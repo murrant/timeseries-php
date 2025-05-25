@@ -78,6 +78,29 @@ try {
 }
 ```
 
+## Testing
+This project uses PHPUnit for testing. To run the tests:
+
+```bash
+# Install dependencies
+composer install
+
+# Run all tests
+./vendor/bin/phpunit
+
+# Run specific test file
+./vendor/bin/phpunit tests/Core/QueryTest.php
+
+# Run tests with coverage report
+./vendor/bin/phpunit --coverage-html coverage
+```
+
+The test suite includes:
+- Unit tests for core components (Query, DataPoint, QueryResult)
+- Tests for configuration classes
+- Tests for the factory class
+- Tests for database drivers using mocks
+
 ## Contributing
 Open PRs ;)
 

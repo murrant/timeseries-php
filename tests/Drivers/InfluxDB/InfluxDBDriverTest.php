@@ -1,0 +1,123 @@
+<?php
+
+namespace TimeSeriesPhp\Tests\Drivers\InfluxDB;
+
+use DateTime;
+use PHPUnit\Framework\TestCase;
+use TimeSeriesPhp\Config\ConfigInterface;
+use TimeSeriesPhp\Core\DataPoint;
+use TimeSeriesPhp\Core\Query;
+use TimeSeriesPhp\Core\QueryResult;
+use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
+
+class InfluxDBDriverTest extends TestCase
+{
+    private InfluxDBDriver $driver;
+    private ConfigInterface $config;
+    
+    protected function setUp(): void
+    {
+        $this->config = $this->createMock(ConfigInterface::class);
+        
+        // Create a partial mock of InfluxDBDriver to mock abstract methods
+        $this->driver = $this->getMockBuilder(InfluxDBDriver::class)
+            ->setMethods(['doConnect', 'executeQuery'])
+            ->getMock();
+        
+        // Configure the mock to return true for doConnect
+        $this->driver->method('doConnect')
+            ->willReturn(true);
+        
+        // Configure the mock to return sample data for executeQuery
+        $this->driver->method('executeQuery')
+            ->willReturn([
+                ['time' => '2023-01-01T00:00:00Z', 'value' => 10],
+                ['time' => '2023-01-01T01:00:00Z', 'value' => 15]
+            ]);
+    }
+    
+    public function testConnect()
+    {
+        $result = $this->driver->connect($this->config);
+        $this->assertTrue($result);
+    }
+    
+    public function testQuery()
+    {
+        $query = new Query('cpu_usage');
+        $query->select(['usage_user', 'usage_system'])
+              ->where('host', 'server01')
+              ->timeRange(new DateTime('2023-01-01'), new DateTime('2023-01-02'));
+        
+        $result = $this->driver->query($query);
+        
+        $this->assertInstanceOf(QueryResult::class, $result);
+        $this->assertCount(2, $result->getSeries());
+    }
+    
+    public function testRawQuery()
+    {
+        $result = $this->driver->rawQuery('SELECT * FROM cpu_usage');
+        
+        $this->assertInstanceOf(QueryResult::class, $result);
+        $this->assertCount(2, $result->getSeries());
+    }
+    
+    public function testWrite()
+    {
+        $dataPoint = new DataPoint(
+            'cpu_usage',
+            ['usage_user' => 23.5, 'usage_system' => 12.1],
+            ['host' => 'server01', 'region' => 'us-west'],
+            new DateTime('2023-01-01 12:00:00')
+        );
+        
+        $result = $this->driver->write($dataPoint);
+        $this->assertTrue($result);
+    }
+    
+    public function testWriteBatch()
+    {
+        $dataPoints = [
+            new DataPoint(
+                'cpu_usage',
+                ['usage_user' => 23.5],
+                ['host' => 'server01']
+            ),
+            new DataPoint(
+                'cpu_usage',
+                ['usage_user' => 25.0],
+                ['host' => 'server02']
+            )
+        ];
+        
+        $result = $this->driver->writeBatch($dataPoints);
+        $this->assertTrue($result);
+    }
+    
+    public function testCreateDatabase()
+    {
+        $result = $this->driver->createDatabase('test_db');
+        $this->assertTrue($result);
+    }
+    
+    public function testListDatabases()
+    {
+        $databases = $this->driver->listDatabases();
+        $this->assertIsArray($databases);
+        $this->assertContains('mydb', $databases);
+        $this->assertContains('testdb', $databases);
+    }
+    
+    public function testClose()
+    {
+        $this->driver->close();
+        
+        // Use reflection to check if the connected property is set to false
+        $reflection = new \ReflectionClass($this->driver);
+        $property = $reflection->getProperty('connected');
+        $property->setAccessible(true);
+        
+        $this->assertFalse($property->getValue($this->driver));
+    }
+}
