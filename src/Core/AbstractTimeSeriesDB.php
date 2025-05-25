@@ -18,7 +18,7 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
     abstract protected function doConnect(): bool;
     abstract protected function buildQuery(Query $query): string;
     abstract protected function executeQuery(string $query): array;
-    abstract protected function formatDataPoint(DataPoint $dataPoint): string;
+    abstract protected function formatDataPoint(DataPoint $dataPoint): mixed;
 
     public function query(Query $query): QueryResult
     {

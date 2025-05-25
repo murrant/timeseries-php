@@ -38,7 +38,7 @@ class CacheConfig extends AbstractConfig
         return $this->get('enabled', false);
     }
 
-    public function getDriverConfig(string $driver = null): array
+    public function getDriverConfig(?string $driver = null): array
     {
         $driver = $driver ?: $this->get('driver');
         return $this->get($driver, []);
