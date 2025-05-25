@@ -1,0 +1,20 @@
+{
+  "name": "librenms/timeseries-php",
+  "description": "PHP Timeseries Database Abstraction Library",
+  "minimum-stability": "stable",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Tony Murray",
+      "email": "murraytony@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "TimeSeriesPhp\\": "src/"
+    }
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^2.1"
+  }
+}
