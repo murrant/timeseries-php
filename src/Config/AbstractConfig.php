@@ -2,7 +2,6 @@
 
 namespace TimeSeriesPhp\Config;
 
-use TimeSeriesPhp\Config\ConfigInterface;
 use TimeSeriesPhp\Exceptions\ConfigurationException;
 
 abstract class AbstractConfig implements ConfigInterface
@@ -12,6 +11,9 @@ abstract class AbstractConfig implements ConfigInterface
     protected array $defaults = [];
     protected array $validators = [];
 
+    /**
+     * @throws ConfigurationException
+     */
     public function __construct(array $config = [])
     {
         $this->config = array_merge($this->getDefaults(), $config);
@@ -28,6 +30,9 @@ abstract class AbstractConfig implements ConfigInterface
         return $this->required;
     }
 
+    /**
+     * @throws ConfigurationException
+     */
     public function validate(): bool
     {
         // Check required fields
@@ -71,6 +76,9 @@ abstract class AbstractConfig implements ConfigInterface
         return array_key_exists($key, $this->config);
     }
 
+    /**
+     * @throws ConfigurationException
+     */
     public function merge(array $config): ConfigInterface
     {
         $this->config = array_merge($this->config, $config);

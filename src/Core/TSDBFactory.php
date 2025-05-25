@@ -3,6 +3,7 @@
 namespace TimeSeriesPhp\Core;
 
 use TimeSeriesPhp\Config\ConfigInterface;
+use TimeSeriesPhp\Exceptions\ConfigurationException;
 use TimeSeriesPhp\Exceptions\DriverException;
 
 class TSDBFactory
@@ -17,6 +18,7 @@ class TSDBFactory
 
     /**
      * @throws DriverException
+     * @throws ConfigurationException
      */
     public static function create(string $driver, ConfigInterface $config): TimeSeriesInterface
     {

@@ -2,43 +2,60 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use TimeSeriesPhp\Config\ConfigFactory;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
+use TimeSeriesPhp\Exceptions\ConfigurationException;
+use TimeSeriesPhp\Exceptions\DriverException;
 
 // Example: Using InfluxDB with timeseries-php library
+
+// set up influxdb
+if (file_exists('.influx_db_token')) {
+    $token = trim(file_get_contents('.influx_db_token'));
+} else {
+    echo "Set up influxdb database and save access token in .influx_db_token...\n";
+    exec("influx setup \
+  --username admin \
+  --password admin1234 \
+  --org example-org \
+  --bucket example-bucket \
+  --retention 0 \
+  --force");
+
+    exec('influx auth create \
+  --org example-org \
+  --all-access \
+  --description "Example all-access token"', $output);
+
+    $token = trim($output[0]);
+    file_put_contents('.influx_db_token', $token);
+}
 
 // Step 1: Initialize the InfluxDB driver with configuration
 echo "Initializing InfluxDB driver...\n";
 
 // Create database configuration
-$dbConfig = ConfigFactory::create('database', [
-    'host' => 'localhost',
-    'port' => 8086,
-    'database' => 'example_db',
-    'username' => 'admin',
-    'password' => 'password',
-    'timeout' => 10,
-    'retry_attempts' => 3
-]);
-
-// Create connection configuration
-$connConfig = ConfigFactory::create('connection', [
-    'pool_size' => 5,
-    'max_idle_time' => 60,
-    'connection_lifetime' => 1800,
-    'reconnect_on_failure' => true
-]);
+try {
+    $influxdbConfig = new \TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig([
+        'token' => $token,
+        'org' => 'example-org',
+        'bucket' => 'example-bucket',
+    ]);
+} catch (ConfigurationException $e) {
+    echo "Failed to configure InfluxDB: {$e->getMessage()}\n";
+    exit(1);
+}
 
 // Initialize the driver
-$influxdb = new InfluxDBDriver();
+\TimeSeriesPhp\Core\TSDBFactory::registerDriver('influxdb', InfluxDBDriver::class);
 
 // Connect to the database
-if ($influxdb->connect($dbConfig)) {
+try {
+    $influxdb = \TimeSeriesPhp\Core\TSDBFactory::create('influxdb', $influxdbConfig);
     echo "Successfully connected to InfluxDB!\n";
-} else {
-    echo "Failed to connect to InfluxDB.\n";
+} catch (DriverException|ConfigurationException $e) {
+    echo "Failed to connect to InfluxDB: {$e->getMessage()}\n";
     exit(1);
 }
 
@@ -70,9 +87,9 @@ for ($i = 1; $i <= 5; $i++) {
     $dataPoints[] = new DataPoint(
         'server_metrics',
         [
-            'cpu_usage' => rand(10, 90),
+            'cpu_usage' => rand(100, 900) / 10,
             'memory' => rand(20, 95),
-            'disk_usage' => rand(30, 85)
+            'disk_usage' => rand(30, 85),
         ],
         [
             'host' => 'web-' . str_pad($i % 3 + 1, 2, '0', STR_PAD_LEFT),
@@ -96,7 +113,6 @@ echo "\nQuerying data...\n";
 // Simple query - get all data from server_metrics
 $query = new Query('server_metrics');
 $result = $influxdb->query($query);
-var_dump($result); exit;
 
 echo "Simple query results:\n";
 echo "Found " . count($result->getSeries()) . " data points\n";
@@ -125,8 +141,16 @@ echo "Found " . count($complexResult->getSeries()) . " data points\n";
 print_r($complexResult->getSeries());
 
 // Raw query example
-echo "\nRaw query example:\n";
-$rawResult = $influxdb->rawQuery('SELECT mean(cpu_usage) FROM server_metrics WHERE time > now() - 1h GROUP BY host');
+//echo "\nRaw query v1 example:\n";
+//$rawResult = $influxdb->rawQuery('SELECT mean(cpu_usage) FROM server_metrics WHERE time > now() - 1h GROUP BY host');
+//print_r($rawResult->getSeries());
+
+echo "\nRaw query v2 example:\n";
+$rawResult = $influxdb->rawQuery('from(bucket: "example-bucket")
+  |> range(start: -1h)
+  |> filter(fn: (r) => r._measurement == "server_metrics" and r._field == "cpu_usage")
+  |> group(columns: ["host"])
+  |> mean()');
 print_r($rawResult->getSeries());
 
 // Close the connection

@@ -2,6 +2,7 @@
 
 namespace TimeSeriesPhp\Drivers\InfluxDB;
 
+use Exception;
 use DateTime;
 use InfluxDB2\Client;
 use InfluxDB2\Model\BucketRetentionRules;
@@ -16,11 +17,12 @@ use InfluxDB2\WriteApi;
 use InfluxDB2\QueryApi;
 use TimeSeriesPhp\Core\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Core\DataPoint;
-use TimeSeriesPhp\Core\QueryResult;
 use TimeSeriesPhp\Core\Query;
-use Exception;
 use TimeSeriesPhp\Core\RawQueryContract;
 use TimeSeriesPhp\Exceptions\QueryException;
+use TimeSeriesPhp\Core\QueryResult;
+use TimeSeriesPhp\Exceptions\ConfigurationException;
+use TimeSeriesPhp\Exceptions\ConnectionException;
 
 class InfluxDBDriver extends AbstractTimeSeriesDB
 {
@@ -56,24 +58,24 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     protected function doConnect(): bool
     {
         try {
-            $this->client = new Client([
-                "url" => $this->url,
-                "token" => $this->token,
-                "bucket" => $this->bucket,
-                "org" => $this->org,
-                "precision" => WritePrecision::NS,
-                "timeout" => $this->options['timeout'],
-                "verifySSL" => $this->options['verify_ssl'],
-                "debug" => $this->options['debug']
-            ]);
+            if (!$this->config instanceof InfluxDBConfig) {
+                throw new ConfigurationException("Invalid configuration type. Expected InfluxDBConfig.");
+            }
 
+            $clientConfig = $this->config->getClientConfig();
+
+            $this->client = new Client($clientConfig);
             $this->writeApi = $this->client->createWriteApi();
             $this->queryApi = $this->client->createQueryApi();
 
+            // Store config values for easier access
+            $this->org = $this->config->get('org');
+            $this->bucket = $this->config->get('bucket');
+
             // Test connection by pinging
-            $health = $this->client->health();
-            $this->connected = $health->getStatus() === 'pass';
-            
+            $ping = $this->client->ping();
+            $this->connected = ! empty($ping);
+
             return $this->connected;
         } catch (Exception $e) {
             error_log("InfluxDB connection failed: " . $e->getMessage());
@@ -86,10 +88,10 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     {
         $fields = $query->getFields();
         $measurement = $query->getMeasurement();
-        
+
         // Build Flux query (InfluxDB 2.x uses Flux, not InfluxQL)
         $fluxQuery = "from(bucket: \"{$this->bucket}\")\n";
-        
+
         // Add time range
         if ($query->getStartTime() && $query->getEndTime()) {
             $start = $query->getStartTime()->format('c');
@@ -102,17 +104,17 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             // Default to last hour if no time range specified
             $fluxQuery .= "  |> range(start: -1h)\n";
         }
-        
+
         // Filter by measurement
         if ($measurement) {
             $fluxQuery .= "  |> filter(fn: (r) => r._measurement == \"{$measurement}\")\n";
         }
-        
+
         // Add tag filters
         foreach ($query->getTags() as $tag => $value) {
             $fluxQuery .= "  |> filter(fn: (r) => r.{$tag} == \"{$value}\")\n";
         }
-        
+
         // Filter by fields if specified
         if (!empty($fields) && !in_array('*', $fields)) {
             $fieldConditions = array_map(function($field) {
@@ -121,12 +123,12 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             $fieldCondition = implode(' or ', $fieldConditions);
             $fluxQuery .= "  |> filter(fn: (r) => {$fieldCondition})\n";
         }
-        
+
         // Add aggregation with windowing if specified
         if ($query->getAggregation()) {
             $aggregation = strtolower($query->getAggregation());
             $interval = $query->getInterval();
-            
+
             if ($interval) {
                 // Convert interval to Flux duration format
                 $duration = $this->convertIntervalToDuration($interval);
@@ -165,7 +167,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
                 }
             }
         }
-        
+
         // Add grouping
         if (!empty($query->getGroupBy())) {
             $groupCols = array_map(function($col) {
@@ -173,7 +175,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             }, $query->getGroupBy());
             $fluxQuery .= "  |> group(columns: [" . implode(', ', $groupCols) . "])\n";
         }
-        
+
         // Add ordering (sort)
         if (!empty($query->getOrderBy())) {
             foreach ($query->getOrderBy() as $field => $direction) {
@@ -181,12 +183,12 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
                 $fluxQuery .= "  |> sort(columns: [\"{$field}\"], desc: {$desc})\n";
             }
         }
-        
+
         // Add limit
         if ($query->getLimit()) {
             $fluxQuery .= "  |> limit(n: {$query->getLimit()})\n";
         }
-        
+
         return $fluxQuery;
     }
 
@@ -199,14 +201,14 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
         try {
             $result = $this->queryApi->query($query, $this->org);
             $data = [];
-            
+
             foreach ($result as $table) {
                 foreach ($table->records as $record) {
                     $values = $record->values;
                     $data[] = $values;
                 }
             }
-            
+
             return $data;
         } catch (Exception $e) {
             throw new QueryException("Query execution failed: " . $e->getMessage());
@@ -216,13 +218,13 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     protected function formatDataPoint(DataPoint $dataPoint): Point
     {
         $point = Point::measurement($dataPoint->getMeasurement())
-            ->time($dataPoint->getTimestamp(), WritePrecision::NS);
-        
+            ->time($dataPoint->getTimestamp());
+
         // Add tags
         foreach ($dataPoint->getTags() as $key => $value) {
             $point->addTag($key, $value);
         }
-        
+
         // Add fields
         foreach ($dataPoint->getFields() as $key => $value) {
             if (is_numeric($value)) {
@@ -237,14 +239,14 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
                 $point->addField($key, strval($value));
             }
         }
-        
+
         return $point;
     }
 
     public function write(DataPoint $dataPoint): bool
     {
         if (!$this->isConnected()) {
-            throw new Exception("Not connected to InfluxDB");
+            throw new ConnectionException("Not connected to InfluxDB");
         }
 
         try {
@@ -261,7 +263,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     public function writeBatch(array $dataPoints): bool
     {
         if (!$this->isConnected()) {
-            throw new Exception("Not connected to InfluxDB");
+            throw new ConnectionException("Not connected to InfluxDB");
         }
 
         try {
@@ -269,7 +271,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             foreach ($dataPoints as $dataPoint) {
                 $points[] = $this->formatDataPoint($dataPoint);
             }
-            
+
             $this->writeApi->write($points);
             $this->writeApi->close();
             return true;
@@ -321,7 +323,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             foreach ($buckets->getBuckets() as $bucket) {
                 $bucketNames[] = $bucket->getName();
             }
-            
+
             return $bucketNames;
         } catch (Exception $e) {
             error_log("Failed to list buckets: " . $e->getMessage());
@@ -403,7 +405,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
         if (preg_match('/^\d+[smhd]$/', $interval)) {
             return $interval;
         }
-        
+
         // Convert common formats
         $interval = strtolower($interval);
         $conversions = [
@@ -418,14 +420,14 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             'day' => 'd',
             'days' => 'd',
         ];
-        
+
         foreach ($conversions as $from => $to) {
             if (str_contains($interval, $from)) {
                 $number = (int) filter_var($interval, FILTER_SANITIZE_NUMBER_INT);
                 return $number . $to;
             }
         }
-        
+
         // Default fallback - assume it's already in correct format
         return $interval;
     }

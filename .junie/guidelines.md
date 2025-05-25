@@ -129,8 +129,7 @@ The project uses PHPStan for static analysis:
 1. Follow PSR-4 for autoloading
 2. Follow PSR-12 for code style
 3. Use type hints for method parameters and return types
-4. Document all classes and methods with PHPDoc comments
-5. Keep classes focused on a single responsibility (SOLID principles)
+4Keep classes focused on a single responsibility (SOLID principles)
 
 ### Architecture Overview
 The library follows a layered architecture:
