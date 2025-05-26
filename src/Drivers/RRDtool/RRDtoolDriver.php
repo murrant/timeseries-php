@@ -17,16 +17,22 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     private RRDTagStrategyContract $tagStrategy;
     private bool $useRrdcached = false;
     private string $rrdcachedAddress = '';
+    private string $rrdtoolPath = 'rrdtool';
+    private RRDtoolConfig $rrdConfig;
 
-    public function __construct(array $config = [], ?RRDTagStrategyContract $tagStrategy = null)
+    public function __construct(array $config = [], ?RRDtoolConfig $rrdConfig = null, ?RRDTagStrategyContract $tagStrategy = null)
     {
         parent::__construct($config);
-        $this->tagStrategy = $tagStrategy ?? new FileNameStrategy();
+        $this->rrdConfig = $rrdConfig ?? new RRDtoolConfig($config);
+        $this->tagStrategy = $tagStrategy ?? $this->rrdConfig->getTagStrategy();
     }
 
     protected function doConnect(): bool
     {
-        $this->rrdDir = $this->config['rrd_dir'] ?? '/tmp/rrd';
+        $this->rrdDir = $this->rrdConfig->get('rrd_dir');
+        $this->rrdtoolPath = $this->rrdConfig->get('rrdtool_path');
+        $this->useRrdcached = $this->rrdConfig->get('use_rrdcached');
+        $this->rrdcachedAddress = $this->rrdConfig->get('rrdcached_address');
 
         if (!is_dir($this->rrdDir)) {
             if (!mkdir($this->rrdDir, 0755, true)) {
@@ -37,10 +43,6 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         if (!is_writable($this->rrdDir)) {
             throw new Exception("RRD directory is not writable: {$this->rrdDir}");
         }
-
-        // Initialize rrdcached settings
-        $this->useRrdcached = $this->config['use_rrdcached'] ?? false;
-        $this->rrdcachedAddress = $this->config['rrdcached_address'] ?? '';
 
         if ($this->useRrdcached && empty($this->rrdcachedAddress)) {
             throw new Exception("rrdcached address must be specified when use_rrdcached is true");
@@ -94,7 +96,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
      */
     private function buildRrdtoolCommand(string $command, array $args): string
     {
-        $cmd = 'rrdtool ' . $command;
+        $cmd = $this->rrdtoolPath . ' ' . $command;
 
         if ($this->useRrdcached && in_array($command, ['update', 'fetch', 'info', 'last'])) {
             $cmd .= ' --daemon ' . escapeshellarg($this->rrdcachedAddress);
@@ -107,11 +109,14 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         return $cmd;
     }
 
-    private function createRRD(string $rrdPath, array $fields, int $step = 300): bool
+    private function createRRD(string $rrdPath, array $fields, ?int $step = null): bool
     {
         if (file_exists($rrdPath)) {
             return true; // Already exists
         }
+
+        // Use default step from config if not provided
+        $step = $step ?? $this->rrdConfig->get('default_step');
 
         // Build data source definitions
         $dataSources = [];
@@ -120,16 +125,8 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
             $dataSources[] = "DS:{$field}:{$type}:600:U:U";
         }
 
-        // Default archives - customize based on retention needs
-        $archives = [
-            'RRA:AVERAGE:0.5:1:2016',      // 5min for 1 week
-            'RRA:AVERAGE:0.5:12:1488',     // 1hour for 2 months
-            'RRA:AVERAGE:0.5:288:366',     // 1day for 1 year
-            'RRA:MAX:0.5:1:2016',          // 5min max for 1 week
-            'RRA:MAX:0.5:12:1488',         // 1hour max for 2 months
-            'RRA:MIN:0.5:1:2016',          // 5min min for 1 week
-            'RRA:MIN:0.5:12:1488'          // 1hour min for 2 months
-        ];
+        // Use default archives from config
+        $archives = $this->rrdConfig->get('default_archives');
 
         $args = [
             escapeshellarg($rrdPath),
@@ -398,9 +395,9 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     {
         $rrdPath = $this->getRRDPath($measurement, $tags);
 
-        $step = $config['step'] ?? 300;
+        $step = $config['step'] ?? $this->rrdConfig->get('default_step');
         $dataSources = $config['data_sources'] ?? [];
-        $archives = $config['archives'] ?? [];
+        $archives = $config['archives'] ?? $this->rrdConfig->get('default_archives');
 
         if (empty($dataSources)) {
             throw new Exception("Data sources must be specified for custom RRD creation");

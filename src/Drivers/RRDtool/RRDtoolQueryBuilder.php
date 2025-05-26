@@ -1,6 +1,6 @@
 <?php
 
-namespace RRDtool;
+namespace TimeSeriesPhp\Drivers\RRDtool;
 
 class RRDtoolQueryBuilder
 {
