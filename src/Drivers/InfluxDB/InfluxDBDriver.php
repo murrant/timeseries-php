@@ -2,9 +2,16 @@
 
 namespace TimeSeriesPhp\Drivers\InfluxDB;
 
+use DateTime;
 use InfluxDB2\Client;
+use InfluxDB2\Model\BucketRetentionRules;
+use InfluxDB2\Model\DeletePredicateRequest;
+use InfluxDB2\Model\PostBucketRequest;
 use InfluxDB2\Model\WritePrecision;
 use InfluxDB2\Point;
+use InfluxDB2\Service\BucketsService;
+use InfluxDB2\Service\DeleteService;
+use InfluxDB2\Service\OrganizationsService;
 use InfluxDB2\WriteApi;
 use InfluxDB2\QueryApi;
 use TimeSeriesPhp\Core\AbstractTimeSeriesDB;
@@ -22,6 +29,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     private string $url;
     private string $token;
     private string $org;
+    private ?string $orgId = null;
     private string $bucket;
     private array $options;
 
@@ -277,16 +285,19 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
     public function createDatabase(string $database): bool
     {
-        // In InfluxDB 2.x, we create buckets instead of databases
         try {
-            $bucketsApi = $this->client->createBucketsApi();
-            $bucket = $bucketsApi->createBucket([
-                'name' => $database,
-                'orgID' => $this->getOrgId(),
-                'retentionRules' => [
-                    ['type' => 'expire', 'everySeconds' => 0] // No expiration
-                ]
-            ]);
+            /** @var BucketsService $bucketsService */
+            $bucketsService = $this->client->createService(BucketsService::class);
+
+            $rule = new BucketRetentionRules();
+            $rule->setEverySeconds(0); // No expiration
+            $bucketRequest = new PostBucketRequest();
+
+            $bucketRequest->setName($database)
+                ->setRetentionRules([$rule])
+                ->setOrgId($this->getOrgId());
+            $bucket = $bucketsService->postBuckets($bucketRequest);
+
             return $bucket !== null;
         } catch (Exception $e) {
             error_log("Failed to create bucket: " . $e->getMessage());
@@ -296,10 +307,10 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
     public function listDatabases(): array
     {
-        // In InfluxDB 2.x, we list buckets instead of databases
         try {
-            $bucketsApi = $this->client->createBucketsApi();
-            $buckets = $bucketsApi->findBuckets();
+            /** @var BucketsService $bucketsService */
+            $bucketsService = $this->client->createService(BucketsService::class);
+            $buckets = $bucketsService->getBuckets(org_id: $this->getOrgId());
             
             $bucketNames = [];
             foreach ($buckets->getBuckets() as $bucket) {
@@ -313,22 +324,18 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
         }
     }
 
-    public function deleteMeasurement(string $measurement, \DateTime $start = null, \DateTime $stop = null): bool
+    public function deleteMeasurement(string $measurement, ?DateTime $start = null, ?DateTime $stop = null): bool
     {
         try {
-            $deleteApi = $this->client->createDeleteApi();
-            
-            $startTime = $start ? $start->format('c') : '1970-01-01T00:00:00Z';
-            $stopTime = $stop ? $stop->format('c') : (new \DateTime())->format('c');
-            
-            $deleteApi->delete(
-                $startTime,
-                $stopTime,
-                "_measurement=\"{$measurement}\"",
-                $this->bucket,
-                $this->org
-            );
-            
+            /** @var DeleteService $service */
+            $service = $this->client->createService(DeleteService::class);
+            $predicate = new DeletePredicateRequest();
+            $predicate->setStart($start ?? new DateTime('1970-01-01T00:00:00Z'));
+            $predicate->setStop($stop ?? new DateTime());
+            $predicate->setPredicate("_measurement=\"{$measurement}\"",);
+
+            $service->postDelete($predicate, bucket: $this->bucket, org_id: $this->getOrgId());
+
             return true;
         } catch (Exception $e) {
             error_log("Failed to delete measurement: " . $e->getMessage());
@@ -356,33 +363,28 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
     private function getOrgId(): string
     {
-        static $orgId = null;
-        
-        if ($orgId === null) {
-            $orgsApi = $this->client->createOrganizationsApi();
-            $orgs = $orgsApi->findOrganizations();
-            
-            foreach ($orgs->getOrgs() as $org) {
-                if ($org->getName() === $this->org) {
-                    $orgId = $org->getId();
-                    break;
+        if ($this->orgId === null) {
+            $orgService = $this->client->createService(OrganizationsService::class);
+            $orgs = $orgService->getOrgs()->getOrgs();
+
+            foreach ($orgs as $org) {
+                if ($org->getName() == $this->org) {
+                    $this->orgId = $org->getId();
+
+                    return $this->orgId;
                 }
             }
+
+            $this->orgId = '';
         }
-        
-        return $orgId ?? '';
+
+        return $this->orgId;
     }
 
     public function close(): void
     {
-        if ($this->writeApi) {
-            $this->writeApi->close();
-        }
-        
-        if ($this->client) {
-            $this->client = null;
-        }
-        
+        $this->writeApi?->close();
+        $this->client = null;
         $this->connected = false;
     }
 
@@ -413,7 +415,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
         ];
         
         foreach ($conversions as $from => $to) {
-            if (strpos($interval, $from) !== false) {
+            if (str_contains($interval, $from)) {
                 $number = (int) filter_var($interval, FILTER_SANITIZE_NUMBER_INT);
                 return $number . $to;
             }
@@ -421,6 +423,11 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
         
         // Default fallback - assume it's already in correct format
         return $interval;
+    }
+
+    public function isConnected(): bool
+    {
+        return $this->connected;
     }
 
     public function __destruct()
