@@ -8,9 +8,7 @@ use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Core\QueryResult;
 use TimeSeriesPhp\Core\RawQueryContract;
-use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyContract;
-use TimeSeriesPhp\Exceptions\QueryException;
 
 class RRDtoolDriver extends AbstractTimeSeriesDB
 {
@@ -29,25 +27,28 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         $this->tagStrategy = $tagStrategy ?? $this->rrdConfig->getTagStrategy();
     }
 
+    /**
+     * @throws ConnectionException
+     */
     protected function doConnect(): bool
     {
-        $this->rrdDir = $this->rrdConfig->get('rrd_dir');
+        $this->rrdDir = $this->config->get('rrd_dir');
         $this->rrdtoolPath = $this->rrdConfig->get('rrdtool_path');
         $this->useRrdcached = $this->rrdConfig->get('use_rrdcached');
         $this->rrdcachedAddress = $this->rrdConfig->get('rrdcached_address');
 
         if (!is_dir($this->rrdDir)) {
             if (!mkdir($this->rrdDir, 0755, true)) {
-                throw new Exception("Cannot create RRD directory: {$this->rrdDir}");
+                throw new ConnectionException("Cannot create RRD directory: {$this->rrdDir}");
             }
         }
 
         if (!is_writable($this->rrdDir)) {
-            throw new Exception("RRD directory is not writable: {$this->rrdDir}");
+            throw new ConnectionException("RRD directory is not writable: {$this->rrdDir}");
         }
 
         if ($this->useRrdcached && empty($this->rrdcachedAddress)) {
-            throw new Exception("rrdcached address must be specified when use_rrdcached is true");
+            throw new ConnectionException("rrdcached address must be specified when use_rrdcached is true");
         }
 
         $this->connected = true;
@@ -79,7 +80,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
 
     /**
      * Get the RRD file path for a measurement and tags
-     * 
+     *
      * @param string $measurement The measurement name
      * @param array $tags The tags as key-value pairs
      * @return string The full path to the RRD file
@@ -141,7 +142,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         exec($cmd . ' 2>&1', $output, $returnCode);
 
         if ($returnCode !== 0) {
-            throw new Exception("Failed to create RRD: " . implode("\n", $output));
+            throw new WriteException("Failed to create RRD: " . implode("\n", $output));
         }
 
         return true;
@@ -177,7 +178,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
 
         foreach ($dataSourceOrder as $dsName) {
             $fields = $dataPoint->getFields();
-            $values[] = isset($fields[$dsName]) ? $fields[$dsName] : 'U'; // U = unknown/undefined
+            $values[] = $fields[$dsName] ?? 'U'; // U = unknown/undefined
         }
 
         $updateString = $timestamp . ':' . implode(':', $values);
@@ -192,7 +193,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         exec($cmd . ' 2>&1', $output, $returnCode);
 
         if ($returnCode !== 0) {
-            throw new Exception("Failed to update RRD: " . implode("\n", $output));
+            throw new WriteException("Failed to update RRD: " . implode("\n", $output));
         }
 
         return true;

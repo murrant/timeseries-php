@@ -2,10 +2,10 @@
 
 namespace TimeSeriesPhp\Support;
 
-use InfluxDBDriver;
 use Prometheus\PrometheusDriver;
 use RRDtool\RRDtoolDriver;
 use TimeSeriesPhp\Core\TSDBFactory;
+use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
 
 class TimeSeriesProvider
 {

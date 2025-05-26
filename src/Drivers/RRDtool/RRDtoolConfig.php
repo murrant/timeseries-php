@@ -54,7 +54,7 @@ class RRDtoolConfig extends AbstractConfig
         });
 
         $this->addValidator('tag_strategy', function ($strategy) {
-            return is_string($strategy) && class_exists($strategy) && 
+            return is_string($strategy) && class_exists($strategy) &&
                    is_subclass_of($strategy, RRDTagStrategyContract::class);
         });
 
