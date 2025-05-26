@@ -7,8 +7,10 @@ use TimeSeriesPhp\Core\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Core\QueryResult;
+use TimeSeriesPhp\Core\RawQueryContract;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyContract;
+use TimeSeriesPhp\Exceptions\QueryException;
 
 class RRDtoolDriver extends AbstractTimeSeriesDB
 {
@@ -340,13 +342,13 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         return new QueryResult($result, ['rrd_path' => $params['rrd_path']]);
     }
 
-    public function rawQuery(string $query): QueryResult
+    public function rawQuery(RawQueryContract $query): QueryResult
     {
         // For RRDtool, raw query would be a direct rrdtool command
-        exec($query . ' 2>&1', $output, $returnCode);
+        exec($this->rrdtoolPath . ' 2>&1', $output, $returnCode);
 
         if ($returnCode !== 0) {
-            throw new Exception("RRD command failed: " . implode("\n", $output));
+            throw new QueryException("RRD command failed: " . implode("\n", $output));
         }
 
         // Try to parse as fetch output, otherwise return raw

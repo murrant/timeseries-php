@@ -19,6 +19,8 @@ use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\QueryResult;
 use TimeSeriesPhp\Core\Query;
 use Exception;
+use TimeSeriesPhp\Core\RawQueryContract;
+use TimeSeriesPhp\Exceptions\QueryException;
 
 class InfluxDBDriver extends AbstractTimeSeriesDB
 {
@@ -191,7 +193,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     protected function executeQuery(string $query): array
     {
         if (!$this->isConnected()) {
-            throw new Exception("Not connected to InfluxDB");
+            throw new QueryException("Not connected to InfluxDB");
         }
 
         try {
@@ -207,7 +209,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             
             return $data;
         } catch (Exception $e) {
-            throw new Exception("Query execution failed: " . $e->getMessage());
+            throw new QueryException("Query execution failed: " . $e->getMessage());
         }
     }
 
@@ -277,9 +279,12 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
         }
     }
 
-    public function rawQuery(string $query): QueryResult
+    /**
+     * @throws QueryException
+     */
+    public function rawQuery(RawQueryContract $query): QueryResult
     {
-        $result = $this->executeQuery($query);
+        $result = $this->executeQuery($query->getRawQuery());
         return new QueryResult($result);
     }
 

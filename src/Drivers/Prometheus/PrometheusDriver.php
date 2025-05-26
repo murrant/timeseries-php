@@ -6,6 +6,7 @@ use TimeSeriesPhp\Core\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\QueryResult;
 use TimeSeriesPhp\Core\Query;
+use TimeSeriesPhp\Core\RawQueryContract;
 
 class PrometheusDriver extends AbstractTimeSeriesDB
 {
@@ -55,9 +56,9 @@ class PrometheusDriver extends AbstractTimeSeriesDB
         return true;
     }
 
-    public function rawQuery(string $query): QueryResult
+    public function rawQuery(RawQueryContract $query): QueryResult
     {
-        $result = $this->executeQuery($query);
+        $result = $this->executeQuery($query->getRawQuery());
         return new QueryResult($result);
     }
 
