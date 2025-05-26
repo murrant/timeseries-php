@@ -25,6 +25,7 @@
     "symfony/var-dumper": "^7.2"
   },
   "require": {
+    "php": ">=8.2",
     "influxdata/influxdb-client-php": "^3.7",
     "guzzlehttp/guzzle": "^7.9"
   },

@@ -4,7 +4,7 @@ namespace TimeSeriesPhp\Drivers\RRDtool;
 
 use TimeSeriesPhp\Core\RawQueryContract;
 
-class RRDRawQuery implements RawQueryContract
+class RRDtoolRawQuery implements RawQueryContract
 {
     protected array $parameters = [];
 

@@ -8,6 +8,7 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
 {
     protected ConfigInterface $config;
     protected bool $connected = false;
+    protected QueryBuilderContract $queryBuilder;
 
     public function connect(ConfigInterface $config): bool
     {
@@ -16,15 +17,10 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
     }
 
     abstract protected function doConnect(): bool;
-    abstract protected function buildQuery(Query $query): string;
-    abstract protected function executeQuery(string $query): array;
-    abstract protected function formatDataPoint(DataPoint $dataPoint): mixed;
 
     public function query(Query $query): QueryResult
     {
-        $nativeQuery = $this->buildQuery($query);
-        $result = $this->executeQuery($nativeQuery);
-        return new QueryResult($result);
+        return $this->rawQuery($this->queryBuilder->build($query));
     }
 
     public function writeBatch(array $dataPoints): bool

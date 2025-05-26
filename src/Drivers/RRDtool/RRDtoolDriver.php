@@ -9,23 +9,18 @@ use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Core\QueryResult;
 use TimeSeriesPhp\Core\RawQueryContract;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyContract;
+use TimeSeriesPhp\Exceptions\ConnectionException;
+use TimeSeriesPhp\Exceptions\QueryException;
+use TimeSeriesPhp\Exceptions\WriteException;
 
 class RRDtoolDriver extends AbstractTimeSeriesDB
 {
     private string $rrdDir;
-    private array $rrdFiles = [];
-    private RRDTagStrategyContract $tagStrategy;
+    private string $rrdtoolPath = 'rrdtool';
     private bool $useRrdcached = false;
     private string $rrdcachedAddress = '';
-    private string $rrdtoolPath = 'rrdtool';
-    private RRDtoolConfig $rrdConfig;
+    private RRDTagStrategyContract $tagStrategy;
 
-    public function __construct(array $config = [], ?RRDtoolConfig $rrdConfig = null, ?RRDTagStrategyContract $tagStrategy = null)
-    {
-        parent::__construct($config);
-        $this->rrdConfig = $rrdConfig ?? new RRDtoolConfig($config);
-        $this->tagStrategy = $tagStrategy ?? $this->rrdConfig->getTagStrategy();
-    }
 
     /**
      * @throws ConnectionException
@@ -33,9 +28,9 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     protected function doConnect(): bool
     {
         $this->rrdDir = $this->config->get('rrd_dir');
-        $this->rrdtoolPath = $this->rrdConfig->get('rrdtool_path');
-        $this->useRrdcached = $this->rrdConfig->get('use_rrdcached');
-        $this->rrdcachedAddress = $this->rrdConfig->get('rrdcached_address');
+        $this->rrdtoolPath = $this->config->get('rrdtool_path');
+        $this->useRrdcached = $this->config->get('use_rrdcached');
+        $this->rrdcachedAddress = $this->config->get('rrdcached_address');
 
         if (!is_dir($this->rrdDir)) {
             if (!mkdir($this->rrdDir, 0755, true)) {
@@ -51,26 +46,18 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
             throw new ConnectionException("rrdcached address must be specified when use_rrdcached is true");
         }
 
+        $tagStrategyClass = $this->config->get('tag_strategy');
+        $this->tagStrategy = new $tagStrategyClass();
+        $this->queryBuilder = new RRDtoolQueryBuilder($this->tagStrategy, $this->rrdDir);
+
         $this->connected = true;
         return true;
     }
 
     /**
-     * Find RRD files that have a specific tag value
-     *
-     * @param string $tagName The tag name to search for
-     * @param string $tagValue The tag value to search for
-     * @return array List of file paths that match the tag
-     */
-    public function findFilesByTag(string $tagName, string $tagValue): array
-    {
-        return $this->tagStrategy->findFilesByTag($tagName, $tagValue, $this->rrdDir);
-    }
-
-    /**
      * Find RRD files that match a set of tag values
      *
-     * @param array $tags The tags as key-value pairs to search for
+     * @param array<string, string> $tags The tags as key-value pairs to search for
      * @return array List of file paths that match all the tags
      */
     public function findFilesByTags(array $tags): array
@@ -119,7 +106,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         }
 
         // Use default step from config if not provided
-        $step = $step ?? $this->rrdConfig->get('default_step');
+        $step = $step ?? $this->config->get('default_step');
 
         // Build data source definitions
         $dataSources = [];
@@ -129,7 +116,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         }
 
         // Use default archives from config
-        $archives = $this->rrdConfig->get('default_archives');
+        $archives = $this->config->get('default_archives');
 
         $args = [
             escapeshellarg($rrdPath),
@@ -223,30 +210,11 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     {
         $dataSources = [];
         foreach ($info as $key => $value) {
-            if (preg_match('/^ds\[([^\]]+)\]\.type$/', $key, $matches)) {
+            if (preg_match('/^ds\[([^]]+)]\.type$/', $key, $matches)) {
                 $dataSources[] = $matches[1];
             }
         }
         return $dataSources;
-    }
-
-    protected function buildQuery(Query $query): string
-    {
-        // RRDtool uses rrdtool fetch/graph commands, not SQL
-        // We'll build parameters for rrdtool fetch
-
-        $rrdPath = $this->getRRDPath($query->getMeasurement(), $query->getTags());
-
-        $params = [
-            'rrd_path' => $rrdPath,
-            'cf' => $this->mapAggregationToConsolidationFunction($query->getAggregation()),
-            'start' => $query->getStartTime() ? $query->getStartTime()->getTimestamp() : '-1h',
-            'end' => $query->getEndTime() ? $query->getEndTime()->getTimestamp() : 'now',
-            'fields' => $query->getFields()
-        ];
-
-        // Serialize the params to a string
-        return serialize($params);
     }
 
     private function mapAggregationToConsolidationFunction(?string $aggregation): string
@@ -261,32 +229,6 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         ];
 
         return $mapping[strtolower($aggregation ?? 'average')] ?? 'AVERAGE';
-    }
-
-    protected function executeQuery(string $query): array
-    {
-        // This method receives the serialized params from buildQuery
-        $params = unserialize($query);
-
-        if (!file_exists($params['rrd_path'])) {
-            return [];
-        }
-
-        $args = [
-            escapeshellarg($params['rrd_path']),
-            $params['cf'],
-            '-s', is_numeric($params['start']) ? $params['start'] : escapeshellarg($params['start']),
-            '-e', is_numeric($params['end']) ? $params['end'] : escapeshellarg($params['end'])
-        ];
-
-        $cmd = $this->buildRrdtoolCommand('fetch', $args);
-        exec($cmd . ' 2>&1', $output, $returnCode);
-
-        if ($returnCode !== 0) {
-            throw new Exception("RRD fetch failed: " . implode("\n", $output));
-        }
-
-        return $this->parseRRDFetchOutput($output, $params['fields']);
     }
 
     private function parseRRDFetchOutput(array $output, array $requestedFields): array
@@ -329,24 +271,15 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         return $result;
     }
 
-    public function query(Query $query): QueryResult
-    {
-        $serializedParams = $this->buildQuery($query);
-        $params = unserialize($serializedParams);
-        $result = $this->executeQuery($serializedParams);
-
-        // Apply limit if specified
-        if ($query->getLimit() && count($result) > $query->getLimit()) {
-            $result = array_slice($result, 0, $query->getLimit());
-        }
-
-        return new QueryResult($result, ['rrd_path' => $params['rrd_path']]);
-    }
 
     public function rawQuery(RawQueryContract $query): QueryResult
     {
+        if (! $query instanceof RRDtoolRawQuery) {
+            throw new QueryException("Invalid query type");
+        }
+
         // For RRDtool, raw query would be a direct rrdtool command
-        exec($this->rrdtoolPath . ' 2>&1', $output, $returnCode);
+        exec($this->rrdtoolPath . ' ' . $query->getRawQuery() . ' 2>&1', $output, $returnCode);
 
         if ($returnCode !== 0) {
             throw new QueryException("RRD command failed: " . implode("\n", $output));
@@ -390,7 +323,6 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     public function close(): void
     {
         $this->connected = false;
-        $this->rrdFiles = [];
     }
 
     // RRDtool-specific methods
@@ -398,9 +330,9 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     {
         $rrdPath = $this->getRRDPath($measurement, $tags);
 
-        $step = $config['step'] ?? $this->rrdConfig->get('default_step');
+        $step = $config['step'] ?? $this->config->get('default_step');
         $dataSources = $config['data_sources'] ?? [];
-        $archives = $config['archives'] ?? $this->rrdConfig->get('default_archives');
+        $archives = $config['archives'] ?? $this->config->get('default_archives');
 
         if (empty($dataSources)) {
             throw new Exception("Data sources must be specified for custom RRD creation");
@@ -454,16 +386,8 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         return $outputPath;
     }
 
-    protected function formatDataPoint(DataPoint $dataPoint): string
+    protected function buildQuery(Query $query): RawQueryContract
     {
-        // Format the data point for RRDtool update command
-        $timestamp = $dataPoint->getTimestamp()->getTimestamp();
-        $values = [];
-
-        foreach ($dataPoint->getFields() as $field => $value) {
-            $values[] = $field . ':' . $value;
-        }
-
-        return $timestamp . ':' . implode(':', array_values($dataPoint->getFields()));
+        // TODO: Implement buildQuery() method.
     }
 }

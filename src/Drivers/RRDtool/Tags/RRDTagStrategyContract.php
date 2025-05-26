@@ -15,20 +15,11 @@ interface RRDTagStrategyContract
      */
     public function getFilePath(string $measurement, array $tags, string $baseDir): string;
 
-    /**
-     * Find files that have a specific tag value
-     *
-     * @param string $tagName The tag name to search for
-     * @param string $tagValue The tag value to search for
-     * @param string $baseDir The base directory for RRD files
-     * @return array List of file paths that match the tag
-     */
-    public function findFilesByTag(string $tagName, string $tagValue, string $baseDir): array;
 
     /**
-     * Find files that match a set of tag values
+     * Find files that match one or more tag values
      *
-     * @param array $tags The tags as key-value pairs to search for
+     * @param array<string, string> $tags The tags as key-value pairs to search for
      * @param string $baseDir The base directory for RRD files
      * @return array List of file paths that match all the tags
      */

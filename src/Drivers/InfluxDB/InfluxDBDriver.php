@@ -2,75 +2,53 @@
 
 namespace TimeSeriesPhp\Drivers\InfluxDB;
 
-use Exception;
 use DateTime;
+use Exception;
 use InfluxDB2\Client;
 use InfluxDB2\Model\BucketRetentionRules;
 use InfluxDB2\Model\DeletePredicateRequest;
 use InfluxDB2\Model\PostBucketRequest;
-use InfluxDB2\Model\WritePrecision;
 use InfluxDB2\Point;
+use InfluxDB2\QueryApi;
 use InfluxDB2\Service\BucketsService;
 use InfluxDB2\Service\DeleteService;
 use InfluxDB2\Service\OrganizationsService;
 use InfluxDB2\WriteApi;
-use InfluxDB2\QueryApi;
 use TimeSeriesPhp\Core\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Core\DataPoint;
-use TimeSeriesPhp\Core\Query;
-use TimeSeriesPhp\Core\RawQueryContract;
-use TimeSeriesPhp\Exceptions\QueryException;
 use TimeSeriesPhp\Core\QueryResult;
+use TimeSeriesPhp\Core\RawQueryContract;
 use TimeSeriesPhp\Exceptions\ConfigurationException;
 use TimeSeriesPhp\Exceptions\ConnectionException;
+use TimeSeriesPhp\Exceptions\QueryException;
 
 class InfluxDBDriver extends AbstractTimeSeriesDB
 {
     private ?Client $client = null;
     private ?WriteApi $writeApi = null;
     private ?QueryApi $queryApi = null;
-    
-    private string $url;
-    private string $token;
+
     private string $org;
     private ?string $orgId = null;
     private string $bucket;
-    private array $options;
 
-    public function __construct(
-        string $url,
-        string $token,
-        string $org,
-        string $bucket,
-        array $options = []
-    ) {
-        $this->url = $url;
-        $this->token = $token;
-        $this->org = $org;
-        $this->bucket = $bucket;
-        $this->options = array_merge([
-            'timeout' => 30,
-            'verify_ssl' => true,
-            'debug' => false
-        ], $options);
-    }
 
     protected function doConnect(): bool
     {
+        if (!$this->config instanceof InfluxDBConfig) {
+            throw new ConfigurationException("Invalid configuration type. Expected InfluxDBConfig.");
+        }
+
         try {
-            if (!$this->config instanceof InfluxDBConfig) {
-                throw new ConfigurationException("Invalid configuration type. Expected InfluxDBConfig.");
-            }
-
-            $clientConfig = $this->config->getClientConfig();
-
-            $this->client = new Client($clientConfig);
+            $this->client = new Client($this->config->getClientConfig());
             $this->writeApi = $this->client->createWriteApi();
             $this->queryApi = $this->client->createQueryApi();
 
             // Store config values for easier access
             $this->org = $this->config->get('org');
             $this->bucket = $this->config->get('bucket');
+
+            $this->queryBuilder = new InfluxDBQueryBuilder($this->bucket);
 
             // Test connection by pinging
             $ping = $this->client->ping();
@@ -81,137 +59,6 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             error_log("InfluxDB connection failed: " . $e->getMessage());
             $this->connected = false;
             return false;
-        }
-    }
-
-    protected function buildQuery(Query $query): string
-    {
-        $fields = $query->getFields();
-        $measurement = $query->getMeasurement();
-
-        // Build Flux query (InfluxDB 2.x uses Flux, not InfluxQL)
-        $fluxQuery = "from(bucket: \"{$this->bucket}\")\n";
-
-        // Add time range
-        if ($query->getStartTime() && $query->getEndTime()) {
-            $start = $query->getStartTime()->format('c');
-            $stop = $query->getEndTime()->format('c');
-            $fluxQuery .= "  |> range(start: {$start}, stop: {$stop})\n";
-        } elseif ($query->getStartTime()) {
-            $start = $query->getStartTime()->format('c');
-            $fluxQuery .= "  |> range(start: {$start})\n";
-        } else {
-            // Default to last hour if no time range specified
-            $fluxQuery .= "  |> range(start: -1h)\n";
-        }
-
-        // Filter by measurement
-        if ($measurement) {
-            $fluxQuery .= "  |> filter(fn: (r) => r._measurement == \"{$measurement}\")\n";
-        }
-
-        // Add tag filters
-        foreach ($query->getTags() as $tag => $value) {
-            $fluxQuery .= "  |> filter(fn: (r) => r.{$tag} == \"{$value}\")\n";
-        }
-
-        // Filter by fields if specified
-        if (!empty($fields) && !in_array('*', $fields)) {
-            $fieldConditions = array_map(function($field) {
-                return "r._field == \"{$field}\"";
-            }, $fields);
-            $fieldCondition = implode(' or ', $fieldConditions);
-            $fluxQuery .= "  |> filter(fn: (r) => {$fieldCondition})\n";
-        }
-
-        // Add aggregation with windowing if specified
-        if ($query->getAggregation()) {
-            $aggregation = strtolower($query->getAggregation());
-            $interval = $query->getInterval();
-
-            if ($interval) {
-                // Convert interval to Flux duration format
-                $duration = $this->convertIntervalToDuration($interval);
-                $fluxQuery .= "  |> aggregateWindow(every: {$duration}, fn: {$aggregation}, createEmpty: false)\n";
-            } else {
-                // Apply aggregation without windowing
-                switch ($aggregation) {
-                    case 'mean':
-                    case 'avg':
-                        $fluxQuery .= "  |> mean()\n";
-                        break;
-                    case 'sum':
-                        $fluxQuery .= "  |> sum()\n";
-                        break;
-                    case 'count':
-                        $fluxQuery .= "  |> count()\n";
-                        break;
-                    case 'min':
-                        $fluxQuery .= "  |> min()\n";
-                        break;
-                    case 'max':
-                        $fluxQuery .= "  |> max()\n";
-                        break;
-                    case 'first':
-                        $fluxQuery .= "  |> first()\n";
-                        break;
-                    case 'last':
-                        $fluxQuery .= "  |> last()\n";
-                        break;
-                    case 'stddev':
-                        $fluxQuery .= "  |> stddev()\n";
-                        break;
-                    default:
-                        // For custom or unsupported aggregations, try to use them directly
-                        $fluxQuery .= "  |> {$aggregation}()\n";
-                }
-            }
-        }
-
-        // Add grouping
-        if (!empty($query->getGroupBy())) {
-            $groupCols = array_map(function($col) {
-                return "\"{$col}\"";
-            }, $query->getGroupBy());
-            $fluxQuery .= "  |> group(columns: [" . implode(', ', $groupCols) . "])\n";
-        }
-
-        // Add ordering (sort)
-        if (!empty($query->getOrderBy())) {
-            foreach ($query->getOrderBy() as $field => $direction) {
-                $desc = strtoupper($direction) === 'DESC' ? 'true' : 'false';
-                $fluxQuery .= "  |> sort(columns: [\"{$field}\"], desc: {$desc})\n";
-            }
-        }
-
-        // Add limit
-        if ($query->getLimit()) {
-            $fluxQuery .= "  |> limit(n: {$query->getLimit()})\n";
-        }
-
-        return $fluxQuery;
-    }
-
-    protected function executeQuery(string $query): array
-    {
-        if (!$this->isConnected()) {
-            throw new QueryException("Not connected to InfluxDB");
-        }
-
-        try {
-            $result = $this->queryApi->query($query, $this->org);
-            $data = [];
-
-            foreach ($result as $table) {
-                foreach ($table->records as $record) {
-                    $values = $record->values;
-                    $data[] = $values;
-                }
-            }
-
-            return $data;
-        } catch (Exception $e) {
-            throw new QueryException("Query execution failed: " . $e->getMessage());
         }
     }
 
@@ -286,7 +133,26 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
      */
     public function rawQuery(RawQueryContract $query): QueryResult
     {
-        $result = $this->executeQuery($query->getRawQuery());
+        if (!$this->isConnected()) {
+            throw new QueryException("Not connected to InfluxDB");
+        }
+
+        try {
+            $result1 = $this->queryApi->query($query->getRawQuery(), $this->org);
+            $data = [];
+
+            foreach ($result1 as $table) {
+                foreach ($table->records as $record) {
+                    $values = $record->values;
+                    $data[] = $values;
+                }
+            }
+
+            $executeQuery = $data;
+        } catch (Exception $e) {
+            throw new QueryException("Query execution failed: " . $e->getMessage());
+        }
+        $result = $executeQuery;
         return new QueryResult($result);
     }
 
@@ -318,7 +184,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             /** @var BucketsService $bucketsService */
             $bucketsService = $this->client->createService(BucketsService::class);
             $buckets = $bucketsService->getBuckets(org_id: $this->getOrgId());
-            
+
             $bucketNames = [];
             foreach ($buckets->getBuckets() as $bucket) {
                 $bucketNames[] = $bucket->getName();

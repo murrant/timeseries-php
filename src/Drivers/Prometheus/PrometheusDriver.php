@@ -1,53 +1,22 @@
 <?php
 
-namespace Prometheus;
+namespace TimeSeriesPhp\Drivers\Prometheus;
 
 use TimeSeriesPhp\Core\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\QueryResult;
-use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Core\RawQueryContract;
+use function time;
 
 class PrometheusDriver extends AbstractTimeSeriesDB
 {
     protected function doConnect(): bool
     {
+        // Initialize the query builder
+        $this->queryBuilder = new PrometheusQueryBuilder();
+
         $this->connected = true;
         return true;
-    }
-
-    protected function buildQuery(Query $query): string
-    {
-        // Prometheus uses PromQL
-        $metric = $query->getMeasurement();
-        $filters = [];
-
-        foreach ($query->getTags() as $label => $value) {
-            $filters[] = "{$label}=\"{$value}\"";
-        }
-
-        $filterStr = empty($filters) ? '' : '{' . implode(',', $filters) . '}';
-
-        if ($query->getAggregation()) {
-            return "{$query->getAggregation()}({$metric}{$filterStr})";
-        }
-
-        return $metric . $filterStr;
-    }
-
-    protected function executeQuery(string $query): array
-    {
-        // Mock Prometheus query result
-        return [
-            ['metric' => ['__name__' => 'cpu_usage'], 'value' => [time(), '0.75']]
-        ];
-    }
-
-    protected function formatDataPoint(DataPoint $dataPoint): string
-    {
-        // Prometheus doesn't typically accept writes via this interface
-        // Usually done via exposition format or push gateway
-        return '';
     }
 
     public function write(DataPoint $dataPoint): bool
@@ -58,7 +27,11 @@ class PrometheusDriver extends AbstractTimeSeriesDB
 
     public function rawQuery(RawQueryContract $query): QueryResult
     {
-        $result = $this->executeQuery($query->getRawQuery());
+        // Mock Prometheus query result
+        $result = [
+            ['metric' => ['__name__' => 'cpu_usage'], 'value' => [time(), '0.75']]
+        ];
+
         return new QueryResult($result);
     }
 

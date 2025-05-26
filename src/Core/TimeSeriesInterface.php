@@ -11,6 +11,7 @@ interface TimeSeriesInterface
     public function write(DataPoint $dataPoint): bool;
     /** @param DataPoint[] $dataPoints */
     public function writeBatch(array $dataPoints): bool;
+    /** @throws QueryException */
     public function query(Query $query): QueryResult;
     /** @throws QueryException */
     public function rawQuery(RawQueryContract $query): QueryResult;
