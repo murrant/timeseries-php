@@ -3,9 +3,9 @@
 namespace TimeSeriesPhp\Support;
 
 use Prometheus\PrometheusDriver;
-use RRDtool\RRDtoolDriver;
 use TimeSeriesPhp\Core\TSDBFactory;
 use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
+use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
 
 class TimeSeriesProvider
 {
