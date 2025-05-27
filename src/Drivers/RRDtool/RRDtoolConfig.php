@@ -5,6 +5,7 @@ namespace TimeSeriesPhp\Drivers\RRDtool;
 use TimeSeriesPhp\Config\AbstractDriverConfig;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyContract;
+use TimeSeriesPhp\Exceptions\ConfigurationException;
 
 class RRDtoolConfig extends AbstractDriverConfig
 {
@@ -70,11 +71,17 @@ class RRDtoolConfig extends AbstractDriverConfig
 
     /**
      * Get the tag strategy instance
+     * @throws ConfigurationException
      */
     public function getTagStrategy(): RRDTagStrategyContract
     {
         $strategyClass = $this->get('tag_strategy');
+        $instance = new $strategyClass;
 
-        return new $strategyClass;
+        if (! $instance instanceof RRDTagStrategyContract) {
+            throw new ConfigurationException('Invalid tag strategy class, must implement RRDTagStrategyContract');
+        }
+
+        return $instance;
     }
 }

@@ -59,7 +59,7 @@ class FolderStrategy implements RRDTagStrategyContract
         if (empty($tagConditions)) {
             $path = implode(File::DIRECTORY_SEPARATOR, array_fill(0, count($this->folderTags), '*'));
 
-            return glob($this->baseDir.$path.File::DIRECTORY_SEPARATOR.$measurement.'*.rrd');
+            return glob($this->baseDir.$path.File::DIRECTORY_SEPARATOR.$measurement.'*.rrd') ?: [];
         }
 
         $files = [];

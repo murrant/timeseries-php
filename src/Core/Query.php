@@ -355,7 +355,7 @@ class Query
 
     public function orderBy(string $field, string $direction = 'ASC'): self
     {
-        $this->orderBy[$field] = strtoupper($direction);
+        $this->orderBy[$field] = strtoupper($direction) == 'DESC' ? 'DESC' : 'ASC';
 
         return $this;
     }

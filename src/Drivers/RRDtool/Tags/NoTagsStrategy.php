@@ -34,13 +34,13 @@ class NoTagsStrategy implements RRDTagStrategyContract
 
     public function findMeasurementsByTags(array $tagConditions): array
     {
-        return array_map(fn ($file) => basename($file, '.rrd'), glob($this->baseDir.'*.rrd'));
+        return array_map(fn ($file) => basename($file, '.rrd'), glob($this->baseDir.'*.rrd') ?: []);
     }
 
     public function resolveFilePaths(string $measurement, array $tagConditions): array
     {
         $measurement = File::sanitize($measurement);
 
-        return glob($this->baseDir.$measurement.'*.rrd');
+        return glob($this->baseDir.$measurement.'*.rrd') ?: [];
     }
 }

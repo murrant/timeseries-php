@@ -50,7 +50,12 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         }
 
         $tagStrategyClass = $this->config->get('tag_strategy');
-        $this->tagStrategy = new $tagStrategyClass($this->rrdDir);
+        $instance = new $tagStrategyClass($this->rrdDir);
+        if (! $instance instanceof RRDTagStrategyContract) {
+            throw new ConnectionException('Invalid tag strategy class, must implement RRDTagStrategyContract');
+        }
+
+        $this->tagStrategy = $instance;
         $this->queryBuilder = new RRDtoolQueryBuilder($this->tagStrategy);
 
         $this->connected = true;

@@ -47,7 +47,7 @@ class PrometheusDriverTest extends TestCase
         $configResponse = new Response(200, [], json_encode([
             'status' => 'success',
             'data' => ['some' => 'config'],
-        ]));
+        ]) ?: json_last_error_msg());
 
         // Sample response for query endpoint
         $queryResponse = new Response(200, [], json_encode([
@@ -64,7 +64,7 @@ class PrometheusDriverTest extends TestCase
                     ],
                 ],
             ],
-        ]));
+        ]) ?: json_last_error_msg());
 
         // Configure the mock client to return appropriate responses
         $mockClient->method('get')

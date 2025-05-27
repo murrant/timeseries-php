@@ -80,7 +80,7 @@ class PrometheusQueryBuilder implements QueryBuilderContract
             $function = strtolower($agg['function']);
 
             // Map common aggregation functions to Prometheus functions
-            switch (substr($function, 0, strpos($function, '_'))) {
+            switch (substr($function, 0, strpos($function, '_') ?: null)) {
                 case 'avg':
                 case 'mean':
                     $promqlQuery = "avg({$metricSelector})";

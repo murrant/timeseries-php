@@ -34,7 +34,7 @@ class FileNameStrategy implements RRDTagStrategyContract
     public function resolveFilePaths(string $measurement, array $tagConditions): array
     {
         if (empty($tagConditions)) {
-            return glob($this->baseDir.$measurement.'*.rrd');
+            return glob($this->baseDir.$measurement.'*.rrd') ?: [];
         }
 
         $files = [];

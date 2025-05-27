@@ -126,7 +126,7 @@ class RRDtoolRawQuery implements RawQueryContract
 
         foreach ($this->data as $data) {
             if ($data[0] === 'XPORT') {
-                $fields[] = substr($data[1], 0, strpos($data[1], ':'));
+                $fields[] = substr($data[1], 0, strpos($data[1], ':') ?: null);
             }
         }
 

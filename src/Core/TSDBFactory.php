@@ -11,14 +11,21 @@ class TSDBFactory
     /** @var array<string, class-string> */
     private static array $drivers = [];
 
+    /**
+     * @param class-string|string $className
+     * @throws DriverException
+     */
     public static function registerDriver(string $name, string $className): void
     {
+        if (! is_subclass_of($className, TimeSeriesInterface::class)) {
+            throw new DriverException('Driver class must implement TimeSeriesInterface');
+        }
+
         self::$drivers[$name] = $className;
     }
 
     /**
      * @throws DriverException
-     * @throws ConfigurationException
      */
     public static function create(string $driver, ConfigInterface $config): TimeSeriesInterface
     {

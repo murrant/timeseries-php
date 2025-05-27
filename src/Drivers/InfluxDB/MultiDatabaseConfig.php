@@ -81,7 +81,7 @@ class MultiDatabaseConfig extends AbstractDriverConfig
     }
 
     /**
-     * @return string[]
+     * @return list<int|string>
      */
     public function getConnectionNames(): array
     {

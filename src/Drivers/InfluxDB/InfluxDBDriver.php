@@ -6,7 +6,9 @@ use DateTime;
 use Exception;
 use InfluxDB2\Client;
 use InfluxDB2\Model\BucketRetentionRules;
+use InfluxDB2\Model\Buckets;
 use InfluxDB2\Model\DeletePredicateRequest;
+use InfluxDB2\Model\Organizations;
 use InfluxDB2\Model\PostBucketRequest;
 use InfluxDB2\Point;
 use InfluxDB2\QueryApi;
@@ -14,6 +16,7 @@ use InfluxDB2\Service\BucketsService;
 use InfluxDB2\Service\DeleteService;
 use InfluxDB2\Service\OrganizationsService;
 use InfluxDB2\WriteApi;
+use RuntimeException;
 use TimeSeriesPhp\Core\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\QueryResult;
@@ -170,7 +173,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     public function createDatabase(string $database): bool
     {
         try {
-            $this->bucketsService ??= $this->client->createService(BucketsService::class);
+            $bucketsService = $this->getBucketsService();
 
             $rule = new BucketRetentionRules;
             $rule->setEverySeconds(0); // No expiration
@@ -179,7 +182,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             $bucketRequest->setName($database)
                 ->setRetentionRules([$rule])
                 ->setOrgId($this->getOrgId());
-            $this->bucketsService->postBuckets($bucketRequest);
+            $bucketsService->postBuckets($bucketRequest);
 
             return true;
         } catch (Exception $e) {
@@ -195,8 +198,11 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     public function listDatabases(): array
     {
         try {
-            $this->bucketsService ??= $this->client->createService(BucketsService::class);
-            $buckets = $this->bucketsService->getBuckets(org_id: $this->getOrgId());
+            $bucketsService = $this->getBucketsService();
+            $buckets = $bucketsService->getBuckets(org_id: $this->getOrgId());
+            if (! $buckets instanceof Buckets) {
+                throw new RuntimeException('Invalid object returned from getBuckets');
+            }
 
             $bucketNames = [];
             foreach ($buckets->getBuckets() as $bucket) {
@@ -257,7 +263,16 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     {
         if ($this->orgId === null) {
             $orgService = $this->client->createService(OrganizationsService::class);
-            $orgs = $orgService->getOrgs()->getOrgs();
+            if (! $orgService instanceof OrganizationsService) {
+                throw new RuntimeException('Failed to create OrganizationsService');
+            }
+
+            $organizations = $orgService->getOrgs();
+            if (! $organizations instanceof Organizations) {
+                throw new RuntimeException('Invalid object returned from getOrgs');
+            }
+
+            $orgs = $organizations->getOrgs();
 
             foreach ($orgs as $org) {
                 if ($org->getName() == $this->org) {
@@ -271,6 +286,21 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
         }
 
         return $this->orgId;
+    }
+
+    private function getBucketsService(): BucketsService
+    {
+        if ($this->bucketsService === null) {
+            $service = $this->client->createService(BucketsService::class);
+
+            if (! $service instanceof BucketsService) {
+                throw new RuntimeException('Failed to create BucketsService');
+            }
+
+            $this->bucketsService = $service;
+        }
+
+        return $this->bucketsService;
     }
 
     public function close(): void

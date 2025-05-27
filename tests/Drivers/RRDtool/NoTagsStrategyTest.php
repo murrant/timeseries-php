@@ -26,7 +26,7 @@ class NoTagsStrategyTest extends TestCase
     protected function tearDown(): void
     {
         // Clean up temporary files and directory
-        $files = glob($this->baseDir.'*.rrd');
+        $files = glob($this->baseDir.'*.rrd') ?: [];
         foreach ($files as $file) {
             unlink($file);
         }
