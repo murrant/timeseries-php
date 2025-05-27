@@ -21,24 +21,60 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
     public function build(Query $query): RawQueryContract
     {
         $rawQuery = new RRDtoolRawQuery();
+        $measurement = $query->getMeasurement();
+        $tags = $query->getTags();
+        $fields = $query->getFields();
+        $startTime = $query->getStartTime();
+        $endTime = $query->getEndTime();
+        $aggregation = $query->getAggregation();
 
-        // create rrdtool command
+        // Get the RRD file path
+        $rrdPath = $this->getRRDPath($measurement, $tags);
+
+        // Set the start and end time parameters
+        if ($startTime) {
+            $rawQuery->param('--start', $startTime->format('U'));
+        } else {
+            // Default to last hour if not specified
+            $rawQuery->param('--start', 'end-1h');
+        }
+
+        if ($endTime) {
+            $rawQuery->param('--end', $endTime->format('U'));
+        }
+
+        // Add the RRD file path
+        $rawQuery->param($rrdPath);
+
+        // Map the aggregation function to RRDtool consolidation function
+        $cf = $this->mapAggregationToConsolidationFunction($aggregation);
+
+        // Add data definitions (DEFs) and export definitions (XPORTs)
+        // If specific fields are requested, use only those, otherwise use all
+        if (!empty($fields) && !in_array('*', $fields)) {
+            foreach ($fields as $field) {
+                $varName = 'v' . md5($field);
+                $rawQuery->param('DEF', $varName . '=' . $rrdPath . ':' . $field . ':' . $cf);
+                $rawQuery->param('XPORT', $varName . ':' . $field);
+            }
+        } else {
+            // We'll need to determine available fields from the RRD file
+            // For now, we'll use a placeholder approach
+            $rawQuery->param('DEF', 'v1=' . $rrdPath . ':value:' . $cf);
+            $rawQuery->param('XPORT', 'v1:value');
+        }
 
         return $rawQuery;
     }
 
     private function mapAggregationToConsolidationFunction(?string $aggregation): string
     {
-        $mapping = [
-            'avg' => 'AVERAGE',
-            'mean' => 'AVERAGE',
-            'average' => 'AVERAGE',
+        return match (strtolower($aggregation ?? 'average')) {
             'max' => 'MAX',
             'min' => 'MIN',
-            'last' => 'LAST'
-        ];
-
-        return $mapping[strtolower($aggregation ?? 'average')] ?? 'AVERAGE';
+            'last' => 'LAST',
+            default => 'AVERAGE',
+        };
     }
 
     private function getRRDPath(string $measurement, array $tags = []): string
