@@ -2,45 +2,43 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 
+use TimeSeriesPhp\Utils\File;
+
 class NoTagsStrategy implements RRDTagStrategyContract
 {
-    /**
-     * @var array Configuration for the strategy
-     */
-    private array $config = [];
+    protected string $folderSeparator = '/';
+
+    public function __construct(
+        public readonly string $baseDir
+    ) {
+        if (! str_ends_with($this->baseDir, $this->folderSeparator)) {
+            throw new \InvalidArgumentException('Base directory must end with a slash');
+        }
+    }
+
+    public function getBaseDir(): string
+    {
+        return $this->baseDir;
+    }
 
     /**
      * @inheritDoc
      */
-    public function getFilePath(string $measurement, array $tags, string $baseDir): string
+    public function getFilePath(string $measurement, array $tags = []): string
     {
         // Ignore tags, use only measurement name
-        $filename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $measurement);
-        return $baseDir . '/' . $filename . '.rrd';
+        $measurement = File::sanitize($measurement);
+        return $this->baseDir . $measurement . '.rrd';
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function findFilesByTags(array $tags, string $baseDir): array
+    public function findMeasurementsByTags(array $tagConditions): array
     {
-        // This strategy doesn't use tags, so it can't find files by tags
-        return [];
+        return array_map(fn($file) => basename($file, '.rrd'), glob($this->baseDir . '*.rrd'));
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function getConfig(): array
+    public function resolveFilePaths(string $measurement, array $tagConditions): array
     {
-        return $this->config;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function setConfig(array $config): void
-    {
-        $this->config = array_merge($this->config, $config);
+        $measurement = File::sanitize($measurement);
+        return glob($this->baseDir . $measurement . '*.rrd');
     }
 }

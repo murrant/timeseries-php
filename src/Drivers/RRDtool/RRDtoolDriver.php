@@ -5,7 +5,6 @@ namespace TimeSeriesPhp\Drivers\RRDtool;
 use Exception;
 use TimeSeriesPhp\Core\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Core\DataPoint;
-use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Core\QueryResult;
 use TimeSeriesPhp\Core\RawQueryContract;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyContract;
@@ -48,7 +47,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         }
 
         $tagStrategyClass = $this->config->get('tag_strategy');
-        $this->tagStrategy = new $tagStrategyClass();
+        $this->tagStrategy = new $tagStrategyClass($this->rrdDir);
         $this->queryBuilder = new RRDtoolQueryBuilder($this->tagStrategy, $this->rrdDir);
 
         $this->connected = true;
@@ -376,10 +375,5 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         }
 
         return $outputPath;
-    }
-
-    protected function buildQuery(Query $query): RawQueryContract
-    {
-        // TODO: Implement buildQuery() method.
     }
 }

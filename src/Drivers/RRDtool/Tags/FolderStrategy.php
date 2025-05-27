@@ -2,101 +2,85 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 
+use TimeSeriesPhp\Utils\File;
+
 class FolderStrategy implements RRDTagStrategyContract
 {
-    /**
-     * @var array Configuration for the strategy
-     */
-    private array $config = [
-        'folder_tags' => [],        // Tags to use for folders
-        'filename_tags' => [],      // Tags to include in filename (empty means all remaining tags)
-        'folder_separator' => '/',  // Separator for folders
-        'filename_separator' => '_', // Separator for filename parts
-        'tag_separator' => '-',     // Separator between tag key and value
-    ];
+    use EncodesTagsInFilename;
 
-    /**
-     * @inheritDoc
-     */
-    public function getFilePath(string $measurement, array $tags, string $baseDir): string
+    protected string $folderSeparator = '/';
+    protected string $filenameSeparator = '_';
+    protected string $tagSeparator = '-';
+
+    /** @param string[] $folderTags */
+    public function __construct(
+        public readonly string $baseDir,
+        protected array $folderTags = [],
+    ) {
+        if (! str_ends_with($this->baseDir, $this->folderSeparator)) {
+            throw new \InvalidArgumentException('Base directory must end with a slash');
+        }
+    }
+
+    public function getBaseDir(): string
     {
-        $path = $baseDir;
-        $filenameTags = $tags;
-
-        // Process folder tags
-        if (!empty($this->config['folder_tags']) && !empty($tags)) {
-            foreach ($this->config['folder_tags'] as $folderTag) {
-                if (isset($tags[$folderTag])) {
-                    $tagValue = preg_replace('/[^a-zA-Z0-9_-]/', '_', $tags[$folderTag]);
-                    $path .= '/' . $folderTag . $this->config['tag_separator'] . $tagValue;
-                    unset($filenameTags[$folderTag]);
-                }
-            }
-        }
-
-        // Create directories if they don't exist
-        if (!is_dir($path) && $path !== $baseDir) {
-            mkdir($path, 0755, true);
-        }
-
-        // Process filename
-        $filename = $measurement;
-
-        // Filter filename tags if specified
-        if (!empty($this->config['filename_tags'])) {
-            $filenameTags = array_intersect_key($filenameTags, array_flip($this->config['filename_tags']));
-        }
-
-        // Add tags to filename
-        if (!empty($filenameTags)) {
-            ksort($filenameTags); // Ensure consistent naming
-            $tagStr = implode($this->config['filename_separator'], array_map(function($k, $v) {
-                return "{$k}{$this->config['tag_separator']}{$v}";
-            }, array_keys($filenameTags), array_values($filenameTags)));
-            $filename .= $this->config['filename_separator'] . $tagStr;
-        }
-
-        // Sanitize filename
-        $filename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $filename);
-        return $path . '/' . $filename . '.rrd';
+        return $this->baseDir;
     }
 
     /**
      * @inheritDoc
      */
-    public function findFilesByTags(array $tags, string $baseDir): array
+    public function getFilePath(string $measurement, array $tags = []): string
     {
+        $path = $this->baseDir;
+        $filenameTags = $tags;
+
+        // Process folder tags
+        if (!empty($this->folderTags) && !empty($tags)) {
+            foreach ($this->folderTags as $folderTag) {
+                $tagValue = isset($tags[$folderTag])
+                    ? File::sanitize($tags[$folderTag])
+                    : '_unset';
+                $path .= $tagValue . $this->folderSeparator;
+            }
+        }
+
+        // Create directories if they don't exist
+        if (! is_dir($path) && $path !== $this->baseDir) {
+            mkdir($path, 0755, true);
+        }
+
+        // Process filename
+        $filenameTags = array_diff_key($filenameTags, array_flip($this->folderTags));
+        $filename = $this->encodeTags($measurement, $filenameTags, $this->tagSeparator, $this->filenameSeparator);
+
+
+        return $path . $filename . '.rrd';
+    }
+
+    public function resolveFilePaths(string $measurement, array $tagConditions): array
+    {
+        // find all
         if (empty($tags)) {
-            return [];
+            $path = implode($this->folderSeparator, array_fill(0, count($this->folderTags), '*'));
+            return glob($this->baseDir . $path . $this->folderSeparator . $measurement . '*.rrd');
         }
 
         $files = [];
-        $folderTags = [];
-        $filenameTags = [];
+        $baseFolderTags = [];
 
-        // Separate folder tags and filename tags
-        foreach ($tags as $tagName => $tagValue) {
-            if (in_array($tagName, $this->config['folder_tags'])) {
-                $folderTags[$tagName] = $tagValue;
-            } else {
-                $filenameTags[$tagName] = $tagValue;
-            }
-        }
-
-        // Build the path based on folder tags
-        $searchPath = $baseDir;
-        if (!empty($folderTags)) {
-            foreach ($this->config['folder_tags'] as $folderTag) {
-                if (isset($folderTags[$folderTag])) {
-                    $tagValue = preg_replace('/[^a-zA-Z0-9_-]/', '_', $folderTags[$folderTag]);
-                    $searchPath .= '/' . $folderTag . $this->config['tag_separator'] . $tagValue;
+        // optimize search path if possible
+        $searchPath = $this->baseDir;
+        foreach ($this->folderTags as $folderTag) {
+            foreach ($tagConditions as $index => $tagCondition) {
+                if ($tagCondition->tag === $folderTag && $tagCondition->operator === '=') {
+                    $searchPath .= $tagCondition->value . $this->folderSeparator;
+                    $baseFolderTags[$index] = $tagCondition->value;
+                    continue 2;
                 }
             }
-        }
 
-        // If we have folder tags, search only in that directory
-        if (!empty($folderTags) && !is_dir($searchPath)) {
-            return []; // Directory doesn't exist, no matches
+            break;
         }
 
         // Recursively search for files
@@ -106,18 +90,16 @@ class FolderStrategy implements RRDTagStrategyContract
         foreach ($iterator as $file) {
             if ($file->isFile() && $file->getExtension() === 'rrd') {
                 $filename = $file->getBasename('.rrd');
-
-                // Check if all filename tags are present
-                $allTagsFound = true;
-                foreach ($filenameTags as $tagName => $tagValue) {
-                    $tagPattern = $tagName . $this->config['tag_separator'] . $tagValue;
-                    if (strpos($filename, $tagPattern) === false) {
-                        $allTagsFound = false;
-                        break;
-                    }
+                if (! str_starts_with($filename, $measurement)) {
+                    continue;
                 }
 
-                if ($allTagsFound) {
+                $filenameTags = $this->parseTags($filename);
+                $relativePath = substr($file->getPath(), strlen($searchPath));
+                $folderTags = $this->getFolderTags($baseFolderTags, $relativePath);
+                $tags = array_merge($folderTags, $filenameTags);
+
+                if (TagSearch::search($tags, $tagConditions)) {
                     $files[] = $file->getPathname();
                 }
             }
@@ -126,19 +108,27 @@ class FolderStrategy implements RRDTagStrategyContract
         return $files;
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function getConfig(): array
+    public function findMeasurementsByTags(array $tagConditions): array
     {
-        return $this->config;
+        $files = $this->resolveFilePaths('', $tagConditions);
+
+        return $this->parseMeasurements($files);
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function setConfig(array $config): void
+    private function getFolderTags(array $baseFolderTags, string $relativePath): array
     {
-        $this->config = array_merge($this->config, $config);
+        $currentFolderTags = $baseFolderTags;
+        if ($relativePath) {
+            $pathParts = explode($this->folderSeparator, trim($relativePath, $this->folderSeparator));
+            $folderTagIndex = count($baseFolderTags); // Continue from where optimization left off
+
+            foreach ($pathParts as $pathPart) {
+                if ($folderTagIndex < count($this->folderTags)) {
+                    $currentFolderTags[$this->folderTags[$folderTagIndex]] = $pathPart;
+                    $folderTagIndex++;
+                }
+            }
+        }
+        return $currentFolderTags;
     }
 }
