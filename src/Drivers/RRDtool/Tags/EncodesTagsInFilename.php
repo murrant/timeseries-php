@@ -2,28 +2,40 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 
+use TimeSeriesPhp\Exceptions\RRDtoolFilenameTooLongException;
 use TimeSeriesPhp\Utils\File;
 
 trait EncodesTagsInFilename
 {
-    protected function encodeTags(string $measurement, array $tags, string $tagValueSeparator = '-', string $tagSeparator = '_'): string
+    protected function encodeTags(string $measurement, array $tags): string
     {
         $filename = $measurement;
 
         if (! empty($tags)) {
             ksort($tags); // Ensure consistent naming
-            $tagStr = implode($tagSeparator, array_map(function($k, $v) use ($tagValueSeparator) {
-                return "{$k}{$tagValueSeparator}{$v}";
+            $tagStr = implode(File::TAG_SEPARATOR, array_map(function($k, $v) {
+                $k = File::sanitizeTag($k);
+                $v = File::sanitizeTag($v);
+                return $k . File::TAG_VALUE_SEPARATOR . $v;
             }, array_keys($tags), array_values($tags)));
-            $filename .= $tagSeparator . $tagStr;
+            $filename .= File::TAG_SEPARATOR . $tagStr;
         }
 
-        return File::sanitize($filename . '.rrd');
+        $filename = File::sanitize($filename . '.rrd');
+        
+        if (strlen($filename) > 255) {
+            throw new RRDtoolFilenameTooLongException("RRDtool filename too long: $filename");
+        }
+        
+        return $filename;
     }
 
     protected function parseTags(string $filename): array
     {
-        preg_match_all("/(\\w+)$this->tagSeparator(\\w+)/", $filename, $matches);
+        // should no contain suffix
+        $tagChars = '([^' . File::TAG_SEPARATOR . File::TAG_VALUE_SEPARATOR . ']+)';
+        $regex = '#' . $tagChars . File::TAG_VALUE_SEPARATOR . $tagChars . '#';
+        preg_match_all($regex, $filename, $matches);
 
         return array_combine($matches[1], $matches[2]);
     }
@@ -32,8 +44,9 @@ trait EncodesTagsInFilename
     {
         return array_unique(array_map(function ($filename) {
             $basename = basename($filename, '.rrd');
-            $parts = explode($this->filenameSeparator, $basename);
-            return $parts[0] ?? $basename;
+            $part = substr($basename, 0, strpos($basename, File::TAG_VALUE_SEPARATOR));
+
+            return substr($part, 0, strrpos($part, File::TAG_SEPARATOR));
         }, $filenames));
     }
 }

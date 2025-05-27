@@ -8,16 +8,12 @@ class FolderStrategy implements RRDTagStrategyContract
 {
     use EncodesTagsInFilename;
 
-    protected string $folderSeparator = '/';
-    protected string $filenameSeparator = '_';
-    protected string $tagSeparator = '-';
-
     /** @param string[] $folderTags */
     public function __construct(
         public readonly string $baseDir,
         protected array $folderTags = [],
     ) {
-        if (! str_ends_with($this->baseDir, $this->folderSeparator)) {
+        if (! str_ends_with($this->baseDir, File::DIRECTORY_SEPARATOR)) {
             throw new \InvalidArgumentException('Base directory must end with a slash');
         }
     }
@@ -41,7 +37,7 @@ class FolderStrategy implements RRDTagStrategyContract
                 $tagValue = isset($tags[$folderTag])
                     ? File::sanitize($tags[$folderTag])
                     : '_unset';
-                $path .= $tagValue . $this->folderSeparator;
+                $path .= $tagValue . File::DIRECTORY_SEPARATOR;
             }
         }
 
@@ -52,18 +48,17 @@ class FolderStrategy implements RRDTagStrategyContract
 
         // Process filename
         $filenameTags = array_diff_key($filenameTags, array_flip($this->folderTags));
-        $filename = $this->encodeTags($measurement, $filenameTags, $this->tagSeparator, $this->filenameSeparator);
+        $filename = $this->encodeTags($measurement, $filenameTags);
 
-
-        return $path . $filename . '.rrd';
+        return $path . $filename;
     }
 
     public function resolveFilePaths(string $measurement, array $tagConditions): array
     {
         // find all
-        if (empty($tags)) {
-            $path = implode($this->folderSeparator, array_fill(0, count($this->folderTags), '*'));
-            return glob($this->baseDir . $path . $this->folderSeparator . $measurement . '*.rrd');
+        if (empty($tagConditions)) {
+            $path = implode(File::DIRECTORY_SEPARATOR, array_fill(0, count($this->folderTags), '*'));
+            return glob($this->baseDir . $path . File::DIRECTORY_SEPARATOR . $measurement . '*.rrd');
         }
 
         $files = [];
@@ -71,11 +66,26 @@ class FolderStrategy implements RRDTagStrategyContract
 
         // optimize search path if possible
         $searchPath = $this->baseDir;
-        foreach ($this->folderTags as $folderTag) {
-            foreach ($tagConditions as $index => $tagCondition) {
+        foreach ($this->folderTags as $index => $folderTag) {
+            // Check if there are any OR conditions for this folder tag
+            $hasOrCondition = false;
+            foreach ($tagConditions as $tagCondition) {
+                if ($tagCondition->tag === $folderTag && $tagCondition->condition === 'OR') {
+                    $hasOrCondition = true;
+                    break;
+                }
+            }
+
+            // If there are OR conditions for this folder tag, we can't optimize the search path
+            if ($hasOrCondition) {
+                break;
+            }
+
+            // Look for an exact match for this folder tag
+            foreach ($tagConditions as $tagCondition) {
                 if ($tagCondition->tag === $folderTag && $tagCondition->operator === '=') {
-                    $searchPath .= $tagCondition->value . $this->folderSeparator;
-                    $baseFolderTags[$index] = $tagCondition->value;
+                    $searchPath .= $tagCondition->value . File::DIRECTORY_SEPARATOR;
+                    $baseFolderTags[$folderTag] = $tagCondition->value;
                     continue 2;
                 }
             }
@@ -119,7 +129,7 @@ class FolderStrategy implements RRDTagStrategyContract
     {
         $currentFolderTags = $baseFolderTags;
         if ($relativePath) {
-            $pathParts = explode($this->folderSeparator, trim($relativePath, $this->folderSeparator));
+            $pathParts = explode(File::DIRECTORY_SEPARATOR, trim($relativePath, File::DIRECTORY_SEPARATOR));
             $folderTagIndex = count($baseFolderTags); // Continue from where optimization left off
 
             foreach ($pathParts as $pathPart) {

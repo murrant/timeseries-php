@@ -2,18 +2,16 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 
+use TimeSeriesPhp\Utils\File;
+
 class FileNameStrategy implements RRDTagStrategyContract
 {
     use EncodesTagsInFilename;
 
-    protected string $folderSeparator = '/';
-    protected string $filenameSeparator = '_';
-    protected string $tagSeparator = '-';
-
     public function __construct(
         public readonly string $baseDir
     ) {
-        if (! str_ends_with($this->baseDir, $this->folderSeparator)) {
+        if (! str_ends_with($this->baseDir, File::DIRECTORY_SEPARATOR)) {
             throw new \InvalidArgumentException('Base directory must end with a slash');
         }
     }
@@ -28,7 +26,7 @@ class FileNameStrategy implements RRDTagStrategyContract
      */
     public function getFilePath(string $measurement, array $tags = []): string
     {
-        $filename = $this->encodeTags($measurement, $tags, $this->tagSeparator, $this->filenameSeparator);
+        $filename = $this->encodeTags($measurement, $tags);
 
         return $this->baseDir . $filename;
     }
