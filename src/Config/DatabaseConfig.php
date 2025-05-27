@@ -21,7 +21,7 @@ class DatabaseConfig extends AbstractConfig
 
     public function __construct(array $config = [])
     {
-        $this->addValidator('port', fn($port) => is_int($port) && $port > 0 && $port <= 65535);
+        $this->addValidator('port', fn($port) => is_null($port) || (is_int($port) && $port > 0 && $port <= 65535));
         $this->addValidator('timeout', fn($timeout) => is_int($timeout) && $timeout > 0);
         $this->addValidator('retry_attempts', fn($attempts) => is_int($attempts) && $attempts >= 0);
         $this->addValidator('retry_delay', fn($delay) => is_int($delay) && $delay >= 0);
