@@ -47,18 +47,60 @@ class TSDBFactoryTest extends TestCase
 
     public function test_create_with_valid_driver()
     {
-        // Create a mock driver and config
-        $mockDriver = $this->createMock(TimeSeriesInterface::class);
+        // Create a mock config
         $mockConfig = $this->createMock(ConfigInterface::class);
 
-        // Configure the mock to expect connect() to be called once and return true
-        $mockDriver->expects($this->once())
-            ->method('connect')
-            ->with($mockConfig)
-            ->willReturn(true);
+        // Create a mock driver class
+        $mockDriverClass = 'TimeSeriesPhp\Tests\Core\MockDriver';
 
-        // Create a mock driver class that returns our configured mock
-        $mockDriverClass = get_class($mockDriver);
+        // Create the mock driver class if it doesn't exist
+        if (!class_exists($mockDriverClass)) {
+            eval('
+                namespace TimeSeriesPhp\Tests\Core;
+
+                use TimeSeriesPhp\Core\TimeSeriesInterface;
+                use TimeSeriesPhp\Config\ConfigInterface;
+
+                class MockDriver implements TimeSeriesInterface {
+                    public static $connectCalled = false;
+
+                    public function connect(ConfigInterface $config): bool {
+                        self::$connectCalled = true;
+                        return true;
+                    }
+
+                    public function query(\TimeSeriesPhp\Core\Query $query): \TimeSeriesPhp\Core\QueryResult {
+                        return new \TimeSeriesPhp\Core\QueryResult([]);
+                    }
+
+                    public function rawQuery(\TimeSeriesPhp\Core\RawQueryContract $query): \TimeSeriesPhp\Core\QueryResult {
+                        return new \TimeSeriesPhp\Core\QueryResult([]);
+                    }
+
+                    public function write(\TimeSeriesPhp\Core\DataPoint $dataPoint): bool {
+                        return true;
+                    }
+
+                    public function writeBatch(array $dataPoints): bool {
+                        return true;
+                    }
+
+                    public function createDatabase(string $database): bool {
+                        return true;
+                    }
+
+                    public function listDatabases(): array {
+                        return [];
+                    }
+
+                    public function close(): void {
+                    }
+                }
+            ');
+        }
+
+        // Reset the static flag
+        $mockDriverClass::$connectCalled = false;
 
         // Register the driver
         TSDBFactory::registerDriver('mock', $mockDriverClass);
@@ -66,8 +108,11 @@ class TSDBFactoryTest extends TestCase
         // Create an instance using the factory
         $instance = TSDBFactory::create('mock', $mockConfig);
 
-        // Verify the instance is our mock
+        // Verify the instance is our mock class
         $this->assertInstanceOf($mockDriverClass, $instance);
+
+        // Verify connect was called
+        $this->assertTrue($mockDriverClass::$connectCalled, 'connect() method was not called');
     }
 
     public function test_create_with_invalid_driver()

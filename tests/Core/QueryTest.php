@@ -13,11 +13,11 @@ class QueryTest extends TestCase
         $query = new Query('cpu_usage');
         $this->assertEquals('cpu_usage', $query->getMeasurement());
         $this->assertEquals(['*'], $query->getFields());
-        $this->assertEquals([], $query->getTags());
+        $this->assertEquals([], $query->getConditions());
         $this->assertNull($query->getStartTime());
         $this->assertNull($query->getEndTime());
         $this->assertEquals([], $query->getGroupBy());
-        $this->assertNull($query->getAggregation());
+        $this->assertEquals([], $query->getAggregations());
         $this->assertNull($query->getInterval());
         $this->assertNull($query->getLimit());
         $this->assertEquals([], $query->getOrderBy());
@@ -35,14 +35,34 @@ class QueryTest extends TestCase
     public function test_where()
     {
         $query = new Query('cpu_usage');
-        $result = $query->where('host', 'server01');
+        $result = $query->where('host', '=', 'server01');
 
         $this->assertSame($query, $result, 'Method should return $this for chaining');
-        $this->assertEquals(['host' => 'server01'], $query->getTags());
+        $this->assertEquals([
+            [
+                'field' => 'host',
+                'operator' => '=',
+                'value' => 'server01',
+                'type' => 'AND',
+            ]
+        ], $query->getConditions());
 
         // Test multiple where clauses
-        $query->where('region', 'us-west');
-        $this->assertEquals(['host' => 'server01', 'region' => 'us-west'], $query->getTags());
+        $query->where('region', '=', 'us-west');
+        $this->assertEquals([
+            [
+                'field' => 'host',
+                'operator' => '=',
+                'value' => 'server01',
+                'type' => 'AND',
+            ],
+            [
+                'field' => 'region',
+                'operator' => '=',
+                'value' => 'us-west',
+                'type' => 'AND',
+            ]
+        ], $query->getConditions());
     }
 
     public function test_time_range()
@@ -70,17 +90,38 @@ class QueryTest extends TestCase
     public function test_aggregate()
     {
         $query = new Query('cpu_usage');
-        $result = $query->aggregate('mean', '1h');
+        $result = $query->aggregate('mean', 'value');
 
         $this->assertSame($query, $result, 'Method should return $this for chaining');
-        $this->assertEquals('mean', $query->getAggregation());
-        $this->assertEquals('1h', $query->getInterval());
+        $this->assertEquals([
+            [
+                'function' => 'mean',
+                'field' => 'value',
+                'alias' => null,
+            ]
+        ], $query->getAggregations());
 
-        // Test without interval
+        // Test with alias
         $query = new Query('cpu_usage');
-        $query->aggregate('max');
-        $this->assertEquals('max', $query->getAggregation());
-        $this->assertNull($query->getInterval());
+        $query->aggregate('max', 'value', 'max_value');
+        $this->assertEquals([
+            [
+                'function' => 'max',
+                'field' => 'value',
+                'alias' => 'max_value',
+            ]
+        ], $query->getAggregations());
+
+        // Test without field
+        $query = new Query('cpu_usage');
+        $query->aggregate('count');
+        $this->assertEquals([
+            [
+                'function' => 'count',
+                'field' => null,
+                'alias' => null,
+            ]
+        ], $query->getAggregations());
     }
 
     public function test_limit()
@@ -117,21 +158,41 @@ class QueryTest extends TestCase
 
         $query = new Query('cpu_usage');
         $query->select(['usage_user', 'usage_system'])
-            ->where('host', 'server01')
-            ->where('region', 'us-west')
+            ->where('host', '=', 'server01')
+            ->where('region', '=', 'us-west')
             ->timeRange($start, $end)
             ->groupBy(['host'])
-            ->aggregate('mean', '5m')
+            ->groupByTime('5m')
+            ->aggregate('mean', 'usage_user')
             ->limit(100)
             ->orderBy('time', 'DESC');
 
         $this->assertEquals('cpu_usage', $query->getMeasurement());
         $this->assertEquals(['usage_user', 'usage_system'], $query->getFields());
-        $this->assertEquals(['host' => 'server01', 'region' => 'us-west'], $query->getTags());
+        $this->assertEquals([
+            [
+                'field' => 'host',
+                'operator' => '=',
+                'value' => 'server01',
+                'type' => 'AND',
+            ],
+            [
+                'field' => 'region',
+                'operator' => '=',
+                'value' => 'us-west',
+                'type' => 'AND',
+            ]
+        ], $query->getConditions());
         $this->assertSame($start, $query->getStartTime());
         $this->assertSame($end, $query->getEndTime());
         $this->assertEquals(['host'], $query->getGroupBy());
-        $this->assertEquals('mean', $query->getAggregation());
+        $this->assertEquals([
+            [
+                'function' => 'mean',
+                'field' => 'usage_user',
+                'alias' => null,
+            ]
+        ], $query->getAggregations());
         $this->assertEquals('5m', $query->getInterval());
         $this->assertEquals(100, $query->getLimit());
         $this->assertEquals(['time' => 'DESC'], $query->getOrderBy());
