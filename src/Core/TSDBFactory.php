@@ -3,7 +3,6 @@
 namespace TimeSeriesPhp\Core;
 
 use TimeSeriesPhp\Config\ConfigInterface;
-use TimeSeriesPhp\Exceptions\ConfigurationException;
 use TimeSeriesPhp\Exceptions\DriverException;
 
 class TSDBFactory
@@ -12,7 +11,8 @@ class TSDBFactory
     private static array $drivers = [];
 
     /**
-     * @param class-string|string $className
+     * @param  class-string|string  $className
+     *
      * @throws DriverException
      */
     public static function registerDriver(string $name, string $className): void

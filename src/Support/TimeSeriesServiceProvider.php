@@ -51,8 +51,9 @@ class TimeSeriesServiceProvider extends ServiceProvider
 
         // Register the time-series singleton
         $this->app->singleton('time-series', function (Application $app) {
-            $driver = $app['config']->get('time-series.driver');
-            $driverConfig = $app['config']->get('time-series.drivers.'.$driver, []);
+            $configRepository = $app->make('config');
+            $driver = $configRepository->get('time-series.driver');
+            $driverConfig = $configRepository->get('time-series.drivers.'.$driver, []);
 
             // Create the driver config using the DriverConfigFactory
             $config = DriverConfigFactory::create($driver, $driverConfig);

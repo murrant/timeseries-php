@@ -131,12 +131,13 @@ class TSDBFactoryTest extends TestCase
         $mockClass = get_class($this->createMock(\stdClass::class));
         $mockConfig = $this->createMock(ConfigInterface::class);
 
-        // Register the invalid driver
+        $this->expectException(DriverException::class);
+        $this->expectExceptionMessage('Driver class must implement TimeSeriesInterface');
+
+        // Register the invalid driver - this should throw the exception
         TSDBFactory::registerDriver('invalid', $mockClass);
 
-        $this->expectException(DriverException::class);
-        $this->expectExceptionMessage('Driver must implement TimeSeriesInterface');
-
+        // This line should not be reached
         TSDBFactory::create('invalid', $mockConfig);
     }
 }

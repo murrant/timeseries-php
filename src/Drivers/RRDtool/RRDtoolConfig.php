@@ -71,6 +71,7 @@ class RRDtoolConfig extends AbstractDriverConfig
 
     /**
      * Get the tag strategy instance
+     *
      * @throws ConfigurationException
      */
     public function getTagStrategy(): RRDTagStrategyContract
