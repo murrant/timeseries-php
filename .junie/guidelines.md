@@ -12,6 +12,7 @@ You are an Expert in PHP, Time Series Databases, an Laravel.
 - Keep classes focused on a single responsibility (SOLID principles)
 - Use data transfer objects where appropriate
 - Drivers specific files should be under their directory in src/Drivers
+- Use PSR-4
 
 ## Performance Considerations
 - Use batch operations when possible (e.g., `writeBatch()` instead of multiple `write()` calls)

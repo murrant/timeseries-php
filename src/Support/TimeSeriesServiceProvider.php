@@ -7,6 +7,8 @@ use Illuminate\Support\ServiceProvider;
 use TimeSeriesPhp\Config\ConfigFactory;
 use TimeSeriesPhp\Config\DriverConfigFactory;
 use TimeSeriesPhp\Core\TSDBFactory;
+use TimeSeriesPhp\Drivers\Graphite\GraphiteConfig;
+use TimeSeriesPhp\Drivers\Graphite\GraphiteDriver;
 use TimeSeriesPhp\Drivers\InfluxDB\DatabaseConfig;
 use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
 use TimeSeriesPhp\Drivers\Prometheus\PrometheusConfig;
@@ -38,10 +40,15 @@ class TimeSeriesServiceProvider extends ServiceProvider
         $this->app->bind(PrometheusDriver::class);
         $this->app->alias(PrometheusDriver::class, 'time-series.prometheus');
 
+        TSDBFactory::registerDriver('graphite', GraphiteDriver::class);
+        $this->app->bind(GraphiteDriver::class);
+        $this->app->alias(GraphiteDriver::class, 'time-series.graphite');
+
         // Register driver config classes
         DriverConfigFactory::registerDriverConfig('influxdb', DatabaseConfig::class);
         DriverConfigFactory::registerDriverConfig('rrdtool', RRDtoolConfig::class);
         DriverConfigFactory::registerDriverConfig('prometheus', PrometheusConfig::class);
+        DriverConfigFactory::registerDriverConfig('graphite', GraphiteConfig::class);
 
         // Register the time-series singleton
         $this->app->singleton('time-series', function (Application $app) {
