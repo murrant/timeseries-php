@@ -32,9 +32,17 @@ class InfluxDBQueryBuilder implements QueryBuilderContract
         } elseif ($query->getStartTime()) {
             $start = $query->getStartTime()->format('c');
             $fluxQuery .= "  |> range(start: {$start})\n";
+        } elseif ($query->getRelativeTime()) {
+            // Handle relative time (e.g., "last 1h")
+            $fluxQuery .= "  |> range(start: -" . $this->formatDateInterval($query->getRelativeTime()) . ")\n";
         } else {
             // Default to last hour if no time range specified
             $fluxQuery .= "  |> range(start: -1h)\n";
+        }
+
+        // Apply timezone if specified
+        if ($query->getTimezone()) {
+            $fluxQuery .= "  |> timeShift(duration: 0s, timeZone: \"{$query->getTimezone()}\")\n";
         }
 
         // Filter by measurement
@@ -42,9 +50,52 @@ class InfluxDBQueryBuilder implements QueryBuilderContract
             $fluxQuery .= "  |> filter(fn: (r) => r._measurement == \"{$measurement}\")\n";
         }
 
-        // Add tag filters
-        foreach ($query->getTags() as $tag => $value) {
-            $fluxQuery .= "  |> filter(fn: (r) => r.{$tag} == \"{$value}\")\n";
+        // Add conditions (where clauses)
+        foreach ($query->getConditions() as $condition) {
+            $field = $condition['field'];
+            $operator = $this->mapOperator($condition['operator']);
+            $value = $this->formatValue($condition['value']);
+            $type = $condition['type'] ?? 'AND';
+
+            // For InfluxDB, we need to handle different types of conditions
+            if ($field === 'time') {
+                // Time-based conditions are handled differently
+                if ($operator === '==') {
+                    $fluxQuery .= "  |> filter(fn: (r) => r._time == {$value})\n";
+                } elseif ($operator === '>') {
+                    $fluxQuery .= "  |> filter(fn: (r) => r._time > {$value})\n";
+                } elseif ($operator === '>=') {
+                    $fluxQuery .= "  |> filter(fn: (r) => r._time >= {$value})\n";
+                } elseif ($operator === '<') {
+                    $fluxQuery .= "  |> filter(fn: (r) => r._time < {$value})\n";
+                } elseif ($operator === '<=') {
+                    $fluxQuery .= "  |> filter(fn: (r) => r._time <= {$value})\n";
+                } elseif ($operator === '!=') {
+                    $fluxQuery .= "  |> filter(fn: (r) => r._time != {$value})\n";
+                }
+            } elseif ($operator === 'IN') {
+                // Handle IN operator
+                $values = array_map(function($v) { return $this->formatValue($v); }, $condition['value']);
+                $valuesList = implode(', ', $values);
+                $fluxQuery .= "  |> filter(fn: (r) => contains(value: r[\"$field\"], set: [$valuesList]))\n";
+            } elseif ($operator === 'NOT IN') {
+                // Handle NOT IN operator
+                $values = array_map(function($v) { return $this->formatValue($v); }, $condition['value']);
+                $valuesList = implode(', ', $values);
+                $fluxQuery .= "  |> filter(fn: (r) => not contains(value: r[\"$field\"], set: [$valuesList]))\n";
+            } elseif ($operator === 'BETWEEN') {
+                // Handle BETWEEN operator
+                $min = $this->formatValue($condition['value'][0]);
+                $max = $this->formatValue($condition['value'][1]);
+                $fluxQuery .= "  |> filter(fn: (r) => r[\"$field\"] >= $min and r[\"$field\"] <= $max)\n";
+            } elseif ($operator === 'REGEX') {
+                // Handle REGEX operator
+                $pattern = $condition['value'];
+                $fluxQuery .= "  |> filter(fn: (r) => r[\"$field\"] =~ /$pattern/)\n";
+            } else {
+                // Standard operators
+                $fluxQuery .= "  |> filter(fn: (r) => r[\"$field\"] $operator $value)\n";
+            }
         }
 
         // Filter by fields if specified
@@ -56,48 +107,9 @@ class InfluxDBQueryBuilder implements QueryBuilderContract
             $fluxQuery .= "  |> filter(fn: (r) => {$fieldCondition})\n";
         }
 
-        // Add aggregation with windowing if specified
-        if ($query->getAggregation()) {
-            $aggregation = strtolower($query->getAggregation());
-            $interval = $query->getInterval();
-
-            if ($interval) {
-                // Convert interval to Flux duration format
-                $duration = $this->convertIntervalToDuration($interval);
-                $fluxQuery .= "  |> aggregateWindow(every: {$duration}, fn: {$aggregation}, createEmpty: false)\n";
-            } else {
-                // Apply aggregation without windowing
-                switch ($aggregation) {
-                    case 'mean':
-                    case 'avg':
-                        $fluxQuery .= "  |> mean()\n";
-                        break;
-                    case 'sum':
-                        $fluxQuery .= "  |> sum()\n";
-                        break;
-                    case 'count':
-                        $fluxQuery .= "  |> count()\n";
-                        break;
-                    case 'min':
-                        $fluxQuery .= "  |> min()\n";
-                        break;
-                    case 'max':
-                        $fluxQuery .= "  |> max()\n";
-                        break;
-                    case 'first':
-                        $fluxQuery .= "  |> first()\n";
-                        break;
-                    case 'last':
-                        $fluxQuery .= "  |> last()\n";
-                        break;
-                    case 'stddev':
-                        $fluxQuery .= "  |> stddev()\n";
-                        break;
-                    default:
-                        // For custom or unsupported aggregations, try to use them directly
-                        $fluxQuery .= "  |> {$aggregation}()\n";
-                }
-            }
+        // Handle distinct
+        if ($query->isDistinct()) {
+            $fluxQuery .= "  |> distinct()\n";
         }
 
         // Add grouping
@@ -108,6 +120,106 @@ class InfluxDBQueryBuilder implements QueryBuilderContract
             $fluxQuery .= "  |> group(columns: [" . implode(', ', $groupCols) . "])\n";
         }
 
+        // Add time grouping
+        if ($query->getInterval()) {
+            $duration = $this->convertIntervalToDuration($query->getInterval());
+            $fluxQuery .= "  |> window(every: {$duration})\n";
+        }
+
+        // Add aggregations
+        foreach ($query->getAggregations() as $agg) {
+            $function = strtolower($agg['function']);
+            $field = $agg['field'] ?? '_value';
+            $alias = $agg['alias'] ?? null;
+
+            // Apply aggregation
+            switch ($function) {
+                case 'mean':
+                case 'avg':
+                    $fluxQuery .= "  |> mean(column: \"{$field}\")\n";
+                    break;
+                case 'sum':
+                    $fluxQuery .= "  |> sum(column: \"{$field}\")\n";
+                    break;
+                case 'count':
+                    $fluxQuery .= "  |> count(column: \"{$field}\")\n";
+                    break;
+                case 'min':
+                    $fluxQuery .= "  |> min(column: \"{$field}\")\n";
+                    break;
+                case 'max':
+                    $fluxQuery .= "  |> max(column: \"{$field}\")\n";
+                    break;
+                case 'first':
+                    $fluxQuery .= "  |> first(column: \"{$field}\")\n";
+                    break;
+                case 'last':
+                    $fluxQuery .= "  |> last(column: \"{$field}\")\n";
+                    break;
+                case 'stddev':
+                    $fluxQuery .= "  |> stddev(column: \"{$field}\")\n";
+                    break;
+                default:
+                    // Handle percentile
+                    if (strpos($function, 'percentile_') === 0) {
+                        $percentile = substr($function, 11);
+                        $fluxQuery .= "  |> quantile(q: {$percentile}, column: \"{$field}\")\n";
+                    } else {
+                        // For custom or unsupported aggregations, try to use them directly
+                        $fluxQuery .= "  |> {$function}(column: \"{$field}\")\n";
+                    }
+            }
+
+            // Add alias if specified
+            if ($alias) {
+                $fluxQuery .= "  |> rename(columns: {_value: \"{$alias}\"})\n";
+            }
+        }
+
+        // Add fill policy for handling missing data
+        if ($query->getFillPolicy()) {
+            $policy = $query->getFillPolicy();
+            $value = $query->getFillValue();
+
+            switch ($policy) {
+                case 'null':
+                    $fluxQuery .= "  |> fill(value: null)\n";
+                    break;
+                case 'none':
+                    // In Flux, not filling is the default behavior
+                    break;
+                case 'previous':
+                    $fluxQuery .= "  |> fill(usePrevious: true)\n";
+                    break;
+                case 'linear':
+                    $fluxQuery .= "  |> interpolate.linear()\n";
+                    break;
+                case 'value':
+                    if ($value !== null) {
+                        $fluxQuery .= "  |> fill(value: {$value})\n";
+                    }
+                    break;
+            }
+        }
+
+        // Add mathematical expressions
+        foreach ($query->getMathExpressions() as $math) {
+            $expression = $math['expression'];
+            $alias = $math['alias'];
+
+            // In Flux, we need to use map() to apply mathematical expressions
+            $fluxQuery .= "  |> map(fn: (r) => ({ r with {$alias}: {$expression} }))\n";
+        }
+
+        // Add having clauses (post-aggregation filtering)
+        foreach ($query->getHaving() as $having) {
+            $field = $having['field'];
+            $operator = $this->mapOperator($having['operator']);
+            $value = $this->formatValue($having['value']);
+
+            $fluxQuery .= "  |> filter(fn: (r) => r[\"$field\"] $operator $value)\n";
+        }
+
         // Add ordering (sort)
         if (!empty($query->getOrderBy())) {
             foreach ($query->getOrderBy() as $field => $direction) {
@@ -116,12 +228,64 @@ class InfluxDBQueryBuilder implements QueryBuilderContract
             }
         }
 
+        // Add offset
+        if ($query->getOffset() !== null) {
+            $fluxQuery .= "  |> tail(offset: {$query->getOffset()})\n";
+        }
+
         // Add limit
-        if ($query->getLimit()) {
+        if ($query->getLimit() !== null) {
             $fluxQuery .= "  |> limit(n: {$query->getLimit()})\n";
         }
 
         return new RawQuery($fluxQuery);
+    }
+
+    private function mapOperator(string $operator): string
+    {
+        // Map SQL-like operators to Flux operators
+        $operatorMap = [
+            '=' => '==',
+            '!=' => '!=',
+            '<>' => '!=',
+            '>' => '>',
+            '>=' => '>=',
+            '<' => '<',
+            '<=' => '<=',
+            'LIKE' => '=~',
+        ];
+
+        return $operatorMap[$operator] ?? $operator;
+    }
+
+    private function formatValue($value): string
+    {
+        if (is_string($value)) {
+            return "\"" . addslashes($value) . "\"";
+        } elseif (is_bool($value)) {
+            return $value ? 'true' : 'false';
+        } elseif (is_null($value)) {
+            return 'null';
+        } elseif ($value instanceof \DateTime) {
+            return "time(v: \"" . $value->format('c') . "\")";
+        } else {
+            return (string)$value;
+        }
+    }
+
+    private function formatDateInterval(\DateInterval $interval): string
+    {
+        // Convert DateInterval to Flux duration format
+        $duration = '';
+
+        if ($interval->y > 0) $duration .= $interval->y . 'y';
+        if ($interval->m > 0) $duration .= $interval->m . 'mo';
+        if ($interval->d > 0) $duration .= $interval->d . 'd';
+        if ($interval->h > 0) $duration .= $interval->h . 'h';
+        if ($interval->i > 0) $duration .= $interval->i . 'm';
+        if ($interval->s > 0) $duration .= $interval->s . 's';
+
+        return $duration ?: '0s';
     }
 
     private function convertIntervalToDuration(string $interval): string
