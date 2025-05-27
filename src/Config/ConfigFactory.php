@@ -7,28 +7,29 @@ use TimeSeriesPhp\Exceptions\ConfigurationException;
 class ConfigFactory
 {
     private static array $configTypes = [
-        'database' => DatabaseConfig::class,
+        'database' => \TimeSeriesPhp\Drivers\InfluxDB\DatabaseConfig::class,
         'connection' => ConnectionConfig::class,
         'multi_database' => MultiDatabaseConfig::class,
         'cache' => CacheConfig::class,
         'logging' => LoggingConfig::class,
-        'performance' => PerformanceConfig::class
+        'performance' => PerformanceConfig::class,
     ];
 
     public static function create(string $type, array $config = []): ConfigInterface
     {
-        if (!isset(self::$configTypes[$type])) {
+        if (! isset(self::$configTypes[$type])) {
             throw new ConfigurationException("Unknown configuration type: {$type}");
         }
 
         $className = self::$configTypes[$type];
+
         return new $className($config);
     }
 
     public static function registerConfigType(string $type, string $className): void
     {
-        if (!is_subclass_of($className, ConfigInterface::class)) {
-            throw new ConfigurationException("Config class must implement ConfigInterface");
+        if (! is_subclass_of($className, ConfigInterface::class)) {
+            throw new ConfigurationException('Config class must implement ConfigInterface');
         }
 
         self::$configTypes[$type] = $className;

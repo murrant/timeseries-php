@@ -1,6 +1,5 @@
 <?php
 
-
 namespace TimeSeriesPhp\Core;
 
 interface RawQueryContract

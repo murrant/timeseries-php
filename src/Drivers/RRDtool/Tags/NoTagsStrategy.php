@@ -22,23 +22,25 @@ class NoTagsStrategy implements RRDTagStrategyContract
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function getFilePath(string $measurement, array $tags = []): string
     {
         // Ignore tags, use only measurement name
         $measurement = File::sanitize($measurement);
-        return $this->baseDir . $measurement . '.rrd';
+
+        return $this->baseDir.$measurement.'.rrd';
     }
 
     public function findMeasurementsByTags(array $tagConditions): array
     {
-        return array_map(fn($file) => basename($file, '.rrd'), glob($this->baseDir . '*.rrd'));
+        return array_map(fn ($file) => basename($file, '.rrd'), glob($this->baseDir.'*.rrd'));
     }
 
     public function resolveFilePaths(string $measurement, array $tagConditions): array
     {
         $measurement = File::sanitize($measurement);
-        return glob($this->baseDir . $measurement . '*.rrd');
+
+        return glob($this->baseDir.$measurement.'*.rrd');
     }
 }

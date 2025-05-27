@@ -26,14 +26,14 @@ class InfluxDBConfig extends AbstractConfig
      */
     public function __construct(array $config = [])
     {
-        $this->addValidator('url', fn($url) => is_string($url) && !empty($url));
-        $this->addValidator('token', fn($token) => is_string($token) && !empty($token));
-        $this->addValidator('org', fn($org) => is_string($org) && !empty($org));
-        $this->addValidator('bucket', fn($bucket) => is_string($bucket) && !empty($bucket));
-        $this->addValidator('timeout', fn($timeout) => is_int($timeout) && $timeout > 0);
-        $this->addValidator('verify_ssl', fn($verify) => is_bool($verify));
-        $this->addValidator('debug', fn($debug) => is_bool($debug));
-        $this->addValidator('precision', fn($precision) => in_array($precision, WritePrecision::getAllowableEnumValues()));
+        $this->addValidator('url', fn ($url) => is_string($url) && ! empty($url));
+        $this->addValidator('token', fn ($token) => is_string($token) && ! empty($token));
+        $this->addValidator('org', fn ($org) => is_string($org) && ! empty($org));
+        $this->addValidator('bucket', fn ($bucket) => is_string($bucket) && ! empty($bucket));
+        $this->addValidator('timeout', fn ($timeout) => is_int($timeout) && $timeout > 0);
+        $this->addValidator('verify_ssl', fn ($verify) => is_bool($verify));
+        $this->addValidator('debug', fn ($debug) => is_bool($debug));
+        $this->addValidator('precision', fn ($precision) => in_array($precision, WritePrecision::getAllowableEnumValues()));
 
         parent::__construct($config);
     }

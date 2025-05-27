@@ -40,24 +40,28 @@ class PrometheusQueryBuilder implements QueryBuilderContract
                     break;
                 case 'IN':
                     if (is_array($value) && count($value) > 0) {
-                        $values = array_map(function($v) { return "\"$v\""; }, $value);
-                        $labelSelectors[] = "{$field}=~\"^(" . implode('|', $value) . ")$\"";
+                        $values = array_map(function ($v) {
+                            return "\"$v\"";
+                        }, $value);
+                        $labelSelectors[] = "{$field}=~\"^(".implode('|', $value).')$"';
                     }
                     break;
                 case 'NOT IN':
                     if (is_array($value) && count($value) > 0) {
-                        $values = array_map(function($v) { return "\"$v\""; }, $value);
-                        $labelSelectors[] = "{$field}!~\"^(" . implode('|', $value) . ")$\"";
+                        $values = array_map(function ($v) {
+                            return "\"$v\"";
+                        }, $value);
+                        $labelSelectors[] = "{$field}!~\"^(".implode('|', $value).')$"';
                     }
                     break;
-                // Other operators like >, <, >=, <= are not directly supported in label selectors
-                // They would need to be handled in post-processing or with specific functions
+                    // Other operators like >, <, >=, <= are not directly supported in label selectors
+                    // They would need to be handled in post-processing or with specific functions
             }
         }
 
         // Build the metric selector part
-        $labelSelectorStr = empty($labelSelectors) ? '' : '{' . implode(',', $labelSelectors) . '}';
-        $metricSelector = $metric . $labelSelectorStr;
+        $labelSelectorStr = empty($labelSelectors) ? '' : '{'.implode(',', $labelSelectors).'}';
+        $metricSelector = $metric.$labelSelectorStr;
 
         // Handle time range
         $timeRange = '';
@@ -66,11 +70,11 @@ class PrometheusQueryBuilder implements QueryBuilderContract
             // But we can add a comment to indicate the intended time range
             $timeRange = " # time range: {$query->getStartTime()->format('c')} to {$query->getEndTime()->format('c')}";
         } elseif ($query->getRelativeTime()) {
-            $timeRange = " # relative time: " . $this->formatDateInterval($query->getRelativeTime());
+            $timeRange = ' # relative time: '.$this->formatDateInterval($query->getRelativeTime());
         }
 
         // Handle aggregations
-        if (!empty($query->getAggregations())) {
+        if (! empty($query->getAggregations())) {
             $aggregations = $query->getAggregations();
             $agg = $aggregations[0]; // Use the first aggregation (Prometheus typically supports one at a time)
             $function = strtolower($agg['function']);
@@ -112,7 +116,7 @@ class PrometheusQueryBuilder implements QueryBuilderContract
             }
 
             // Handle group by (in Prometheus, this is done with 'by' clause)
-            if (!empty($query->getGroupBy())) {
+            if (! empty($query->getGroupBy())) {
                 $groupBy = implode(',', $query->getGroupBy());
                 $promqlQuery = str_replace(')', " by ({$groupBy}))", $promqlQuery);
             }
@@ -129,7 +133,7 @@ class PrometheusQueryBuilder implements QueryBuilderContract
         }
 
         // Handle math expressions
-        if (!empty($query->getMathExpressions())) {
+        if (! empty($query->getMathExpressions())) {
             $mathExpr = $query->getMathExpressions()[0]; // Use the first math expression
             $expression = $mathExpr['expression'];
 
@@ -154,12 +158,24 @@ class PrometheusQueryBuilder implements QueryBuilderContract
         // Convert DateInterval to a human-readable string for comments
         $parts = [];
 
-        if ($interval->y > 0) $parts[] = $interval->y . 'y';
-        if ($interval->m > 0) $parts[] = $interval->m . 'mo';
-        if ($interval->d > 0) $parts[] = $interval->d . 'd';
-        if ($interval->h > 0) $parts[] = $interval->h . 'h';
-        if ($interval->i > 0) $parts[] = $interval->i . 'm';
-        if ($interval->s > 0) $parts[] = $interval->s . 's';
+        if ($interval->y > 0) {
+            $parts[] = $interval->y.'y';
+        }
+        if ($interval->m > 0) {
+            $parts[] = $interval->m.'mo';
+        }
+        if ($interval->d > 0) {
+            $parts[] = $interval->d.'d';
+        }
+        if ($interval->h > 0) {
+            $parts[] = $interval->h.'h';
+        }
+        if ($interval->i > 0) {
+            $parts[] = $interval->i.'m';
+        }
+        if ($interval->s > 0) {
+            $parts[] = $interval->s.'s';
+        }
 
         return implode(' ', $parts) ?: '0s';
     }

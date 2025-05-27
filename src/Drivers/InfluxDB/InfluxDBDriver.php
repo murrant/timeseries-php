@@ -25,28 +25,52 @@ use TimeSeriesPhp\Exceptions\QueryException;
 class InfluxDBDriver extends AbstractTimeSeriesDB
 {
     private ?Client $client = null;
+
     private ?WriteApi $writeApi = null;
+
     private ?QueryApi $queryApi = null;
 
     private string $org;
-    private ?string $orgId = null;
-    private string $bucket;
 
+    private ?string $orgId = null;
+
+    private string $bucket;
 
     protected function doConnect(): bool
     {
-        if (!$this->config instanceof InfluxDBConfig) {
-            throw new ConfigurationException("Invalid configuration type. Expected InfluxDBConfig.");
+        if (! $this->config instanceof InfluxDBConfig && ! $this->config instanceof DatabaseConfig) {
+            throw new ConfigurationException('Invalid configuration type. Expected InfluxDBConfig or DatabaseConfig.');
         }
 
         try {
-            $this->client = new Client($this->config->getClientConfig());
-            $this->writeApi = $this->client->createWriteApi();
-            $this->queryApi = $this->client->createQueryApi();
+            if ($this->config instanceof InfluxDBConfig) {
+                $this->client = new Client($this->config->getClientConfig());
+                $this->writeApi = $this->client->createWriteApi();
+                $this->queryApi = $this->client->createQueryApi();
 
-            // Store config values for easier access
-            $this->org = $this->config->get('org');
-            $this->bucket = $this->config->get('bucket');
+                // Store config values for easier access
+                $this->org = $this->config->get('org');
+                $this->bucket = $this->config->get('bucket');
+            } else {
+                // Using DatabaseConfig
+                $clientConfig = [
+                    'url' => 'http://'.$this->config->getConnectionString(),
+                    'token' => '',  // Token needs to be set in the config
+                    'bucket' => $this->config->get('database'),
+                    'org' => '',    // Org needs to be set in the config
+                    'timeout' => $this->config->get('timeout'),
+                    'verifySSL' => $this->config->get('verify_ssl'),
+                    'debug' => false,
+                ];
+
+                $this->client = new Client($clientConfig);
+                $this->writeApi = $this->client->createWriteApi();
+                $this->queryApi = $this->client->createQueryApi();
+
+                // Store config values for easier access
+                $this->org = '';    // Org needs to be set in the config
+                $this->bucket = $this->config->get('database');
+            }
 
             $this->queryBuilder = new InfluxDBQueryBuilder($this->bucket);
 
@@ -56,8 +80,9 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
             return $this->connected;
         } catch (Exception $e) {
-            error_log("InfluxDB connection failed: " . $e->getMessage());
+            error_log('InfluxDB connection failed: '.$e->getMessage());
             $this->connected = false;
+
             return false;
         }
     }
@@ -92,25 +117,27 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
     public function write(DataPoint $dataPoint): bool
     {
-        if (!$this->isConnected()) {
-            throw new ConnectionException("Not connected to InfluxDB");
+        if (! $this->isConnected()) {
+            throw new ConnectionException('Not connected to InfluxDB');
         }
 
         try {
             $point = $this->formatDataPoint($dataPoint);
             $this->writeApi->write($point);
             $this->writeApi->close();
+
             return true;
         } catch (Exception $e) {
-            error_log("InfluxDB write failed: " . $e->getMessage());
+            error_log('InfluxDB write failed: '.$e->getMessage());
+
             return false;
         }
     }
 
     public function writeBatch(array $dataPoints): bool
     {
-        if (!$this->isConnected()) {
-            throw new ConnectionException("Not connected to InfluxDB");
+        if (! $this->isConnected()) {
+            throw new ConnectionException('Not connected to InfluxDB');
         }
 
         try {
@@ -121,9 +148,11 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
             $this->writeApi->write($points);
             $this->writeApi->close();
+
             return true;
         } catch (Exception $e) {
-            error_log("InfluxDB batch write failed: " . $e->getMessage());
+            error_log('InfluxDB batch write failed: '.$e->getMessage());
+
             return false;
         }
     }
@@ -133,8 +162,8 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
      */
     public function rawQuery(RawQueryContract $query): QueryResult
     {
-        if (!$this->isConnected()) {
-            throw new QueryException($query, "Not connected to InfluxDB");
+        if (! $this->isConnected()) {
+            throw new QueryException($query, 'Not connected to InfluxDB');
         }
 
         try {
@@ -150,9 +179,10 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
             $executeQuery = $data;
         } catch (Exception $e) {
-            throw new QueryException($query, "Query execution failed: " . $e->getMessage());
+            throw new QueryException($query, 'Query execution failed: '.$e->getMessage());
         }
         $result = $executeQuery;
+
         return new QueryResult($result);
     }
 
@@ -162,9 +192,9 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             /** @var BucketsService $bucketsService */
             $bucketsService = $this->client->createService(BucketsService::class);
 
-            $rule = new BucketRetentionRules();
+            $rule = new BucketRetentionRules;
             $rule->setEverySeconds(0); // No expiration
-            $bucketRequest = new PostBucketRequest();
+            $bucketRequest = new PostBucketRequest;
 
             $bucketRequest->setName($database)
                 ->setRetentionRules([$rule])
@@ -173,7 +203,8 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
             return $bucket !== null;
         } catch (Exception $e) {
-            error_log("Failed to create bucket: " . $e->getMessage());
+            error_log('Failed to create bucket: '.$e->getMessage());
+
             return false;
         }
     }
@@ -192,7 +223,8 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
             return $bucketNames;
         } catch (Exception $e) {
-            error_log("Failed to list buckets: " . $e->getMessage());
+            error_log('Failed to list buckets: '.$e->getMessage());
+
             return [];
         }
     }
@@ -202,16 +234,17 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
         try {
             /** @var DeleteService $service */
             $service = $this->client->createService(DeleteService::class);
-            $predicate = new DeletePredicateRequest();
+            $predicate = new DeletePredicateRequest;
             $predicate->setStart($start ?? new DateTime('1970-01-01T00:00:00Z'));
-            $predicate->setStop($stop ?? new DateTime());
-            $predicate->setPredicate("_measurement=\"{$measurement}\"",);
+            $predicate->setStop($stop ?? new DateTime);
+            $predicate->setPredicate("_measurement=\"{$measurement}\"");
 
             $service->postDelete($predicate, bucket: $this->bucket, org_id: $this->getOrgId());
 
             return true;
         } catch (Exception $e) {
-            error_log("Failed to delete measurement: " . $e->getMessage());
+            error_log('Failed to delete measurement: '.$e->getMessage());
+
             return false;
         }
     }
@@ -220,16 +253,17 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     {
         try {
             $health = $this->client->health();
+
             return [
                 'status' => $health->getStatus(),
                 'message' => $health->getMessage(),
-                'version' => $health->getVersion()
+                'version' => $health->getVersion(),
             ];
         } catch (Exception $e) {
             return [
                 'status' => 'fail',
                 'message' => $e->getMessage(),
-                'version' => null
+                'version' => null,
             ];
         }
     }
@@ -290,7 +324,8 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
         foreach ($conversions as $from => $to) {
             if (str_contains($interval, $from)) {
                 $number = (int) filter_var($interval, FILTER_SANITIZE_NUMBER_INT);
-                return $number . $to;
+
+                return $number.$to;
             }
         }
 

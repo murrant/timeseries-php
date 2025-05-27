@@ -1,6 +1,3 @@
 <?php
 
-class Sum
-{
-
-}
+class Sum {}

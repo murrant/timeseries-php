@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__.'/../vendor/autoload.php';
 
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\Query;
@@ -81,9 +81,9 @@ $dataPoints = [];
 
 // Add some historical data points
 for ($i = 1; $i <= 5; $i++) {
-    $timestamp = new DateTime();
+    $timestamp = new DateTime;
     $timestamp->modify("-{$i} hour");
-    
+
     $dataPoints[] = new DataPoint(
         'server_metrics',
         [
@@ -92,9 +92,9 @@ for ($i = 1; $i <= 5; $i++) {
             'disk_usage' => rand(30, 85),
         ],
         [
-            'host' => 'web-' . str_pad($i % 3 + 1, 2, '0', STR_PAD_LEFT),
+            'host' => 'web-'.str_pad($i % 3 + 1, 2, '0', STR_PAD_LEFT),
             'region' => ($i % 2 == 0) ? 'us-east' : 'us-west',
-            'environment' => ($i % 3 == 0) ? 'production' : 'staging'
+            'environment' => ($i % 3 == 0) ? 'production' : 'staging',
         ],
         $timestamp
     );
@@ -102,7 +102,7 @@ for ($i = 1; $i <= 5; $i++) {
 
 // Write batch of data points
 if ($influxdb->writeBatch($dataPoints)) {
-    echo "Successfully wrote " . count($dataPoints) . " data points in batch!\n";
+    echo 'Successfully wrote '.count($dataPoints)." data points in batch!\n";
 } else {
     echo "Failed to write data points in batch.\n";
 }
@@ -115,15 +115,15 @@ $query = new Query('server_metrics');
 $result = $influxdb->query($query);
 
 echo "Simple query results:\n";
-echo "Found " . count($result->getSeries()) . " data points\n";
+echo 'Found '.count($result->getSeries())." data points\n";
 print_r($result->getSeries());
 
 // More complex query with filtering, time range, and aggregation
 echo "\nComplex query with filtering and time range:\n";
 
-$startTime = new DateTime();
+$startTime = new DateTime;
 $startTime->modify('-6 hours');
-$endTime = new DateTime();
+$endTime = new DateTime;
 
 $complexQuery = new Query('server_metrics');
 $complexQuery->select(['mean(cpu_usage) as avg_cpu', 'max(memory) as max_memory'])
@@ -137,13 +137,13 @@ $complexQuery->select(['mean(cpu_usage) as avg_cpu', 'max(memory) as max_memory'
 $complexResult = $influxdb->query($complexQuery);
 
 echo "Complex query results:\n";
-echo "Found " . count($complexResult->getSeries()) . " data points\n";
+echo 'Found '.count($complexResult->getSeries())." data points\n";
 print_r($complexResult->getSeries());
 
 // Raw query example
-//echo "\nRaw query v1 example:\n";
-//$rawResult = $influxdb->rawQuery('SELECT mean(cpu_usage) FROM server_metrics WHERE time > now() - 1h GROUP BY host');
-//print_r($rawResult->getSeries());
+// echo "\nRaw query v1 example:\n";
+// $rawResult = $influxdb->rawQuery('SELECT mean(cpu_usage) FROM server_metrics WHERE time > now() - 1h GROUP BY host');
+// print_r($rawResult->getSeries());
 
 echo "\nRaw query v2 example:\n";
 $rawResult = $influxdb->rawQuery('from(bucket: "example-bucket")

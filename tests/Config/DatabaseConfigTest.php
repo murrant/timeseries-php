@@ -3,7 +3,7 @@
 namespace TimeSeriesPhp\Tests\Config;
 
 use TimeSeriesPhp\Config\ConfigInterface;
-use TimeSeriesPhp\Config\DatabaseConfig;
+use TimeSeriesPhp\Drivers\InfluxDB\DatabaseConfig;
 use TimeSeriesPhp\Exceptions\ConfigurationException;
 
 class DatabaseConfigTest extends ConfigTestCase
@@ -13,7 +13,7 @@ class DatabaseConfigTest extends ConfigTestCase
         return new DatabaseConfig($config);
     }
 
-    public function testGetConnectionString()
+    public function test_get_connection_string()
     {
         // Test with host only
         $config = $this->createConfig(['host' => 'localhost']);
@@ -32,7 +32,7 @@ class DatabaseConfigTest extends ConfigTestCase
         $this->assertEquals('localhost/metrics', $config->getConnectionString());
     }
 
-    public function testHasAuth()
+    public function test_has_auth()
     {
         // Test with no auth
         $config = $this->createConfig(['host' => 'localhost']);
@@ -43,7 +43,7 @@ class DatabaseConfigTest extends ConfigTestCase
         $this->assertTrue($config->hasAuth());
     }
 
-    public function testGetAuthCredentials()
+    public function test_get_auth_credentials()
     {
         // Test with no auth
         $config = $this->createConfig(['host' => 'localhost']);
@@ -64,7 +64,7 @@ class DatabaseConfigTest extends ConfigTestCase
         $this->assertEquals('secret', $credentials['password']);
     }
 
-    public function testPortValidator()
+    public function test_port_validator()
     {
         // Test with valid port
         $config = $this->createConfig(['host' => 'localhost', 'port' => 8086]);
@@ -79,14 +79,14 @@ class DatabaseConfigTest extends ConfigTestCase
         $this->createConfig(['host' => 'localhost', 'port' => 0]);
     }
 
-    public function testPortValidatorTooHigh()
+    public function test_port_validator_too_high()
     {
         // Test with invalid port (too high)
         $this->expectException(ConfigurationException::class);
         $this->createConfig(['host' => 'localhost', 'port' => 65536]);
     }
 
-    public function testTimeoutValidator()
+    public function test_timeout_validator()
     {
         // Test with valid timeout
         $config = $this->createConfig(['host' => 'localhost', 'timeout' => 30]);
@@ -97,7 +97,7 @@ class DatabaseConfigTest extends ConfigTestCase
         $this->createConfig(['host' => 'localhost', 'timeout' => 0]);
     }
 
-    public function testRetryAttemptsValidator()
+    public function test_retry_attempts_validator()
     {
         // Test with valid retry_attempts
         $config = $this->createConfig(['host' => 'localhost', 'retry_attempts' => 3]);
@@ -112,7 +112,7 @@ class DatabaseConfigTest extends ConfigTestCase
         $this->createConfig(['host' => 'localhost', 'retry_attempts' => -1]);
     }
 
-    public function testRetryDelayValidator()
+    public function test_retry_delay_validator()
     {
         // Test with valid retry_delay
         $config = $this->createConfig(['host' => 'localhost', 'retry_delay' => 1000]);

@@ -1,6 +1,3 @@
 <?php
 
-class Min
-{
-
-}
+class Min {}

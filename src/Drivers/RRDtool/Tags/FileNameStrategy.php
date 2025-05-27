@@ -22,19 +22,19 @@ class FileNameStrategy implements RRDTagStrategyContract
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function getFilePath(string $measurement, array $tags = []): string
     {
         $filename = $this->encodeTags($measurement, $tags);
 
-        return $this->baseDir . $filename;
+        return $this->baseDir.$filename;
     }
 
     public function resolveFilePaths(string $measurement, array $tagConditions): array
     {
         if (empty($tagConditions)) {
-            return glob($this->baseDir . $measurement . '*.rrd');
+            return glob($this->baseDir.$measurement.'*.rrd');
         }
 
         $files = [];

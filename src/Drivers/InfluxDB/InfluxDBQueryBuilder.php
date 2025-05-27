@@ -34,7 +34,7 @@ class InfluxDBQueryBuilder implements QueryBuilderContract
             $fluxQuery .= "  |> range(start: {$start})\n";
         } elseif ($query->getRelativeTime()) {
             // Handle relative time (e.g., "last 1h")
-            $fluxQuery .= "  |> range(start: -" . $this->formatDateInterval($query->getRelativeTime()) . ")\n";
+            $fluxQuery .= '  |> range(start: -'.$this->formatDateInterval($query->getRelativeTime()).")\n";
         } else {
             // Default to last hour if no time range specified
             $fluxQuery .= "  |> range(start: -1h)\n";
@@ -75,12 +75,16 @@ class InfluxDBQueryBuilder implements QueryBuilderContract
                 }
             } elseif ($operator === 'IN') {
                 // Handle IN operator
-                $values = array_map(function($v) { return $this->formatValue($v); }, $condition['value']);
+                $values = array_map(function ($v) {
+                    return $this->formatValue($v);
+                }, $condition['value']);
                 $valuesList = implode(', ', $values);
                 $fluxQuery .= "  |> filter(fn: (r) => contains(value: r[\"$field\"], set: [$valuesList]))\n";
             } elseif ($operator === 'NOT IN') {
                 // Handle NOT IN operator
-                $values = array_map(function($v) { return $this->formatValue($v); }, $condition['value']);
+                $values = array_map(function ($v) {
+                    return $this->formatValue($v);
+                }, $condition['value']);
                 $valuesList = implode(', ', $values);
                 $fluxQuery .= "  |> filter(fn: (r) => not contains(value: r[\"$field\"], set: [$valuesList]))\n";
             } elseif ($operator === 'BETWEEN') {
@@ -99,8 +103,8 @@ class InfluxDBQueryBuilder implements QueryBuilderContract
         }
 
         // Filter by fields if specified
-        if (!empty($fields) && !in_array('*', $fields)) {
-            $fieldConditions = array_map(function($field) {
+        if (! empty($fields) && ! in_array('*', $fields)) {
+            $fieldConditions = array_map(function ($field) {
                 return "r._field == \"{$field}\"";
             }, $fields);
             $fieldCondition = implode(' or ', $fieldConditions);
@@ -113,11 +117,11 @@ class InfluxDBQueryBuilder implements QueryBuilderContract
         }
 
         // Add grouping
-        if (!empty($query->getGroupBy())) {
-            $groupCols = array_map(function($col) {
+        if (! empty($query->getGroupBy())) {
+            $groupCols = array_map(function ($col) {
                 return "\"{$col}\"";
             }, $query->getGroupBy());
-            $fluxQuery .= "  |> group(columns: [" . implode(', ', $groupCols) . "])\n";
+            $fluxQuery .= '  |> group(columns: ['.implode(', ', $groupCols)."])\n";
         }
 
         // Add time grouping
@@ -221,7 +225,7 @@ class InfluxDBQueryBuilder implements QueryBuilderContract
         }
 
         // Add ordering (sort)
-        if (!empty($query->getOrderBy())) {
+        if (! empty($query->getOrderBy())) {
             foreach ($query->getOrderBy() as $field => $direction) {
                 $desc = strtoupper($direction) === 'DESC' ? 'true' : 'false';
                 $fluxQuery .= "  |> sort(columns: [\"{$field}\"], desc: {$desc})\n";
@@ -261,15 +265,15 @@ class InfluxDBQueryBuilder implements QueryBuilderContract
     private function formatValue($value): string
     {
         if (is_string($value)) {
-            return "\"" . addslashes($value) . "\"";
+            return '"'.addslashes($value).'"';
         } elseif (is_bool($value)) {
             return $value ? 'true' : 'false';
         } elseif (is_null($value)) {
             return 'null';
         } elseif ($value instanceof \DateTime) {
-            return "time(v: \"" . $value->format('c') . "\")";
+            return 'time(v: "'.$value->format('c').'")';
         } else {
-            return (string)$value;
+            return (string) $value;
         }
     }
 
@@ -278,12 +282,24 @@ class InfluxDBQueryBuilder implements QueryBuilderContract
         // Convert DateInterval to Flux duration format
         $duration = '';
 
-        if ($interval->y > 0) $duration .= $interval->y . 'y';
-        if ($interval->m > 0) $duration .= $interval->m . 'mo';
-        if ($interval->d > 0) $duration .= $interval->d . 'd';
-        if ($interval->h > 0) $duration .= $interval->h . 'h';
-        if ($interval->i > 0) $duration .= $interval->i . 'm';
-        if ($interval->s > 0) $duration .= $interval->s . 's';
+        if ($interval->y > 0) {
+            $duration .= $interval->y.'y';
+        }
+        if ($interval->m > 0) {
+            $duration .= $interval->m.'mo';
+        }
+        if ($interval->d > 0) {
+            $duration .= $interval->d.'d';
+        }
+        if ($interval->h > 0) {
+            $duration .= $interval->h.'h';
+        }
+        if ($interval->i > 0) {
+            $duration .= $interval->i.'m';
+        }
+        if ($interval->s > 0) {
+            $duration .= $interval->s.'s';
+        }
 
         return $duration ?: '0s';
     }

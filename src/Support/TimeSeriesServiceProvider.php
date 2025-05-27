@@ -42,7 +42,7 @@ class TimeSeriesServiceProvider extends ServiceProvider
             $driverConfig = $app['config']->get('time-series.drivers.'.$driver, []);
 
             // Create the appropriate config object based on driver
-            $configClass = match($driver) {
+            $configClass = match ($driver) {
                 'influxdb' => InfluxDBConfig::class,
                 'rrdtool' => RRDtoolConfig::class,
                 default => null,

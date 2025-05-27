@@ -2,7 +2,4 @@
 
 namespace TimeSeriesPhp\Exceptions;
 
-class TSDBException extends \Exception
-{
-
-}
+class TSDBException extends \Exception {}

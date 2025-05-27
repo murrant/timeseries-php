@@ -2,7 +2,4 @@
 
 namespace Filters;
 
-class TagFilter
-{
-
-}
+class TagFilter {}

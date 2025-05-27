@@ -1,6 +1,3 @@
 <?php
 
-class Max
-{
-
-}
+class Max {}

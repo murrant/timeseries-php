@@ -7,12 +7,15 @@ use TimeSeriesPhp\Config\ConfigInterface;
 abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
 {
     protected ConfigInterface $config;
+
     protected bool $connected = false;
+
     protected QueryBuilderContract $queryBuilder;
 
     public function connect(ConfigInterface $config): bool
     {
         $this->config = $config;
+
         return $this->doConnect();
     }
 
@@ -26,10 +29,11 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
     public function writeBatch(array $dataPoints): bool
     {
         foreach ($dataPoints as $dataPoint) {
-            if (!$this->write($dataPoint)) {
+            if (! $this->write($dataPoint)) {
                 return false;
             }
         }
+
         return true;
     }
 }

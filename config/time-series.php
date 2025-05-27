@@ -49,7 +49,7 @@ return [
                 'RRA:MAX:0.5:1:2016',          // 5min max for 1 week
                 'RRA:MAX:0.5:12:1488',         // 1hour max for 2 months
                 'RRA:MIN:0.5:1:2016',          // 5min min for 1 week
-                'RRA:MIN:0.5:12:1488'          // 1hour min for 2 months
+                'RRA:MIN:0.5:12:1488',          // 1hour min for 2 months
             ],
         ],
 

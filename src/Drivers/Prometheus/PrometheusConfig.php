@@ -21,10 +21,10 @@ class PrometheusConfig extends AbstractConfig
      */
     public function __construct(array $config = [])
     {
-        $this->addValidator('url', fn($url) => is_string($url) && !empty($url));
-        $this->addValidator('timeout', fn($timeout) => is_int($timeout) && $timeout > 0);
-        $this->addValidator('verify_ssl', fn($verify) => is_bool($verify));
-        $this->addValidator('debug', fn($debug) => is_bool($debug));
+        $this->addValidator('url', fn ($url) => is_string($url) && ! empty($url));
+        $this->addValidator('timeout', fn ($timeout) => is_int($timeout) && $timeout > 0);
+        $this->addValidator('verify_ssl', fn ($verify) => is_bool($verify));
+        $this->addValidator('debug', fn ($debug) => is_bool($debug));
 
         parent::__construct($config);
     }

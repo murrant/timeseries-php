@@ -5,8 +5,11 @@ namespace TimeSeriesPhp\Utils;
 class File
 {
     const TAG_VALUE_SEPARATOR = '-';
+
     const TAG_SEPARATOR = '_';
+
     const DIRECTORY_SEPARATOR = '/';
+
     const BAD_CHARACTER_REPLACEMENT = '.';
 
     public static function sanitize(string $name): string

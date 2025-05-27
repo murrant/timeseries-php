@@ -13,14 +13,14 @@ class PerformanceConfig extends AbstractConfig
         'memory_limit' => '128M',
         'enable_metrics' => false,
         'metrics_interval' => 60, // seconds
-        'auto_optimize_queries' => false
+        'auto_optimize_queries' => false,
     ];
 
     public function __construct(array $config = [])
     {
-        $this->addValidator('query_timeout', fn($timeout) => is_numeric($timeout) && $timeout > 0);
-        $this->addValidator('batch_size', fn($size) => is_int($size) && $size > 0);
-        $this->addValidator('max_concurrent_queries', fn($max) => is_int($max) && $max > 0);
+        $this->addValidator('query_timeout', fn ($timeout) => is_numeric($timeout) && $timeout > 0);
+        $this->addValidator('batch_size', fn ($size) => is_int($size) && $size > 0);
+        $this->addValidator('max_concurrent_queries', fn ($max) => is_int($max) && $max > 0);
 
         parent::__construct($config);
     }
@@ -38,6 +38,7 @@ class PerformanceConfig extends AbstractConfig
     public function getMemoryLimitBytes(): int
     {
         $limit = $this->get('memory_limit');
+
         return $this->parseMemoryLimit($limit);
     }
 

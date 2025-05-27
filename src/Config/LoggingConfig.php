@@ -12,16 +12,16 @@ class LoggingConfig extends AbstractConfig
         'file' => [
             'path' => '/var/log/tsdb.log',
             'max_size' => '10MB',
-            'rotate' => 5
+            'rotate' => 5,
         ],
         'format' => '[{timestamp}] {level}: {message} {context}',
-        'include_stack_trace' => false
+        'include_stack_trace' => false,
     ];
 
     public function __construct(array $config = [])
     {
-        $this->addValidator('level', fn($level) => in_array($level, ['debug', 'info', 'warning', 'error']));
-        $this->addValidator('output', fn($output) => in_array($output, ['file', 'syslog', 'stdout']));
+        $this->addValidator('level', fn ($level) => in_array($level, ['debug', 'info', 'warning', 'error']));
+        $this->addValidator('output', fn ($output) => in_array($output, ['file', 'syslog', 'stdout']));
 
         parent::__construct($config);
     }

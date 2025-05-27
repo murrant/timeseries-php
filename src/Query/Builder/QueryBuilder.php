@@ -2,7 +2,4 @@
 
 namespace Builder;
 
-class QueryBuilder
-{
-
-}
+class QueryBuilder {}

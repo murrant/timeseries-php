@@ -1,6 +1,3 @@
 <?php
 
-class Average
-{
-
-}
+class Average {}

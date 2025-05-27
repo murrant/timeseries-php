@@ -9,7 +9,7 @@ class QueryException extends TSDBException
 {
     public function __construct(
         public readonly RawQueryContract $rawQuery,
-        string $message = "",
+        string $message = '',
         int $code = 0,
         ?Throwable $previous = null,
     ) {

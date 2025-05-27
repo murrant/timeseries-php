@@ -16,15 +16,19 @@ use TimeSeriesPhp\Exceptions\QueryException;
 class PrometheusDriver extends AbstractTimeSeriesDB
 {
     private string $apiUrl;
+
     private int $timeout;
+
     private bool $verifySSL;
+
     private bool $debug;
+
     private ?Client $client = null;
 
     protected function doConnect(): bool
     {
-        if (!$this->config instanceof PrometheusConfig) {
-            throw new ConfigurationException("Invalid configuration type. Expected PrometheusConfig.");
+        if (! $this->config instanceof PrometheusConfig) {
+            throw new ConfigurationException('Invalid configuration type. Expected PrometheusConfig.');
         }
 
         try {
@@ -36,7 +40,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB
             $this->debug = $clientConfig['debug'];
 
             // Initialize the query builder
-            $this->queryBuilder = new PrometheusQueryBuilder();
+            $this->queryBuilder = new PrometheusQueryBuilder;
 
             // Test connection by pinging the API
             $response = $this->makeApiRequest('/api/v1/status/config');
@@ -44,8 +48,9 @@ class PrometheusDriver extends AbstractTimeSeriesDB
 
             return $this->connected;
         } catch (Exception $e) {
-            error_log("Prometheus connection failed: " . $e->getMessage());
+            error_log('Prometheus connection failed: '.$e->getMessage());
             $this->connected = false;
+
             return false;
         }
     }
@@ -62,8 +67,8 @@ class PrometheusDriver extends AbstractTimeSeriesDB
      */
     public function rawQuery(RawQueryContract $query): QueryResult
     {
-        if (!$this->connected) {
-            throw new ConnectionException("Not connected to Prometheus");
+        if (! $this->connected) {
+            throw new ConnectionException('Not connected to Prometheus');
         }
 
         try {
@@ -88,7 +93,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB
             $params = ['query' => trim($queryString)];
 
             // Add time parameters if present
-            if (!empty($timeParams)) {
+            if (! empty($timeParams)) {
                 if (isset($timeParams['start']) && isset($timeParams['end'])) {
                     $endpoint = '/api/v1/query_range';
                     $params['start'] = $timeParams['start'];
@@ -103,7 +108,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB
             $response = $this->makeApiRequest($endpoint, $params);
 
             if ($response['status'] !== 'success') {
-                throw new QueryException($query, "Query execution failed: " . ($response['error'] ?? 'Unknown error'));
+                throw new QueryException($query, 'Query execution failed: '.($response['error'] ?? 'Unknown error'));
             }
 
             // Process the result
@@ -131,21 +136,22 @@ class PrometheusDriver extends AbstractTimeSeriesDB
 
             return new QueryResult($result);
         } catch (Exception $e) {
-            throw new QueryException($query, "Query execution failed: " . $e->getMessage());
+            throw new QueryException($query, 'Query execution failed: '.$e->getMessage());
         }
     }
 
     /**
      * Make an API request to the Prometheus HTTP API using Guzzle
      *
-     * @param string $endpoint The API endpoint
-     * @param array $params Query parameters
+     * @param  string  $endpoint  The API endpoint
+     * @param  array  $params  Query parameters
      * @return array The response data
+     *
      * @throws Exception
      */
     private function makeApiRequest(string $endpoint, array $params = []): array
     {
-        $url = $this->apiUrl . $endpoint;
+        $url = $this->apiUrl.$endpoint;
 
         // Use injected client or create a new one
         $client = $this->client ?? new Client([
@@ -155,14 +161,14 @@ class PrometheusDriver extends AbstractTimeSeriesDB
 
         // Prepare request options
         $options = [];
-        if (!empty($params)) {
+        if (! empty($params)) {
             $options['query'] = $params;
         }
 
         if ($this->debug) {
             $fullUrl = $url;
-            if (!empty($params)) {
-                $fullUrl .= '?' . http_build_query($params);
+            if (! empty($params)) {
+                $fullUrl .= '?'.http_build_query($params);
             }
             error_log("Prometheus API request: $fullUrl");
         }
@@ -182,15 +188,15 @@ class PrometheusDriver extends AbstractTimeSeriesDB
             $data = json_decode($responseBody, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new Exception("Failed to parse API response: " . json_last_error_msg());
+                throw new Exception('Failed to parse API response: '.json_last_error_msg());
             }
 
             return $data;
         } catch (GuzzleException $e) {
             if ($this->debug) {
-                error_log("Prometheus API request failed: " . $e->getMessage());
+                error_log('Prometheus API request failed: '.$e->getMessage());
             }
-            throw new Exception("API request failed: " . $e->getMessage());
+            throw new Exception('API request failed: '.$e->getMessage());
         }
     }
 
@@ -213,8 +219,6 @@ class PrometheusDriver extends AbstractTimeSeriesDB
 
     /**
      * Check if the driver is connected to Prometheus
-     *
-     * @return bool
      */
     public function isConnected(): bool
     {
@@ -224,9 +228,6 @@ class PrometheusDriver extends AbstractTimeSeriesDB
     /**
      * Set the HTTP client for API requests
      * This is primarily used for testing to inject a mock client
-     *
-     * @param Client $client
-     * @return void
      */
     public function setClient(Client $client): void
     {

@@ -24,7 +24,7 @@ class FolderStrategy implements RRDTagStrategyContract
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function getFilePath(string $measurement, array $tags = []): string
     {
@@ -32,12 +32,12 @@ class FolderStrategy implements RRDTagStrategyContract
         $filenameTags = $tags;
 
         // Process folder tags
-        if (!empty($this->folderTags) && !empty($tags)) {
+        if (! empty($this->folderTags) && ! empty($tags)) {
             foreach ($this->folderTags as $folderTag) {
                 $tagValue = isset($tags[$folderTag])
                     ? File::sanitize($tags[$folderTag])
                     : '_unset';
-                $path .= $tagValue . File::DIRECTORY_SEPARATOR;
+                $path .= $tagValue.File::DIRECTORY_SEPARATOR;
             }
         }
 
@@ -50,7 +50,7 @@ class FolderStrategy implements RRDTagStrategyContract
         $filenameTags = array_diff_key($filenameTags, array_flip($this->folderTags));
         $filename = $this->encodeTags($measurement, $filenameTags);
 
-        return $path . $filename;
+        return $path.$filename;
     }
 
     public function resolveFilePaths(string $measurement, array $tagConditions): array
@@ -58,7 +58,8 @@ class FolderStrategy implements RRDTagStrategyContract
         // find all
         if (empty($tagConditions)) {
             $path = implode(File::DIRECTORY_SEPARATOR, array_fill(0, count($this->folderTags), '*'));
-            return glob($this->baseDir . $path . File::DIRECTORY_SEPARATOR . $measurement . '*.rrd');
+
+            return glob($this->baseDir.$path.File::DIRECTORY_SEPARATOR.$measurement.'*.rrd');
         }
 
         $files = [];
@@ -84,8 +85,9 @@ class FolderStrategy implements RRDTagStrategyContract
             // Look for an exact match for this folder tag
             foreach ($tagConditions as $tagCondition) {
                 if ($tagCondition->tag === $folderTag && $tagCondition->operator === '=') {
-                    $searchPath .= $tagCondition->value . File::DIRECTORY_SEPARATOR;
+                    $searchPath .= $tagCondition->value.File::DIRECTORY_SEPARATOR;
                     $baseFolderTags[$folderTag] = $tagCondition->value;
+
                     continue 2;
                 }
             }
@@ -139,6 +141,7 @@ class FolderStrategy implements RRDTagStrategyContract
                 }
             }
         }
+
         return $currentFolderTags;
     }
 }

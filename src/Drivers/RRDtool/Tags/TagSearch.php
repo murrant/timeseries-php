@@ -7,8 +7,8 @@ class TagSearch
     /**
      * Search tags based on given conditions
      *
-     * @param array<string, mixed> $tags Array of tag => value pairs
-     * @param TagCondition[] $conditions Array of TagCondition objects
+     * @param  array<string, mixed>  $tags  Array of tag => value pairs
+     * @param  TagCondition[]  $conditions  Array of TagCondition objects
      * @return bool True if all conditions are satisfied
      */
     public static function search(array $tags, array $conditions): bool
@@ -32,7 +32,7 @@ class TagSearch
         // Evaluate AND conditions - all must be true
         $andResult = true;
         foreach ($andConditions as $condition) {
-            if (!self::evaluateCondition($tags, $condition)) {
+            if (! self::evaluateCondition($tags, $condition)) {
                 $andResult = false;
                 break;
             }
@@ -40,7 +40,7 @@ class TagSearch
 
         // Evaluate OR conditions - at least one must be true
         $orResult = empty($orConditions);
-        if (!empty($orConditions)) {
+        if (! empty($orConditions)) {
             foreach ($orConditions as $condition) {
                 if (self::evaluateCondition($tags, $condition)) {
                     $orResult = true;
@@ -59,11 +59,12 @@ class TagSearch
     private static function evaluateCondition(array $tags, TagCondition $condition): bool
     {
         // Check if the tag exists
-        if (!array_key_exists($condition->tag, $tags)) {
+        if (! array_key_exists($condition->tag, $tags)) {
             return false;
         }
 
         $tagValue = (string) $tags[$condition->tag];
+
         return $condition->matches($tagValue);
     }
 
@@ -71,8 +72,8 @@ class TagSearch
      * Advanced search with support for sequential logical operations
      * Processes conditions left-to-right with proper operator precedence
      *
-     * @param array<string, mixed> $tags Array of tag => value pairs
-     * @param TagCondition[] $conditions Array of TagCondition objects
+     * @param  array<string, mixed>  $tags  Array of tag => value pairs
+     * @param  TagCondition[]  $conditions  Array of TagCondition objects
      * @return bool True if the logical expression evaluates to true
      */
     public static function advancedSearch(array $tags, array $conditions): bool
@@ -103,8 +104,8 @@ class TagSearch
      * Complex search with explicit grouping support
      * Allows for more sophisticated logical operations by grouping conditions
      *
-     * @param array<string, mixed> $tags Array of tag => value pairs
-     * @param array $conditionGroups Array of condition groups, each with 'conditions' and 'operator'
+     * @param  array<string, mixed>  $tags  Array of tag => value pairs
+     * @param  array  $conditionGroups  Array of condition groups, each with 'conditions' and 'operator'
      * @return bool True if the grouped expression evaluates to true
      */
     public static function groupedSearch(array $tags, array $conditionGroups): bool
@@ -136,4 +137,3 @@ class TagSearch
         return $finalResult;
     }
 }
-

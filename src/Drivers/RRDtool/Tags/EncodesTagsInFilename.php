@@ -13,28 +13,29 @@ trait EncodesTagsInFilename
 
         if (! empty($tags)) {
             ksort($tags); // Ensure consistent naming
-            $tagStr = implode(File::TAG_SEPARATOR, array_map(function($k, $v) {
+            $tagStr = implode(File::TAG_SEPARATOR, array_map(function ($k, $v) {
                 $k = File::sanitizeTag($k);
                 $v = File::sanitizeTag($v);
-                return $k . File::TAG_VALUE_SEPARATOR . $v;
+
+                return $k.File::TAG_VALUE_SEPARATOR.$v;
             }, array_keys($tags), array_values($tags)));
-            $filename .= File::TAG_SEPARATOR . $tagStr;
+            $filename .= File::TAG_SEPARATOR.$tagStr;
         }
 
-        $filename = File::sanitize($filename . '.rrd');
-        
+        $filename = File::sanitize($filename.'.rrd');
+
         if (strlen($filename) > 255) {
             throw new RRDtoolFilenameTooLongException("RRDtool filename too long: $filename");
         }
-        
+
         return $filename;
     }
 
     protected function parseTags(string $filename): array
     {
         // should no contain suffix
-        $tagChars = '([^' . File::TAG_SEPARATOR . File::TAG_VALUE_SEPARATOR . ']+)';
-        $regex = '#' . $tagChars . File::TAG_VALUE_SEPARATOR . $tagChars . '#';
+        $tagChars = '([^'.File::TAG_SEPARATOR.File::TAG_VALUE_SEPARATOR.']+)';
+        $regex = '#'.$tagChars.File::TAG_VALUE_SEPARATOR.$tagChars.'#';
         preg_match_all($regex, $filename, $matches);
 
         return array_combine($matches[1], $matches[2]);

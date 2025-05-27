@@ -22,7 +22,7 @@ class RRDtoolConfig extends AbstractConfig
             'RRA:MAX:0.5:1:2016',          // 5min max for 1 week
             'RRA:MAX:0.5:12:1488',         // 1hour max for 2 months
             'RRA:MIN:0.5:1:2016',          // 5min min for 1 week
-            'RRA:MIN:0.5:12:1488'          // 1hour min for 2 months
+            'RRA:MIN:0.5:12:1488',          // 1hour min for 2 months
         ],
     ];
 
@@ -31,11 +31,11 @@ class RRDtoolConfig extends AbstractConfig
     public function __construct(array $config = [])
     {
         $this->addValidator('rrdtool_path', function ($path) {
-            return is_string($path) && !empty($path);
+            return is_string($path) && ! empty($path);
         });
 
         $this->addValidator('rrd_dir', function ($dir) {
-            return is_string($dir) && !empty($dir);
+            return is_string($dir) && ! empty($dir);
         });
 
         $this->addValidator('use_rrdcached', function ($use) {
@@ -46,6 +46,7 @@ class RRDtoolConfig extends AbstractConfig
             if ($this->get('use_rrdcached', false) && empty($address)) {
                 return false;
             }
+
             return true;
         });
 
@@ -59,7 +60,7 @@ class RRDtoolConfig extends AbstractConfig
         });
 
         $this->addValidator('default_archives', function ($archives) {
-            return is_array($archives) && !empty($archives);
+            return is_array($archives) && ! empty($archives);
         });
 
         parent::__construct($config);
@@ -67,12 +68,11 @@ class RRDtoolConfig extends AbstractConfig
 
     /**
      * Get the tag strategy instance
-     *
-     * @return RRDTagStrategyContract
      */
     public function getTagStrategy(): RRDTagStrategyContract
     {
         $strategyClass = $this->get('tag_strategy');
-        return new $strategyClass();
+
+        return new $strategyClass;
     }
 }

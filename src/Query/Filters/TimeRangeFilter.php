@@ -2,7 +2,4 @@
 
 namespace Filters;
 
-class TimeRangeFilter
-{
-
-}
+class TimeRangeFilter {}

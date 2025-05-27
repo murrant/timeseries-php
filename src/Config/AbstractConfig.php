@@ -7,8 +7,11 @@ use TimeSeriesPhp\Exceptions\ConfigurationException;
 abstract class AbstractConfig implements ConfigInterface
 {
     protected array $config = [];
+
     protected array $required = [];
+
     protected array $defaults = [];
+
     protected array $validators = [];
 
     /**
@@ -37,7 +40,7 @@ abstract class AbstractConfig implements ConfigInterface
     {
         // Check required fields
         foreach ($this->getRequired() as $field) {
-            if (!$this->has($field)) {
+            if (! $this->has($field)) {
                 throw new ConfigurationException("Required configuration field '{$field}' is missing");
             }
         }
@@ -46,7 +49,7 @@ abstract class AbstractConfig implements ConfigInterface
         foreach ($this->validators as $field => $validator) {
             if ($this->has($field)) {
                 $value = $this->get($field);
-                if (!$validator($value)) {
+                if (! $validator($value)) {
                     throw new ConfigurationException("Invalid value for configuration field '{$field}'");
                 }
             }
@@ -68,6 +71,7 @@ abstract class AbstractConfig implements ConfigInterface
     public function set(string $key, $value): ConfigInterface
     {
         $this->config[$key] = $value;
+
         return $this;
     }
 
@@ -83,6 +87,7 @@ abstract class AbstractConfig implements ConfigInterface
     {
         $this->config = array_merge($this->config, $config);
         $this->validate();
+
         return $this;
     }
 

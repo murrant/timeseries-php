@@ -2,7 +2,4 @@
 
 namespace TimeSeriesPhp\Utils;
 
-class ValidationHelper
-{
-
-}
+class ValidationHelper {}

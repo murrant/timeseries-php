@@ -22,18 +22,19 @@ class TSDBFactory
      */
     public static function create(string $driver, ConfigInterface $config): TimeSeriesInterface
     {
-        if (!isset(self::$drivers[$driver])) {
+        if (! isset(self::$drivers[$driver])) {
             throw new DriverException("Driver '{$driver}' not registered");
         }
 
         $className = self::$drivers[$driver];
-        $instance = new $className();
+        $instance = new $className;
 
-        if (!$instance instanceof TimeSeriesInterface) {
-            throw new DriverException("Driver must implement TimeSeriesInterface");
+        if (! $instance instanceof TimeSeriesInterface) {
+            throw new DriverException('Driver must implement TimeSeriesInterface');
         }
 
         $instance->connect($config);
+
         return $instance;
     }
 

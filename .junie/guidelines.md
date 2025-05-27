@@ -1,6 +1,28 @@
-# Development Guidelines for timeseries-php
+You are an Expert in PHP, Time Series Databases, an Laravel.
 
-This document provides guidelines and information for developers working on the timeseries-php project.
+## Code Style and Development Guidelines
+- Use PHP v8.2 features
+- Enforce strict types and array shapes
+- Use the following tools:
+   Tests: phpunit
+   Formatting: pint
+   Static Analysis: phpstan
+
+## Project Structure
+- Keep classes focused on a single responsibility (SOLID principles)
+- Use data transfer objects where appropriate
+- Drivers specific files should be under their directory in src/Drivers
+
+## Performance Considerations
+- Use batch operations when possible (e.g., `writeBatch()` instead of multiple `write()` calls)
+- Be mindful of memory usage when handling large result sets
+- Consider using aggregations on the database side rather than in PHP
+
+### Error Handling
+- Use exceptions for error handling
+- Create specific exception classes for different error types
+- Document exceptions in PHPDoc comments
+
 
 ## Build/Configuration Instructions
 
@@ -17,37 +39,8 @@ This document provides guidelines and information for developers working on the 
 
 ### Configuration
 The library uses a factory pattern for creating database driver instances:
-
-```php
-// Create an InfluxDB driver instance
-$influxdb = TSDBFactory::create('influxdb', [
-    'host' => 'localhost',
-    'port' => 8086,
-    'database' => 'mydb'
-]);
-
-// Create an RRDtool driver instance
-$rrdtool = TSDBFactory::create('rrdtool', [
-    'rrd_dir' => '/var/lib/rrd'
-]);
-```
-
-Each driver has its own configuration requirements:
-
-#### InfluxDB Configuration
-- `host`: InfluxDB server hostname (default: localhost)
-- `port`: InfluxDB server port (default: 8086)
-- `database`: Database name
-- `username`: Username for authentication (optional)
-- `password`: Password for authentication (optional)
-- `ssl`: Use SSL/TLS connection (default: false)
-- `verify_ssl`: Verify SSL certificate (default: true)
-- `timeout`: Connection timeout in seconds (default: 10)
-
-#### RRDtool Configuration
-- `rrd_dir`: Directory where RRD files are stored
-- `step`: Default step interval in seconds (default: 60)
-- `heartbeat`: Default heartbeat interval in seconds (default: 120)
+Each driver has its own configuration requirements
+The Laravel Facade and Service Provider should use a Laravel compatible configuration, but other parts of the code should not.
 
 ## Testing Information
 
@@ -62,16 +55,16 @@ tests/
 ```
 
 ### Running Tests
-To run the tests:
+Use ./vendor/bin/phpunit directly to run tests
 
 ```bash
-# Run all tests
+# all tests
 ./vendor/bin/phpunit
 
-# Run a specific test file
+# a specific test file
 ./vendor/bin/phpunit tests/Core/QueryTest.php
 
-# Run a specific test method
+# a specific test method
 ./vendor/bin/phpunit --filter testMethodName tests/Core/QueryTest.php
 
 # Generate code coverage report
@@ -123,14 +116,6 @@ The project uses PHPStan for static analysis:
 ./vendor/bin/phpstan analyse src tests
 ```
 
-## Code Style and Development Guidelines
-
-### General Guidelines
-1. Follow PSR-4 for autoloading
-2. Follow PSR-12 for code style
-3. Use type hints for method parameters and return types
-4Keep classes focused on a single responsibility (SOLID principles)
-
 ### Architecture Overview
 The library follows a layered architecture:
 
@@ -166,12 +151,5 @@ Example of registering a new driver:
 TSDBFactory::registerDriver('newdriver', NewDriverConfig::class, NewDriver::class);
 ```
 
-### Error Handling
-- Use exceptions for error handling
-- Create specific exception classes for different error types
-- Document exceptions in PHPDoc comments
 
-## Performance Considerations
-- Use batch operations when possible (e.g., `writeBatch()` instead of multiple `write()` calls)
-- Be mindful of memory usage when handling large result sets
-- Consider using aggregations on the database side rather than in PHP
+

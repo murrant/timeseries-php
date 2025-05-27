@@ -16,6 +16,7 @@ use TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver;
 class PrometheusDriverTest extends TestCase
 {
     private PrometheusDriver $driver;
+
     private PrometheusConfig $config;
 
     protected function setUp(): void
@@ -28,7 +29,7 @@ class PrometheusDriverTest extends TestCase
                 ['url', null, 'http://localhost:9090'],
                 ['timeout', null, 30],
                 ['verify_ssl', null, true],
-                ['debug', null, false]
+                ['debug', null, false],
             ]);
 
         $this->config->method('getClientConfig')
@@ -36,7 +37,7 @@ class PrometheusDriverTest extends TestCase
                 'url' => 'http://localhost:9090',
                 'timeout' => 30,
                 'verify_ssl' => true,
-                'debug' => false
+                'debug' => false,
             ]);
 
         // Create a mock of the Guzzle Client
@@ -45,7 +46,7 @@ class PrometheusDriverTest extends TestCase
         // Sample response for status/config endpoint (used in connect)
         $configResponse = new Response(200, [], json_encode([
             'status' => 'success',
-            'data' => ['some' => 'config']
+            'data' => ['some' => 'config'],
         ]));
 
         // Sample response for query endpoint
@@ -55,14 +56,14 @@ class PrometheusDriverTest extends TestCase
                 'result' => [
                     [
                         'metric' => ['__name__' => 'cpu_usage', 'instance' => 'localhost:9090'],
-                        'value' => [time(), '0.75']
+                        'value' => [time(), '0.75'],
                     ],
                     [
                         'metric' => ['__name__' => 'cpu_usage', 'instance' => 'localhost:9091'],
-                        'value' => [time(), '0.85']
-                    ]
-                ]
-            ]
+                        'value' => [time(), '0.85'],
+                    ],
+                ],
+            ],
         ]));
 
         // Configure the mock client to return appropriate responses
@@ -71,11 +72,12 @@ class PrometheusDriverTest extends TestCase
                 if (strpos($url, '/api/v1/status/config') !== false) {
                     return $configResponse;
                 }
+
                 return $queryResponse;
             });
 
         // Create the real driver (not a mock)
-        $this->driver = new PrometheusDriver();
+        $this->driver = new PrometheusDriver;
 
         // Inject the mock client
         $this->driver->setClient($mockClient);
@@ -84,18 +86,18 @@ class PrometheusDriverTest extends TestCase
         $this->driver->connect($this->config);
     }
 
-    public function testConnect()
+    public function test_connect()
     {
         $result = $this->driver->isConnected();
         $this->assertTrue($result);
     }
 
-    public function testQuery()
+    public function test_query()
     {
         $query = new Query('cpu_usage');
         $query->select(['value'])
-              ->where('instance', '=', 'localhost:9090')
-              ->timeRange(new DateTime('2023-01-01'), new DateTime('2023-01-02'));
+            ->where('instance', '=', 'localhost:9090')
+            ->timeRange(new DateTime('2023-01-01'), new DateTime('2023-01-02'));
 
         $result = $this->driver->query($query);
 
@@ -103,7 +105,7 @@ class PrometheusDriverTest extends TestCase
         $this->assertCount(2, $result->getSeries());
     }
 
-    public function testRawQuery()
+    public function test_raw_query()
     {
         $rawQuery = new RawQuery('cpu_usage{instance="localhost:9090"}');
         $result = $this->driver->rawQuery($rawQuery);
@@ -112,7 +114,7 @@ class PrometheusDriverTest extends TestCase
         $this->assertCount(2, $result->getSeries());
     }
 
-    public function testWrite()
+    public function test_write()
     {
         $dataPoint = new DataPoint(
             'cpu_usage',
@@ -125,7 +127,7 @@ class PrometheusDriverTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function testWriteBatch()
+    public function test_write_batch()
     {
         $dataPoints = [
             new DataPoint(
@@ -137,27 +139,27 @@ class PrometheusDriverTest extends TestCase
                 'cpu_usage',
                 ['value' => 25.0],
                 ['instance' => 'localhost:9091']
-            )
+            ),
         ];
 
         $result = $this->driver->writeBatch($dataPoints);
         $this->assertTrue($result);
     }
 
-    public function testCreateDatabase()
+    public function test_create_database()
     {
         $result = $this->driver->createDatabase('test_db');
         $this->assertTrue($result);
     }
 
-    public function testListDatabases()
+    public function test_list_databases()
     {
         $databases = $this->driver->listDatabases();
         $this->assertIsArray($databases);
         $this->assertEmpty($databases);
     }
 
-    public function testClose()
+    public function test_close()
     {
         $this->driver->close();
 

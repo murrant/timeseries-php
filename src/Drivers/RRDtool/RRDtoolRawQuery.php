@@ -7,6 +7,7 @@ use TimeSeriesPhp\Core\RawQueryContract;
 class RRDtoolRawQuery implements RawQueryContract
 {
     protected array $parameters = [];
+
     protected array $data = [];
 
     public function __construct(
@@ -85,7 +86,7 @@ class RRDtoolRawQuery implements RawQueryContract
     {
         $this->data[] = [
             'XPORT',
-            $vname . ($legend ? ":$legend" : ''),
+            $vname.($legend ? ":$legend" : ''),
         ];
 
         return $this;
@@ -93,18 +94,18 @@ class RRDtoolRawQuery implements RawQueryContract
 
     public function getRawQuery(): string
     {
-        $rawQuery = $this->type . ' ';
+        $rawQuery = $this->type.' ';
 
         foreach ($this->parameters as $param => $value) {
             if ($value === null) {
-                $rawQuery .= escapeshellarg($param) . ' ';
+                $rawQuery .= escapeshellarg($param).' ';
             } else {
-                $rawQuery .= escapeshellarg($param) . ' ' . escapeshellarg($value) . ' ';
+                $rawQuery .= escapeshellarg($param).' '.escapeshellarg($value).' ';
             }
         }
 
         foreach ($this->data as $data) {
-            $rawQuery .= escapeshellarg(implode(':', $data)) . ' ';
+            $rawQuery .= escapeshellarg(implode(':', $data)).' ';
         }
 
         return $rawQuery;

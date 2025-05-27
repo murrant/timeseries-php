@@ -8,22 +8,39 @@ use DateTime;
 class Query
 {
     private string $measurement;
+
     private array $fields = ['*'];
+
     private array $conditions = [];
+
     private ?DateTime $startTime = null;
+
     private ?DateTime $endTime = null;
+
     private ?DateInterval $relativeTime = null;
+
     private array $groupBy = [];
+
     private array $aggregations = [];
+
     private ?string $interval = null;
+
     private ?int $limit = null;
+
     private ?int $offset = null;
+
     private array $orderBy = [];
+
     private array $having = [];
+
     private ?string $fillPolicy = null;
+
     private ?float $fillValue = null;
+
     private array $mathExpressions = [];
+
     private bool $distinct = false;
+
     private ?string $timezone = null;
 
     public function __construct(string $measurement)
@@ -35,6 +52,7 @@ class Query
     public function select(array $fields): self
     {
         $this->fields = $fields;
+
         return $this;
     }
 
@@ -42,6 +60,7 @@ class Query
     {
         $this->fields = $fields;
         $this->distinct = true;
+
         return $this;
     }
 
@@ -52,8 +71,9 @@ class Query
             'field' => $field,
             'operator' => $operator,
             'value' => $value,
-            'type' => 'AND'
+            'type' => 'AND',
         ];
+
         return $this;
     }
 
@@ -63,8 +83,9 @@ class Query
             'field' => $field,
             'operator' => $operator,
             'value' => $value,
-            'type' => 'OR'
+            'type' => 'OR',
         ];
+
         return $this;
     }
 
@@ -74,8 +95,9 @@ class Query
             'field' => $field,
             'operator' => 'IN',
             'value' => $values,
-            'type' => 'AND'
+            'type' => 'AND',
         ];
+
         return $this;
     }
 
@@ -85,8 +107,9 @@ class Query
             'field' => $field,
             'operator' => 'NOT IN',
             'value' => $values,
-            'type' => 'AND'
+            'type' => 'AND',
         ];
+
         return $this;
     }
 
@@ -96,8 +119,9 @@ class Query
             'field' => $field,
             'operator' => 'BETWEEN',
             'value' => [$min, $max],
-            'type' => 'AND'
+            'type' => 'AND',
         ];
+
         return $this;
     }
 
@@ -107,8 +131,9 @@ class Query
             'field' => $field,
             'operator' => 'REGEX',
             'value' => $pattern,
-            'type' => 'AND'
+            'type' => 'AND',
         ];
+
         return $this;
     }
 
@@ -118,6 +143,7 @@ class Query
         $this->startTime = $start;
         $this->endTime = $end;
         $this->relativeTime = null;
+
         return $this;
     }
 
@@ -126,12 +152,14 @@ class Query
         $this->startTime = $start;
         $this->endTime = null;
         $this->relativeTime = null;
+
         return $this;
     }
 
     public function until(DateTime $end): self
     {
         $this->endTime = $end;
+
         return $this;
     }
 
@@ -141,12 +169,14 @@ class Query
         $this->relativeTime = $this->parseDuration($duration);
         $this->startTime = null;
         $this->endTime = null;
+
         return $this;
     }
 
     public function timezone(string $timezone): self
     {
         $this->timezone = $timezone;
+
         return $this;
     }
 
@@ -157,12 +187,14 @@ class Query
         if ($interval) {
             $this->interval = $interval;
         }
+
         return $this;
     }
 
     public function groupByTime(string $interval): self
     {
         $this->interval = $interval;
+
         return $this;
     }
 
@@ -172,8 +204,9 @@ class Query
         $this->aggregations[] = [
             'function' => $function,
             'field' => $field,
-            'alias' => $alias
+            'alias' => $alias,
         ];
+
         return $this;
     }
 
@@ -229,6 +262,7 @@ class Query
     {
         $this->fillPolicy = $policy;
         $this->fillValue = $value;
+
         return $this;
     }
 
@@ -262,8 +296,9 @@ class Query
     {
         $this->mathExpressions[] = [
             'expression' => $expression,
-            'alias' => $alias
+            'alias' => $alias,
         ];
+
         return $this;
     }
 
@@ -271,18 +306,21 @@ class Query
     public function limit(int $limit): self
     {
         $this->limit = $limit;
+
         return $this;
     }
 
     public function offset(int $offset): self
     {
         $this->offset = $offset;
+
         return $this;
     }
 
     public function orderBy(string $field, string $direction = 'ASC'): self
     {
         $this->orderBy[$field] = strtoupper($direction);
+
         return $this;
     }
 
@@ -297,8 +335,9 @@ class Query
         $this->having[] = [
             'field' => $field,
             'operator' => $operator,
-            'value' => $value
+            'value' => $value,
         ];
+
         return $this;
     }
 
@@ -308,7 +347,7 @@ class Query
         // Simple duration parser - extend as needed
         $matches = [];
         if (preg_match('/^(\d+)([smhdwy])$/', $duration, $matches)) {
-            $amount = (int)$matches[1];
+            $amount = (int) $matches[1];
             $unit = $matches[2];
 
             switch ($unit) {
@@ -316,7 +355,7 @@ class Query
                 case 'm': return new DateInterval("PT{$amount}M");
                 case 'h': return new DateInterval("PT{$amount}H");
                 case 'd': return new DateInterval("P{$amount}D");
-                case 'w': return new DateInterval("P" . ($amount * 7) . "D");
+                case 'w': return new DateInterval('P'.($amount * 7).'D');
                 case 'y': return new DateInterval("P{$amount}Y");
             }
         }
@@ -324,35 +363,106 @@ class Query
     }
 
     // Enhanced getters
-    public function getMeasurement(): string { return $this->measurement; }
-    public function getFields(): array { return $this->fields; }
-    public function getConditions(): array { return $this->conditions; }
-    public function getStartTime(): ?DateTime { return $this->startTime; }
-    public function getEndTime(): ?DateTime { return $this->endTime; }
-    public function getRelativeTime(): ?DateInterval { return $this->relativeTime; }
-    public function getGroupBy(): array { return $this->groupBy; }
-    public function getAggregations(): array { return $this->aggregations; }
-    public function getInterval(): ?string { return $this->interval; }
-    public function getLimit(): ?int { return $this->limit; }
-    public function getOffset(): ?int { return $this->offset; }
-    public function getOrderBy(): array { return $this->orderBy; }
-    public function getHaving(): array { return $this->having; }
-    public function getFillPolicy(): ?string { return $this->fillPolicy; }
-    public function getFillValue(): ?float { return $this->fillValue; }
-    public function getMathExpressions(): array { return $this->mathExpressions; }
-    public function isDistinct(): bool { return $this->distinct; }
-    public function getTimezone(): ?string { return $this->timezone; }
+    public function getMeasurement(): string
+    {
+        return $this->measurement;
+    }
+
+    public function getFields(): array
+    {
+        return $this->fields;
+    }
+
+    public function getConditions(): array
+    {
+        return $this->conditions;
+    }
+
+    public function getStartTime(): ?DateTime
+    {
+        return $this->startTime;
+    }
+
+    public function getEndTime(): ?DateTime
+    {
+        return $this->endTime;
+    }
+
+    public function getRelativeTime(): ?DateInterval
+    {
+        return $this->relativeTime;
+    }
+
+    public function getGroupBy(): array
+    {
+        return $this->groupBy;
+    }
+
+    public function getAggregations(): array
+    {
+        return $this->aggregations;
+    }
+
+    public function getInterval(): ?string
+    {
+        return $this->interval;
+    }
+
+    public function getLimit(): ?int
+    {
+        return $this->limit;
+    }
+
+    public function getOffset(): ?int
+    {
+        return $this->offset;
+    }
+
+    public function getOrderBy(): array
+    {
+        return $this->orderBy;
+    }
+
+    public function getHaving(): array
+    {
+        return $this->having;
+    }
+
+    public function getFillPolicy(): ?string
+    {
+        return $this->fillPolicy;
+    }
+
+    public function getFillValue(): ?float
+    {
+        return $this->fillValue;
+    }
+
+    public function getMathExpressions(): array
+    {
+        return $this->mathExpressions;
+    }
+
+    public function isDistinct(): bool
+    {
+        return $this->distinct;
+    }
+
+    public function getTimezone(): ?string
+    {
+        return $this->timezone;
+    }
 
     // Helper method to check if query has aggregations
     public function hasAggregations(): bool
     {
-        return !empty($this->aggregations);
+        return ! empty($this->aggregations);
     }
 
     // Helper method to check if query has time grouping
     public function hasTimeGrouping(): bool
     {
-        return !empty($this->interval);
+        return ! empty($this->interval);
     }
 
     // Method to validate query before execution
@@ -368,7 +478,7 @@ class Query
             $errors[] = 'Aggregations require GROUP BY clause or time interval';
         }
 
-        if (!empty($this->having) && !$this->hasAggregations()) {
+        if (! empty($this->having) && ! $this->hasAggregations()) {
             $errors[] = 'HAVING clause requires aggregation functions';
         }
 

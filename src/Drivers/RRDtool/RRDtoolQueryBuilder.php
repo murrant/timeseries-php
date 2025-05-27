@@ -22,11 +22,11 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
     {
         // Validate the query first
         $errors = $query->validate();
-        if (!empty($errors)) {
-            throw new InvalidArgumentException('Query validation failed: ' . implode(', ', $errors));
+        if (! empty($errors)) {
+            throw new InvalidArgumentException('Query validation failed: '.implode(', ', $errors));
         }
 
-        $rawQuery = new RRDtoolRawQuery();
+        $rawQuery = new RRDtoolRawQuery;
         $measurement = $query->getMeasurement();
 
         // Handle time range
@@ -82,7 +82,7 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
     {
         $measurement = $query->getMeasurement();
         $conditions = $query->getConditions();
-        
+
         // Extract tag conditions to determine which RRD files to query
         $tagConditions = [];
         foreach ($conditions as $condition) {
@@ -110,13 +110,15 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
         $varCounter = 1;
         foreach ($rrdPaths as $rrdPath) {
             foreach ($fields as $field) {
-                if ($field === '*') continue;
+                if ($field === '*') {
+                    continue;
+                }
 
                 $varName = "v{$varCounter}";
-                
+
                 // Default to AVERAGE consolidation function
                 $cf = 'AVERAGE';
-                
+
                 // Apply field-level conditions if any
                 if ($this->hasFieldConditions($field, $conditions)) {
                     // For RRDtool, we'll handle filtering post-aggregation
@@ -137,7 +139,7 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
         foreach ($aggregations as $agg) {
             $function = strtoupper($agg['function']);
             $field = $agg['field'];
-            $alias = $agg['alias'] ?? $field . '_' . strtolower($function);
+            $alias = $agg['alias'] ?? $field.'_'.strtolower($function);
 
             $varName = "agg{$varCounter}";
 
@@ -146,43 +148,43 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
                     // Sum all matching data sources
                     $this->buildSumAggregation($rawQuery, $varName, $field);
                     break;
-                
+
                 case 'AVG':
                 case 'AVERAGE':
                     // Average all matching data sources
                     $this->buildAvgAggregation($rawQuery, $varName, $field);
                     break;
-                
+
                 case 'MIN':
                     // Minimum across all data sources
                     $this->buildMinAggregation($rawQuery, $varName, $field);
                     break;
-                
+
                 case 'MAX':
                     // Maximum across all data sources
                     $this->buildMaxAggregation($rawQuery, $varName, $field);
                     break;
-                
+
                 case 'COUNT':
                     // Count non-null values
                     $this->buildCountAggregation($rawQuery, $varName, $field);
                     break;
-                
+
                 case 'FIRST':
                     // Use VDEF to get first value
-                    $rawQuery->vdef($varName, "v1,FIRST");
+                    $rawQuery->vdef($varName, 'v1,FIRST');
                     break;
-                
+
                 case 'LAST':
                     // Use VDEF to get last value
-                    $rawQuery->vdef($varName, "v1,LAST");
+                    $rawQuery->vdef($varName, 'v1,LAST');
                     break;
-                
+
                 case 'STDDEV':
                     // Standard deviation using RPN
                     $this->buildStddevAggregation($rawQuery, $varName, $field);
                     break;
-                
+
                 default:
                     if (str_starts_with($function, 'PERCENTILE_')) {
                         $percentile = floatval(substr($function, 11));
@@ -203,7 +205,7 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
         foreach ($mathExpressions as $expr) {
             $varName = "math{$varCounter}";
             $expression = $this->translateMathExpression($expr['expression']);
-            
+
             $rawQuery->cdef($varName, $expression);
             $varCounter++;
         }
@@ -216,17 +218,17 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
         $mathExpressions = $query->getMathExpressions();
 
         // Export aggregated values if present
-        if (!empty($aggregations)) {
+        if (! empty($aggregations)) {
             $varCounter = 1000;
             foreach ($aggregations as $agg) {
-                $alias = $agg['alias'] ?? $agg['field'] . '_' . strtolower($agg['function']);
+                $alias = $agg['alias'] ?? $agg['field'].'_'.strtolower($agg['function']);
                 $rawQuery->xport("agg{$varCounter}", $alias);
                 $varCounter++;
             }
         }
 
         // Export math expressions if present
-        if (!empty($mathExpressions)) {
+        if (! empty($mathExpressions)) {
             $varCounter = 2000;
             foreach ($mathExpressions as $expr) {
                 $rawQuery->xport("math{$varCounter}", $expr['alias']);
@@ -254,35 +256,35 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
     private function buildSumAggregation(RRDtoolRawQuery $rawQuery, string $varName, ?string $field): void
     {
         // This is a simplified example - you'd need to identify all matching variables
-        $rawQuery->cdef($varName, "v1,v2,+"); // Add more variables as needed
+        $rawQuery->cdef($varName, 'v1,v2,+'); // Add more variables as needed
     }
 
     private function buildAvgAggregation(RRDtoolRawQuery $rawQuery, string $varName, ?string $field): void
     {
         // Calculate average using RPN
-        $rawQuery->cdef($varName, "v1,v2,+,2,/"); // Simplified for 2 variables
+        $rawQuery->cdef($varName, 'v1,v2,+,2,/'); // Simplified for 2 variables
     }
 
     private function buildMinAggregation(RRDtoolRawQuery $rawQuery, string $varName, ?string $field): void
     {
-        $rawQuery->cdef($varName, "v1,v2,MIN");
+        $rawQuery->cdef($varName, 'v1,v2,MIN');
     }
 
     private function buildMaxAggregation(RRDtoolRawQuery $rawQuery, string $varName, ?string $field): void
     {
-        $rawQuery->cdef($varName, "v1,v2,MAX");
+        $rawQuery->cdef($varName, 'v1,v2,MAX');
     }
 
     private function buildCountAggregation(RRDtoolRawQuery $rawQuery, string $varName, ?string $field): void
     {
         // Count non-NaN values
-        $rawQuery->cdef($varName, "v1,UN,0,1,IF,v2,UN,0,1,IF,+");
+        $rawQuery->cdef($varName, 'v1,UN,0,1,IF,v2,UN,0,1,IF,+');
     }
 
     private function buildStddevAggregation(RRDtoolRawQuery $rawQuery, string $varName, ?string $field): void
     {
         // Standard deviation calculation using RPN (simplified)
-        $rawQuery->vdef($varName, "v1,STDEV");
+        $rawQuery->vdef($varName, 'v1,STDEV');
     }
 
     private function translateMathExpression(string $expression): string
@@ -300,13 +302,13 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
         $seconds += $interval->i * 60;
         $seconds += $interval->h * 3600;
         $seconds += $interval->d * 86400;
-        
+
         return "end-{$seconds}s";
     }
 
     private function parseInterval(?string $interval): string
     {
-        if (!$interval) {
+        if (! $interval) {
             return '300'; // Default 5 minutes
         }
 
@@ -316,9 +318,9 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
             $unit = $matches[2];
 
             return match ($unit) {
-                's' => (string)$amount,
-                'm' => (string)($amount * 60),
-                'h' => (string)($amount * 3600),
+                's' => (string) $amount,
+                'm' => (string) ($amount * 60),
+                'h' => (string) ($amount * 3600),
                 default => '300'
             };
         }
@@ -340,6 +342,7 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
                 return true;
             }
         }
+
         return false;
     }
 }

@@ -14,21 +14,21 @@ class CacheConfig extends AbstractConfig
         'redis' => [
             'host' => 'localhost',
             'port' => 6379,
-            'database' => 0
+            'database' => 0,
         ],
         'memcached' => [
-            'servers' => [['localhost', 11211]]
+            'servers' => [['localhost', 11211]],
         ],
         'file' => [
             'path' => '/tmp/tsdb_cache',
-            'permissions' => 0755
-        ]
+            'permissions' => 0755,
+        ],
     ];
 
     public function __construct(array $config = [])
     {
-        $this->addValidator('ttl', fn($ttl) => is_int($ttl) && $ttl > 0);
-        $this->addValidator('driver', fn($driver) => in_array($driver, ['memory', 'redis', 'memcached', 'file']));
+        $this->addValidator('ttl', fn ($ttl) => is_int($ttl) && $ttl > 0);
+        $this->addValidator('driver', fn ($driver) => in_array($driver, ['memory', 'redis', 'memcached', 'file']));
 
         parent::__construct($config);
     }
@@ -41,6 +41,7 @@ class CacheConfig extends AbstractConfig
     public function getDriverConfig(?string $driver = null): array
     {
         $driver = $driver ?: $this->get('driver');
+
         return $this->get($driver, []);
     }
 }

@@ -13,6 +13,7 @@ use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
 class InfluxDBDriverTest extends TestCase
 {
     private InfluxDBDriver $driver;
+
     private InfluxDBConfig $config;
 
     protected function setUp(): void
@@ -28,7 +29,7 @@ class InfluxDBDriverTest extends TestCase
                 ['bucket', null, 'test-bucket'],
                 ['timeout', null, 30],
                 ['verify_ssl', null, true],
-                ['debug', null, false]
+                ['debug', null, false],
             ]);
 
         $this->config->method('getClientConfig')
@@ -39,7 +40,7 @@ class InfluxDBDriverTest extends TestCase
                 'org' => 'test-org',
                 'timeout' => 30,
                 'verifySSL' => true,
-                'debug' => false
+                'debug' => false,
             ]);
 
         // Create a partial mock of InfluxDBDriver to mock abstract methods
@@ -55,22 +56,22 @@ class InfluxDBDriverTest extends TestCase
         $this->driver->method('executeQuery')
             ->willReturn([
                 ['time' => '2023-01-01T00:00:00Z', 'value' => 10],
-                ['time' => '2023-01-01T01:00:00Z', 'value' => 15]
+                ['time' => '2023-01-01T01:00:00Z', 'value' => 15],
             ]);
     }
 
-    public function testConnect()
+    public function test_connect()
     {
         $result = $this->driver->connect($this->config);
         $this->assertTrue($result);
     }
 
-    public function testQuery()
+    public function test_query()
     {
         $query = new Query('cpu_usage');
         $query->select(['usage_user', 'usage_system'])
-              ->where('host', 'server01')
-              ->timeRange(new DateTime('2023-01-01'), new DateTime('2023-01-02'));
+            ->where('host', 'server01')
+            ->timeRange(new DateTime('2023-01-01'), new DateTime('2023-01-02'));
 
         $result = $this->driver->query($query);
 
@@ -78,7 +79,7 @@ class InfluxDBDriverTest extends TestCase
         $this->assertCount(2, $result->getSeries());
     }
 
-    public function testRawQuery()
+    public function test_raw_query()
     {
         $result = $this->driver->rawQuery('SELECT * FROM cpu_usage');
 
@@ -86,7 +87,7 @@ class InfluxDBDriverTest extends TestCase
         $this->assertCount(2, $result->getSeries());
     }
 
-    public function testWrite()
+    public function test_write()
     {
         $dataPoint = new DataPoint(
             'cpu_usage',
@@ -99,7 +100,7 @@ class InfluxDBDriverTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function testWriteBatch()
+    public function test_write_batch()
     {
         $dataPoints = [
             new DataPoint(
@@ -111,20 +112,20 @@ class InfluxDBDriverTest extends TestCase
                 'cpu_usage',
                 ['usage_user' => 25.0],
                 ['host' => 'server02']
-            )
+            ),
         ];
 
         $result = $this->driver->writeBatch($dataPoints);
         $this->assertTrue($result);
     }
 
-    public function testCreateDatabase()
+    public function test_create_database()
     {
         $result = $this->driver->createDatabase('test_db');
         $this->assertTrue($result);
     }
 
-    public function testListDatabases()
+    public function test_list_databases()
     {
         $databases = $this->driver->listDatabases();
         $this->assertIsArray($databases);
@@ -132,7 +133,7 @@ class InfluxDBDriverTest extends TestCase
         $this->assertContains('testdb', $databases);
     }
 
-    public function testClose()
+    public function test_close()
     {
         $this->driver->close();
 
