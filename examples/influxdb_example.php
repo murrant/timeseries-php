@@ -29,7 +29,10 @@ if (file_exists('.influx_db_token')) {
   --description "Example all-access token"', $output);
 
     $token = trim($output[0]);
-    file_put_contents('.influx_db_token', $token);
+    if ($token) {
+        echo "Successfully created token: {$token}\n";
+        file_put_contents('.influx_db_token', $token);
+    }
 }
 
 // Step 1: Initialize the InfluxDB driver with configuration
@@ -57,6 +60,17 @@ try {
 } catch (DriverException|ConfigurationException $e) {
     echo "Failed to connect to InfluxDB: {$e->getMessage()}\n";
     exit(1);
+}
+
+// Check health
+if ($influxdb instanceof InfluxDBDriver) {
+    $ping = $influxdb->getHealth();
+    var_export($ping);
+    if ($ping) {
+        echo "Successfully pinged InfluxDB!\n";
+    } else {
+        echo "Failed to ping InfluxDB.\n";
+    }
 }
 
 // Step 2: Create and save data points

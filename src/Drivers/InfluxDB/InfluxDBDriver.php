@@ -24,6 +24,7 @@ use TimeSeriesPhp\Core\RawQueryContract;
 use TimeSeriesPhp\Exceptions\ConfigurationException;
 use TimeSeriesPhp\Exceptions\ConnectionException;
 use TimeSeriesPhp\Exceptions\QueryException;
+use TimeSeriesPhp\Exceptions\WriteException;
 
 class InfluxDBDriver extends AbstractTimeSeriesDB
 {
@@ -102,7 +103,11 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     public function write(DataPoint $dataPoint): bool
     {
         if (! $this->isConnected()) {
-            throw new ConnectionException('Not connected to InfluxDB');
+            throw new WriteException('Not connected to InfluxDB');
+        }
+
+        if ($this->writeApi === null) {
+            throw new WriteException('WriteApi is not initialized');
         }
 
         try {
@@ -121,7 +126,11 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     public function writeBatch(array $dataPoints): bool
     {
         if (! $this->isConnected()) {
-            throw new ConnectionException('Not connected to InfluxDB');
+            throw new WriteException('Not connected to InfluxDB');
+        }
+
+        if ($this->writeApi === null) {
+            throw new WriteException('WriteApi is not initialized');
         }
 
         try {
@@ -150,24 +159,27 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             throw new QueryException($query, 'Not connected to InfluxDB');
         }
 
+        if ($this->queryApi === null) {
+            throw new QueryException($query, 'QueryApi is not initialized');
+        }
+
         try {
-            $result1 = $this->queryApi->query($query->getRawQuery(), $this->org);
+            $queryResult = $this->queryApi->query($query->getRawQuery(), $this->org);
             $data = [];
 
-            foreach ($result1 as $table) {
-                foreach ($table->records as $record) {
-                    $values = $record->values;
-                    $data[] = $values;
+            if ($queryResult !== null) {
+                foreach ($queryResult as $table) {
+                    foreach ($table->records as $record) {
+                        $values = $record->values;
+                        $data[] = $values;
+                    }
                 }
             }
 
-            $executeQuery = $data;
+            return new QueryResult($data);
         } catch (Exception $e) {
             throw new QueryException($query, 'Query execution failed: '.$e->getMessage());
         }
-        $result = $executeQuery;
-
-        return new QueryResult($result);
     }
 
     public function createDatabase(string $database): bool
@@ -205,8 +217,11 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             }
 
             $bucketNames = [];
-            foreach ($buckets->getBuckets() as $bucket) {
-                $bucketNames[] = $bucket->getName();
+            $bucketsList = $buckets->getBuckets();
+            if ($bucketsList !== null) {
+                foreach ($bucketsList as $bucket) {
+                    $bucketNames[] = $bucket->getName();
+                }
             }
 
             return $bucketNames;
@@ -219,6 +234,10 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
     public function deleteMeasurement(string $measurement, ?DateTime $start = null, ?DateTime $stop = null): bool
     {
+        if ($this->client === null) {
+            throw new ConnectionException('Client is not initialized');
+        }
+
         try {
             /** @var DeleteService $service */
             $service = $this->client->createService(DeleteService::class);
@@ -238,23 +257,27 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     }
 
     /**
-     * @return array<string, ?string>
+     * @return array{'status': 'success'|'fail', 'build': string, 'version': string}
      */
     public function getHealth(): array
     {
         try {
-            $health = $this->client->health();
+            if ($this->client === null) {
+                throw new ConnectionException('Client is not initialized');
+            }
+
+            $health = $this->client->ping();
 
             return [
-                'status' => $health->getStatus(),
-                'message' => $health->getMessage(),
-                'version' => $health->getVersion(),
+                'status' => 'success',
+                'build' => $health['X-Influxdb-Build'][0] ?? 'Unknown',
+                'version' => $health['X-Influxdb-Version'][0] ?? 'Unknown',
             ];
         } catch (Exception $e) {
             return [
                 'status' => 'fail',
-                'message' => $e->getMessage(),
-                'version' => null,
+                'build' => $e->getMessage(),
+                'version' => 'Unknown',
             ];
         }
     }
@@ -262,6 +285,10 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     private function getOrgId(): string
     {
         if ($this->orgId === null) {
+            if ($this->client === null) {
+                throw new ConnectionException('Client is not initialized');
+            }
+
             $orgService = $this->client->createService(OrganizationsService::class);
             if (! $orgService instanceof OrganizationsService) {
                 throw new RuntimeException('Failed to create OrganizationsService');
@@ -274,11 +301,13 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
             $orgs = $organizations->getOrgs();
 
-            foreach ($orgs as $org) {
-                if ($org->getName() == $this->org) {
-                    $this->orgId = $org->getId();
+            if ($orgs !== null) {
+                foreach ($orgs as $org) {
+                    if ($org->getName() == $this->org) {
+                        $this->orgId = $org->getId() ?? '';
 
-                    return $this->orgId;
+                        return $this->orgId;
+                    }
                 }
             }
 
@@ -291,6 +320,10 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     private function getBucketsService(): BucketsService
     {
         if ($this->bucketsService === null) {
+            if ($this->client === null) {
+                throw new ConnectionException('Client is not initialized');
+            }
+
             $service = $this->client->createService(BucketsService::class);
 
             if (! $service instanceof BucketsService) {

@@ -81,12 +81,12 @@ class PrometheusDriver extends AbstractTimeSeriesDB
                 $timeParams['start'] = $matches[1];
                 $timeParams['end'] = $matches[2];
                 // Remove the comment from the query
-                $queryString = preg_replace('/#\s*time range:[^\n]+/', '', $queryString);
+                $queryString = preg_replace('/#\s*time range:[^\n]+/', '', $queryString) ?? $queryString;
             } elseif (preg_match('/#\s*relative time:\s*([^\n]+)/', $queryString, $matches)) {
                 // Convert relative time to absolute time
                 $timeParams['time'] = $matches[1];
                 // Remove the comment from the query
-                $queryString = preg_replace('/#\s*relative time:[^\n]+/', '', $queryString);
+                $queryString = preg_replace('/#\s*relative time:[^\n]+/', '', $queryString) ?? $queryString;
             }
 
             // Determine which API endpoint to use based on the query
