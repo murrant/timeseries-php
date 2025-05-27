@@ -28,10 +28,9 @@ class DriverConfigFactory
     /**
      * Create a driver configuration instance
      *
-     * @param string $driver
-     * @param array<string, mixed> $config
+     * @param  array<string, mixed>  $config
+     *
      * @throws ConfigurationException
-     * @return DriverConfigInterface
      */
     public static function create(string $driver, array $config = []): DriverConfigInterface
     {
@@ -46,7 +45,7 @@ class DriverConfigFactory
 
     /**
      * Get available driver names
-     * 
+     *
      * @return string[]
      */
     public static function getAvailableDrivers(): array

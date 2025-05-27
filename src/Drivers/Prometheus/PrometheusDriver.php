@@ -146,7 +146,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB
      *
      * @param  string  $endpoint  The API endpoint
      * @param  array<string, string>  $params  Query parameters
-     * @return array The response data
+     * @return array<string, mixed> The response data
      *
      * @throws Exception
      */

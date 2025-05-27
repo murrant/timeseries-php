@@ -8,8 +8,7 @@ use TimeSeriesPhp\Config\ConfigInterface;
 abstract class ConfigTestCase extends TestCase
 {
     /**
-     * @param array<string, mixed> $config
-     * @return ConfigInterface
+     * @param  array<string, mixed>  $config
      */
     abstract protected function createConfig(array $config): ConfigInterface;
 

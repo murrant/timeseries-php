@@ -27,7 +27,8 @@ abstract class AbstractConfig implements ConfigInterface
     protected array $validators = [];
 
     /**
-     * @param array<string, mixed> $config
+     * @param  array<string, mixed>  $config
+     *
      * @throws ConfigurationException
      */
     public function __construct(array $config = [])
@@ -46,7 +47,6 @@ abstract class AbstractConfig implements ConfigInterface
 
     /**
      * @return string[]
-     *
      */
     protected function getRequired(): array
     {
@@ -104,7 +104,8 @@ abstract class AbstractConfig implements ConfigInterface
     }
 
     /**
-     * @param array<string, mixed> $config
+     * @param  array<string, mixed>  $config
+     *
      * @throws ConfigurationException
      */
     public function merge(array $config): ConfigInterface

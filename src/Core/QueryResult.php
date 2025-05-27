@@ -15,8 +15,8 @@ class QueryResult
     private array $metadata;
 
     /**
-     * @param array<int|string, mixed> $series
-     * @param array<string, mixed> $metadata
+     * @param  array<int|string, mixed>  $series
+     * @param  array<string, mixed>  $metadata
      */
     public function __construct(array $series = [], array $metadata = [])
     {

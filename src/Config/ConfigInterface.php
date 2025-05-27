@@ -18,7 +18,7 @@ interface ConfigInterface
     public function has(string $key): bool;
 
     /**
-     * @param array<string, mixed> $config
+     * @param  array<string, mixed>  $config
      */
     public function merge(array $config): self;
 }

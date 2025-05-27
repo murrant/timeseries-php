@@ -54,6 +54,7 @@ class MultiDatabaseConfig extends AbstractDriverConfig
 
     /**
      * @return array<string, string>
+     *
      * @throws ConfigurationException
      */
     public function getConnection(string $name): array
@@ -69,6 +70,7 @@ class MultiDatabaseConfig extends AbstractDriverConfig
 
     /**
      * @return array<string, string>
+     *
      * @throws ConfigurationException
      */
     public function getDefaultConnection(): array
@@ -87,8 +89,7 @@ class MultiDatabaseConfig extends AbstractDriverConfig
     }
 
     /**
-     * @param string $name
-     * @param array<string, string> $config
+     * @param  array<string, string>  $config
      * @return $this
      */
     public function addConnection(string $name, array $config): self

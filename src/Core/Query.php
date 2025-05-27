@@ -31,7 +31,7 @@ class Query
     private array $groupBy = [];
 
     /**
-     * @var array<int, array{'function': string, 'field': string, 'alias': string}>
+     * @var array<int, array{'function': string, 'field': ?string, 'alias': ?string}>
      */
     private array $aggregations = [];
 
@@ -72,7 +72,7 @@ class Query
     // Enhanced field selection with aliases and calculations
 
     /**
-     * @param string[] $fields
+     * @param  string[]  $fields
      */
     public function select(array $fields): self
     {
@@ -82,7 +82,7 @@ class Query
     }
 
     /**
-     * @param string[] $fields
+     * @param  string[]  $fields
      */
     public function selectDistinct(array $fields): self
     {
@@ -118,7 +118,7 @@ class Query
     }
 
     /**
-     * @param array<int, mixed> $values
+     * @param  array<int, mixed>  $values
      */
     public function whereIn(string $field, array $values): self
     {
@@ -133,7 +133,7 @@ class Query
     }
 
     /**
-     * @param array<int, mixed> $values
+     * @param  array<int, mixed>  $values
      */
     public function whereNotIn(string $field, array $values): self
     {
@@ -215,7 +215,7 @@ class Query
     }
 
     /**
-     * @param string[] $tags
+     * @param  string[]  $tags
      */
     public function groupBy(array $tags, ?string $interval = null): self
     {
@@ -443,7 +443,7 @@ class Query
     }
 
     /**
-     * @return array<int, array{'function': string, 'field': string, 'alias': string}>
+     * @return array<int, array{'function': string, 'field': ?string, 'alias': ?string}>
      */
     public function getAggregations(): array
     {

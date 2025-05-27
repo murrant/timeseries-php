@@ -57,7 +57,9 @@ class TagSearch
 
     /**
      * Evaluate a single condition against the tags
-     * @param string[] $tags
+     *
+     * @param  string[]  $tags
+     *
      * @throws TSDBException
      */
     private static function evaluateCondition(array $tags, TagCondition $condition): bool
@@ -122,7 +124,7 @@ class TagSearch
 
         // Evaluate each group
         foreach ($conditionGroups as $group) {
-            $conditions = $group['conditions'] ?? [];
+            $conditions = $group['conditions'];
             $groupResult = self::search($tags, $conditions);
             $groupResults[] = $groupResult;
         }

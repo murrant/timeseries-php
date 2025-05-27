@@ -11,7 +11,6 @@ use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyContract;
 use TimeSeriesPhp\Exceptions\ConnectionException;
 use TimeSeriesPhp\Exceptions\QueryException;
 use TimeSeriesPhp\Exceptions\RRDtoolPrematureUpdateException;
-use TimeSeriesPhp\Exceptions\TSDBException;
 use TimeSeriesPhp\Exceptions\WriteException;
 
 class RRDtoolDriver extends AbstractTimeSeriesDB
@@ -94,8 +93,8 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     }
 
     /**
-     * @param string $rrdPath
-     * @param array<string, mixed> $fields
+     * @param  array<string, mixed>  $fields
+     *
      * @throws WriteException
      */
     private function createRRD(string $rrdPath, array $fields): void
@@ -212,7 +211,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     }
 
     /**
-     * @param array<string, string> $info
+     * @param  array<string, string>  $info
      * @return string[]
      */
     private function getDataSourceOrder(array $info): array
@@ -228,9 +227,8 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     }
 
     /**
-     * @param array{'meta': array{'legend': array<int, string>, 'start': int, 'end': int, 'step': int}, 'data': array<int, mixed>} $json
-     * @param string[] $requestedFields
-     * @return QueryResult
+     * @param  array{'meta': array{'legend': array<int, string>, 'start': int, 'end': int, 'step': int}, 'data': array<int, mixed>}  $json
+     * @param  string[]  $requestedFields
      */
     private function parseRRDXportJson(array $json, array $requestedFields): QueryResult
     {
@@ -317,8 +315,9 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     // RRDtool-specific methods
 
     /**
-     * @param array<string, string> $tags
-     * @param array<string, mixed> $config
+     * @param  array<string, string>  $tags
+     * @param  array<string, mixed>  $config
+     *
      * @throws WriteException
      */
     public function createRRDWithCustomConfig(string $measurement, array $tags, array $config): bool
@@ -355,8 +354,9 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     }
 
     /**
-     * @param string[] $tags
-     * @param array<string, string|string[]> $graphConfig
+     * @param  string[]  $tags
+     * @param  array<string, string|string[]>  $graphConfig
+     *
      * @throws Exception
      */
     public function getRRDGraph(string $measurement, array $tags, array $graphConfig): string

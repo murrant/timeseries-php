@@ -8,7 +8,8 @@ use TimeSeriesPhp\Utils\File;
 trait EncodesTagsInFilename
 {
     /**
-     * @param array<string, string> $tags
+     * @param  array<string, string>  $tags
+     *
      * @throws RRDtoolFilenameTooLongException
      */
     protected function encodeTags(string $measurement, array $tags): string
@@ -49,7 +50,7 @@ trait EncodesTagsInFilename
     }
 
     /**
-     * @param string[] $filenames
+     * @param  string[]  $filenames
      * @return string[]
      */
     protected function parseMeasurements(array $filenames): array

@@ -21,10 +21,8 @@ class DataPoint
     private DateTime $timestamp;
 
     /**
-     * @param string $measurement
-     * @param array<string, mixed> $fields
-     * @param array<string, string> $tags
-     * @param DateTime|null $timestamp
+     * @param  array<string, mixed>  $fields
+     * @param  array<string, string>  $tags
      */
     public function __construct(
         string $measurement,
@@ -71,11 +69,6 @@ class DataPoint
         return $this;
     }
 
-    /**
-     * @param string $key
-     * @param mixed $value
-     * @return self
-     */
     public function addField(string $key, mixed $value): self
     {
         $this->fields[$key] = $value;

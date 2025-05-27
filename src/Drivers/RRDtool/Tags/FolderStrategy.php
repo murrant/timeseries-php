@@ -128,7 +128,7 @@ class FolderStrategy implements RRDTagStrategyContract
     }
 
     /**
-     * @param array<string, string> $baseFolderTags
+     * @param  array<string, string>  $baseFolderTags
      * @return array<string, string>
      */
     private function getFolderTags(array $baseFolderTags, string $relativePath): array

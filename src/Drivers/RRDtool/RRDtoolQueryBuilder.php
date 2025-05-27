@@ -101,7 +101,7 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
     }
 
     /**
-     * @param string[] $rrdPaths
+     * @param  string[]  $rrdPaths
      */
     private function buildDataDefinitions(RRDtoolRawQuery $rawQuery, Query $query, array $rrdPaths): void
     {
@@ -334,7 +334,7 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
     }
 
     /**
-     * @param string[] $rrdPaths
+     * @param  string[]  $rrdPaths
      * @return string[]
      */
     private function getAvailableFields(array $rrdPaths): array
@@ -345,7 +345,7 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
     }
 
     /**
-     * @param array<array{'field': string}> $conditions
+     * @param  array<array{'field': string}>  $conditions
      */
     private function hasFieldConditions(string $field, array $conditions): bool
     {
