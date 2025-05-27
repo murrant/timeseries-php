@@ -11,6 +11,7 @@ use TimeSeriesPhp\Core\RawQueryContract;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyContract;
 use TimeSeriesPhp\Exceptions\ConnectionException;
 use TimeSeriesPhp\Exceptions\QueryException;
+use TimeSeriesPhp\Exceptions\RRDtoolPrematureUpdateException;
 use TimeSeriesPhp\Exceptions\WriteException;
 
 class RRDtoolDriver extends AbstractTimeSeriesDB
@@ -180,7 +181,12 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         exec($cmd . ' 2>&1', $output, $returnCode);
 
         if ($returnCode !== 0) {
-            throw new WriteException("Failed to update RRD: " . implode("\n", $output));
+            $message = "Failed to update RRD: " . implode("\n", $output);
+            if(preg_match('/illegal attempt to update using time \d+ when last update time is/', $message)) {
+                throw new RRDtoolPrematureUpdateException($message);
+            }
+
+            throw new WriteException($message, $returnCode);
         }
 
         return true;
@@ -231,67 +237,53 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         return $mapping[strtolower($aggregation ?? 'average')] ?? 'AVERAGE';
     }
 
-    private function parseRRDFetchOutput(array $output, array $requestedFields): array
+    private function parseRRDXportJson(array $json, array $requestedFields): QueryResult
     {
-        $result = [];
-        $headers = [];
+        $allFields = in_array('*', $requestedFields);
+        $legend = array_filter($json['meta']['legend'], function ($field) use ($requestedFields) {
+            return in_array('*', $requestedFields)
+                || in_array($field, $requestedFields);
+        });
+        $start = $json['meta']['start'];
+        $step = $json['meta']['step'];
+        $series = [];
 
-        foreach ($output as $i => $line) {
-            $line = trim($line);
-            if (empty($line)) continue;
-
-            // First non-empty line contains headers
-            if (empty($headers) && !preg_match('/^\d+:/', $line)) {
-                $headers = preg_split('/\s+/', $line);
-                continue;
+        foreach ($json['data'] as $index => $values) {
+            $entry = ['time' => $start + $step * $index];
+            foreach ($legend as $field => $name) {
+                $entry[$name] = $values[$field];
             }
-
-            // Data lines start with timestamp
-            if (preg_match('/^(\d+):\s*(.+)$/', $line, $matches)) {
-                $timestamp = (int)$matches[1];
-                $values = preg_split('/\s+/', trim($matches[2]));
-
-                $dataPoint = ['time' => date('c', $timestamp)];
-
-                foreach ($headers as $j => $header) {
-                    if (isset($values[$j]) && $values[$j] !== 'nan') {
-                        // Only include requested fields or all if none specified
-                        if (in_array('*', $requestedFields) ||
-                            in_array($header, $requestedFields) ||
-                            empty($requestedFields)) {
-                            $dataPoint[$header] = is_numeric($values[$j]) ? (float)$values[$j] : $values[$j];
-                        }
-                    }
-                }
-
-                $result[] = $dataPoint;
-            }
+            $series[] = $entry;
         }
 
-        return $result;
+        return new QueryResult($series, $json['meta']);
     }
 
 
     public function rawQuery(RawQueryContract $query): QueryResult
     {
         if (! $query instanceof RRDtoolRawQuery) {
-            throw new QueryException("Invalid query type");
+            throw new QueryException($query, "Invalid query type");
         }
 
         // For RRDtool, raw query would be a direct rrdtool command
         exec($this->rrdtoolPath . ' ' . $query->getRawQuery() . ' 2>&1', $output, $returnCode);
 
+        $output = implode("\n", $output);
         if ($returnCode !== 0) {
-            throw new QueryException("RRD command failed: " . implode("\n", $output));
+            throw new QueryException($query, "RRD command failed: " . $output, $returnCode);
         }
 
-        // Try to parse as fetch output, otherwise return raw
-        try {
-            $parsed = $this->parseRRDFetchOutput($output, ['*']);
-            return new QueryResult($parsed);
-        } catch (Exception $e) {
-            return new QueryResult([['raw_output' => implode("\n", $output)]]);
+        if ($query->type === 'xport') {
+            $json = json_decode($output, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new QueryException($query, "Failed to parse RRD command output: " . json_last_error_msg() . PHP_EOL . $output, json_last_error());
+            }
+
+            return $this->parseRRDXportJson($json, ['*']);
         }
+
+        return new QueryResult([['raw_output' => $output]]);
     }
 
     public function createDatabase(string $database): bool

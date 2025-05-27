@@ -22,15 +22,6 @@ class NoTagsStrategy implements RRDTagStrategyContract
     /**
      * @inheritDoc
      */
-    public function findFilesByTag(string $tagName, string $tagValue, string $baseDir): array
-    {
-        // This strategy doesn't use tags, so it can't find files by tag
-        return [];
-    }
-
-    /**
-     * @inheritDoc
-     */
     public function findFilesByTags(array $tags, string $baseDir): array
     {
         // This strategy doesn't use tags, so it can't find files by tags

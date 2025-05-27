@@ -134,7 +134,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     public function rawQuery(RawQueryContract $query): QueryResult
     {
         if (!$this->isConnected()) {
-            throw new QueryException("Not connected to InfluxDB");
+            throw new QueryException($query, "Not connected to InfluxDB");
         }
 
         try {
@@ -150,7 +150,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
             $executeQuery = $data;
         } catch (Exception $e) {
-            throw new QueryException("Query execution failed: " . $e->getMessage());
+            throw new QueryException($query, "Query execution failed: " . $e->getMessage());
         }
         $result = $executeQuery;
         return new QueryResult($result);

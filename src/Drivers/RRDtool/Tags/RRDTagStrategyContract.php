@@ -24,19 +24,4 @@ interface RRDTagStrategyContract
      * @return array List of file paths that match all the tags
      */
     public function findFilesByTags(array $tags, string $baseDir): array;
-
-    /**
-     * Get the configuration for this strategy
-     *
-     * @return array The configuration
-     */
-    public function getConfig(): array;
-
-    /**
-     * Set the configuration for this strategy
-     *
-     * @param array $config The configuration
-     * @return void
-     */
-    public function setConfig(array $config): void;
 }

@@ -43,9 +43,6 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
             $rawQuery->param('--end', $endTime->format('U'));
         }
 
-        // Add the RRD file path
-        $rawQuery->param($rrdPath);
-
         // Map the aggregation function to RRDtool consolidation function
         $cf = $this->mapAggregationToConsolidationFunction($aggregation);
 
@@ -54,14 +51,14 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
         if (!empty($fields) && !in_array('*', $fields)) {
             foreach ($fields as $field) {
                 $varName = 'v' . md5($field);
-                $rawQuery->param('DEF', $varName . '=' . $rrdPath . ':' . $field . ':' . $cf);
-                $rawQuery->param('XPORT', $varName . ':' . $field);
+                $rawQuery->def($varName, $rrdPath, $field, $cf);
+                $rawQuery->xport($varName, $field);
             }
         } else {
             // We'll need to determine available fields from the RRD file
             // For now, we'll use a placeholder approach
-            $rawQuery->param('DEF', 'v1=' . $rrdPath . ':value:' . $cf);
-            $rawQuery->param('XPORT', 'v1:value');
+            $rawQuery->def('v1', $rrdPath, 'value', $cf);
+            $rawQuery->xport('v1', 'value');
         }
 
         return $rawQuery;

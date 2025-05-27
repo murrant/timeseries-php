@@ -34,10 +34,17 @@ class Query
         return $this;
     }
 
-    public function timeRange(DateTime $start, DateTime $end): self
+        public function timePeriod(string $period, ?DateTime $end = null): self
+    {
+        $this->startTime = new DateTime('-' . $period);
+        $this->endTime = $end ?? new DateTime;
+        return $this;
+    }
+
+    public function timeRange(DateTime $start, ?DateTime $end = null): self
     {
         $this->startTime = $start;
-        $this->endTime = $end;
+        $this->endTime = $end ?? new DateTime;
         return $this;
     }
 

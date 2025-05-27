@@ -5,7 +5,77 @@ A library to abstract storing data in and retrieving data from timeseries databa
 ## Installation
 `composer require librenms/timeseries-php`
 
-## Usage
+## Laravel Integration
+
+This library includes Laravel integration. After installing the package, Laravel will automatically discover the service provider and register the facade.
+
+### Publishing the Configuration
+
+To publish the configuration file, run:
+
+```bash
+php artisan vendor:publish --tag=time-series-config
+```
+
+This will create a `config/time-series.php` file in your Laravel application.
+
+### Configuration
+
+The configuration file includes options for all supported drivers:
+
+```php
+// config/time-series.php
+return [
+    // Default driver to use
+    'driver' => env('TIMESERIES_DRIVER', 'rrdtool'),
+
+    // Driver-specific configurations
+    'drivers' => [
+        'influxdb' => [
+            'url' => env('INFLUXDB_URL', 'http://localhost:8086'),
+            'token' => env('INFLUXDB_TOKEN', ''),
+            'org' => env('INFLUXDB_ORG', ''),
+            'bucket' => env('INFLUXDB_BUCKET', ''),
+            // Additional options...
+        ],
+
+        'rrdtool' => [
+            'rrdtool_path' => env('RRDTOOL_PATH', 'rrdtool'),
+            'rrd_dir' => env('RRDTOOL_DIR', '/tmp/rrd'),
+            // Additional options...
+        ],
+
+        // Other drivers...
+    ],
+];
+```
+
+### Usage with Laravel
+
+You can use the `TimeSeries` facade to access the time series functionality:
+
+```php
+use TimeSeriesPhp\Support\TimeSeriesFacade as TimeSeries;
+
+// Write data
+$dataPoint = new DataPoint('cpu_usage', ['value' => 85.5])
+    ->addTag('host', 'server1');
+
+TimeSeries::write($dataPoint);
+
+// Query data
+$query = (new Query('cpu_usage'))
+    ->select(['value'])
+    ->where('host', 'server1')
+    ->timeRange(
+        now()->subHour(),
+        now()
+    );
+
+$result = TimeSeries::query($query);
+```
+
+## Direct Usage
 ```php
 try {
     // InfluxDB example

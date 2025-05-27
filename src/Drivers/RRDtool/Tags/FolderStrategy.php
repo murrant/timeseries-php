@@ -64,14 +64,6 @@ class FolderStrategy implements RRDTagStrategyContract
     /**
      * @inheritDoc
      */
-    public function findFilesByTag(string $tagName, string $tagValue, string $baseDir): array
-    {
-        return $this->findFilesByTags([$tagName => $tagValue], $baseDir);
-    }
-
-    /**
-     * @inheritDoc
-     */
     public function findFilesByTags(array $tags, string $baseDir): array
     {
         if (empty($tags)) {

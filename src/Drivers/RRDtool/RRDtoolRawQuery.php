@@ -7,10 +7,14 @@ use TimeSeriesPhp\Core\RawQueryContract;
 class RRDtoolRawQuery implements RawQueryContract
 {
     protected array $parameters = [];
+    protected array $data = [];
 
     public function __construct(
         public readonly string $type = 'xport'
     ) {
+        if ($type === 'xport') {
+            $this->param('--json');
+        }
     }
 
     public function param(string $param, ?string $value = null): self
@@ -20,6 +24,72 @@ class RRDtoolRawQuery implements RawQueryContract
         return $this;
     }
 
+    // DEF:<vname>=<rrdfile>:<ds-name>:<CF>[:step=<step>][:start=<time>][:end=<time>][:reduce=<CF>][:daemon=<address>]
+    public function def(string $vname, string $rrdfile, string $dsName, string $cf, ?string $step = null, ?string $start = null, ?string $end = null, ?string $reduce = null, ?string $daemon = null): self
+    {
+        $vars = [
+            'DEF',
+            "$vname=$rrdfile",
+            $dsName,
+            $cf,
+        ];
+
+        if ($step) {
+            $vars[] = "step=$step";
+        }
+
+        if ($start) {
+            $vars[] = "start=$start";
+        }
+
+        if ($end) {
+            $vars[] = "end=$end";
+        }
+
+        if ($reduce) {
+            $vars[] = "reduce=$reduce";
+        }
+
+        if ($daemon) {
+            $vars[] = "daemon=$daemon";
+        }
+
+        $this->data[] = $vars;
+
+        return $this;
+    }
+
+    // CDEF:vname=RPN expression
+    public function cdef(string $vname, string $rpnExpression): self
+    {
+        $this->data[] = [
+            'CDEF',
+            "$vname=$rpnExpression",
+        ];
+
+        return $this;
+    }
+
+    // VDEF:vname=RPN expression
+    public function vdef(string $vname, string $rpnExpression): self
+    {
+        $this->data[] = [
+            'VDEF',
+            "$vname=$rpnExpression",
+        ];
+
+        return $this;
+    }
+
+    public function xport(string $vname, ?string $legend = null): self
+    {
+        $this->data[] = [
+            'XPORT',
+            $vname . ($legend ? ":$legend" : ''),
+        ];
+
+        return $this;
+    }
 
     public function getRawQuery(): string
     {
@@ -31,6 +101,10 @@ class RRDtoolRawQuery implements RawQueryContract
             } else {
                 $rawQuery .= escapeshellarg($param) . ' ' . escapeshellarg($value) . ' ';
             }
+        }
+
+        foreach ($this->data as $data) {
+            $rawQuery .= escapeshellarg(implode(':', $data)) . ' ';
         }
 
         return $rawQuery;
