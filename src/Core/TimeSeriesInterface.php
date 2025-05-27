@@ -28,6 +28,9 @@ interface TimeSeriesInterface
 
     public function createDatabase(string $database): bool;
 
+    /**
+     * @return string[]
+     */
     public function listDatabases(): array;
 
     public function close(): void;

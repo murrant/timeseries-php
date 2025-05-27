@@ -11,6 +11,7 @@ use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyContract;
 use TimeSeriesPhp\Exceptions\ConnectionException;
 use TimeSeriesPhp\Exceptions\QueryException;
 use TimeSeriesPhp\Exceptions\RRDtoolPrematureUpdateException;
+use TimeSeriesPhp\Exceptions\TSDBException;
 use TimeSeriesPhp\Exceptions\WriteException;
 
 class RRDtoolDriver extends AbstractTimeSeriesDB
@@ -59,28 +60,10 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     }
 
     /**
-     * Find RRD files that match a set of tag values
-     *
-     * @param  array<string, string>  $tags  The tags as key-value pairs to search for
-     * @param  string|null  $measurement  Optional measurement name to filter by
-     * @return array List of file paths that match all the tags
-     */
-    public function findFilesByTags(array $tags, ?string $measurement = null): array
-    {
-        // Convert tags to TagCondition objects
-        $tagConditions = [];
-        foreach ($tags as $tag => $value) {
-            $tagConditions[] = new Tags\TagCondition($tag, '=', $value);
-        }
-
-        return $this->tagStrategy->resolveFilePaths($measurement ?? '*', $tagConditions);
-    }
-
-    /**
      * Get the RRD file path for a measurement and tags
      *
      * @param  string  $measurement  The measurement name
-     * @param  array  $tags  The tags as key-value pairs
+     * @param  array<string, string>  $tags  The tags as key-value pairs
      * @return string The full path to the RRD file
      */
     private function getRRDPath(string $measurement, array $tags = []): string
@@ -92,7 +75,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
      * Build an rrdtool command with rrdcached support if configured
      *
      * @param  string  $command  The rrdtool command (create, update, fetch, etc.)
-     * @param  array  $args  The command arguments
+     * @param  string[]  $args  The command arguments
      * @return string The full command string
      */
     private function buildRrdtoolCommand(string $command, array $args): string
@@ -110,14 +93,18 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         return $cmd;
     }
 
-    private function createRRD(string $rrdPath, array $fields, ?int $step = null): bool
+    /**
+     * @param string $rrdPath
+     * @param array<string, mixed> $fields
+     * @throws WriteException
+     */
+    private function createRRD(string $rrdPath, array $fields): void
     {
         if (file_exists($rrdPath)) {
-            return true; // Already exists
+            return; // Already exists
         }
 
-        // Use default step from config if not provided
-        $step = $step ?? $this->config->get('default_step');
+        $step = $this->config->get('default_step');
 
         // Build data source definitions
         $dataSources = [];
@@ -142,11 +129,9 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         if ($returnCode !== 0) {
             throw new WriteException('Failed to create RRD: '.implode("\n", $output));
         }
-
-        return true;
     }
 
-    private function guessDataSourceType($value): string
+    private function guessDataSourceType(mixed $value): string
     {
         if (is_int($value)) {
             return 'GAUGE'; // or COUNTER, DERIVE, ABSOLUTE based on your needs
@@ -203,6 +188,9 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         return true;
     }
 
+    /**
+     * @return array<string, string>
+     */
     private function getRRDInfo(string $rrdPath): array
     {
         $args = [escapeshellarg($rrdPath)];
@@ -223,6 +211,10 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         return $info;
     }
 
+    /**
+     * @param array<string, string> $info
+     * @return string[]
+     */
     private function getDataSourceOrder(array $info): array
     {
         $dataSources = [];
@@ -235,6 +227,11 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         return $dataSources;
     }
 
+    /**
+     * @param array{'meta': array{'legend': array<int, string>, 'start': int, 'end': int, 'step': int}, 'data': array<int, mixed>} $json
+     * @param string[] $requestedFields
+     * @return QueryResult
+     */
     private function parseRRDXportJson(array $json, array $requestedFields): QueryResult
     {
         $allFields = in_array('*', $requestedFields);
@@ -277,7 +274,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
                 throw new QueryException($query, 'Failed to parse RRD command output: '.json_last_error_msg().PHP_EOL.$output, json_last_error());
             }
 
-            return $this->parseRRDXportJson($json, ['*']);
+            return $this->parseRRDXportJson($json, $query->getFields() ?: ['*']);
         }
 
         return new QueryResult([['raw_output' => $output]]);
@@ -295,6 +292,9 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         return true;
     }
 
+    /**
+     * @return string[]
+     */
     public function listDatabases(): array
     {
         $databases = [];
@@ -315,6 +315,12 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     }
 
     // RRDtool-specific methods
+
+    /**
+     * @param array<string, string> $tags
+     * @param array<string, mixed> $config
+     * @throws WriteException
+     */
     public function createRRDWithCustomConfig(string $measurement, array $tags, array $config): bool
     {
         $rrdPath = $this->getRRDPath($measurement, $tags);
@@ -324,11 +330,11 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         $archives = $config['archives'] ?? $this->config->get('default_archives');
 
         if (empty($dataSources)) {
-            throw new Exception('Data sources must be specified for custom RRD creation');
+            throw new WriteException('Data sources must be specified for custom RRD creation');
         }
 
         if (empty($archives)) {
-            throw new Exception('Archives must be specified for custom RRD creation');
+            throw new WriteException('Archives must be specified for custom RRD creation');
         }
 
         $args = [
@@ -342,12 +348,17 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         exec($cmd.' 2>&1', $output, $returnCode);
 
         if ($returnCode !== 0) {
-            throw new Exception('Failed to create custom RRD: '.implode("\n", $output));
+            throw new WriteException('Failed to create custom RRD: '.implode("\n", $output));
         }
 
         return true;
     }
 
+    /**
+     * @param string[] $tags
+     * @param array<string, string|string[]> $graphConfig
+     * @throws Exception
+     */
     public function getRRDGraph(string $measurement, array $tags, array $graphConfig): string
     {
         $rrdPath = $this->getRRDPath($measurement, $tags);

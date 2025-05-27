@@ -38,6 +38,9 @@ class TSDBFactory
         return $instance;
     }
 
+    /**
+     * @return string[]
+     */
     public static function getAvailableDrivers(): array
     {
         return array_keys(self::$drivers);

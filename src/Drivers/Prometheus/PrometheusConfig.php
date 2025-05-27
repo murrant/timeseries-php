@@ -31,6 +31,9 @@ class PrometheusConfig extends AbstractDriverConfig
         parent::__construct($config);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getClientConfig(): array
     {
         return [

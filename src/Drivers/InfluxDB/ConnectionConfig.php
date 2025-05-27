@@ -31,6 +31,9 @@ class ConnectionConfig extends AbstractDriverConfig
         parent::__construct($config);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getCircuitBreakerConfig(): array
     {
         return $this->get('circuit_breaker', []);

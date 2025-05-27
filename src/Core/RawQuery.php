@@ -5,7 +5,7 @@ namespace TimeSeriesPhp\Core;
 readonly class RawQuery implements RawQueryContract
 {
     public function __construct(
-        private string $rawQuery,
+        protected string $rawQuery,
     ) {}
 
     public function getRawQuery(): string

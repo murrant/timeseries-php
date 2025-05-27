@@ -262,7 +262,7 @@ class InfluxDBQueryBuilder implements QueryBuilderContract
         return $operatorMap[$operator] ?? $operator;
     }
 
-    private function formatValue($value): string
+    private function formatValue(mixed $value): string
     {
         if (is_string($value)) {
             return '"'.addslashes($value).'"';

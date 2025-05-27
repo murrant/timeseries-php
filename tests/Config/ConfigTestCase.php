@@ -7,9 +7,13 @@ use TimeSeriesPhp\Config\ConfigInterface;
 
 abstract class ConfigTestCase extends TestCase
 {
+    /**
+     * @param array<string, mixed> $config
+     * @return ConfigInterface
+     */
     abstract protected function createConfig(array $config): ConfigInterface;
 
-    public function test_get_existing_key()
+    public function test_get_existing_key(): void
     {
         $config = $this->createConfig([
             'host' => 'localhost',
@@ -30,14 +34,14 @@ abstract class ConfigTestCase extends TestCase
         $this->assertEquals(30, $config->get('timeout'));
     }
 
-    public function test_get_non_existing_key_with_default()
+    public function test_get_non_existing_key_with_default(): void
     {
         $config = $this->createConfig(['host' => 'localhost']);
 
         $this->assertEquals('default', $config->get('non_existing', 'default'));
     }
 
-    public function test_get_non_existing_key_without_default()
+    public function test_get_non_existing_key_without_default(): void
     {
         $config = $this->createConfig(['host' => 'localhost']);
 

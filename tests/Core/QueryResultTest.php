@@ -7,7 +7,7 @@ use TimeSeriesPhp\Core\QueryResult;
 
 class QueryResultTest extends TestCase
 {
-    public function test_constructor()
+    public function test_constructor(): void
     {
         $series = [
             ['time' => '2023-01-01T00:00:00Z', 'value' => 10],
@@ -21,7 +21,7 @@ class QueryResultTest extends TestCase
         $this->assertEquals($metadata, $result->getMetadata());
     }
 
-    public function test_constructor_with_defaults()
+    public function test_constructor_with_defaults(): void
     {
         $result = new QueryResult;
 
@@ -29,7 +29,7 @@ class QueryResultTest extends TestCase
         $this->assertEquals([], $result->getMetadata());
     }
 
-    public function test_is_empty()
+    public function test_is_empty(): void
     {
         $emptyResult = new QueryResult;
         $this->assertTrue($emptyResult->isEmpty());
@@ -38,7 +38,7 @@ class QueryResultTest extends TestCase
         $this->assertFalse($nonEmptyResult->isEmpty());
     }
 
-    public function test_count()
+    public function test_count(): void
     {
         $emptyResult = new QueryResult;
         $this->assertEquals(0, $emptyResult->count());
@@ -54,7 +54,7 @@ class QueryResultTest extends TestCase
         $this->assertEquals(3, $multipleResult->count());
     }
 
-    public function test_to_array()
+    public function test_to_array(): void
     {
         $series = [
             ['time' => '2023-01-01T00:00:00Z', 'value' => 10],

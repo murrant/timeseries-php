@@ -24,7 +24,10 @@ class ConfigFactory
     /**
      * Create a configuration instance
      *
+     * @param string $type
+     * @param array<string, mixed> $config
      * @throws ConfigurationException
+     * @return ConfigInterface
      */
     public static function create(string $type, array $config = []): ConfigInterface
     {
@@ -53,6 +56,8 @@ class ConfigFactory
 
     /**
      * Get available configuration types
+     * 
+     * @return array<int, string>
      */
     public static function getAvailableTypes(): array
     {
@@ -62,7 +67,9 @@ class ConfigFactory
     /**
      * Create multiple configuration instances from an array
      *
+     * @param array<string, array<string, mixed>> $configs
      * @throws ConfigurationException
+     * @return array<string, ConfigInterface>
      */
     public static function createFromArray(array $configs): array
     {

@@ -14,6 +14,9 @@ class FolderStrategyTest extends TestCase
 
     private string $tempDir;
 
+    /**
+     * @var string[]
+     */
     private array $folderTags;
 
     protected function setUp(): void
@@ -32,7 +35,7 @@ class FolderStrategyTest extends TestCase
         $this->removeDirectory($this->tempDir);
     }
 
-    private function removeDirectory($dir): void
+    private function removeDirectory(string $dir): void
     {
         if (! is_dir($dir)) {
             return;

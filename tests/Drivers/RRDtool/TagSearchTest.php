@@ -9,6 +9,9 @@ use TimeSeriesPhp\Exceptions\TSDBException;
 
 class TagSearchTest extends TestCase
 {
+    /**
+     * @var array<string, string>
+     */
     private array $sampleTags;
 
     protected function setUp(): void
@@ -311,7 +314,7 @@ class TagSearchTest extends TestCase
     /**
      * @dataProvider tagValueTypeProvider
      */
-    public function test_different_tag_value_types($tagValue, $searchValue, $operator, $expected): void
+    public function test_different_tag_value_types(int|float|bool|null $tagValue, string $searchValue, string $operator, bool $expected): void
     {
         $tags = ['test_tag' => $tagValue];
         $conditions = [new TagCondition('test_tag', $operator, $searchValue)];
@@ -323,6 +326,9 @@ class TagSearchTest extends TestCase
         );
     }
 
+    /**
+     * @return array<string, array{int|float|bool|null, string, string, bool}>
+     */
     public function tagValueTypeProvider(): array
     {
         return [

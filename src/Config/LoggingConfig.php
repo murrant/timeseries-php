@@ -4,6 +4,9 @@ namespace TimeSeriesPhp\Config;
 
 class LoggingConfig extends AbstractConfig
 {
+    /**
+     * @var array<string, mixed>
+     */
     protected array $defaults = [
         'enabled' => false,
         'level' => 'info', // debug, info, warning, error
@@ -18,6 +21,9 @@ class LoggingConfig extends AbstractConfig
         'include_stack_trace' => false,
     ];
 
+    /**
+     * @param array<string, mixed> $config
+     */
     public function __construct(array $config = [])
     {
         $this->addValidator('level', fn ($level) => in_array($level, ['debug', 'info', 'warning', 'error']));

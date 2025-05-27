@@ -18,7 +18,7 @@ class GraphiteQueryBuilderTest extends TestCase
         $this->queryBuilder = new GraphiteQueryBuilder;
     }
 
-    public function test_build_simple_query()
+    public function test_build_simple_query(): void
     {
         $query = new Query('cpu');
         $query->select(['usage']);
@@ -32,7 +32,7 @@ class GraphiteQueryBuilderTest extends TestCase
         $this->assertStringContainsString('format=json', $rawQuery->getRawQuery());
     }
 
-    public function test_build_query_with_prefix()
+    public function test_build_query_with_prefix(): void
     {
         $queryBuilder = new GraphiteQueryBuilder('servers');
         $query = new Query('cpu');
@@ -43,7 +43,7 @@ class GraphiteQueryBuilderTest extends TestCase
         $this->assertStringContainsString('target=servers.cpu.usage', $rawQuery->getRawQuery());
     }
 
-    public function test_build_query_with_multiple_fields()
+    public function test_build_query_with_multiple_fields(): void
     {
         $query = new Query('cpu');
         $query->select(['user', 'system']);
@@ -55,7 +55,7 @@ class GraphiteQueryBuilderTest extends TestCase
         $this->assertStringContainsString('cpu.system', $rawQuery->getRawQuery());
     }
 
-    public function test_build_query_with_wildcard_fields()
+    public function test_build_query_with_wildcard_fields(): void
     {
         $query = new Query('cpu');
         $query->select(['*']);
@@ -65,7 +65,7 @@ class GraphiteQueryBuilderTest extends TestCase
         $this->assertStringContainsString('target=cpu.*', $rawQuery->getRawQuery());
     }
 
-    public function test_build_query_with_time_range()
+    public function test_build_query_with_time_range(): void
     {
         $start = new DateTime('2023-01-01');
         $end = new DateTime('2023-01-02');
@@ -80,7 +80,7 @@ class GraphiteQueryBuilderTest extends TestCase
         $this->assertStringContainsString('until='.$end->getTimestamp(), $rawQuery->getRawQuery());
     }
 
-    public function test_build_query_with_relative_time()
+    public function test_build_query_with_relative_time(): void
     {
         $query = new Query('cpu');
         $query->select(['usage']);
@@ -91,7 +91,7 @@ class GraphiteQueryBuilderTest extends TestCase
         $this->assertStringContainsString('from=-1h', $rawQuery->getRawQuery());
     }
 
-    public function test_build_query_with_aggregation()
+    public function test_build_query_with_aggregation(): void
     {
         $query = new Query('cpu');
         $query->select(['usage']);
@@ -104,7 +104,7 @@ class GraphiteQueryBuilderTest extends TestCase
         $this->assertStringContainsString('avg_usage', $rawQuery->getRawQuery());
     }
 
-    public function test_build_query_with_time_grouping()
+    public function test_build_query_with_time_grouping(): void
     {
         $query = new Query('cpu');
         $query->select(['usage']);
@@ -116,7 +116,7 @@ class GraphiteQueryBuilderTest extends TestCase
         $this->assertStringContainsString('1hour', $rawQuery->getRawQuery());
     }
 
-    public function test_build_query_with_conditions()
+    public function test_build_query_with_conditions(): void
     {
         $query = new Query('cpu');
         $query->select(['usage']);
@@ -129,7 +129,7 @@ class GraphiteQueryBuilderTest extends TestCase
         $this->assertInstanceOf(RawQuery::class, $rawQuery);
     }
 
-    public function test_build_query_with_limit()
+    public function test_build_query_with_limit(): void
     {
         $query = new Query('cpu');
         $query->select(['usage']);
@@ -141,7 +141,7 @@ class GraphiteQueryBuilderTest extends TestCase
         $this->assertStringContainsString('10', $rawQuery->getRawQuery());
     }
 
-    public function test_build_query_with_ordering()
+    public function test_build_query_with_ordering(): void
     {
         $query = new Query('cpu');
         $query->select(['usage']);
@@ -152,7 +152,7 @@ class GraphiteQueryBuilderTest extends TestCase
         $this->assertStringContainsString('sortByMaxima', $rawQuery->getRawQuery());
     }
 
-    public function test_convert_interval_to_graphite()
+    public function test_convert_interval_to_graphite(): void
     {
         $reflection = new \ReflectionClass(GraphiteQueryBuilder::class);
         $method = $reflection->getMethod('convertIntervalToGraphite');
@@ -165,7 +165,7 @@ class GraphiteQueryBuilderTest extends TestCase
         $this->assertEquals('4week', $method->invoke($this->queryBuilder, '4w'));
     }
 
-    public function test_format_date_interval()
+    public function test_format_date_interval(): void
     {
         $reflection = new \ReflectionClass(GraphiteQueryBuilder::class);
         $method = $reflection->getMethod('formatDateInterval');

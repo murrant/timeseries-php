@@ -9,8 +9,14 @@ class Query
 {
     private string $measurement;
 
+    /**
+     * @var array<int, string>
+     */
     private array $fields = ['*'];
 
+    /**
+     * @var array<int, array{'field': string, 'operator': string, 'value': mixed, 'type'?: 'AND'|'OR'}>
+     */
     private array $conditions = [];
 
     private ?DateTime $startTime = null;
@@ -19,8 +25,14 @@ class Query
 
     private ?DateInterval $relativeTime = null;
 
+    /**
+     * @var string[]
+     */
     private array $groupBy = [];
 
+    /**
+     * @var array<int, array{'function': string, 'field': string, 'alias': string}>
+     */
     private array $aggregations = [];
 
     private ?string $interval = null;
@@ -29,14 +41,23 @@ class Query
 
     private ?int $offset = null;
 
+    /**
+     * @var array<string, 'ASC'|'DESC'>
+     */
     private array $orderBy = [];
 
+    /**
+     * @var array<array{'field': string, 'operator': string, 'value': mixed}>
+     */
     private array $having = [];
 
     private ?string $fillPolicy = null;
 
     private ?float $fillValue = null;
 
+    /**
+     * @var array<array{'expression': string, 'alias': string}>
+     */
     private array $mathExpressions = [];
 
     private bool $distinct = false;
@@ -49,6 +70,10 @@ class Query
     }
 
     // Enhanced field selection with aliases and calculations
+
+    /**
+     * @param string[] $fields
+     */
     public function select(array $fields): self
     {
         $this->fields = $fields;
@@ -56,6 +81,9 @@ class Query
         return $this;
     }
 
+    /**
+     * @param string[] $fields
+     */
     public function selectDistinct(array $fields): self
     {
         $this->fields = $fields;
@@ -65,7 +93,7 @@ class Query
     }
 
     // More flexible condition building
-    public function where(string $field, string $operator, $value): self
+    public function where(string $field, string $operator, mixed $value): self
     {
         $this->conditions[] = [
             'field' => $field,
@@ -77,7 +105,7 @@ class Query
         return $this;
     }
 
-    public function orWhere(string $field, string $operator, $value): self
+    public function orWhere(string $field, string $operator, mixed $value): self
     {
         $this->conditions[] = [
             'field' => $field,
@@ -89,6 +117,9 @@ class Query
         return $this;
     }
 
+    /**
+     * @param array<int, mixed> $values
+     */
     public function whereIn(string $field, array $values): self
     {
         $this->conditions[] = [
@@ -101,6 +132,9 @@ class Query
         return $this;
     }
 
+    /**
+     * @param array<int, mixed> $values
+     */
     public function whereNotIn(string $field, array $values): self
     {
         $this->conditions[] = [
@@ -113,7 +147,7 @@ class Query
         return $this;
     }
 
-    public function whereBetween(string $field, $min, $max): self
+    public function whereBetween(string $field, int|float $min, int|float $max): self
     {
         $this->conditions[] = [
             'field' => $field,
@@ -180,7 +214,9 @@ class Query
         return $this;
     }
 
-    // Enhanced grouping and aggregation
+    /**
+     * @param string[] $tags
+     */
     public function groupBy(array $tags, ?string $interval = null): self
     {
         $this->groupBy = $tags;
@@ -329,8 +365,7 @@ class Query
         return $this->orderBy('time', $direction);
     }
 
-    // Having clause for post-aggregation filtering
-    public function having(string $field, string $operator, $value): self
+    public function having(string $field, string $operator, mixed $value): self
     {
         $this->having[] = [
             'field' => $field,
@@ -368,11 +403,17 @@ class Query
         return $this->measurement;
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function getFields(): array
     {
         return $this->fields;
     }
 
+    /**
+     * @return array<int, array{'field': string, 'operator': string, 'value': mixed, 'type'?: 'AND'|'OR'}>
+     */
     public function getConditions(): array
     {
         return $this->conditions;
@@ -393,11 +434,17 @@ class Query
         return $this->relativeTime;
     }
 
+    /**
+     * @return string[]
+     */
     public function getGroupBy(): array
     {
         return $this->groupBy;
     }
 
+    /**
+     * @return array<int, array{'function': string, 'field': string, 'alias': string}>
+     */
     public function getAggregations(): array
     {
         return $this->aggregations;
@@ -418,11 +465,17 @@ class Query
         return $this->offset;
     }
 
+    /**
+     * @return array<string, 'ASC'|'DESC'>
+     */
     public function getOrderBy(): array
     {
         return $this->orderBy;
     }
 
+    /**
+     * @return array<array{'field': string, 'operator': string, 'value': mixed}>
+     */
     public function getHaving(): array
     {
         return $this->having;
@@ -438,6 +491,9 @@ class Query
         return $this->fillValue;
     }
 
+    /**
+     * @return array<array{'expression': string, 'alias': string}>
+     */
     public function getMathExpressions(): array
     {
         return $this->mathExpressions;
@@ -453,19 +509,19 @@ class Query
         return $this->timezone;
     }
 
-    // Helper method to check if query has aggregations
     public function hasAggregations(): bool
     {
         return ! empty($this->aggregations);
     }
 
-    // Helper method to check if query has time grouping
     public function hasTimeGrouping(): bool
     {
         return ! empty($this->interval);
     }
 
-    // Method to validate query before execution
+    /**
+     * @return string[]
+     */
     public function validate(): array
     {
         $errors = [];

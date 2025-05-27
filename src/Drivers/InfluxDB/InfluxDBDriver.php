@@ -189,6 +189,9 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
         }
     }
 
+    /**
+     * @return string[]
+     */
     public function listDatabases(): array
     {
         try {
@@ -228,6 +231,9 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
         }
     }
 
+    /**
+     * @return array<string, ?string>
+     */
     public function getHealth(): array
     {
         try {

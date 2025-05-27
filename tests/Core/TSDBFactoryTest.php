@@ -19,7 +19,7 @@ class TSDBFactoryTest extends TestCase
         $driversProperty->setValue(null, []);
     }
 
-    public function test_register_driver()
+    public function test_register_driver(): void
     {
         // Create a mock driver class
         $mockDriverClass = get_class($this->createMock(TimeSeriesInterface::class));
@@ -31,7 +31,7 @@ class TSDBFactoryTest extends TestCase
         $this->assertContains('mock', TSDBFactory::getAvailableDrivers());
     }
 
-    public function test_get_available_drivers()
+    public function test_get_available_drivers(): void
     {
         // Initially, no drivers should be registered
         $this->assertEmpty(TSDBFactory::getAvailableDrivers());
@@ -45,7 +45,7 @@ class TSDBFactoryTest extends TestCase
         $this->assertEquals(['mock1', 'mock2'], TSDBFactory::getAvailableDrivers());
     }
 
-    public function test_create_with_valid_driver()
+    public function test_create_with_valid_driver(): void
     {
         // Create a mock config
         $mockConfig = $this->createMock(ConfigInterface::class);
@@ -115,7 +115,7 @@ class TSDBFactoryTest extends TestCase
         $this->assertTrue($mockDriverClass::$connectCalled, 'connect() method was not called');
     }
 
-    public function test_create_with_invalid_driver()
+    public function test_create_with_invalid_driver(): void
     {
         $mockConfig = $this->createMock(ConfigInterface::class);
 
@@ -125,7 +125,7 @@ class TSDBFactoryTest extends TestCase
         TSDBFactory::create('invalid', $mockConfig);
     }
 
-    public function test_create_with_invalid_driver_class()
+    public function test_create_with_invalid_driver_class(): void
     {
         // Create a mock that doesn't implement TimeSeriesInterface
         $mockClass = get_class($this->createMock(\stdClass::class));

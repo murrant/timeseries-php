@@ -7,7 +7,7 @@ use TimeSeriesPhp\Core\DataPoint;
 
 class SimpleTest extends TestCase
 {
-    public function test_data_point_creation()
+    public function test_data_point_creation(): void
     {
         // Create a simple data point
         $dataPoint = new DataPoint('cpu_usage', ['value' => 85.5]);

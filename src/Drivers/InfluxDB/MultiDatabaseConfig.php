@@ -52,6 +52,10 @@ class MultiDatabaseConfig extends AbstractDriverConfig
         }
     }
 
+    /**
+     * @return array<string, string>
+     * @throws ConfigurationException
+     */
     public function getConnection(string $name): array
     {
         $connections = $this->get('connections', []);
@@ -63,6 +67,10 @@ class MultiDatabaseConfig extends AbstractDriverConfig
         return $connections[$name];
     }
 
+    /**
+     * @return array<string, string>
+     * @throws ConfigurationException
+     */
     public function getDefaultConnection(): array
     {
         $default = $this->get('default');
@@ -70,11 +78,19 @@ class MultiDatabaseConfig extends AbstractDriverConfig
         return $this->getConnection($default);
     }
 
+    /**
+     * @return string[]
+     */
     public function getConnectionNames(): array
     {
         return array_keys($this->get('connections', []));
     }
 
+    /**
+     * @param string $name
+     * @param array<string, string> $config
+     * @return $this
+     */
     public function addConnection(string $name, array $config): self
     {
         $connections = $this->get('connections', []);

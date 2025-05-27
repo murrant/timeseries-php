@@ -11,7 +11,7 @@ class CacheConfigTest extends ConfigTestCase
         return new CacheConfig($config);
     }
 
-    public function test_default_values()
+    public function test_default_values(): void
     {
         $config = $this->createConfig([]);
 
@@ -21,7 +21,7 @@ class CacheConfigTest extends ConfigTestCase
         $this->assertEquals('php', $config->get('serialization'));
     }
 
-    public function test_is_enabled()
+    public function test_is_enabled(): void
     {
         $config = $this->createConfig(['enabled' => true]);
         $this->assertTrue($config->isEnabled());
@@ -30,7 +30,7 @@ class CacheConfigTest extends ConfigTestCase
         $this->assertFalse($config->isEnabled());
     }
 
-    public function test_get_driver_config()
+    public function test_get_driver_config(): void
     {
         $redisConfig = [
             'host' => 'redis-server',
@@ -60,7 +60,7 @@ class CacheConfigTest extends ConfigTestCase
         $this->assertEquals($memcachedConfig, $config->getDriverConfig('memcached'));
     }
 
-    public function test_validation()
+    public function test_validation(): void
     {
         $this->expectNotToPerformAssertions();
         // Valid configuration should not throw an exception

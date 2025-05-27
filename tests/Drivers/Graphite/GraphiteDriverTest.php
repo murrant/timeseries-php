@@ -44,8 +44,6 @@ class GraphiteDriverTest extends TestCase
         // Create a real instance of GraphiteDriver with mocked methods
         $this->driver = new class extends GraphiteDriver
         {
-            private $socket = null;
-
             protected function doConnect(): bool
             {
                 $this->connected = true;
@@ -96,14 +94,14 @@ class GraphiteDriverTest extends TestCase
         };
     }
 
-    public function test_connect()
+    public function test_connect(): void
     {
         $result = $this->driver->connect($this->config);
         $this->assertTrue($result);
         $this->assertTrue($this->driver->isConnected());
     }
 
-    public function test_write()
+    public function test_write(): void
     {
         $this->driver->connect($this->config);
 
@@ -118,7 +116,7 @@ class GraphiteDriverTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function test_write_not_connected()
+    public function test_write_not_connected(): void
     {
         $this->expectException(ConnectionException::class);
 
@@ -131,7 +129,7 @@ class GraphiteDriverTest extends TestCase
         $this->driver->write($dataPoint);
     }
 
-    public function test_write_batch()
+    public function test_write_batch(): void
     {
         $this->driver->connect($this->config);
 
@@ -152,7 +150,7 @@ class GraphiteDriverTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function test_query()
+    public function test_query(): void
     {
         $this->driver->connect($this->config);
 
@@ -167,7 +165,7 @@ class GraphiteDriverTest extends TestCase
         $this->assertCount(2, $result->getSeries());
     }
 
-    public function test_raw_query()
+    public function test_raw_query(): void
     {
         $this->driver->connect($this->config);
 
@@ -178,7 +176,7 @@ class GraphiteDriverTest extends TestCase
         $this->assertCount(2, $result->getSeries());
     }
 
-    public function test_create_database()
+    public function test_create_database(): void
     {
         $this->driver->connect($this->config);
 
@@ -186,7 +184,7 @@ class GraphiteDriverTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function test_list_databases()
+    public function test_list_databases(): void
     {
         $this->driver->connect($this->config);
 
@@ -194,7 +192,7 @@ class GraphiteDriverTest extends TestCase
         $this->assertContains('default', $databases);
     }
 
-    public function test_close()
+    public function test_close(): void
     {
         $this->driver->connect($this->config);
         $this->driver->close();

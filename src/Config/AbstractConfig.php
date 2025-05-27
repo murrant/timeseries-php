@@ -6,15 +6,28 @@ use TimeSeriesPhp\Exceptions\ConfigurationException;
 
 abstract class AbstractConfig implements ConfigInterface
 {
+    /**
+     * @var array<string, mixed>
+     */
     protected array $config = [];
 
+    /**
+     * @var string[]
+     */
     protected array $required = [];
 
+    /**
+     * @var array<string, mixed>
+     */
     protected array $defaults = [];
 
+    /**
+     * @var array<string, callable>
+     */
     protected array $validators = [];
 
     /**
+     * @param array<string, mixed> $config
      * @throws ConfigurationException
      */
     public function __construct(array $config = [])
@@ -23,11 +36,18 @@ abstract class AbstractConfig implements ConfigInterface
         $this->validate();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function getDefaults(): array
     {
         return $this->defaults;
     }
 
+    /**
+     * @return string[]
+     *
+     */
     protected function getRequired(): array
     {
         return $this->required;
@@ -58,17 +78,20 @@ abstract class AbstractConfig implements ConfigInterface
         return true;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(): array
     {
         return $this->config;
     }
 
-    public function get(string $key, $default = null)
+    public function get(string $key, mixed $default = null): mixed
     {
         return $this->config[$key] ?? $default;
     }
 
-    public function set(string $key, $value): ConfigInterface
+    public function set(string $key, mixed $value): ConfigInterface
     {
         $this->config[$key] = $value;
 
@@ -81,6 +104,7 @@ abstract class AbstractConfig implements ConfigInterface
     }
 
     /**
+     * @param array<string, mixed> $config
      * @throws ConfigurationException
      */
     public function merge(array $config): ConfigInterface

@@ -8,7 +8,7 @@ use TimeSeriesPhp\Core\DataPoint;
 
 class DataPointTest extends TestCase
 {
-    public function test_constructor()
+    public function test_constructor(): void
     {
         $measurement = 'cpu_usage';
         $fields = ['usage_user' => 23.5, 'usage_system' => 12.1];
@@ -23,7 +23,7 @@ class DataPointTest extends TestCase
         $this->assertSame($timestamp, $dataPoint->getTimestamp());
     }
 
-    public function test_constructor_with_default_timestamp()
+    public function test_constructor_with_default_timestamp(): void
     {
         $before = new DateTime;
         $dataPoint = new DataPoint('cpu_usage', ['value' => 10]);
@@ -36,13 +36,13 @@ class DataPointTest extends TestCase
         $this->assertLessThanOrEqual($after->getTimestamp(), $dataPoint->getTimestamp()->getTimestamp());
     }
 
-    public function test_constructor_with_default_tags()
+    public function test_constructor_with_default_tags(): void
     {
         $dataPoint = new DataPoint('cpu_usage', ['value' => 10]);
         $this->assertEquals([], $dataPoint->getTags());
     }
 
-    public function test_add_tag()
+    public function test_add_tag(): void
     {
         $dataPoint = new DataPoint('cpu_usage', ['value' => 10]);
         $result = $dataPoint->addTag('host', 'server01');
@@ -59,7 +59,7 @@ class DataPointTest extends TestCase
         $this->assertEquals(['host' => 'server02', 'region' => 'us-west'], $dataPoint->getTags());
     }
 
-    public function test_add_field()
+    public function test_add_field(): void
     {
         $dataPoint = new DataPoint('cpu_usage', ['usage_user' => 23.5]);
         $result = $dataPoint->addField('usage_system', 12.1);
@@ -72,7 +72,7 @@ class DataPointTest extends TestCase
         $this->assertEquals(['usage_user' => 25.0, 'usage_system' => 12.1], $dataPoint->getFields());
     }
 
-    public function test_method_chaining()
+    public function test_method_chaining(): void
     {
         $dataPoint = new DataPoint('cpu_usage', ['usage_user' => 23.5]);
         $dataPoint->addTag('host', 'server01')

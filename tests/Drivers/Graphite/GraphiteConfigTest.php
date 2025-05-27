@@ -8,7 +8,7 @@ use TimeSeriesPhp\Exceptions\ConfigurationException;
 
 class GraphiteConfigTest extends TestCase
 {
-    public function test_default_values()
+    public function test_default_values(): void
     {
         $config = new GraphiteConfig;
 
@@ -24,7 +24,7 @@ class GraphiteConfigTest extends TestCase
         $this->assertEquals('/render', $config->get('web_path'));
     }
 
-    public function test_custom_values()
+    public function test_custom_values(): void
     {
         $config = new GraphiteConfig([
             'host' => 'graphite.example.com',
@@ -51,7 +51,7 @@ class GraphiteConfigTest extends TestCase
         $this->assertEquals('/api/render', $config->get('web_path'));
     }
 
-    public function test_missing_required_fields()
+    public function test_missing_required_fields(): void
     {
         $this->expectException(ConfigurationException::class);
 
@@ -59,7 +59,7 @@ class GraphiteConfigTest extends TestCase
         new GraphiteConfig(['host' => '']);
     }
 
-    public function test_invalid_protocol()
+    public function test_invalid_protocol(): void
     {
         $this->expectException(ConfigurationException::class);
 
@@ -71,7 +71,7 @@ class GraphiteConfigTest extends TestCase
         ]);
     }
 
-    public function test_invalid_web_protocol()
+    public function test_invalid_web_protocol(): void
     {
         $this->expectException(ConfigurationException::class);
 
@@ -83,7 +83,7 @@ class GraphiteConfigTest extends TestCase
         ]);
     }
 
-    public function test_get_connection_string()
+    public function test_get_connection_string(): void
     {
         $config = new GraphiteConfig([
             'host' => 'graphite.example.com',
@@ -93,7 +93,7 @@ class GraphiteConfigTest extends TestCase
         $this->assertEquals('graphite.example.com:2004', $config->getConnectionString());
     }
 
-    public function test_get_web_url()
+    public function test_get_web_url(): void
     {
         $config = new GraphiteConfig([
             'web_host' => 'graphite-web.example.com',
@@ -105,7 +105,7 @@ class GraphiteConfigTest extends TestCase
         $this->assertEquals('https://graphite-web.example.com:8081/api/render', $config->getWebUrl());
     }
 
-    public function test_driver_name()
+    public function test_driver_name(): void
     {
         $config = new GraphiteConfig;
 

@@ -2,6 +2,8 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 
+use TimeSeriesPhp\Exceptions\TSDBException;
+
 class TagSearch
 {
     /**
@@ -55,6 +57,8 @@ class TagSearch
 
     /**
      * Evaluate a single condition against the tags
+     * @param string[] $tags
+     * @throws TSDBException
      */
     private static function evaluateCondition(array $tags, TagCondition $condition): bool
     {
@@ -105,7 +109,7 @@ class TagSearch
      * Allows for more sophisticated logical operations by grouping conditions
      *
      * @param  array<string, mixed>  $tags  Array of tag => value pairs
-     * @param  array  $conditionGroups  Array of condition groups, each with 'conditions' and 'operator'
+     * @param  array<array{'conditions': TagCondition[], 'operator'?: 'OR'|'AND'}>  $conditionGroups  Array of condition groups, each with 'conditions' and 'operator'
      * @return bool True if the grouped expression evaluates to true
      */
     public static function groupedSearch(array $tags, array $conditionGroups): bool

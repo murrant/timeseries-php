@@ -7,6 +7,7 @@ You are an Expert in PHP, Time Series Databases, an Laravel.
    Tests: phpunit
    Formatting: pint
    Static Analysis: phpstan
+- Never throw a generic \Exception, use TSDBException as the base exception
 
 ## Project Structure
 - Keep classes focused on a single responsibility (SOLID principles)

@@ -12,6 +12,7 @@ use TimeSeriesPhp\Core\RawQueryContract;
 use TimeSeriesPhp\Exceptions\ConfigurationException;
 use TimeSeriesPhp\Exceptions\ConnectionException;
 use TimeSeriesPhp\Exceptions\QueryException;
+use TimeSeriesPhp\Exceptions\TSDBException;
 
 class PrometheusDriver extends AbstractTimeSeriesDB
 {
@@ -144,7 +145,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB
      * Make an API request to the Prometheus HTTP API using Guzzle
      *
      * @param  string  $endpoint  The API endpoint
-     * @param  array  $params  Query parameters
+     * @param  array<string, string>  $params  Query parameters
      * @return array The response data
      *
      * @throws Exception
@@ -188,7 +189,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB
             $data = json_decode($responseBody, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new Exception('Failed to parse API response: '.json_last_error_msg());
+                throw new TSDBException('Failed to parse API response: '.json_last_error_msg());
             }
 
             return $data;
@@ -196,7 +197,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB
             if ($this->debug) {
                 error_log('Prometheus API request failed: '.$e->getMessage());
             }
-            throw new Exception('API request failed: '.$e->getMessage());
+            throw new TSDBException('API request failed: '.$e->getMessage());
         }
     }
 
@@ -206,6 +207,9 @@ class PrometheusDriver extends AbstractTimeSeriesDB
         return true;
     }
 
+    /**
+     * @return string[]
+     */
     public function listDatabases(): array
     {
         // Prometheus doesn't have databases in the traditional sense

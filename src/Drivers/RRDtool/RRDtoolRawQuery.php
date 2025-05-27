@@ -6,8 +6,14 @@ use TimeSeriesPhp\Core\RawQueryContract;
 
 class RRDtoolRawQuery implements RawQueryContract
 {
+    /**
+     * @var array<string, ?string>
+     */
     protected array $parameters = [];
 
+    /**
+     * @var array<array{string, string}>
+     */
     protected array $data = [];
 
     public function __construct(
@@ -109,5 +115,21 @@ class RRDtoolRawQuery implements RawQueryContract
         }
 
         return $rawQuery;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getFields(): array
+    {
+        $fields = [];
+
+        foreach ($this->data as $data) {
+            if ($data[0] === 'XPORT') {
+                $fields[] = substr($data[1], 0, strpos($data[1], ':'));
+            }
+        }
+
+        return $fields;
     }
 }

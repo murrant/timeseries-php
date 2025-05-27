@@ -14,21 +14,21 @@ use TimeSeriesPhp\Exceptions\WriteException;
 
 class GraphiteDriver extends AbstractTimeSeriesDB
 {
-    private mixed $socket = null;
+    protected mixed $socket = null;
 
-    private string $host = 'localhost';
+    protected string $host = 'localhost';
 
-    private int $port = 2003;
+    protected int $port = 2003;
 
-    private string $protocol = 'tcp';
+    protected string $protocol = 'tcp';
 
-    private int $timeout = 30;
+    protected int $timeout = 30;
 
-    private string $prefix = '';
+    protected string $prefix = '';
 
-    private int $batchSize = 500;
+    protected int $batchSize = 500;
 
-    private string $webUrl = '';
+    protected string $webUrl = '';
 
     protected function doConnect(): bool
     {
@@ -254,6 +254,9 @@ class GraphiteDriver extends AbstractTimeSeriesDB
         return true;
     }
 
+    /**
+     * @return string[]
+     */
     public function listDatabases(): array
     {
         // Graphite doesn't have a concept of databases
@@ -268,7 +271,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
         $this->connected = false;
     }
 
-    private function openSocket(): void
+    protected function openSocket(): void
     {
         if ($this->socket !== null) {
             return;
@@ -288,7 +291,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
         stream_set_timeout($this->socket, $this->timeout);
     }
 
-    private function closeSocket(): void
+    protected function closeSocket(): void
     {
         if ($this->socket) {
             fclose($this->socket);

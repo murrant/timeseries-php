@@ -86,13 +86,13 @@ class PrometheusDriverTest extends TestCase
         $this->driver->connect($this->config);
     }
 
-    public function test_connect()
+    public function test_connect(): void
     {
         $result = $this->driver->isConnected();
         $this->assertTrue($result);
     }
 
-    public function test_query()
+    public function test_query(): void
     {
         $query = new Query('cpu_usage');
         $query->select(['value'])
@@ -105,7 +105,7 @@ class PrometheusDriverTest extends TestCase
         $this->assertCount(2, $result->getSeries());
     }
 
-    public function test_raw_query()
+    public function test_raw_query(): void
     {
         $rawQuery = new RawQuery('cpu_usage{instance="localhost:9090"}');
         $result = $this->driver->rawQuery($rawQuery);
@@ -114,7 +114,7 @@ class PrometheusDriverTest extends TestCase
         $this->assertCount(2, $result->getSeries());
     }
 
-    public function test_write()
+    public function test_write(): void
     {
         $dataPoint = new DataPoint(
             'cpu_usage',
@@ -127,7 +127,7 @@ class PrometheusDriverTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function test_write_batch()
+    public function test_write_batch(): void
     {
         $dataPoints = [
             new DataPoint(
@@ -146,19 +146,19 @@ class PrometheusDriverTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function test_create_database()
+    public function test_create_database(): void
     {
         $result = $this->driver->createDatabase('test_db');
         $this->assertTrue($result);
     }
 
-    public function test_list_databases()
+    public function test_list_databases(): void
     {
         $databases = $this->driver->listDatabases();
         $this->assertEmpty($databases);
     }
 
-    public function test_close()
+    public function test_close(): void
     {
         $this->driver->close();
 

@@ -4,6 +4,9 @@ namespace TimeSeriesPhp\Config;
 
 class CacheConfig extends AbstractConfig
 {
+    /**
+     * @var array<string, mixed>
+     */
     protected array $defaults = [
         'enabled' => false,
         'driver' => 'memory', // memory, redis, memcached, file
@@ -25,6 +28,9 @@ class CacheConfig extends AbstractConfig
         ],
     ];
 
+    /**
+     * @param array<string, mixed> $config
+     */
     public function __construct(array $config = [])
     {
         $this->addValidator('ttl', fn ($ttl) => is_int($ttl) && $ttl > 0);
@@ -38,6 +44,9 @@ class CacheConfig extends AbstractConfig
         return $this->get('enabled', false);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getDriverConfig(?string $driver = null): array
     {
         $driver = $driver ?: $this->get('driver');

@@ -88,7 +88,10 @@ class InfluxDBDriverTest extends TestCase
                 return true;
             }
 
-            protected function executeQuery($query): array
+            /**
+             * @return array<int, array{'time': string, 'value': int}>
+             */
+            protected function executeQuery(Query $query): array
             {
                 return [
                     ['time' => '2023-01-01T00:00:00Z', 'value' => 10],
@@ -123,6 +126,9 @@ class InfluxDBDriverTest extends TestCase
                 return true;
             }
 
+            /**
+             * @return string[]
+             */
             public function listDatabases(): array
             {
                 // Mock implementation that doesn't use client
@@ -131,13 +137,13 @@ class InfluxDBDriverTest extends TestCase
         };
     }
 
-    public function test_connect()
+    public function test_connect(): void
     {
         $result = $this->driver->connect($this->config);
         $this->assertTrue($result);
     }
 
-    public function test_query()
+    public function test_query(): void
     {
         $query = new Query('cpu_usage');
         $query->select(['usage_user', 'usage_system'])
@@ -150,7 +156,7 @@ class InfluxDBDriverTest extends TestCase
         $this->assertCount(2, $result->getSeries());
     }
 
-    public function test_raw_query()
+    public function test_raw_query(): void
     {
         $rawQuery = new \TimeSeriesPhp\Core\RawQuery('SELECT * FROM cpu_usage');
         $result = $this->driver->rawQuery($rawQuery);
@@ -159,7 +165,7 @@ class InfluxDBDriverTest extends TestCase
         $this->assertCount(2, $result->getSeries());
     }
 
-    public function test_write()
+    public function test_write(): void
     {
         $dataPoint = new DataPoint(
             'cpu_usage',
@@ -172,7 +178,7 @@ class InfluxDBDriverTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function test_write_batch()
+    public function test_write_batch(): void
     {
         $dataPoints = [
             new DataPoint(
@@ -191,20 +197,20 @@ class InfluxDBDriverTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function test_create_database()
+    public function test_create_database(): void
     {
         $result = $this->driver->createDatabase('test_db');
         $this->assertTrue($result);
     }
 
-    public function test_list_databases()
+    public function test_list_databases(): void
     {
         $databases = $this->driver->listDatabases();
         $this->assertContains('mydb', $databases);
         $this->assertContains('testdb', $databases);
     }
 
-    public function test_close()
+    public function test_close(): void
     {
         $this->driver->close();
 

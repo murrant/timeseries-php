@@ -8,7 +8,7 @@ use TimeSeriesPhp\Core\Query;
 
 class QueryTest extends TestCase
 {
-    public function test_constructor()
+    public function test_constructor(): void
     {
         $query = new Query('cpu_usage');
         $this->assertEquals('cpu_usage', $query->getMeasurement());
@@ -23,7 +23,7 @@ class QueryTest extends TestCase
         $this->assertEquals([], $query->getOrderBy());
     }
 
-    public function test_select()
+    public function test_select(): void
     {
         $query = new Query('cpu_usage');
         $result = $query->select(['usage_user', 'usage_system']);
@@ -32,7 +32,7 @@ class QueryTest extends TestCase
         $this->assertEquals(['usage_user', 'usage_system'], $query->getFields());
     }
 
-    public function test_where()
+    public function test_where(): void
     {
         $query = new Query('cpu_usage');
         $result = $query->where('host', '=', 'server01');
@@ -65,7 +65,7 @@ class QueryTest extends TestCase
         ], $query->getConditions());
     }
 
-    public function test_time_range()
+    public function test_time_range(): void
     {
         $start = new DateTime('2023-01-01');
         $end = new DateTime('2023-01-02');
@@ -78,7 +78,7 @@ class QueryTest extends TestCase
         $this->assertSame($end, $query->getEndTime());
     }
 
-    public function test_group_by()
+    public function test_group_by(): void
     {
         $query = new Query('cpu_usage');
         $result = $query->groupBy(['host', 'region']);
@@ -87,7 +87,7 @@ class QueryTest extends TestCase
         $this->assertEquals(['host', 'region'], $query->getGroupBy());
     }
 
-    public function test_aggregate()
+    public function test_aggregate(): void
     {
         $query = new Query('cpu_usage');
         $result = $query->aggregate('mean', 'value');
@@ -124,7 +124,7 @@ class QueryTest extends TestCase
         ], $query->getAggregations());
     }
 
-    public function test_limit()
+    public function test_limit(): void
     {
         $query = new Query('cpu_usage');
         $result = $query->limit(100);
@@ -133,7 +133,7 @@ class QueryTest extends TestCase
         $this->assertEquals(100, $query->getLimit());
     }
 
-    public function test_order_by()
+    public function test_order_by(): void
     {
         $query = new Query('cpu_usage');
         $result = $query->orderBy('time', 'DESC');
@@ -151,7 +151,7 @@ class QueryTest extends TestCase
         $this->assertEquals(['value' => 'ASC', 'time' => 'DESC'], $query->getOrderBy());
     }
 
-    public function test_method_chaining()
+    public function test_method_chaining(): void
     {
         $start = new DateTime('2023-01-01');
         $end = new DateTime('2023-01-02');

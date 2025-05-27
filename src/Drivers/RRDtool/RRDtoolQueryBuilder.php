@@ -78,6 +78,9 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
         }
     }
 
+    /**
+     * @return string[]
+     */
     private function resolveRRDPaths(Query $query): array
     {
         $measurement = $query->getMeasurement();
@@ -97,6 +100,9 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
         return $this->tagStrategy->resolveFilePaths($measurement, $tagConditions);
     }
 
+    /**
+     * @param string[] $rrdPaths
+     */
     private function buildDataDefinitions(RRDtoolRawQuery $rawQuery, Query $query, array $rrdPaths): void
     {
         $fields = $query->getFields();
@@ -327,6 +333,10 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
         return $interval; // Return as-is if already in seconds
     }
 
+    /**
+     * @param string[] $rrdPaths
+     * @return string[]
+     */
     private function getAvailableFields(array $rrdPaths): array
     {
         // This would need to be implemented based on your RRD file structure
@@ -334,6 +344,9 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
         return ['value'];
     }
 
+    /**
+     * @param array<array{'field': string}> $conditions
+     */
     private function hasFieldConditions(string $field, array $conditions): bool
     {
         foreach ($conditions as $condition) {
