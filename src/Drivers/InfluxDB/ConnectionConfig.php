@@ -1,9 +1,12 @@
 <?php
 
-namespace TimeSeriesPhp\Config;
+namespace TimeSeriesPhp\Drivers\InfluxDB;
 
-class ConnectionConfig extends AbstractConfig
+use TimeSeriesPhp\Config\AbstractDriverConfig;
+
+class ConnectionConfig extends AbstractDriverConfig
 {
+    protected string $driverName = 'influxdb';
     protected array $defaults = [
         'pool_size' => 10,
         'max_idle_time' => 300, // seconds

@@ -1,11 +1,13 @@
 <?php
 
-namespace TimeSeriesPhp\Config;
+namespace TimeSeriesPhp\Drivers\InfluxDB;
 
+use TimeSeriesPhp\Config\AbstractDriverConfig;
 use TimeSeriesPhp\Exceptions\ConfigurationException;
 
-class MultiDatabaseConfig extends AbstractConfig
+class MultiDatabaseConfig extends AbstractDriverConfig
 {
+    protected string $driverName = 'influxdb';
     protected array $defaults = [
         'default' => 'primary',
         'connections' => [],

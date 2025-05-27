@@ -2,12 +2,13 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool;
 
-use TimeSeriesPhp\Config\AbstractConfig;
+use TimeSeriesPhp\Config\AbstractDriverConfig;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyContract;
 
-class RRDtoolConfig extends AbstractConfig
+class RRDtoolConfig extends AbstractDriverConfig
 {
+    protected string $driverName = 'rrdtool';
     protected array $defaults = [
         'rrdtool_path' => 'rrdtool',
         'rrd_dir' => '/tmp/rrd',

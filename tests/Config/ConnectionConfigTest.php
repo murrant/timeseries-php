@@ -3,7 +3,7 @@
 namespace TimeSeriesPhp\Tests\Config;
 
 use TimeSeriesPhp\Config\ConfigInterface;
-use TimeSeriesPhp\Config\ConnectionConfig;
+use TimeSeriesPhp\Drivers\InfluxDB\ConnectionConfig;
 
 class ConnectionConfigTest extends ConfigTestCase
 {

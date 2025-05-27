@@ -1,9 +1,12 @@
 <?php
 
-namespace TimeSeriesPhp\Config;
+namespace TimeSeriesPhp\Drivers\InfluxDB;
 
-class PerformanceConfig extends AbstractConfig
+use TimeSeriesPhp\Config\AbstractDriverConfig;
+
+class PerformanceConfig extends AbstractDriverConfig
 {
+    protected string $driverName = 'influxdb';
     protected array $defaults = [
         'query_timeout' => 30,
         'batch_size' => 1000,

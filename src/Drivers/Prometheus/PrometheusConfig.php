@@ -2,11 +2,12 @@
 
 namespace TimeSeriesPhp\Drivers\Prometheus;
 
-use TimeSeriesPhp\Config\AbstractConfig;
+use TimeSeriesPhp\Config\AbstractDriverConfig;
 use TimeSeriesPhp\Exceptions\ConfigurationException;
 
-class PrometheusConfig extends AbstractConfig
+class PrometheusConfig extends AbstractDriverConfig
 {
+    protected string $driverName = 'prometheus';
     protected array $defaults = [
         'url' => 'http://localhost:9090',
         'timeout' => 30,

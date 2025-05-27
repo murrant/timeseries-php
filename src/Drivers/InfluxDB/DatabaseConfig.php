@@ -2,10 +2,11 @@
 
 namespace TimeSeriesPhp\Drivers\InfluxDB;
 
-use TimeSeriesPhp\Config\AbstractConfig;
+use TimeSeriesPhp\Config\AbstractDriverConfig;
 
-class DatabaseConfig extends AbstractConfig
+class DatabaseConfig extends AbstractDriverConfig
 {
+    protected string $driverName = 'influxdb';
     protected array $defaults = [
         'host' => 'localhost',
         'port' => null,

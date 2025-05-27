@@ -5,9 +5,11 @@ namespace TimeSeriesPhp\Support;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use TimeSeriesPhp\Config\ConfigFactory;
+use TimeSeriesPhp\Config\DriverConfigFactory;
 use TimeSeriesPhp\Core\TSDBFactory;
-use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig;
+use TimeSeriesPhp\Drivers\InfluxDB\DatabaseConfig;
 use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
+use TimeSeriesPhp\Drivers\Prometheus\PrometheusConfig;
 use TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
@@ -36,24 +38,18 @@ class TimeSeriesServiceProvider extends ServiceProvider
         $this->app->bind(PrometheusDriver::class);
         $this->app->alias(PrometheusDriver::class, 'time-series.prometheus');
 
+        // Register driver config classes
+        DriverConfigFactory::registerDriverConfig('influxdb', DatabaseConfig::class);
+        DriverConfigFactory::registerDriverConfig('rrdtool', RRDtoolConfig::class);
+        DriverConfigFactory::registerDriverConfig('prometheus', PrometheusConfig::class);
+
         // Register the time-series singleton
         $this->app->singleton('time-series', function (Application $app) {
             $driver = $app['config']->get('time-series.driver');
             $driverConfig = $app['config']->get('time-series.drivers.'.$driver, []);
 
-            // Create the appropriate config object based on driver
-            $configClass = match ($driver) {
-                'influxdb' => InfluxDBConfig::class,
-                'rrdtool' => RRDtoolConfig::class,
-                default => null,
-            };
-
-            if ($configClass) {
-                $config = new $configClass($driverConfig);
-            } else {
-                // For drivers without specific config classes (like Prometheus)
-                $config = ConfigFactory::create('database', $driverConfig);
-            }
+            // Create the driver config using the DriverConfigFactory
+            $config = DriverConfigFactory::create($driver, $driverConfig);
 
             // Create and return the driver instance
             return TSDBFactory::create($driver, $config);
