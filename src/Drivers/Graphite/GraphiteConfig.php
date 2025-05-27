@@ -29,16 +29,16 @@ class GraphiteConfig extends AbstractDriverConfig
      */
     public function __construct(array $config = [])
     {
-        $this->addValidator('host', fn ($host) => is_string($host) && !empty($host));
+        $this->addValidator('host', fn ($host) => is_string($host) && ! empty($host));
         $this->addValidator('port', fn ($port) => is_int($port) && $port > 0);
         $this->addValidator('protocol', fn ($protocol) => in_array($protocol, ['tcp', 'udp']));
         $this->addValidator('timeout', fn ($timeout) => is_int($timeout) && $timeout > 0);
         $this->addValidator('prefix', fn ($prefix) => is_string($prefix));
         $this->addValidator('batch_size', fn ($size) => is_int($size) && $size > 0);
-        $this->addValidator('web_host', fn ($host) => is_string($host) && !empty($host));
+        $this->addValidator('web_host', fn ($host) => is_string($host) && ! empty($host));
         $this->addValidator('web_port', fn ($port) => is_int($port) && $port > 0);
         $this->addValidator('web_protocol', fn ($protocol) => in_array($protocol, ['http', 'https']));
-        $this->addValidator('web_path', fn ($path) => is_string($path) && !empty($path));
+        $this->addValidator('web_path', fn ($path) => is_string($path) && ! empty($path));
 
         parent::__construct($config);
     }
@@ -48,7 +48,7 @@ class GraphiteConfig extends AbstractDriverConfig
      */
     public function getConnectionString(): string
     {
-        return $this->get('host') . ':' . $this->get('port');
+        return $this->get('host').':'.$this->get('port');
     }
 
     /**
@@ -56,6 +56,6 @@ class GraphiteConfig extends AbstractDriverConfig
      */
     public function getWebUrl(): string
     {
-        return $this->get('web_protocol') . '://' . $this->get('web_host') . ':' . $this->get('web_port') . $this->get('web_path');
+        return $this->get('web_protocol').'://'.$this->get('web_host').':'.$this->get('web_port').$this->get('web_path');
     }
 }

@@ -24,53 +24,34 @@ use TimeSeriesPhp\Exceptions\QueryException;
 
 class InfluxDBDriver extends AbstractTimeSeriesDB
 {
-    private ?Client $client = null;
+    protected ?Client $client = null;
 
-    private ?WriteApi $writeApi = null;
+    protected ?WriteApi $writeApi = null;
 
-    private ?QueryApi $queryApi = null;
+    protected ?QueryApi $queryApi = null;
 
-    private string $org;
+    protected ?BucketsService $bucketsService = null;
 
-    private ?string $orgId = null;
+    protected string $org;
 
-    private string $bucket;
+    protected ?string $orgId = null;
+
+    protected string $bucket;
 
     protected function doConnect(): bool
     {
-        if (! $this->config instanceof InfluxDBConfig && ! $this->config instanceof DatabaseConfig) {
-            throw new ConfigurationException('Invalid configuration type. Expected InfluxDBConfig or DatabaseConfig.');
+        if (! $this->config instanceof InfluxDBConfig) {
+            throw new ConfigurationException('Invalid configuration type. Expected InfluxDBConfig.');
         }
 
         try {
-            if ($this->config instanceof InfluxDBConfig) {
-                $this->client = new Client($this->config->getClientConfig());
-                $this->writeApi = $this->client->createWriteApi();
-                $this->queryApi = $this->client->createQueryApi();
+            $this->client = new Client($this->config->getClientConfig());
+            $this->writeApi = $this->client->createWriteApi();
+            $this->queryApi = $this->client->createQueryApi();
 
-                // Store config values for easier access
-                $this->org = $this->config->get('org');
-                $this->bucket = $this->config->get('bucket');
-            } else {
-                // Using DatabaseConfig
-                $clientConfig = [
-                    'url' => 'http://'.$this->config->getConnectionString(),
-                    'token' => '',  // Token needs to be set in the config
-                    'bucket' => $this->config->get('database'),
-                    'org' => '',    // Org needs to be set in the config
-                    'timeout' => $this->config->get('timeout'),
-                    'verifySSL' => $this->config->get('verify_ssl'),
-                    'debug' => false,
-                ];
-
-                $this->client = new Client($clientConfig);
-                $this->writeApi = $this->client->createWriteApi();
-                $this->queryApi = $this->client->createQueryApi();
-
-                // Store config values for easier access
-                $this->org = '';    // Org needs to be set in the config
-                $this->bucket = $this->config->get('database');
-            }
+            // Store config values for easier access
+            $this->org = $this->config->get('org');
+            $this->bucket = $this->config->get('bucket');
 
             $this->queryBuilder = new InfluxDBQueryBuilder($this->bucket);
 
@@ -189,8 +170,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     public function createDatabase(string $database): bool
     {
         try {
-            /** @var BucketsService $bucketsService */
-            $bucketsService = $this->client->createService(BucketsService::class);
+            $this->bucketsService ??= $this->client->createService(BucketsService::class);
 
             $rule = new BucketRetentionRules;
             $rule->setEverySeconds(0); // No expiration
@@ -199,9 +179,9 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             $bucketRequest->setName($database)
                 ->setRetentionRules([$rule])
                 ->setOrgId($this->getOrgId());
-            $bucket = $bucketsService->postBuckets($bucketRequest);
+            $this->bucketsService->postBuckets($bucketRequest);
 
-            return $bucket !== null;
+            return true;
         } catch (Exception $e) {
             error_log('Failed to create bucket: '.$e->getMessage());
 
@@ -212,9 +192,8 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     public function listDatabases(): array
     {
         try {
-            /** @var BucketsService $bucketsService */
-            $bucketsService = $this->client->createService(BucketsService::class);
-            $buckets = $bucketsService->getBuckets(org_id: $this->getOrgId());
+            $this->bucketsService ??= $this->client->createService(BucketsService::class);
+            $buckets = $this->bucketsService->getBuckets(org_id: $this->getOrgId());
 
             $bucketNames = [];
             foreach ($buckets->getBuckets() as $bucket) {
@@ -293,44 +272,6 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
         $this->writeApi?->close();
         $this->client = null;
         $this->connected = false;
-    }
-
-    /**
-     * Convert interval string to Flux duration format
-     * Examples: '1h' -> '1h', '30m' -> '30m', '5s' -> '5s', '1d' -> '1d'
-     */
-    private function convertIntervalToDuration(string $interval): string
-    {
-        // If already in Flux format, return as-is
-        if (preg_match('/^\d+[smhd]$/', $interval)) {
-            return $interval;
-        }
-
-        // Convert common formats
-        $interval = strtolower($interval);
-        $conversions = [
-            'second' => 's',
-            'seconds' => 's',
-            'sec' => 's',
-            'minute' => 'm',
-            'minutes' => 'm',
-            'min' => 'm',
-            'hour' => 'h',
-            'hours' => 'h',
-            'day' => 'd',
-            'days' => 'd',
-        ];
-
-        foreach ($conversions as $from => $to) {
-            if (str_contains($interval, $from)) {
-                $number = (int) filter_var($interval, FILTER_SANITIZE_NUMBER_INT);
-
-                return $number.$to;
-            }
-        }
-
-        // Default fallback - assume it's already in correct format
-        return $interval;
     }
 
     public function isConnected(): bool

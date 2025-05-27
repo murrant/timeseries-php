@@ -54,7 +54,7 @@ class TSDBFactoryTest extends TestCase
         $mockDriverClass = 'TimeSeriesPhp\Tests\Core\MockDriver';
 
         // Create the mock driver class if it doesn't exist
-        if (!class_exists($mockDriverClass)) {
+        if (! class_exists($mockDriverClass)) {
             eval('
                 namespace TimeSeriesPhp\Tests\Core;
 
@@ -109,7 +109,7 @@ class TSDBFactoryTest extends TestCase
         $instance = TSDBFactory::create('mock', $mockConfig);
 
         // Verify the instance is our mock class
-        $this->assertInstanceOf($mockDriverClass, $instance);
+        $this->assertTrue($instance instanceof $mockDriverClass);
 
         // Verify connect was called
         $this->assertTrue($mockDriverClass::$connectCalled, 'connect() method was not called');

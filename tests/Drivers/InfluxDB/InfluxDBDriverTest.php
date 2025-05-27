@@ -63,35 +63,41 @@ class InfluxDBDriverTest extends TestCase
         $mockBucketsService->method('postBuckets')->willReturn($mockBucket);
 
         // Create a real instance of InfluxDBDriver with mocked methods
-        $this->driver = new class($mockClient, $mockWriteApi, $mockQueryApi, $mockBucketsService) extends InfluxDBDriver {
-            private $mockClient;
-            private $mockWriteApi;
-            private $mockQueryApi;
-            private $mockBucketsService;
-
-            public function __construct($mockClient, $mockWriteApi, $mockQueryApi, $mockBucketsService) {
+        $this->driver = new class($mockClient, $mockWriteApi, $mockQueryApi, $mockBucketsService) extends InfluxDBDriver
+        {
+            /**
+             * @param  \InfluxDB2\Client  $mockClient
+             * @param  \InfluxDB2\WriteApi  $mockWriteApi
+             * @param  \InfluxDB2\QueryApi  $mockQueryApi
+             * @param  \InfluxDB2\Service\BucketsService  $mockBucketsService
+             */
+            public function __construct($mockClient, $mockWriteApi, $mockQueryApi, $mockBucketsService)
+            {
                 $this->client = $mockClient;
                 $this->writeApi = $mockWriteApi;
                 $this->queryApi = $mockQueryApi;
-                $this->mockBucketsService = $mockBucketsService;
+                $this->bucketsService = $mockBucketsService;
                 $this->org = 'test-org';
                 $this->bucket = 'test-bucket';
                 $this->connected = true;
                 $this->queryBuilder = new \TimeSeriesPhp\Drivers\InfluxDB\InfluxDBQueryBuilder('test-bucket');
             }
 
-            protected function doConnect(): bool {
+            protected function doConnect(): bool
+            {
                 return true;
             }
 
-            protected function executeQuery($query): array {
+            protected function executeQuery($query): array
+            {
                 return [
                     ['time' => '2023-01-01T00:00:00Z', 'value' => 10],
                     ['time' => '2023-01-01T01:00:00Z', 'value' => 15],
                 ];
             }
 
-            public function rawQuery(\TimeSeriesPhp\Core\RawQueryContract $query): \TimeSeriesPhp\Core\QueryResult {
+            public function rawQuery(\TimeSeriesPhp\Core\RawQueryContract $query): \TimeSeriesPhp\Core\QueryResult
+            {
                 // Mock implementation that doesn't use queryApi
                 return new \TimeSeriesPhp\Core\QueryResult([
                     ['time' => '2023-01-01T00:00:00Z', 'value' => 10],
@@ -99,22 +105,26 @@ class InfluxDBDriverTest extends TestCase
                 ]);
             }
 
-            public function write(\TimeSeriesPhp\Core\DataPoint $dataPoint): bool {
+            public function write(\TimeSeriesPhp\Core\DataPoint $dataPoint): bool
+            {
                 // Mock implementation that doesn't use writeApi
                 return true;
             }
 
-            public function writeBatch(array $dataPoints): bool {
+            public function writeBatch(array $dataPoints): bool
+            {
                 // Mock implementation that doesn't use writeApi
                 return true;
             }
 
-            public function createDatabase(string $database): bool {
+            public function createDatabase(string $database): bool
+            {
                 // Mock implementation that doesn't use client
                 return true;
             }
 
-            public function listDatabases(): array {
+            public function listDatabases(): array
+            {
                 // Mock implementation that doesn't use client
                 return ['mydb', 'testdb'];
             }
@@ -190,7 +200,6 @@ class InfluxDBDriverTest extends TestCase
     public function test_list_databases()
     {
         $databases = $this->driver->listDatabases();
-        $this->assertIsArray($databases);
         $this->assertContains('mydb', $databases);
         $this->assertContains('testdb', $databases);
     }

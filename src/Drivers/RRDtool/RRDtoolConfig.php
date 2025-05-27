@@ -9,6 +9,7 @@ use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyContract;
 class RRDtoolConfig extends AbstractDriverConfig
 {
     protected string $driverName = 'rrdtool';
+
     protected array $defaults = [
         'rrdtool_path' => 'rrdtool',
         'rrd_dir' => '/tmp/rrd',

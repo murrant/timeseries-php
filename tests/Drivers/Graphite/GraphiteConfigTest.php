@@ -10,8 +10,8 @@ class GraphiteConfigTest extends TestCase
 {
     public function test_default_values()
     {
-        $config = new GraphiteConfig();
-        
+        $config = new GraphiteConfig;
+
         $this->assertEquals('localhost', $config->get('host'));
         $this->assertEquals(2003, $config->get('port'));
         $this->assertEquals('tcp', $config->get('protocol'));
@@ -23,7 +23,7 @@ class GraphiteConfigTest extends TestCase
         $this->assertEquals('http', $config->get('web_protocol'));
         $this->assertEquals('/render', $config->get('web_path'));
     }
-    
+
     public function test_custom_values()
     {
         $config = new GraphiteConfig([
@@ -38,7 +38,7 @@ class GraphiteConfigTest extends TestCase
             'web_protocol' => 'https',
             'web_path' => '/api/render',
         ]);
-        
+
         $this->assertEquals('graphite.example.com', $config->get('host'));
         $this->assertEquals(2004, $config->get('port'));
         $this->assertEquals('udp', $config->get('protocol'));
@@ -50,19 +50,19 @@ class GraphiteConfigTest extends TestCase
         $this->assertEquals('https', $config->get('web_protocol'));
         $this->assertEquals('/api/render', $config->get('web_path'));
     }
-    
+
     public function test_missing_required_fields()
     {
         $this->expectException(ConfigurationException::class);
-        
+
         // Create config with empty host (required field)
         new GraphiteConfig(['host' => '']);
     }
-    
+
     public function test_invalid_protocol()
     {
         $this->expectException(ConfigurationException::class);
-        
+
         // Create config with invalid protocol
         new GraphiteConfig([
             'host' => 'graphite.example.com',
@@ -70,11 +70,11 @@ class GraphiteConfigTest extends TestCase
             'protocol' => 'invalid',
         ]);
     }
-    
+
     public function test_invalid_web_protocol()
     {
         $this->expectException(ConfigurationException::class);
-        
+
         // Create config with invalid web protocol
         new GraphiteConfig([
             'host' => 'graphite.example.com',
@@ -82,17 +82,17 @@ class GraphiteConfigTest extends TestCase
             'web_protocol' => 'invalid',
         ]);
     }
-    
+
     public function test_get_connection_string()
     {
         $config = new GraphiteConfig([
             'host' => 'graphite.example.com',
             'port' => 2004,
         ]);
-        
+
         $this->assertEquals('graphite.example.com:2004', $config->getConnectionString());
     }
-    
+
     public function test_get_web_url()
     {
         $config = new GraphiteConfig([
@@ -101,14 +101,14 @@ class GraphiteConfigTest extends TestCase
             'web_protocol' => 'https',
             'web_path' => '/api/render',
         ]);
-        
+
         $this->assertEquals('https://graphite-web.example.com:8081/api/render', $config->getWebUrl());
     }
-    
+
     public function test_driver_name()
     {
-        $config = new GraphiteConfig();
-        
+        $config = new GraphiteConfig;
+
         $this->assertEquals('graphite', $config->getDriverName());
     }
 }

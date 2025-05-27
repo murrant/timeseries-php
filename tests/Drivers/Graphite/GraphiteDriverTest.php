@@ -42,21 +42,26 @@ class GraphiteDriverTest extends TestCase
             ->willReturn('http://localhost:8080/render');
 
         // Create a real instance of GraphiteDriver with mocked methods
-        $this->driver = new class extends GraphiteDriver {
+        $this->driver = new class extends GraphiteDriver
+        {
             private $socket = null;
 
-            protected function doConnect(): bool {
+            protected function doConnect(): bool
+            {
                 $this->connected = true;
-                $this->queryBuilder = new GraphiteQueryBuilder();
+                $this->queryBuilder = new GraphiteQueryBuilder;
+
                 return true;
             }
 
-            protected function openSocket(): void {
+            protected function openSocket(): void
+            {
                 // Mock implementation that doesn't actually open a socket
                 $this->socket = fopen('php://memory', 'r+');
             }
 
-            protected function closeSocket(): void {
+            protected function closeSocket(): void
+            {
                 // Mock implementation that doesn't actually close a socket
                 if ($this->socket) {
                     fclose($this->socket);
@@ -64,20 +69,24 @@ class GraphiteDriverTest extends TestCase
                 }
             }
 
-            public function write(\TimeSeriesPhp\Core\DataPoint $dataPoint): bool {
+            public function write(\TimeSeriesPhp\Core\DataPoint $dataPoint): bool
+            {
                 // Mock implementation that checks connection status
-                if (!$this->isConnected()) {
+                if (! $this->isConnected()) {
                     throw new \TimeSeriesPhp\Exceptions\ConnectionException('Not connected to Graphite');
                 }
+
                 return true;
             }
 
-            public function writeBatch(array $dataPoints): bool {
+            public function writeBatch(array $dataPoints): bool
+            {
                 // Mock implementation that doesn't actually write to Graphite
                 return true;
             }
 
-            public function rawQuery(\TimeSeriesPhp\Core\RawQueryContract $query): \TimeSeriesPhp\Core\QueryResult {
+            public function rawQuery(\TimeSeriesPhp\Core\RawQueryContract $query): \TimeSeriesPhp\Core\QueryResult
+            {
                 // Mock implementation that returns a predefined result
                 return new \TimeSeriesPhp\Core\QueryResult([
                     ['target' => 'cpu.usage', 'timestamp' => 1672531200, 'value' => 10],
@@ -182,7 +191,6 @@ class GraphiteDriverTest extends TestCase
         $this->driver->connect($this->config);
 
         $databases = $this->driver->listDatabases();
-        $this->assertIsArray($databases);
         $this->assertContains('default', $databases);
     }
 

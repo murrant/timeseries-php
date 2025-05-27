@@ -32,7 +32,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
 
     protected function doConnect(): bool
     {
-        if (!$this->config instanceof GraphiteConfig) {
+        if (! $this->config instanceof GraphiteConfig) {
             throw new ConfigurationException('Invalid configuration type. Expected GraphiteConfig.');
         }
 
@@ -53,10 +53,12 @@ class GraphiteDriver extends AbstractTimeSeriesDB
             $this->closeSocket();
 
             $this->connected = true;
+
             return true;
         } catch (Exception $e) {
-            error_log('Graphite connection failed: ' . $e->getMessage());
+            error_log('Graphite connection failed: '.$e->getMessage());
             $this->connected = false;
+
             return false;
         }
     }
@@ -66,7 +68,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
      */
     public function write(DataPoint $dataPoint): bool
     {
-        if (!$this->isConnected()) {
+        if (! $this->isConnected()) {
             throw new ConnectionException('Not connected to Graphite');
         }
 
@@ -79,13 +81,13 @@ class GraphiteDriver extends AbstractTimeSeriesDB
             $tags = $dataPoint->getTags();
 
             // In Graphite, tags are typically part of the metric path
-            $metricPrefix = $this->prefix ? $this->prefix . '.' : '';
+            $metricPrefix = $this->prefix ? $this->prefix.'.' : '';
 
             // Add tags to the metric path if present
             $tagPath = '';
-            if (!empty($tags)) {
+            if (! empty($tags)) {
                 foreach ($tags as $key => $value) {
-                    $tagPath .= '.' . $key . '.' . $value;
+                    $tagPath .= '.'.$key.'.'.$value;
                 }
             }
 
@@ -93,13 +95,13 @@ class GraphiteDriver extends AbstractTimeSeriesDB
 
             // Write each field as a separate metric
             foreach ($fields as $key => $value) {
-                if (!is_numeric($value)) {
+                if (! is_numeric($value)) {
                     // Graphite only supports numeric values
                     continue;
                 }
 
-                $metricPath = $metricPrefix . $measurement . $tagPath . '.' . $key;
-                $line = $metricPath . ' ' . $value . ' ' . $timestamp . "\n";
+                $metricPath = $metricPrefix.$measurement.$tagPath.'.'.$key;
+                $line = $metricPath.' '.$value.' '.$timestamp."\n";
 
                 $result = fwrite($this->socket, $line);
                 if ($result === false) {
@@ -111,19 +113,20 @@ class GraphiteDriver extends AbstractTimeSeriesDB
 
             return $success;
         } catch (Exception $e) {
-            error_log('Graphite write failed: ' . $e->getMessage());
+            error_log('Graphite write failed: '.$e->getMessage());
             $this->closeSocket();
-            throw new WriteException('Failed to write data to Graphite: ' . $e->getMessage());
+            throw new WriteException('Failed to write data to Graphite: '.$e->getMessage());
         }
     }
 
     /**
-     * @param DataPoint[] $dataPoints
+     * @param  DataPoint[]  $dataPoints
+     *
      * @throws WriteException
      */
     public function writeBatch(array $dataPoints): bool
     {
-        if (!$this->isConnected()) {
+        if (! $this->isConnected()) {
             throw new ConnectionException('Not connected to Graphite');
         }
 
@@ -132,7 +135,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
 
             $success = true;
             $batchCount = 0;
-            $metricPrefix = $this->prefix ? $this->prefix . '.' : '';
+            $metricPrefix = $this->prefix ? $this->prefix.'.' : '';
 
             foreach ($dataPoints as $dataPoint) {
                 $timestamp = $dataPoint->getTimestamp()->getTimestamp();
@@ -142,21 +145,21 @@ class GraphiteDriver extends AbstractTimeSeriesDB
 
                 // Add tags to the metric path if present
                 $tagPath = '';
-                if (!empty($tags)) {
+                if (! empty($tags)) {
                     foreach ($tags as $key => $value) {
-                        $tagPath .= '.' . $key . '.' . $value;
+                        $tagPath .= '.'.$key.'.'.$value;
                     }
                 }
 
                 // Write each field as a separate metric
                 foreach ($fields as $key => $value) {
-                    if (!is_numeric($value)) {
+                    if (! is_numeric($value)) {
                         // Graphite only supports numeric values
                         continue;
                     }
 
-                    $metricPath = $metricPrefix . $measurement . $tagPath . '.' . $key;
-                    $line = $metricPath . ' ' . $value . ' ' . $timestamp . "\n";
+                    $metricPath = $metricPrefix.$measurement.$tagPath.'.'.$key;
+                    $line = $metricPath.' '.$value.' '.$timestamp."\n";
 
                     $result = fwrite($this->socket, $line);
                     if ($result === false) {
@@ -178,9 +181,9 @@ class GraphiteDriver extends AbstractTimeSeriesDB
 
             return $success;
         } catch (Exception $e) {
-            error_log('Graphite batch write failed: ' . $e->getMessage());
+            error_log('Graphite batch write failed: '.$e->getMessage());
             $this->closeSocket();
-            throw new WriteException('Failed to write batch data to Graphite: ' . $e->getMessage());
+            throw new WriteException('Failed to write batch data to Graphite: '.$e->getMessage());
         }
     }
 
@@ -189,13 +192,13 @@ class GraphiteDriver extends AbstractTimeSeriesDB
      */
     public function rawQuery(RawQueryContract $query): QueryResult
     {
-        if (!$this->isConnected()) {
+        if (! $this->isConnected()) {
             throw new QueryException($query, 'Not connected to Graphite');
         }
 
         try {
             $queryString = $query->getRawQuery();
-            $url = $this->webUrl . '?' . $queryString;
+            $url = $this->webUrl.'?'.$queryString;
 
             $context = stream_context_create([
                 'http' => [
@@ -212,7 +215,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
             $data = json_decode($response, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new Exception('Failed to parse JSON response: ' . json_last_error_msg());
+                throw new Exception('Failed to parse JSON response: '.json_last_error_msg());
             }
 
             // Transform Graphite response to a standard format
@@ -240,7 +243,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
 
             return new QueryResult($result);
         } catch (Exception $e) {
-            throw new QueryException($query, 'Query execution failed: ' . $e->getMessage());
+            throw new QueryException($query, 'Query execution failed: '.$e->getMessage());
         }
     }
 
@@ -275,9 +278,9 @@ class GraphiteDriver extends AbstractTimeSeriesDB
         $errstr = '';
 
         $protocol = $this->protocol === 'udp' ? 'udp' : 'tcp';
-        $this->socket = fsockopen($protocol . '://' . $this->host, $this->port, $errno, $errstr, $this->timeout);
+        $this->socket = fsockopen($protocol.'://'.$this->host, $this->port, $errno, $errstr, $this->timeout);
 
-        if (!$this->socket) {
+        if (! $this->socket) {
             throw new ConnectionException("Failed to connect to Graphite: {$errstr} ({$errno})");
         }
 

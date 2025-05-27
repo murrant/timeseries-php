@@ -191,8 +191,8 @@ class FolderStrategyTest extends TestCase
         $files = $this->strategy->resolveFilePaths('cpu', $conditions);
 
         $this->assertCount(2, $files);
-        $this->assertCount(1, array_filter($files, fn($f) => str_contains($f, 'us-east/server1/cpu_usage_env-prod.rrd')));
-        $this->assertCount(1, array_filter($files, fn($f) => str_contains($f, 'eu-west/server3/cpu_usage_env-prod.rrd')));
+        $this->assertCount(1, array_filter($files, fn ($f) => str_contains($f, 'us-east/server1/cpu_usage_env-prod.rrd')));
+        $this->assertCount(1, array_filter($files, fn ($f) => str_contains($f, 'eu-west/server3/cpu_usage_env-prod.rrd')));
     }
 
     public function test_optimized_search_path(): void

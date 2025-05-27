@@ -6,14 +6,14 @@ use TimeSeriesPhp\Exceptions\ConfigurationException;
 
 /**
  * Factory for creating general configuration objects
- * 
+ *
  * For driver-specific configurations, use DriverConfigFactory
  */
 class ConfigFactory
 {
     /**
      * Map of configuration types to their classes
-     * 
+     *
      * @var array<string, class-string<ConfigInterface>>
      */
     private static array $configTypes = [
@@ -23,7 +23,7 @@ class ConfigFactory
 
     /**
      * Create a configuration instance
-     * 
+     *
      * @throws ConfigurationException
      */
     public static function create(string $type, array $config = []): ConfigInterface
@@ -39,7 +39,7 @@ class ConfigFactory
 
     /**
      * Register a configuration type
-     * 
+     *
      * @throws ConfigurationException
      */
     public static function registerConfigType(string $type, string $className): void
@@ -61,7 +61,7 @@ class ConfigFactory
 
     /**
      * Create multiple configuration instances from an array
-     * 
+     *
      * @throws ConfigurationException
      */
     public static function createFromArray(array $configs): array

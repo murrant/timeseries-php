@@ -321,7 +321,6 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
                 's' => (string) $amount,
                 'm' => (string) ($amount * 60),
                 'h' => (string) ($amount * 3600),
-                default => '300'
             };
         }
 

@@ -65,7 +65,6 @@ class QueryResultTest extends TestCase
         $result = new QueryResult($series, $metadata);
         $array = $result->toArray();
 
-        $this->assertIsArray($array);
         $this->assertArrayHasKey('series', $array);
         $this->assertArrayHasKey('metadata', $array);
         $this->assertEquals($series, $array['series']);

@@ -23,23 +23,23 @@ class GraphiteQueryBuilder implements QueryBuilderContract
         $target = '';
 
         // Add prefix if set
-        $metricPrefix = $this->prefix ? $this->prefix . '.' : '';
+        $metricPrefix = $this->prefix ? $this->prefix.'.' : '';
 
         // Build the base metric path
-        $metricPath = $metricPrefix . $measurement;
+        $metricPath = $metricPrefix.$measurement;
 
         // Handle fields
         if (empty($fields) || in_array('*', $fields)) {
-            $target = $metricPath . '.*';
+            $target = $metricPath.'.*';
         } else {
             // For multiple fields, we need to use group() function
             if (count($fields) > 1) {
                 $fieldPaths = array_map(function ($field) use ($metricPath) {
-                    return '"' . $metricPath . '.' . $field . '"';
+                    return '"'.$metricPath.'.'.$field.'"';
                 }, $fields);
-                $target = 'group(' . implode(', ', $fieldPaths) . ')';
+                $target = 'group('.implode(', ', $fieldPaths).')';
             } else {
-                $target = $metricPath . '.' . $fields[0];
+                $target = $metricPath.'.'.$fields[0];
             }
         }
 
@@ -50,7 +50,7 @@ class GraphiteQueryBuilder implements QueryBuilderContract
         if ($query->getStartTime()) {
             $from = $query->getStartTime()->getTimestamp();
         } elseif ($query->getRelativeTime()) {
-            $from = '-' . $this->formatDateInterval($query->getRelativeTime());
+            $from = '-'.$this->formatDateInterval($query->getRelativeTime());
         }
 
         if ($query->getEndTime()) {
@@ -158,22 +158,22 @@ class GraphiteQueryBuilder implements QueryBuilderContract
         $duration = '';
 
         if ($interval->y > 0) {
-            $duration .= $interval->y . 'y';
+            $duration .= $interval->y.'y';
         }
         if ($interval->m > 0) {
-            $duration .= $interval->m . 'mon';
+            $duration .= $interval->m.'mon';
         }
         if ($interval->d > 0) {
-            $duration .= $interval->d . 'd';
+            $duration .= $interval->d.'d';
         }
         if ($interval->h > 0) {
-            $duration .= $interval->h . 'h';
+            $duration .= $interval->h.'h';
         }
         if ($interval->i > 0) {
-            $duration .= $interval->i . 'min';
+            $duration .= $interval->i.'min';
         }
         if ($interval->s > 0) {
-            $duration .= $interval->s . 's';
+            $duration .= $interval->s.'s';
         }
 
         return $duration ?: '0s';

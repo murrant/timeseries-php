@@ -8,6 +8,7 @@ use TimeSeriesPhp\Exceptions\ConfigurationException;
 class MultiDatabaseConfig extends AbstractDriverConfig
 {
     protected string $driverName = 'influxdb';
+
     protected array $defaults = [
         'default' => 'primary',
         'connections' => [],

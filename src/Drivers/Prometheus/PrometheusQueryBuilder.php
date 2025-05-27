@@ -80,7 +80,7 @@ class PrometheusQueryBuilder implements QueryBuilderContract
             $function = strtolower($agg['function']);
 
             // Map common aggregation functions to Prometheus functions
-            switch ($function) {
+            switch (substr($function, 0, strpos($function, '_'))) {
                 case 'avg':
                 case 'mean':
                     $promqlQuery = "avg({$metricSelector})";
@@ -102,9 +102,15 @@ class PrometheusQueryBuilder implements QueryBuilderContract
                     break;
                 case 'percentile':
                     // Extract percentile value from the function name (e.g., PERCENTILE_95 -> 0.95)
-                    if (strpos($function, 'percentile_') === 0) {
-                        $percentile = substr($function, 11) / 100;
-                        $promqlQuery = "quantile({$percentile}, {$metricSelector})";
+                    if (str_starts_with($function, 'percentile_')) {
+                        $percentileValue = substr($function, 11);
+                        if ($percentileValue !== '' && is_numeric($percentileValue)) {
+                            $percentile = (float) $percentileValue / 100;
+                            $promqlQuery = "quantile({$percentile}, {$metricSelector})";
+                        } else {
+                            // Default to 50th percentile if no valid value is provided
+                            $promqlQuery = "quantile(0.5, {$metricSelector})";
+                        }
                     } else {
                         // Default to the original function name
                         $promqlQuery = "{$function}({$metricSelector})";

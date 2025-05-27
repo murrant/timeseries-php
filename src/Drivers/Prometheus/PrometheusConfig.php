@@ -8,6 +8,7 @@ use TimeSeriesPhp\Exceptions\ConfigurationException;
 class PrometheusConfig extends AbstractDriverConfig
 {
     protected string $driverName = 'prometheus';
+
     protected array $defaults = [
         'url' => 'http://localhost:9090',
         'timeout' => 30,

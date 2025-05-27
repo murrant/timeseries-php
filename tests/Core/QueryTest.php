@@ -44,7 +44,7 @@ class QueryTest extends TestCase
                 'operator' => '=',
                 'value' => 'server01',
                 'type' => 'AND',
-            ]
+            ],
         ], $query->getConditions());
 
         // Test multiple where clauses
@@ -61,7 +61,7 @@ class QueryTest extends TestCase
                 'operator' => '=',
                 'value' => 'us-west',
                 'type' => 'AND',
-            ]
+            ],
         ], $query->getConditions());
     }
 
@@ -98,7 +98,7 @@ class QueryTest extends TestCase
                 'function' => 'mean',
                 'field' => 'value',
                 'alias' => null,
-            ]
+            ],
         ], $query->getAggregations());
 
         // Test with alias
@@ -109,7 +109,7 @@ class QueryTest extends TestCase
                 'function' => 'max',
                 'field' => 'value',
                 'alias' => 'max_value',
-            ]
+            ],
         ], $query->getAggregations());
 
         // Test without field
@@ -120,7 +120,7 @@ class QueryTest extends TestCase
                 'function' => 'count',
                 'field' => null,
                 'alias' => null,
-            ]
+            ],
         ], $query->getAggregations());
     }
 
@@ -181,7 +181,7 @@ class QueryTest extends TestCase
                 'operator' => '=',
                 'value' => 'us-west',
                 'type' => 'AND',
-            ]
+            ],
         ], $query->getConditions());
         $this->assertSame($start, $query->getStartTime());
         $this->assertSame($end, $query->getEndTime());
@@ -191,7 +191,7 @@ class QueryTest extends TestCase
                 'function' => 'mean',
                 'field' => 'usage_user',
                 'alias' => null,
-            ]
+            ],
         ], $query->getAggregations());
         $this->assertEquals('5m', $query->getInterval());
         $this->assertEquals(100, $query->getLimit());

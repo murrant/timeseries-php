@@ -51,7 +51,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
 
         $tagStrategyClass = $this->config->get('tag_strategy');
         $this->tagStrategy = new $tagStrategyClass($this->rrdDir);
-        $this->queryBuilder = new RRDtoolQueryBuilder($this->tagStrategy, $this->rrdDir);
+        $this->queryBuilder = new RRDtoolQueryBuilder($this->tagStrategy);
 
         $this->connected = true;
 
@@ -62,11 +62,18 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
      * Find RRD files that match a set of tag values
      *
      * @param  array<string, string>  $tags  The tags as key-value pairs to search for
+     * @param  string|null  $measurement  Optional measurement name to filter by
      * @return array List of file paths that match all the tags
      */
-    public function findFilesByTags(array $tags): array
+    public function findFilesByTags(array $tags, ?string $measurement = null): array
     {
-        return $this->tagStrategy->findFilesByTags($tags, $this->rrdDir);
+        // Convert tags to TagCondition objects
+        $tagConditions = [];
+        foreach ($tags as $tag => $value) {
+            $tagConditions[] = new Tags\TagCondition($tag, '=', $value);
+        }
+
+        return $this->tagStrategy->resolveFilePaths($measurement ?? '*', $tagConditions);
     }
 
     /**
@@ -78,7 +85,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
      */
     private function getRRDPath(string $measurement, array $tags = []): string
     {
-        return $this->tagStrategy->getFilePath($measurement, $tags, $this->rrdDir);
+        return $this->tagStrategy->getFilePath($measurement, $tags);
     }
 
     /**
@@ -226,20 +233,6 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         }
 
         return $dataSources;
-    }
-
-    private function mapAggregationToConsolidationFunction(?string $aggregation): string
-    {
-        $mapping = [
-            'avg' => 'AVERAGE',
-            'mean' => 'AVERAGE',
-            'average' => 'AVERAGE',
-            'max' => 'MAX',
-            'min' => 'MIN',
-            'last' => 'LAST',
-        ];
-
-        return $mapping[strtolower($aggregation ?? 'average')] ?? 'AVERAGE';
     }
 
     private function parseRRDXportJson(array $json, array $requestedFields): QueryResult

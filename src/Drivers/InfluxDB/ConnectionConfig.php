@@ -7,6 +7,7 @@ use TimeSeriesPhp\Config\AbstractDriverConfig;
 class ConnectionConfig extends AbstractDriverConfig
 {
     protected string $driverName = 'influxdb';
+
     protected array $defaults = [
         'pool_size' => 10,
         'max_idle_time' => 300, // seconds

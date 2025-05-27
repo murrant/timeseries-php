@@ -155,7 +155,6 @@ class PrometheusDriverTest extends TestCase
     public function test_list_databases()
     {
         $databases = $this->driver->listDatabases();
-        $this->assertIsArray($databases);
         $this->assertEmpty($databases);
     }
 

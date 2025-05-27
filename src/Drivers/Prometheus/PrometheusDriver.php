@@ -94,7 +94,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB
 
             // Add time parameters if present
             if (! empty($timeParams)) {
-                if (isset($timeParams['start']) && isset($timeParams['end'])) {
+                if (isset($timeParams['start'])) {
                     $endpoint = '/api/v1/query_range';
                     $params['start'] = $timeParams['start'];
                     $params['end'] = $timeParams['end'];

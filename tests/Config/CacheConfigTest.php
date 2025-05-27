@@ -3,11 +3,10 @@
 namespace TimeSeriesPhp\Tests\Config;
 
 use TimeSeriesPhp\Config\CacheConfig;
-use TimeSeriesPhp\Config\ConfigInterface;
 
 class CacheConfigTest extends ConfigTestCase
 {
-    protected function createConfig(array $config): ConfigInterface
+    protected function createConfig(array $config): CacheConfig
     {
         return new CacheConfig($config);
     }
@@ -63,12 +62,11 @@ class CacheConfigTest extends ConfigTestCase
 
     public function test_validation()
     {
+        $this->expectNotToPerformAssertions();
         // Valid configuration should not throw an exception
         $config = $this->createConfig([
             'ttl' => 600,
             'driver' => 'redis',
         ]);
-
-        $this->assertTrue(true); // If we got here, no exception was thrown
     }
 }

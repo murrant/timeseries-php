@@ -4,12 +4,11 @@ namespace TimeSeriesPhp\Support;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
-use TimeSeriesPhp\Config\ConfigFactory;
 use TimeSeriesPhp\Config\DriverConfigFactory;
 use TimeSeriesPhp\Core\TSDBFactory;
 use TimeSeriesPhp\Drivers\Graphite\GraphiteConfig;
 use TimeSeriesPhp\Drivers\Graphite\GraphiteDriver;
-use TimeSeriesPhp\Drivers\InfluxDB\DatabaseConfig;
+use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig;
 use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
 use TimeSeriesPhp\Drivers\Prometheus\PrometheusConfig;
 use TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver;
@@ -45,7 +44,7 @@ class TimeSeriesServiceProvider extends ServiceProvider
         $this->app->alias(GraphiteDriver::class, 'time-series.graphite');
 
         // Register driver config classes
-        DriverConfigFactory::registerDriverConfig('influxdb', DatabaseConfig::class);
+        DriverConfigFactory::registerDriverConfig('influxdb', InfluxDBConfig::class);
         DriverConfigFactory::registerDriverConfig('rrdtool', RRDtoolConfig::class);
         DriverConfigFactory::registerDriverConfig('prometheus', PrometheusConfig::class);
         DriverConfigFactory::registerDriverConfig('graphite', GraphiteConfig::class);
@@ -69,8 +68,15 @@ class TimeSeriesServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Publish the configuration file
-        $this->publishes([
-            __DIR__.'/../../config/time-series.php' => config_path('time-series.php'),
-        ], 'time-series-config');
+        if (function_exists('config_path')) {
+            $this->publishes([
+                __DIR__.'/../../config/time-series.php' => config_path('time-series.php'),
+            ], 'time-series-config');
+        } else {
+            // Fallback for when not in a Laravel environment
+            $this->publishes([
+                __DIR__.'/../../config/time-series.php' => $this->app->basePath('config/time-series.php'),
+            ], 'time-series-config');
+        }
     }
 }
