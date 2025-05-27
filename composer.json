@@ -27,11 +27,22 @@
   "require": {
     "php": ">=8.2",
     "influxdata/influxdb-client-php": "^3.7",
-    "guzzlehttp/guzzle": "^7.9"
+    "guzzlehttp/guzzle": "^7.9",
+    "illuminate/support": "^12.15"
   },
   "config": {
     "allow-plugins": {
       "php-http/discovery": true
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "TimeSeriesPhp\\Support\\TimeSeriesServiceProvider"
+      ],
+      "aliases": {
+        "TimeSeries": "TimeSeriesPhp\\Support\\TimeSeriesFacade"
+      }
     }
   }
 }
