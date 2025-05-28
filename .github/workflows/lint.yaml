@@ -1,0 +1,31 @@
+name: PHPStan Analysis and PHPUnit Coverage Report
+
+on:
+    push:
+        branches: ["main"]
+        paths:
+            - '.github/lint.yml'
+            - '**.php'
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Cache Composer dependencies
+              uses: actions/cache@v3
+              with:
+                  path: ./vendor
+                  key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+
+            - name: Composer Init
+              uses: php-actions/composer@v6
+              with:
+                  php_version: "8.2"
+                  php_extensions: "fileinfo"
+
+            - name: PHPStan Analysis
+              uses: php-actions/phpstan@v3

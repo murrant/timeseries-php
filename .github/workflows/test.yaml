@@ -1,0 +1,42 @@
+name: PHPStan Analysis and PHPUnit Coverage Report
+
+on:
+    push:
+        branches: ["main"]
+        paths:
+            - '.github/test.yml'
+            - '**.php'
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Cache Composer dependencies
+              uses: actions/cache@v3
+              with:
+                  path: ./vendor
+                  key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+
+            - name: Composer Init
+              uses: php-actions/composer@v6
+              with:
+                  php_version: "8.2"
+                  php_extensions: "fileinfo"
+
+            - name: PHPUnit tests
+              uses: php-actions/phpunit@v3
+              with:
+                  php_extensions: "xdebug"
+                  coverage_cobertura: coverage.cobertura.xml
+              env:
+                  XDEBUG_MODE: coverage
+
+            - name: Code Coverage Summary Report
+              uses: irongut/CodeCoverageSummary@v1.3.0
+              with:
+                  badge: true
+                  filename: coverage.cobertura.xml
