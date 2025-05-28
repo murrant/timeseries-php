@@ -20,7 +20,7 @@ use RuntimeException;
 use TimeSeriesPhp\Core\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\QueryResult;
-use TimeSeriesPhp\Core\RawQueryContract;
+use TimeSeriesPhp\Core\RawQueryInterface;
 use TimeSeriesPhp\Exceptions\ConfigurationException;
 use TimeSeriesPhp\Exceptions\ConnectionException;
 use TimeSeriesPhp\Exceptions\QueryException;
@@ -148,7 +148,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     /**
      * @throws QueryException
      */
-    public function rawQuery(RawQueryContract $query): QueryResult
+    public function rawQuery(RawQueryInterface $query): QueryResult
     {
         if (! $this->isConnected()) {
             throw new QueryException($query, 'Not connected to InfluxDB');

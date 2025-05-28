@@ -5,7 +5,7 @@ namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 use SplFileInfo;
 use TimeSeriesPhp\Utils\File;
 
-class FolderStrategy implements RRDTagStrategyContract
+class FolderStrategy implements RRDTagStrategyInterface
 {
     use EncodesTagsInFilename;
 

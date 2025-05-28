@@ -3,12 +3,12 @@
 namespace TimeSeriesPhp\Drivers\InfluxDB;
 
 use TimeSeriesPhp\Core\Query;
-use TimeSeriesPhp\Core\QueryBuilderContract;
+use TimeSeriesPhp\Core\QueryBuilderInterface;
 use TimeSeriesPhp\Core\RawQuery;
-use TimeSeriesPhp\Core\RawQueryContract;
+use TimeSeriesPhp\Core\RawQueryInterface;
 use TimeSeriesPhp\Exceptions\QueryException;
 
-class InfluxDBQueryBuilder implements QueryBuilderContract
+class InfluxDBQueryBuilder implements QueryBuilderInterface
 {
     private string $bucket;
 
@@ -20,7 +20,7 @@ class InfluxDBQueryBuilder implements QueryBuilderContract
     /**
      * @throws QueryException
      */
-    public function build(Query $query): RawQueryContract
+    public function build(Query $query): RawQueryInterface
     {
         $fields = $query->getFields();
         $measurement = $query->getMeasurement();

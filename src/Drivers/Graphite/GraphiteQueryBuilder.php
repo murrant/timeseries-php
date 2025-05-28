@@ -3,12 +3,12 @@
 namespace TimeSeriesPhp\Drivers\Graphite;
 
 use TimeSeriesPhp\Core\Query;
-use TimeSeriesPhp\Core\QueryBuilderContract;
+use TimeSeriesPhp\Core\QueryBuilderInterface;
 use TimeSeriesPhp\Core\RawQuery;
-use TimeSeriesPhp\Core\RawQueryContract;
+use TimeSeriesPhp\Core\RawQueryInterface;
 use TimeSeriesPhp\Exceptions\QueryException;
 
-class GraphiteQueryBuilder implements QueryBuilderContract
+class GraphiteQueryBuilder implements QueryBuilderInterface
 {
     private string $prefix;
 
@@ -20,7 +20,7 @@ class GraphiteQueryBuilder implements QueryBuilderContract
     /**
      * @throws QueryException
      */
-    public function build(Query $query): RawQueryContract
+    public function build(Query $query): RawQueryInterface
     {
         $measurement = $query->getMeasurement();
         $fields = $query->getFields();

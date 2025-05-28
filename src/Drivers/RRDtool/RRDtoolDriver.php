@@ -8,8 +8,8 @@ use Symfony\Component\Process\Process;
 use TimeSeriesPhp\Core\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\QueryResult;
-use TimeSeriesPhp\Core\RawQueryContract;
-use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyContract;
+use TimeSeriesPhp\Core\RawQueryInterface;
+use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
 use TimeSeriesPhp\Exceptions\ConnectionException;
 use TimeSeriesPhp\Exceptions\DriverException;
 use TimeSeriesPhp\Exceptions\QueryException;
@@ -28,7 +28,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
 
     protected string $rrdcachedAddress = '';
 
-    protected RRDTagStrategyContract $tagStrategy;
+    protected RRDTagStrategyInterface $tagStrategy;
 
     private ?Process $persistentProcess = null;
 
@@ -64,8 +64,8 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
 
         $tagStrategyClass = $this->config->getString('tag_strategy');
         $instance = new $tagStrategyClass($this->rrdDir);
-        if (! $instance instanceof RRDTagStrategyContract) {
-            throw new ConnectionException('Invalid tag strategy class, must implement RRDTagStrategyContract');
+        if (! $instance instanceof RRDTagStrategyInterface) {
+            throw new ConnectionException('Invalid tag strategy class, must implement RRDTagStrategyInterface');
         }
 
         $this->tagStrategy = $instance;
@@ -294,7 +294,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         return $result;
     }
 
-    public function rawQuery(RawQueryContract $query): QueryResult
+    public function rawQuery(RawQueryInterface $query): QueryResult
     {
         if (! $query instanceof RRDtoolRawQuery) {
             throw new QueryException($query, 'Invalid query type');

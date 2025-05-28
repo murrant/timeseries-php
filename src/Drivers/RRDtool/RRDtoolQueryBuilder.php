@@ -4,22 +4,22 @@ namespace TimeSeriesPhp\Drivers\RRDtool;
 
 use InvalidArgumentException;
 use TimeSeriesPhp\Core\Query;
-use TimeSeriesPhp\Core\QueryBuilderContract;
+use TimeSeriesPhp\Core\QueryBuilderInterface;
 use TimeSeriesPhp\Core\QueryCondition;
-use TimeSeriesPhp\Core\RawQueryContract;
-use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyContract;
+use TimeSeriesPhp\Core\RawQueryInterface;
+use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\TagCondition;
 
-class RRDtoolQueryBuilder implements QueryBuilderContract
+class RRDtoolQueryBuilder implements QueryBuilderInterface
 {
-    private RRDTagStrategyContract $tagStrategy;
+    private RRDTagStrategyInterface $tagStrategy;
 
-    public function __construct(RRDTagStrategyContract $tagStrategy)
+    public function __construct(RRDTagStrategyInterface $tagStrategy)
     {
         $this->tagStrategy = $tagStrategy;
     }
 
-    public function build(Query $query): RawQueryContract
+    public function build(Query $query): RawQueryInterface
     {
         // Validate the query first
         $errors = $query->validate();

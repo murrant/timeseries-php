@@ -3,13 +3,13 @@
 namespace TimeSeriesPhp\Drivers\Prometheus;
 
 use TimeSeriesPhp\Core\Query;
-use TimeSeriesPhp\Core\QueryBuilderContract;
+use TimeSeriesPhp\Core\QueryBuilderInterface;
 use TimeSeriesPhp\Core\RawQuery;
-use TimeSeriesPhp\Core\RawQueryContract;
+use TimeSeriesPhp\Core\RawQueryInterface;
 
-class PrometheusQueryBuilder implements QueryBuilderContract
+class PrometheusQueryBuilder implements QueryBuilderInterface
 {
-    public function build(Query $query): RawQueryContract
+    public function build(Query $query): RawQueryInterface
     {
         // Prometheus uses PromQL
         $metric = $query->getMeasurement();

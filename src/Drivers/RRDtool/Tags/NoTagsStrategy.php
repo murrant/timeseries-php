@@ -4,7 +4,7 @@ namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 
 use TimeSeriesPhp\Utils\File;
 
-class NoTagsStrategy implements RRDTagStrategyContract
+class NoTagsStrategy implements RRDTagStrategyInterface
 {
     protected string $folderSeparator = '/';
 

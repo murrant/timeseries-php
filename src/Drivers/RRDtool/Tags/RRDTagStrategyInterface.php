@@ -2,7 +2,7 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 
-interface RRDTagStrategyContract
+interface RRDTagStrategyInterface
 {
     public function __construct(string $baseDir);
 

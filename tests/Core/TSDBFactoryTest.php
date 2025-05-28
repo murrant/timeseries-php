@@ -77,7 +77,7 @@ class TSDBFactoryTest extends TestCase
                         return new \TimeSeriesPhp\Core\QueryResult([]);
                     }
 
-                    public function rawQuery(\TimeSeriesPhp\Core\RawQueryContract $query): \TimeSeriesPhp\Core\QueryResult {
+                    public function rawQuery(\TimeSeriesPhp\Core\RawQueryInterface $query): \TimeSeriesPhp\Core\QueryResult {
                         return new \TimeSeriesPhp\Core\QueryResult([]);
                     }
 

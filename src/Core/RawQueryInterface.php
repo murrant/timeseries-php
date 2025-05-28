@@ -2,7 +2,7 @@
 
 namespace TimeSeriesPhp\Core;
 
-interface RawQueryContract
+interface RawQueryInterface
 {
     public function getRawQuery(): string;
 }

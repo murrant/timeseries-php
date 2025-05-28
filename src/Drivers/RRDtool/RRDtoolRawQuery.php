@@ -2,9 +2,9 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool;
 
-use TimeSeriesPhp\Core\RawQueryContract;
+use TimeSeriesPhp\Core\RawQueryInterface;
 
-class RRDtoolRawQuery implements RawQueryContract
+class RRDtoolRawQuery implements RawQueryInterface
 {
     /**
      * @var array<string, ?string>

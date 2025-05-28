@@ -99,7 +99,7 @@ class InfluxDBDriverTest extends TestCase
                 ];
             }
 
-            public function rawQuery(\TimeSeriesPhp\Core\RawQueryContract $query): \TimeSeriesPhp\Core\QueryResult
+            public function rawQuery(\TimeSeriesPhp\Core\RawQueryInterface $query): \TimeSeriesPhp\Core\QueryResult
             {
                 // Mock implementation that doesn't use queryApi
                 return new \TimeSeriesPhp\Core\QueryResult([

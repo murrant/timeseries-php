@@ -2,7 +2,7 @@
 
 namespace TimeSeriesPhp\Core;
 
-readonly class RawQuery implements RawQueryContract
+readonly class RawQuery implements RawQueryInterface
 {
     public function __construct(
         protected string $rawQuery,

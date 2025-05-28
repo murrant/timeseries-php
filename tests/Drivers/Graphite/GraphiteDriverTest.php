@@ -92,7 +92,7 @@ class GraphiteDriverTest extends TestCase
                 return true;
             }
 
-            public function rawQuery(\TimeSeriesPhp\Core\RawQueryContract $query): \TimeSeriesPhp\Core\QueryResult
+            public function rawQuery(\TimeSeriesPhp\Core\RawQueryInterface $query): \TimeSeriesPhp\Core\QueryResult
             {
                 // Mock implementation that returns a predefined result
                 return new \TimeSeriesPhp\Core\QueryResult([

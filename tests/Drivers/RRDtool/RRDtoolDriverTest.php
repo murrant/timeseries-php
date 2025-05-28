@@ -10,7 +10,7 @@ use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolRawQuery;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
-use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyContract;
+use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
 
 class RRDtoolDriverTest extends TestCase
 {
@@ -72,7 +72,7 @@ class RRDtoolDriverTest extends TestCase
             });
 
         // Create a mock tag strategy
-        $tagStrategy = $this->createMock(RRDTagStrategyContract::class);
+        $tagStrategy = $this->createMock(RRDTagStrategyInterface::class);
         $tagStrategy->method('getFilePath')
             ->willReturnCallback(
                 /** @param array<string, string> $tags */
@@ -97,7 +97,7 @@ class RRDtoolDriverTest extends TestCase
         {
             protected string $tempDir;
 
-            public function __construct(string $tempDir, RRDTagStrategyContract $tagStrategy)
+            public function __construct(string $tempDir, RRDTagStrategyInterface $tagStrategy)
             {
                 $this->tempDir = $tempDir;
                 $this->tagStrategy = $tagStrategy;
@@ -124,7 +124,7 @@ class RRDtoolDriverTest extends TestCase
                 return true;
             }
 
-            public function rawQuery(\TimeSeriesPhp\Core\RawQueryContract $query): \TimeSeriesPhp\Core\QueryResult
+            public function rawQuery(\TimeSeriesPhp\Core\RawQueryInterface $query): \TimeSeriesPhp\Core\QueryResult
             {
                 // Mock implementation that doesn't execute commands
                 if ($query instanceof \TimeSeriesPhp\Drivers\RRDtool\RRDtoolRawQuery && $query->command === 'xport') {
