@@ -153,7 +153,7 @@ class RRDtoolDriverTest extends TestCase
                     touch($filename);
                 }
 
-                return $filename;
+                return file_exists($filename);
             }
 
             public function getRRDGraph(RRDtoolRawQuery $graphConfig): string

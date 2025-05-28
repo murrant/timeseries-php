@@ -117,9 +117,13 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         }
 
         if ($this->persistentProcess) {
+            if ($this->persistentInput == null) {
+                throw new RRDtoolException('Persistent process is not started, input stream missing');
+            }
+
             $this->persistentInput->write(implode(' ', $args)."\n");
             $timeout = time() + $this->commandTimeout;
-            $this->persistentProcess->waitUntil(function ($type, $output) use ($command, $args, $timeout) {
+            $this->persistentProcess->waitUntil(function (string $type, string $output) use ($command, $args, $timeout) {
                 // FIXME debug output?
                 if ($this->debug && function_exists('dump')) {
                     dump("Type: $type  $output");
@@ -356,6 +360,10 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         $this->connected = false;
     }
 
+    /**
+     * @param  string  $measurement_or_filename  The tsdb measurement or the full path to the file
+     * @param  array<string, string>|null  $tags
+     */
     public function rrdExists(string $measurement_or_filename, ?array $tags = null): bool
     {
         $filename = $tags === null ? $measurement_or_filename : $this->getRRDPath($measurement_or_filename, $tags);
@@ -364,7 +372,8 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     }
 
     /**
-     * @param  array<string, mixed>  $fields
+     * @param  array<string, string>  $tags
+     * @param  array<string, ?scalar>  $fields
      *
      * @throws WriteException
      */
@@ -406,7 +415,8 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
             throw new WriteException('Archives must be specified for custom RRD creation');
         }
 
-        $args = [$filename, '--step', $step];
+        /** @var string[] $archives */
+        $args = [$filename, '--step', (string) $step];
         $args = array_merge($args, $data_sources, $archives);
 
         try {

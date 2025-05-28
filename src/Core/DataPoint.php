@@ -3,6 +3,7 @@
 namespace TimeSeriesPhp\Core;
 
 use DateTime;
+use TimeSeriesPhp\Utils\Convert;
 
 class DataPoint
 {
@@ -14,14 +15,14 @@ class DataPoint
     private array $tags;
 
     /**
-     * @var array<string, mixed>
+     * @var array<string, ?scalar>
      */
     private array $fields;
 
     private DateTime $timestamp;
 
     /**
-     * @param  array<string, mixed>  $fields
+     * @param  array<string, ?scalar>  $fields
      * @param  array<string, string>  $tags
      */
     public function __construct(
@@ -50,7 +51,7 @@ class DataPoint
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<string, ?scalar>
      */
     public function getFields(): array
     {
@@ -69,9 +70,13 @@ class DataPoint
         return $this;
     }
 
+    /**
+     * @param  ?scalar  $value
+     * @return $this
+     */
     public function addField(string $key, mixed $value): self
     {
-        $this->fields[$key] = $value;
+        $this->fields[$key] = Convert::toScalar($value);
 
         return $this;
     }

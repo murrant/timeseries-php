@@ -28,9 +28,9 @@ class RRDtoolRawQuery implements RawQueryContract
         }
     }
 
-    public function param(string $param, ?string $value = null): self
+    public function param(string $param, int|string|null $value = null): self
     {
-        $this->parameters[$param] = $value !== null ? $this->escapeString($value) : null;
+        $this->parameters[$param] = $value !== null ? $this->escapeString((string) $value) : null;
 
         return $this;
     }
@@ -110,6 +110,9 @@ class RRDtoolRawQuery implements RawQueryContract
         return implode(' ', array_map(fn ($arg) => escapeshellarg($arg), $args));
     }
 
+    /**
+     * @return string[]
+     */
     public function getArgs(): array
     {
         $args = $this->filename ? [$this->filename] : [];

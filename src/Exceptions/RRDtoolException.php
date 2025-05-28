@@ -8,6 +8,9 @@ class RRDtoolException extends TSDBException
 
     private string $errorOutput = '';
 
+    /**
+     * @param  string[]  $args
+     */
     public function __construct(
         public readonly string $command,
         public readonly array $args = [],
@@ -46,7 +49,7 @@ class RRDtoolException extends TSDBException
     public function getDebugMessage(bool $debug = false): string
     {
         if ($debug) {
-            $message = $this->message;
+            $message = $this->getMessage();
             $message .= "\n\nCommand: {$this->command}\n";
             $message .= 'Args: '.implode(' ', $this->args)."\n";
             $message .= "Output: {$this->output}\n";
@@ -55,6 +58,6 @@ class RRDtoolException extends TSDBException
             return $message;
         }
 
-        return $this->message;
+        return $this->getMessage();
     }
 }
