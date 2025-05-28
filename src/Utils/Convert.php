@@ -19,12 +19,13 @@ class Convert
             : $floatValue;
     }
 
-    /**
-     * @return ?scalar
-     */
     public static function toScalar(mixed $value): float|int|bool|string|null
     {
-        return is_array($value) ? $value[0] ?? null : (is_scalar($value) ? $value : null);
+        if (is_array($value)) {
+            return isset($value[0]) && is_scalar($value[0]) ? $value[0] : null;
+        }
+
+        return is_scalar($value) ? $value : null;
     }
 
     public static function toString(mixed $value): string

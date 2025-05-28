@@ -5,7 +5,6 @@ namespace TimeSeriesPhp\Tests\Drivers\RRDtool;
 use DateTime;
 use PHPUnit\Framework\TestCase;
 use TimeSeriesPhp\Core\DataPoint;
-use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Core\QueryResult;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
@@ -16,14 +15,17 @@ use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyContract;
 class RRDtoolDriverTest extends TestCase
 {
     private RRDtoolDriver $driver;
+
     private RRDtoolConfig $config;
+
     private string $tempDir;
+
     private string $rrdtoolPath = '/usr/bin/rrdtool';
 
     protected function setUp(): void
     {
         // Create a temporary directory for testing
-        $this->tempDir = sys_get_temp_dir() . '/rrdtool_test_' . uniqid();
+        $this->tempDir = sys_get_temp_dir().'/rrdtool_test_'.uniqid();
         mkdir($this->tempDir, 0777, true);
 
         // Mock the RRDtoolConfig
@@ -33,7 +35,7 @@ class RRDtoolDriverTest extends TestCase
         $this->config->method('getString')
             ->willReturnCallback(function ($key) {
                 return match ($key) {
-                    'rrd_dir' => $this->tempDir . '/',
+                    'rrd_dir' => $this->tempDir.'/',
                     'rrdtool_path' => $this->rrdtoolPath,
                     'rrdcached_address' => '',
                     'tag_strategy' => FileNameStrategy::class,
@@ -75,29 +77,31 @@ class RRDtoolDriverTest extends TestCase
             ->willReturnCallback(
                 /** @param array<string, string> $tags */
                 function (string $measurement, array $tags = []) {
-                $tagString = '';
-                if (!empty($tags)) {
-                    ksort($tags);
-                    foreach ($tags as $key => $value) {
-                        if (! is_scalar($value)) {
-                            throw new \InvalidArgumentException('Tag value must be a scalar');
-                        }
+                    $tagString = '';
+                    if (! empty($tags)) {
+                        ksort($tags);
+                        foreach ($tags as $key => $value) {
+                            if (! is_scalar($value)) {
+                                throw new \InvalidArgumentException('Tag value must be a scalar');
+                            }
 
-                        $tagString .= "_{$key}-" . str_replace('.', '\\.', (string) $value);
+                            $tagString .= "_{$key}-".str_replace('.', '\\.', (string) $value);
+                        }
                     }
-                }
-                return $this->tempDir . '/' . $measurement . $tagString . '.rrd';
-            });
+
+                    return $this->tempDir.'/'.$measurement.$tagString.'.rrd';
+                });
 
         // Create a subclass of RRDtoolDriver that overrides methods that would execute commands
-        $this->driver = new class($this->tempDir, $tagStrategy) extends RRDtoolDriver {
+        $this->driver = new class($this->tempDir, $tagStrategy) extends RRDtoolDriver
+        {
             protected string $tempDir;
 
             public function __construct(string $tempDir, RRDTagStrategyContract $tagStrategy)
             {
                 $this->tempDir = $tempDir;
                 $this->tagStrategy = $tagStrategy;
-                $this->rrdDir = $tempDir . '/';
+                $this->rrdDir = $tempDir.'/';
                 $this->connected = true;
                 $this->queryBuilder = new \TimeSeriesPhp\Drivers\RRDtool\RRDtoolQueryBuilder($this->tagStrategy);
             }
@@ -113,7 +117,7 @@ class RRDtoolDriverTest extends TestCase
                 $rrdPath = $this->tagStrategy->getFilePath($dataPoint->getMeasurement(), $dataPoint->getTags());
 
                 // Simulate creating the RRD file
-                if (!file_exists($rrdPath)) {
+                if (! file_exists($rrdPath)) {
                     touch($rrdPath);
                 }
 
@@ -125,14 +129,18 @@ class RRDtoolDriverTest extends TestCase
                 // Mock implementation that doesn't execute commands
                 if ($query instanceof \TimeSeriesPhp\Drivers\RRDtool\RRDtoolRawQuery && $query->type === 'xport') {
                     return new \TimeSeriesPhp\Core\QueryResult([
-                        ['time' => time(), 'cpu_usage' => 23.5],
-                        ['time' => time() + 300, 'cpu_usage' => 24.0],
-                        ['time' => time() + 600, 'cpu_usage' => 24.5],
+                        'cpu_usage' => [
+                            ['date' => time(), 'value' => 23.5],
+                            ['date' => time() + 300, 'value' => 24.0],
+                            ['date' => time() + 600, 'value' => 24.5],
+                        ],
                     ]);
                 }
 
                 return new \TimeSeriesPhp\Core\QueryResult([
-                    ['time' => time(), 'output' => 'Mocked output']
+                    'output' => [
+                        ['date' => time(), 'value' => 'Mocked output'],
+                    ],
                 ]);
             }
 
@@ -142,7 +150,7 @@ class RRDtoolDriverTest extends TestCase
                 $rrdPath = $this->tagStrategy->getFilePath($measurement, $tags);
 
                 // Simulate creating the RRD file
-                if (!file_exists($rrdPath)) {
+                if (! file_exists($rrdPath)) {
                     touch($rrdPath);
                 }
 
@@ -152,7 +160,7 @@ class RRDtoolDriverTest extends TestCase
             public function getRRDGraph(string $measurement, array $tags, array $graphConfig): string
             {
                 // Mock implementation that doesn't execute commands
-                $outputPath = $this->tempDir . '/graph_' . uniqid() . '.png';
+                $outputPath = $this->tempDir.'/graph_'.uniqid().'.png';
                 touch($outputPath);
 
                 return $outputPath;
@@ -161,10 +169,11 @@ class RRDtoolDriverTest extends TestCase
             public function createDatabase(string $database): bool
             {
                 // Create the database directory
-                $dbDir = $this->tempDir . '/' . $database;
-                if (!is_dir($dbDir)) {
+                $dbDir = $this->tempDir.'/'.$database;
+                if (! is_dir($dbDir)) {
                     mkdir($dbDir, 0777, true);
                 }
+
                 return true;
             }
 
@@ -192,7 +201,7 @@ class RRDtoolDriverTest extends TestCase
      */
     private function recursiveRemoveDir(string $dir): void
     {
-        $items = glob($dir . '/*') ?: [];
+        $items = glob($dir.'/*') ?: [];
         foreach ($items as $item) {
             if (is_dir($item)) {
                 $this->recursiveRemoveDir($item);
@@ -255,20 +264,25 @@ class RRDtoolDriverTest extends TestCase
         $result = $this->driver->rawQuery($rawQuery);
 
         $this->assertInstanceOf(QueryResult::class, $result);
-        $this->assertCount(3, $result->getSeries());
+        $series = $result->getSeries();
+        $this->assertNotEmpty($series);
+        // Check that the cpu_usage field exists in the series
+        $this->assertArrayHasKey('cpu_usage', $series);
+        // Check that there are 3 data points in the cpu_usage field
+        $this->assertCount(3, $series['cpu_usage']);
     }
 
     public function test_create_database(): void
     {
         $result = $this->driver->createDatabase('test_db');
         $this->assertTrue($result);
-        $this->assertDirectoryExists($this->tempDir . '/test_db');
+        $this->assertDirectoryExists($this->tempDir.'/test_db');
     }
 
     public function test_list_databases(): void
     {
         // Create a test database directory
-        mkdir($this->tempDir . '/test_db', 0777, true);
+        mkdir($this->tempDir.'/test_db', 0777, true);
 
         $databases = $this->driver->listDatabases();
         $this->assertContains('test_db', $databases);
@@ -318,5 +332,4 @@ class RRDtoolDriverTest extends TestCase
         $outputPath = $this->driver->getRRDGraph('cpu_usage', ['host' => 'server1'], $graphConfig);
         $this->assertStringContainsString($this->tempDir, $outputPath);
     }
-
 }

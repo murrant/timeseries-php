@@ -245,7 +245,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         });
 
         // If no fields matched, use all legend fields
-        if (empty($legend) && !empty($json['meta']['legend'])) {
+        if (empty($legend) && ! empty($json['meta']['legend'])) {
             $legend = $json['meta']['legend'];
         }
 
@@ -406,7 +406,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         }
 
         // If the file doesn't exist despite a successful command, try to create a dummy file
-        if (!file_exists($outputPath)) {
+        if (! file_exists($outputPath)) {
             file_put_contents($outputPath, 'Dummy graph file');
         }
 

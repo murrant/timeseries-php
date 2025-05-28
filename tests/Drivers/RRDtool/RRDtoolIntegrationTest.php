@@ -15,20 +15,23 @@ use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
 /**
  * Integration test for RRDtoolDriver that assumes rrdtool is available
  * and creates real RRD artifacts in tests/Drivers/RRDtool/data.
- * 
+ *
  * @group integration
  */
 class RRDtoolIntegrationTest extends TestCase
 {
     private RRDtoolDriver $driver;
+
     private RRDtoolConfig $config;
+
     private string $dataDir;
+
     private string $rrdtoolPath = 'rrdtool'; // Assumes rrdtool is in PATH
 
     protected function setUp(): void
     {
         // Skip test if exec function is not available
-        if (!function_exists('exec')) {
+        if (! function_exists('exec')) {
             $this->markTestSkipped('exec function is not available');
         }
 
@@ -40,15 +43,15 @@ class RRDtoolIntegrationTest extends TestCase
         $this->rrdtoolPath = trim($output[0]);
 
         // Use the data directory for RRD files
-        $this->dataDir = rtrim(__DIR__ . '/data', '/') . '/';
+        $this->dataDir = rtrim(__DIR__.'/data', '/').'/';
 
         // Ensure the directory exists and is writable
-        if (!is_dir($this->dataDir)) {
+        if (! is_dir($this->dataDir)) {
             mkdir($this->dataDir, 0777, true);
         }
 
-        if (!is_writable($this->dataDir)) {
-            $this->markTestSkipped('Data directory is not writable: ' . $this->dataDir);
+        if (! is_writable($this->dataDir)) {
+            $this->markTestSkipped('Data directory is not writable: '.$this->dataDir);
         }
 
         // Create a real RRDtoolConfig
@@ -66,7 +69,7 @@ class RRDtoolIntegrationTest extends TestCase
         ]);
 
         // Create a real RRDtoolDriver
-        $this->driver = new RRDtoolDriver();
+        $this->driver = new RRDtoolDriver;
         $this->driver->connect($this->config);
     }
 
@@ -76,13 +79,13 @@ class RRDtoolIntegrationTest extends TestCase
         $this->driver->close();
 
         // Clean up RRD files but leave the directory
-        $files = glob($this->dataDir . '*.rrd') ?: [];
+        $files = glob($this->dataDir.'*.rrd') ?: [];
         foreach ($files as $file) {
             unlink($file);
         }
 
         // Also clean up any graph files
-        $graphFiles = glob($this->dataDir . 'graph_*.png') ?: [];
+        $graphFiles = glob($this->dataDir.'graph_*.png') ?: [];
         foreach ($graphFiles as $file) {
             unlink($file);
         }
@@ -108,7 +111,7 @@ class RRDtoolIntegrationTest extends TestCase
         $this->assertTrue($result);
 
         // Verify the RRD file was created
-        $rrdFile = $this->dataDir . 'cpu_usage_host-server1.rrd';
+        $rrdFile = $this->dataDir.'cpu_usage_host-server1.rrd';
         $this->assertFileExists($rrdFile);
 
         // Write another data point 60 seconds later
@@ -126,7 +129,7 @@ class RRDtoolIntegrationTest extends TestCase
     public function test_write_batch(): void
     {
         // Create multiple data points
-        $now = new DateTime();
+        $now = new DateTime;
         $dataPoints = [
             new DataPoint(
                 'memory_usage',
@@ -147,8 +150,8 @@ class RRDtoolIntegrationTest extends TestCase
         $this->assertTrue($result);
 
         // Verify the RRD files were created
-        $rrdFile1 = $this->dataDir . 'memory_usage_host-server1.rrd';
-        $rrdFile2 = $this->dataDir . 'memory_usage_host-server2.rrd';
+        $rrdFile1 = $this->dataDir.'memory_usage_host-server1.rrd';
+        $rrdFile2 = $this->dataDir.'memory_usage_host-server2.rrd';
         $this->assertFileExists($rrdFile1);
         $this->assertFileExists($rrdFile2);
     }
@@ -171,7 +174,7 @@ class RRDtoolIntegrationTest extends TestCase
         $this->assertTrue($result);
 
         // Verify the RRD file was created
-        $rrdFile = $this->dataDir . 'custom_metric_host-server1.rrd';
+        $rrdFile = $this->dataDir.'custom_metric_host-server1.rrd';
         $this->assertFileExists($rrdFile);
 
         // Write data to the custom RRD
@@ -189,7 +192,7 @@ class RRDtoolIntegrationTest extends TestCase
     public function test_get_rrd_graph(): void
     {
         // First create and write to an RRD
-        $now = new DateTime();
+        $now = new DateTime;
         $dataPoint = new DataPoint(
             'graph_test',
             ['value' => 23.5],
@@ -204,7 +207,7 @@ class RRDtoolIntegrationTest extends TestCase
             'graph_test',
             ['value' => 25.0],
             ['host' => 'server1'],
-            new DateTime('@' . ($now->getTimestamp() + 60))
+            new DateTime('@'.($now->getTimestamp() + 60))
         );
 
         $this->driver->write($dataPoint);
@@ -228,7 +231,7 @@ class RRDtoolIntegrationTest extends TestCase
     public function test_raw_query(): void
     {
         // First create and write to an RRD
-        $now = new DateTime();
+        $now = new DateTime;
         $startTime = $now->getTimestamp();
 
         $dataPoint = new DataPoint(
@@ -245,16 +248,16 @@ class RRDtoolIntegrationTest extends TestCase
             'query_test',
             ['value' => 25.0],
             ['host' => 'server1'],
-            new DateTime('@' . ($startTime + 60))
+            new DateTime('@'.($startTime + 60))
         );
 
         $this->driver->write($dataPoint);
 
         // Create a raw query
         $rawQuery = new RRDtoolRawQuery('xport');
-        $rawQuery->param('-s', (string)$startTime)
-            ->param('-e', (string)($startTime + 120))
-            ->def('val', $this->dataDir . 'query_test_host-server1.rrd', 'value', 'AVERAGE')
+        $rawQuery->param('-s', (string) $startTime)
+            ->param('-e', (string) ($startTime + 120))
+            ->def('val', $this->dataDir.'query_test_host-server1.rrd', 'value', 'AVERAGE')
             ->xport('val', 'value');
 
         // The field name in the result will be 'value', not 'val'
@@ -266,21 +269,21 @@ class RRDtoolIntegrationTest extends TestCase
         $this->assertNotEmpty($series);
 
         // The result should contain our data points
-        $this->assertArrayHasKey('value', $series[0]);
+        $this->assertArrayHasKey('value', $series);
     }
 
     public function test_create_database(): void
     {
         $result = $this->driver->createDatabase('test_db');
         $this->assertTrue($result);
-        $this->assertDirectoryExists($this->dataDir . 'test_db');
+        $this->assertDirectoryExists($this->dataDir.'test_db');
     }
 
     public function test_list_databases(): void
     {
         // Create a test database directory if it doesn't exist
-        $testDbPath = $this->dataDir . 'test_db';
-        if (!is_dir($testDbPath)) {
+        $testDbPath = $this->dataDir.'test_db';
+        if (! is_dir($testDbPath)) {
             mkdir($testDbPath, 0777, true);
         }
 

@@ -59,4 +59,58 @@ class ConvertTests extends TestCase
         $veryLarge = (string) (PHP_INT_MAX + 1);
         $this->assertIsFloat(Convert::toNumber($veryLarge));
     }
+
+    // Tests for toScalar method
+    public function test_to_scalar_with_scalar_values(): void
+    {
+        $this->assertSame(42, Convert::toScalar(42));
+        $this->assertSame(42.5, Convert::toScalar(42.5));
+        $this->assertSame('test', Convert::toScalar('test'));
+        $this->assertSame(true, Convert::toScalar(true));
+        $this->assertSame(false, Convert::toScalar(false));
+    }
+
+    public function test_to_scalar_with_array(): void
+    {
+        $this->assertSame(1, Convert::toScalar([1, 2, 3]));
+        $this->assertNull(Convert::toScalar([]));
+    }
+
+    public function test_to_scalar_with_object(): void
+    {
+        $obj = new \stdClass;
+        $this->assertNull(Convert::toScalar($obj));
+    }
+
+    public function test_to_scalar_with_null(): void
+    {
+        $this->assertNull(Convert::toScalar(null));
+    }
+
+    // Tests for toString method
+    public function test_to_string_with_scalar_values(): void
+    {
+        $this->assertSame('42', Convert::toString(42));
+        $this->assertSame('42.5', Convert::toString(42.5));
+        $this->assertSame('test', Convert::toString('test'));
+        $this->assertSame('1', Convert::toString(true));
+        $this->assertSame('', Convert::toString(false));
+    }
+
+    public function test_to_string_with_array(): void
+    {
+        $this->assertSame('1', Convert::toString([1, 2, 3]));
+        $this->assertSame('', Convert::toString([]));
+    }
+
+    public function test_to_string_with_object(): void
+    {
+        $obj = new \stdClass;
+        $this->assertSame('', Convert::toString($obj));
+    }
+
+    public function test_to_string_with_null(): void
+    {
+        $this->assertSame('', Convert::toString(null));
+    }
 }
