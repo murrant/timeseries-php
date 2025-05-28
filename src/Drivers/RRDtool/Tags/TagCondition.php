@@ -34,7 +34,7 @@ readonly class TagCondition
 
     public function getStringValue(): string
     {
-        return $this->getStringValue();
+        return (string) $this->getScalarValue();
     }
 
     public function getScalarValue(): float|int|bool|string|null

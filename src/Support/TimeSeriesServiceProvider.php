@@ -2,6 +2,7 @@
 
 namespace TimeSeriesPhp\Support;
 
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use TimeSeriesPhp\Config\DriverConfigFactory;
@@ -51,9 +52,21 @@ class TimeSeriesServiceProvider extends ServiceProvider
 
         // Register the time-series singleton
         $this->app->singleton('time-series', function (Application $app) {
+            /** @var Repository $configRepository */
             $configRepository = $app->make('config');
             $driver = $configRepository->get('time-series.driver');
+
+            if (! is_string($driver)) {
+                throw new \InvalidArgumentException('Driver must be a string');
+            }
+
             $driverConfig = $configRepository->get('time-series.drivers.'.$driver, []);
+
+            if (! is_array($driverConfig)) {
+                throw new \InvalidArgumentException('Driver configuration must be an array');
+            }
+
+            /** @var array<string, mixed> $driverConfig */
 
             // Create the driver config using the DriverConfigFactory
             $config = DriverConfigFactory::create($driver, $driverConfig);
