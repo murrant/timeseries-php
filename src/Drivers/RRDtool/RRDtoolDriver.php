@@ -340,7 +340,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     /**
      * @return string[]
      */
-    public function listDatabases(): array
+    public function getDatabases(): array
     {
         $databases = [];
         $items = scandir($this->rrdDir);

@@ -205,7 +205,7 @@ class GraphiteDriverTest extends TestCase
     {
         $this->driver->connect($this->config);
 
-        $databases = $this->driver->listDatabases();
+        $databases = $this->driver->getDatabases();
         $this->assertContains('default', $databases);
     }
 

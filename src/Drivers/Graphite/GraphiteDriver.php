@@ -245,7 +245,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
     /**
      * @return string[]
      */
-    public function listDatabases(): array
+    public function getDatabases(): array
     {
         // Graphite doesn't have a concept of databases
         // We could potentially return a list of top-level metrics, but that's not

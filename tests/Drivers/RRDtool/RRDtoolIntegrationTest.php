@@ -307,7 +307,7 @@ class RRDtoolIntegrationTest extends TestCase
             mkdir($testDbPath, 0777, true);
         }
 
-        $databases = $this->driver->listDatabases();
+        $databases = $this->driver->getDatabases();
         $this->assertContains('test_db', $databases);
     }
 }

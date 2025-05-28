@@ -209,7 +209,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     /**
      * @return string[]
      */
-    public function listDatabases(): array
+    public function getDatabases(): array
     {
         try {
             $bucketsService = $this->getBucketsService();

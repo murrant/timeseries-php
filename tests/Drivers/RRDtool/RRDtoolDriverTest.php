@@ -176,7 +176,7 @@ class RRDtoolDriverTest extends TestCase
                 return true;
             }
 
-            public function listDatabases(): array
+            public function getDatabases(): array
             {
                 // Mock implementation that returns a fixed list
                 return ['test_db'];
@@ -283,7 +283,7 @@ class RRDtoolDriverTest extends TestCase
         // Create a test database directory
         mkdir($this->tempDir.'/test_db', 0777, true);
 
-        $databases = $this->driver->listDatabases();
+        $databases = $this->driver->getDatabases();
         $this->assertContains('test_db', $databases);
     }
 

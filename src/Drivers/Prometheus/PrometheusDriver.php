@@ -209,7 +209,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB
     /**
      * @return string[]
      */
-    public function listDatabases(): array
+    public function getDatabases(): array
     {
         // Prometheus doesn't have databases in the traditional sense
         return [];

@@ -69,6 +69,10 @@ class TSDBFactoryTest extends TestCase
                         return true;
                     }
 
+                    public function isConnected(): bool {
+                        return true;
+                    }
+
                     public function query(\TimeSeriesPhp\Core\Query $query): \TimeSeriesPhp\Core\QueryResult {
                         return new \TimeSeriesPhp\Core\QueryResult([]);
                     }
@@ -89,8 +93,16 @@ class TSDBFactoryTest extends TestCase
                         return true;
                     }
 
-                    public function listDatabases(): array {
+                    public function deleteDatabase(string $database): bool {
+                        return true;
+                    }
+
+                    public function getDatabases(): array {
                         return [];
+                    }
+
+                    public function deleteMeasurement(string $measurement, ?\DateTime $start = null, ?\DateTime $stop = null): bool {
+                        return true;
                     }
 
                     public function close(): void {
@@ -132,7 +144,8 @@ class TSDBFactoryTest extends TestCase
         $mockConfig = $this->createMock(ConfigInterface::class);
 
         $this->expectException(DriverException::class);
-        $this->expectExceptionMessage('Driver class must implement TimeSeriesInterface');
+        // We only check for a partial message since the class name is dynamic
+        $this->expectExceptionMessageMatches('/must implement TimeSeriesInterface/');
 
         // Register the invalid driver - this should throw the exception
         TSDBFactory::registerDriver('invalid', $mockClass);

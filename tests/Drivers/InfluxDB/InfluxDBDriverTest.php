@@ -131,7 +131,7 @@ class InfluxDBDriverTest extends TestCase
             /**
              * @return string[]
              */
-            public function listDatabases(): array
+            public function getDatabases(): array
             {
                 // Mock implementation that doesn't use client
                 return ['mydb', 'testdb'];
@@ -213,7 +213,7 @@ class InfluxDBDriverTest extends TestCase
 
     public function test_list_databases(): void
     {
-        $databases = $this->driver->listDatabases();
+        $databases = $this->driver->getDatabases();
         $this->assertContains('mydb', $databases);
         $this->assertContains('testdb', $databases);
     }
