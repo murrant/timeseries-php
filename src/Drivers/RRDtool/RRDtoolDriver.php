@@ -251,18 +251,17 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
 
         $start = $json['meta']['start'];
         $step = $json['meta']['step'];
-        $series = [];
+        $result = new QueryResult(metadata: $json['meta']);
 
         foreach ($json['data'] as $index => $values) {
-            $entry = ['time' => $start + $step * $index];
+            $timestamp = $start + $step * $index;
 
             foreach ($legend as $field => $name) {
-                $entry[$name] = $values[$field];
+                $result->appendPoint($timestamp, $name, $values[$field]);
             }
-            $series[] = $entry;
         }
 
-        return new QueryResult($series, $json['meta']);
+        return $result;
     }
 
     public function rawQuery(RawQueryContract $query): QueryResult
@@ -292,7 +291,13 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
             return $this->parseRRDXportJson($json, $query->getFields() ?: ['*']);
         }
 
-        return new QueryResult([['raw_output' => $output]]);
+        // Create a result with a time key and a value key for non-xport queries
+        return new QueryResult([
+            'output' => [[
+                'date' => time(),
+                'value' => implode("\n", $output),
+            ]],
+        ]);
     }
 
     public function createDatabase(string $database): bool

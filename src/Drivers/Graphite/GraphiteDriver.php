@@ -209,7 +209,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
                 throw new Exception('Failed to get response from Graphite');
             }
 
-            /** @var array<array{'target': string, 'datapoints': array<array{mixed, int}>}> $data */
+            /** @var array<array{'target': string, 'datapoints': array<array{string, int}>}> $data */
             $data = json_decode($response, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
@@ -217,29 +217,19 @@ class GraphiteDriver extends AbstractTimeSeriesDB
             }
 
             // Transform Graphite response to a standard format
-            $result = [];
+            $result = new QueryResult;
 
             foreach ($data as $series) {
                 $target = $series['target'];
-                $datapoints = $series['datapoints'];
 
-                foreach ($datapoints as $point) {
+                foreach ($series['datapoints'] as $point) {
                     [$value, $timestamp] = $point;
 
-                    // Skip null values
-                    if ($value === null) {
-                        continue;
-                    }
-
-                    $result[] = [
-                        'target' => $target,
-                        'timestamp' => $timestamp,
-                        'value' => $value,
-                    ];
+                    $result->appendPoint($timestamp, $target, $value);
                 }
             }
 
-            return new QueryResult($result);
+            return $result;
         } catch (Exception $e) {
             throw new QueryException($query, 'Query execution failed: '.$e->getMessage());
         }

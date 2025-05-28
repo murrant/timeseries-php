@@ -79,7 +79,11 @@ class RRDtoolDriverTest extends TestCase
                 if (!empty($tags)) {
                     ksort($tags);
                     foreach ($tags as $key => $value) {
-                        $tagString .= "_{$key}-" . str_replace('.', '\\.', $value);
+                        if (! is_scalar($value)) {
+                            throw new \InvalidArgumentException('Tag value must be a scalar');
+                        }
+
+                        $tagString .= "_{$key}-" . str_replace('.', '\\.', (string) $value);
                     }
                 }
                 return $this->tempDir . '/' . $measurement . $tagString . '.rrd';
@@ -121,13 +125,15 @@ class RRDtoolDriverTest extends TestCase
                 // Mock implementation that doesn't execute commands
                 if ($query instanceof \TimeSeriesPhp\Drivers\RRDtool\RRDtoolRawQuery && $query->type === 'xport') {
                     return new \TimeSeriesPhp\Core\QueryResult([
-                        ['time' => time(), 'value' => 23.5],
-                        ['time' => time() + 300, 'value' => 24.0],
-                        ['time' => time() + 600, 'value' => 24.5],
+                        ['time' => time(), 'cpu_usage' => 23.5],
+                        ['time' => time() + 300, 'cpu_usage' => 24.0],
+                        ['time' => time() + 600, 'cpu_usage' => 24.5],
                     ]);
                 }
 
-                return new \TimeSeriesPhp\Core\QueryResult([['raw_output' => 'Mocked output']]);
+                return new \TimeSeriesPhp\Core\QueryResult([
+                    ['time' => time(), 'output' => 'Mocked output']
+                ]);
             }
 
             public function createRRDWithCustomConfig(string $measurement, array $tags, array $config): bool

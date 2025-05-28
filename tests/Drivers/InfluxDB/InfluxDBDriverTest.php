@@ -89,13 +89,13 @@ class InfluxDBDriverTest extends TestCase
             }
 
             /**
-             * @return array<int, array{'time': string, 'value': int}>
+             * @return array<int, array{'time': int|string, string: int}>
              */
             protected function executeQuery(Query $query): array
             {
                 return [
-                    ['time' => '2023-01-01T00:00:00Z', 'value' => 10],
-                    ['time' => '2023-01-01T01:00:00Z', 'value' => 15],
+                    ['time' => '2023-01-01T00:00:00Z', 'cpu_usage' => 10],
+                    ['time' => '2023-01-01T01:00:00Z', 'cpu_usage' => 15],
                 ];
             }
 
@@ -103,8 +103,8 @@ class InfluxDBDriverTest extends TestCase
             {
                 // Mock implementation that doesn't use queryApi
                 return new \TimeSeriesPhp\Core\QueryResult([
-                    ['time' => '2023-01-01T00:00:00Z', 'value' => 10],
-                    ['time' => '2023-01-01T01:00:00Z', 'value' => 15],
+                    ['time' => '2023-01-01T00:00:00Z', 'cpu_usage' => 10],
+                    ['time' => '2023-01-01T01:00:00Z', 'cpu_usage' => 15],
                 ]);
             }
 

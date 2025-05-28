@@ -160,18 +160,25 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
         try {
             $queryResult = $this->queryApi->query($query->getRawQuery(), $this->org);
-            $data = [];
+            $result = new QueryResult;
 
             if ($queryResult !== null) {
                 foreach ($queryResult as $table) {
                     foreach ($table->records as $record) {
-                        $values = $record->values;
-                        $data[] = $values;
+                        $values = (array) $record->values;
+                        $timestamp = $values['_time'] ?? $values['time'] ?? time();
+
+                        // Add all other values as dynamic keys
+                        foreach ($values as $key => $value) {
+                            if ($key !== '_time' && $key !== 'time' && $key !== '_measurement' && $key !== '_field') {
+                                $result->appendPoint(Convert::toString($timestamp), $key, Convert::toScalar($value));
+                            }
+                        }
                     }
                 }
             }
 
-            return new QueryResult($data);
+            return $result;
         } catch (Exception $e) {
             throw new QueryException($query, 'Query execution failed: '.$e->getMessage());
         }

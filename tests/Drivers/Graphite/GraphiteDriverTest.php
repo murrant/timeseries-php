@@ -96,8 +96,8 @@ class GraphiteDriverTest extends TestCase
             {
                 // Mock implementation that returns a predefined result
                 return new \TimeSeriesPhp\Core\QueryResult([
-                    ['target' => 'cpu.usage', 'timestamp' => 1672531200, 'value' => 10],
-                    ['target' => 'cpu.usage', 'timestamp' => 1672534800, 'value' => 15],
+                    ['time' => 1672531200, 'cpu.usage' => 10],
+                    ['time' => 1672534800, 'cpu.usage' => 15],
                 ]);
             }
         };

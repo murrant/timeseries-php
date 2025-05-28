@@ -113,29 +113,27 @@ class PrometheusDriver extends AbstractTimeSeriesDB
             }
 
             // Process the result
-            $result = [];
+            $result = new QueryResult;
             if (isset($response['data']['result'])) {
                 foreach ($response['data']['result'] as $item) {
-                    // Format the result to match the expected format
-                    $formattedItem = [];
+                    /** @var array{'metric': array{'__name__'?: string}, 'value'?: array{int, ?scalar}, 'values'?: array<array{int, ?scalar}>} $item */
+                    // Get the metric name or use a default
+                    $metricName = $item['metric']['__name__'] ?? 'value';
 
-                    // Add metric information
-                    if (isset($item['metric'])) {
-                        $formattedItem['metric'] = $item['metric'];
-                    }
-
-                    // Add value or values
+                    // Handle single value result (instant query)
                     if (isset($item['value'])) {
-                        $formattedItem['value'] = $item['value'];
+                        [$timestamp, $value] = $item['value'];
+                        $result->appendPoint($timestamp, $metricName, $value);
                     } elseif (isset($item['values'])) {
-                        $formattedItem['values'] = $item['values'];
+                        foreach ($item['values'] as $valueItem) {
+                            [$timestamp, $value] = $valueItem;
+                            $result->appendPoint($timestamp, $metricName, $value);
+                        }
                     }
-
-                    $result[] = $formattedItem;
                 }
             }
 
-            return new QueryResult($result);
+            return $result;
         } catch (Exception $e) {
             throw new QueryException($query, 'Query execution failed: '.$e->getMessage());
         }

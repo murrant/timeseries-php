@@ -5,7 +5,7 @@ namespace TimeSeriesPhp\Core;
 class QueryResult
 {
     /**
-     * @var array<int, array{'time': int|string, string: ?scalar}>
+     * @var array<string, array<int, array{'date': int|string, 'value': ?scalar}>>
      */
     private array $series;
 
@@ -15,7 +15,7 @@ class QueryResult
     private array $metadata;
 
     /**
-     * @param  array<int, array{'time': int|string, string: ?scalar}>  $series
+     * @param  array<string, array<int, array{'date': int|string, 'value': ?scalar}>>  $series
      * @param  array<string, mixed>  $metadata
      */
     public function __construct(array $series = [], array $metadata = [])
@@ -24,8 +24,20 @@ class QueryResult
         $this->metadata = $metadata;
     }
 
+    public function appendPoint(int|string $timestamp, string $field, float|int|string|bool|null $value): void
+    {
+        $this->series[$field][] = ['date' => $timestamp, 'value' => $value];
+    }
+
+    public function getSingleValue(?string $field = null): float|int|string|bool|null
+    {
+        $field ??= array_key_first($this->series);
+
+        return $this->series[$field][0]['value'] ?? null;
+    }
+
     /**
-     * @return array<int, array{'time': int|string, string: ?scalar}>
+     * @return array<string, array<int, array{'date': int|string, 'value': ?scalar}>>
      */
     public function getSeries(): array
     {
@@ -51,7 +63,7 @@ class QueryResult
     }
 
     /**
-     * @return array{'series': array<int, array{'time': int|string, string: ?scalar}>, 'metadata': array<string, mixed>}
+     * @return array{'series': array<string, array<int, array{'date': int|string, 'value': ?scalar}>>, 'metadata': array<string, mixed>}
      */
     public function toArray(): array
     {

@@ -18,4 +18,17 @@ class Convert
             ? (int) $floatValue
             : $floatValue;
     }
+
+    /**
+     * @return ?scalar
+     */
+    public static function toScalar(mixed $value): float|int|bool|string|null
+    {
+        return is_array($value) ? $value[0] ?? null : (is_scalar($value) ? $value : null);
+    }
+
+    public static function toString(mixed $value): string
+    {
+        return (string) (is_scalar($value) ? $value : self::toScalar($value));
+    }
 }
