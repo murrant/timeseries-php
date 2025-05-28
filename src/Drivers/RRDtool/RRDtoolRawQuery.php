@@ -12,9 +12,9 @@ class RRDtoolRawQuery implements RawQueryContract
     protected array $parameters = [];
 
     /**
-     * @var array<array{string, string}>
+     * @var array<string[]>
      */
-    protected array $data = [];
+    protected array $statements = [];
 
     public function __construct(
         public readonly string $command = 'xport',
@@ -35,11 +35,17 @@ class RRDtoolRawQuery implements RawQueryContract
         return $this;
     }
 
+    public function statement(string $type, string ...$params): self
+    {
+        $this->statements[] = [$type, ...$params];
+
+        return $this;
+    }
+
     // DEF:<vname>=<rrdfile>:<ds-name>:<CF>[:step=<step>][:start=<time>][:end=<time>][:reduce=<CF>][:daemon=<address>]
     public function def(string $vname, string $rrdfile, string $dsName, string $cf, ?string $step = null, ?string $start = null, ?string $end = null, ?string $reduce = null, ?string $daemon = null): self
     {
         $vars = [
-            'DEF',
             "$vname=$rrdfile",
             $dsName,
             $cf,
@@ -65,7 +71,7 @@ class RRDtoolRawQuery implements RawQueryContract
             $vars[] = "daemon=$daemon";
         }
 
-        $this->data[] = $vars;
+        $this->statement('DEF', ...$vars);
 
         return $this;
     }
@@ -73,10 +79,7 @@ class RRDtoolRawQuery implements RawQueryContract
     // CDEF:vname=RPN expression
     public function cdef(string $vname, string $rpnExpression): self
     {
-        $this->data[] = [
-            'CDEF',
-            "$vname=$rpnExpression",
-        ];
+        $this->statement('CDEF', "$vname=$rpnExpression");
 
         return $this;
     }
@@ -84,20 +87,20 @@ class RRDtoolRawQuery implements RawQueryContract
     // VDEF:vname=RPN expression
     public function vdef(string $vname, string $rpnExpression): self
     {
-        $this->data[] = [
-            'VDEF',
-            "$vname=$rpnExpression",
-        ];
+        $this->statement('VDEF', "$vname=$rpnExpression");
 
         return $this;
     }
 
     public function xport(string $vname, ?string $legend = null): self
     {
-        $this->data[] = [
-            'XPORT',
-            $vname.($legend ? ':'.$this->escapeString($legend) : ''),
-        ];
+        if ($legend) {
+            $this->statement('XPORT', $vname, $this->escapeString($legend));
+
+            return $this;
+        }
+
+        $this->statement('XPORT', $vname);
 
         return $this;
     }
@@ -125,7 +128,7 @@ class RRDtoolRawQuery implements RawQueryContract
             }
         }
 
-        foreach ($this->data as $data) {
+        foreach ($this->statements as $data) {
             $args[] = implode(':', $data);
         }
 
@@ -144,7 +147,7 @@ class RRDtoolRawQuery implements RawQueryContract
     {
         $fields = [];
 
-        foreach ($this->data as $data) {
+        foreach ($this->statements as $data) {
             if ($data[0] === 'XPORT') {
                 $fields[] = substr($data[1], 0, strpos($data[1], ':') ?: null);
             }

@@ -232,7 +232,8 @@ class RRDtoolIntegrationTest extends TestCase
             ->param('--height', '200')
             ->param('--start', $now->getTimestamp() - 120)
             ->param('--end', $now->getTimestamp() + 120)
-            ->def('valueout', $rrdFile, 'value', 'AVERAGE');
+            ->def('valueout', $rrdFile, 'value', 'AVERAGE')
+            ->statement('LINE1', 'valueout#FF0000', 'Value');
 
         $outputPath = $this->driver->getRRDGraph($rawQuery);
 
