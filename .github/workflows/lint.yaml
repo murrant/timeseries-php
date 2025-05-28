@@ -1,4 +1,4 @@
-name: PHPStan Analysis and PHPUnit Coverage Report
+name: PHPStan Analysis
 
 on:
     push:
