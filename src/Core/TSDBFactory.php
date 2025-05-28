@@ -13,8 +13,9 @@ class TSDBFactory
     /**
      * Register a driver with the factory
      *
-     * @param string $name The name of the driver
-     * @param class-string $className The fully qualified class name of the driver
+     * @param  string  $name  The name of the driver
+     * @param  class-string  $className  The fully qualified class name of the driver
+     *
      * @throws DriverException If the class doesn't exist or doesn't implement TimeSeriesInterface
      */
     public static function registerDriver(string $name, string $className): void
@@ -33,13 +34,14 @@ class TSDBFactory
     /**
      * Unregister a driver from the factory
      *
-     * @param string $name The name of the driver to unregister
+     * @param  string  $name  The name of the driver to unregister
      * @return bool True if the driver was unregistered, false if it wasn't registered
      */
     public static function unregisterDriver(string $name): bool
     {
         if (isset(self::$drivers[$name])) {
             unset(self::$drivers[$name]);
+
             return true;
         }
 
@@ -49,10 +51,11 @@ class TSDBFactory
     /**
      * Create a new instance of a time series database driver
      *
-     * @param string $driver The name of the driver to create
-     * @param ConfigInterface $config The configuration for the driver
-     * @param bool $autoConnect Whether to automatically connect to the database
+     * @param  string  $driver  The name of the driver to create
+     * @param  ConfigInterface  $config  The configuration for the driver
+     * @param  bool  $autoConnect  Whether to automatically connect to the database
      * @return TimeSeriesInterface A new instance of the driver
+     *
      * @throws DriverException If the driver is not registered or doesn't implement TimeSeriesInterface
      */
     public static function create(string $driver, ConfigInterface $config, bool $autoConnect = true): TimeSeriesInterface
@@ -88,7 +91,7 @@ class TSDBFactory
     /**
      * Check if a driver is registered
      *
-     * @param string $name The name of the driver to check
+     * @param  string  $name  The name of the driver to check
      * @return bool True if the driver is registered, false otherwise
      */
     public static function hasDriver(string $name): bool

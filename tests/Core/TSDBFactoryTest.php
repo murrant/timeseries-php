@@ -115,6 +115,7 @@ class TSDBFactoryTest extends TestCase
         $mockDriverClass::$connectCalled = false;
 
         // Register the driver
+        // @phpstan-ignore-next-line
         TSDBFactory::registerDriver('mock', $mockDriverClass);
 
         // Create an instance using the factory

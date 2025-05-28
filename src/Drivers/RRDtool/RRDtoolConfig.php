@@ -4,7 +4,7 @@ namespace TimeSeriesPhp\Drivers\RRDtool;
 
 use TimeSeriesPhp\Config\AbstractDriverConfig;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
-use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyContract;
+use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
 use TimeSeriesPhp\Exceptions\ConfigurationException;
 
 class RRDtoolConfig extends AbstractDriverConfig
@@ -49,7 +49,7 @@ class RRDtoolConfig extends AbstractDriverConfig
         $this->addValidator('default_archives', fn ($archives) => is_array($archives) && ! empty($archives));
         $this->addValidator('tag_strategy', function ($strategy) {
             return is_string($strategy) && class_exists($strategy) &&
-                   is_subclass_of($strategy, RRDTagStrategyContract::class);
+                   is_subclass_of($strategy, RRDTagStrategyInterface::class);
         });
 
         parent::__construct($config);
@@ -60,13 +60,13 @@ class RRDtoolConfig extends AbstractDriverConfig
      *
      * @throws ConfigurationException
      */
-    public function getTagStrategy(): RRDTagStrategyContract
+    public function getTagStrategy(): RRDTagStrategyInterface
     {
         $strategyClass = $this->getString('tag_strategy');
         $instance = new $strategyClass;
 
-        if (! $instance instanceof RRDTagStrategyContract) {
-            throw new ConfigurationException('Invalid tag strategy class, must implement RRDTagStrategyContract');
+        if (! $instance instanceof RRDTagStrategyInterface) {
+            throw new ConfigurationException('Invalid tag strategy class, must implement RRDTagStrategyInterface');
         }
 
         return $instance;

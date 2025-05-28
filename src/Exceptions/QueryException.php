@@ -3,12 +3,12 @@
 namespace TimeSeriesPhp\Exceptions;
 
 use Throwable;
-use TimeSeriesPhp\Core\RawQueryContract;
+use TimeSeriesPhp\Core\RawQueryInterface;
 
 class QueryException extends TSDBException
 {
     public function __construct(
-        public readonly RawQueryContract $rawQuery,
+        public readonly RawQueryInterface $rawQuery,
         string $message = '',
         int $code = 0,
         ?Throwable $previous = null,
