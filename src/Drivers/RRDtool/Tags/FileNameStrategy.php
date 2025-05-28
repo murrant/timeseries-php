@@ -2,6 +2,7 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 
+use SplFileInfo;
 use TimeSeriesPhp\Utils\File;
 
 class FileNameStrategy implements RRDTagStrategyContract
@@ -42,6 +43,7 @@ class FileNameStrategy implements RRDTagStrategyContract
         $iterator = new \RecursiveIteratorIterator($dirIterator);
 
         foreach ($iterator as $file) {
+            /** @var SplFileInfo $file */
             if ($file->isFile() && $file->getExtension() === 'rrd') {
                 $filename = $file->getBasename('.rrd');
                 if (! str_starts_with($filename, $measurement)) {

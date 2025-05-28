@@ -314,7 +314,7 @@ class TagSearchTest extends TestCase
     /**
      * @dataProvider tagValueTypeProvider
      */
-    public function test_different_tag_value_types(int|float|bool|null $tagValue, string $searchValue, string $operator, bool $expected): void
+    public function test_different_tag_value_types(float|int|bool|string|null $tagValue, string $searchValue, string $operator, bool $expected): void
     {
         $tags = ['test_tag' => $tagValue];
         $conditions = [new TagCondition('test_tag', $operator, $searchValue)];

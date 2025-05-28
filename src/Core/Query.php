@@ -47,7 +47,7 @@ class Query
     private array $orderBy = [];
 
     /**
-     * @var array<array{'field': string, 'operator': string, 'value': float|int|string|null}>
+     * @var array<array{'field': string, 'operator': string, 'value': ?scalar}>
      */
     private array $having = [];
 
@@ -95,9 +95,9 @@ class Query
     // More flexible condition building
 
     /**
-     * @param  float|int|string|null|array<float|int|string|null>  $value
+     * @param  scalar|null|array<?scalar>  $value
      */
-    public function where(string $field, string $operator, mixed $value): self
+    public function where(string $field, string $operator, float|int|bool|string|null|array $value): self
     {
         $this->conditions[] = QueryCondition::where($field, $operator, $value);
 
@@ -105,9 +105,9 @@ class Query
     }
 
     /**
-     * @param  float|int|string|null|array<float|int|string|null>  $value
+     * @param  scalar|null|array<?scalar>  $value
      */
-    public function orWhere(string $field, string $operator, mixed $value): self
+    public function orWhere(string $field, string $operator, float|int|bool|string|null|array $value): self
     {
         $this->conditions[] = QueryCondition::orWhere($field, $operator, $value);
 
@@ -115,7 +115,7 @@ class Query
     }
 
     /**
-     * @param  array<int, float|int|string|null>  $values
+     * @param  array<int, ?scalar>  $values
      */
     public function whereIn(string $field, array $values): self
     {
@@ -125,7 +125,7 @@ class Query
     }
 
     /**
-     * @param  array<int, float|int|string|null>  $values
+     * @param  array<int, ?scalar>  $values
      */
     public function whereNotIn(string $field, array $values): self
     {
@@ -343,9 +343,9 @@ class Query
     }
 
     /**
-     * @param  float|int|string|null  $value
+     * @param  ?scalar  $value
      */
-    public function having(string $field, string $operator, mixed $value): self
+    public function having(string $field, string $operator, float|int|bool|string|null $value): self
     {
         $this->having[] = [
             'field' => $field,
@@ -402,7 +402,7 @@ class Query
     /**
      * Get the conditions as array representation
      *
-     * @return array<int, array{'field': string, 'operator': string, 'value': float|int|string|null|array<float|int|string|null>, 'type': 'AND'|'OR'}>
+     * @return array<int, array{'field': string, 'operator': string, 'value': scalar|null|array<?scalar>, 'type': 'AND'|'OR'}>
      */
     public function getConditionsAsArray(): array
     {
@@ -464,7 +464,7 @@ class Query
     }
 
     /**
-     * @return array<array{'field': string, 'operator': string, 'value': float|int|string|null}>
+     * @return array<array{'field': string, 'operator': string, 'value': ?scalar}>
      */
     public function getHaving(): array
     {

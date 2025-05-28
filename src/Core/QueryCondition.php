@@ -12,13 +12,13 @@ readonly class QueryCondition
     /**
      * @param  string  $field  The field name to apply the condition to
      * @param  string  $operator  The operator for the condition (=, >, <, etc.)
-     * @param  float|int|string|null|array<float|int|string|null>  $value  The value to compare against
+     * @param  scalar|null|array<?scalar>  $value  The value to compare against
      * @param  'AND'|'OR'  $type  The type of condition (AND or OR)
      */
     public function __construct(
         private string $field,
         private string $operator,
-        private float|int|string|null|array $value,
+        private float|int|bool|string|null|array $value,
         private string $type = 'AND',
     ) {}
 
@@ -41,18 +41,21 @@ readonly class QueryCondition
     /**
      * Get the value
      *
-     * @return float|int|string|null|array<float|int|string|null>
+     * @return scalar|null|array<?scalar>
      */
-    public function getValue(): float|int|string|null|array
+    public function getValue(): float|int|bool|string|null|array
     {
         return $this->value;
     }
 
-    public function getScalarValue(): float|int|string|null
+    public function getScalarValue(): float|int|bool|string|null
     {
-        return is_array($this->value) ? $this->value[0] : $this->value;
+        return is_array($this->value) ? $this->value[0] ?? null : $this->value;
     }
 
+    /**
+     * @return array<?scalar>
+     */
     public function getValues(): array
     {
         return is_array($this->value) ? $this->value : [$this->value];
@@ -71,7 +74,7 @@ readonly class QueryCondition
     /**
      * Convert to array format for backward compatibility
      *
-     * @return array{field: string, operator: string, value: float|int|string|null|array<float|int|string|null>, type: 'AND'|'OR'}
+     * @return array{field: string, operator: string, value: scalar|null|array<?scalar>, type: 'AND'|'OR'}
      */
     public function toArray(): array
     {
@@ -88,9 +91,9 @@ readonly class QueryCondition
      *
      * @param  string  $field  The field name
      * @param  string  $operator  The operator
-     * @param  float|int|string|null|array<float|int|string|null>  $value  The value
+     * @param  scalar|null|array<?scalar>  $value  The value
      */
-    public static function where(string $field, string $operator, float|int|string|null|array $value): self
+    public static function where(string $field, string $operator, float|int|bool|string|null|array $value): self
     {
         return new self($field, $operator, $value, 'AND');
     }
@@ -100,9 +103,9 @@ readonly class QueryCondition
      *
      * @param  string  $field  The field name
      * @param  string  $operator  The operator
-     * @param  float|int|string|null|array<float|int|string|null>  $value  The value
+     * @param  scalar|null|array<?scalar>  $value  The value
      */
-    public static function orWhere(string $field, string $operator, float|int|string|null|array $value): self
+    public static function orWhere(string $field, string $operator, float|int|bool|string|null|array $value): self
     {
         return new self($field, $operator, $value, 'OR');
     }
@@ -111,7 +114,7 @@ readonly class QueryCondition
      * Create a new IN condition
      *
      * @param  string  $field  The field name
-     * @param  array<int, float|int|string|null>  $values  The values
+     * @param  array<int, ?scalar>  $values  The values
      */
     public static function whereIn(string $field, array $values): self
     {
@@ -122,7 +125,7 @@ readonly class QueryCondition
      * Create a new NOT IN condition
      *
      * @param  string  $field  The field name
-     * @param  array<int, float|int|string|null>  $values  The values
+     * @param  array<int, ?scalar>  $values  The values
      */
     public static function whereNotIn(string $field, array $values): self
     {

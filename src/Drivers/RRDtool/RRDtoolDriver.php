@@ -232,12 +232,11 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     }
 
     /**
-     * @param  array{'meta': array{'legend': array<int, string>, 'start': int, 'end': int, 'step': int}, 'data': array<int, mixed>}  $json
+     * @param  array{'meta': array{'legend': array<int, string>, 'start': int, 'end': int, 'step': int}, 'data': array<int, array<int, float|int|null>>}  $json
      * @param  string[]  $requestedFields
      */
     private function parseRRDXportJson(array $json, array $requestedFields): QueryResult
     {
-        $allFields = in_array('*', $requestedFields);
         $legend = array_filter($json['meta']['legend'], function ($field) use ($requestedFields) {
             return in_array('*', $requestedFields)
                 || in_array($field, $requestedFields);
@@ -276,6 +275,8 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
             if (json_last_error() !== JSON_ERROR_NONE) {
                 throw new QueryException($query, 'Failed to parse RRD command output: '.json_last_error_msg().PHP_EOL.$output, json_last_error());
             }
+
+            /** @var array{'meta': array{'legend': array<int, string>, 'start': int, 'end': int, 'step': int}, 'data': array<int, array<int, float|int|null>>} $json */
 
             return $this->parseRRDXportJson($json, $query->getFields() ?: ['*']);
         }
@@ -329,15 +330,15 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     {
         $rrdPath = $this->getRRDPath($measurement, $tags);
 
-        $step = $config['step'] ?? $this->config->getInt('default_step');
+        $step = isset($config['step']) && is_numeric($config['step']) ? (int) $config['step'] : $this->config->getInt('default_step');
         $dataSources = $config['data_sources'] ?? [];
         $archives = $config['archives'] ?? $this->config->getArray('default_archives');
 
-        if (empty($dataSources)) {
+        if (empty($dataSources) || ! is_array($dataSources)) {
             throw new WriteException('Data sources must be specified for custom RRD creation');
         }
 
-        if (empty($archives)) {
+        if (empty($archives) || ! is_array($archives)) {
             throw new WriteException('Archives must be specified for custom RRD creation');
         }
 

@@ -2,6 +2,7 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 
+use SplFileInfo;
 use TimeSeriesPhp\Utils\File;
 
 class FolderStrategy implements RRDTagStrategyContract
@@ -84,9 +85,10 @@ class FolderStrategy implements RRDTagStrategyContract
 
             // Look for an exact match for this folder tag
             foreach ($tagConditions as $tagCondition) {
-                if ($tagCondition->tag === $folderTag && $tagCondition->operator === '=') {
-                    $searchPath .= $tagCondition->value.File::DIRECTORY_SEPARATOR;
-                    $baseFolderTags[$folderTag] = $tagCondition->value;
+                if ($tagCondition->tag === $folderTag && $tagCondition->operator === '=' && ! is_array($tagCondition->value)) {
+                    $tagValue = (string) $tagCondition->value;
+                    $searchPath .= $tagValue.File::DIRECTORY_SEPARATOR;
+                    $baseFolderTags[$folderTag] = $tagValue;
 
                     continue 2;
                 }
@@ -100,6 +102,7 @@ class FolderStrategy implements RRDTagStrategyContract
         $iterator = new \RecursiveIteratorIterator($dirIterator, \RecursiveIteratorIterator::SELF_FIRST);
 
         foreach ($iterator as $file) {
+            /** @var SplFileInfo $file */
             if ($file->isFile() && $file->getExtension() === 'rrd') {
                 $filename = $file->getBasename('.rrd');
                 if (! str_starts_with($filename, $measurement)) {

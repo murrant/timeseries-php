@@ -9,9 +9,11 @@ class TagSearch
     /**
      * Search tags based on given conditions
      *
-     * @param  array<string, mixed>  $tags  Array of tag => value pairs
+     * @param  array<string, ?scalar>  $tags  Array of tag => value pairs
      * @param  TagCondition[]  $conditions  Array of TagCondition objects
      * @return bool True if all conditions are satisfied
+     *
+     * @throws TSDBException
      */
     public static function search(array $tags, array $conditions): bool
     {
@@ -58,7 +60,7 @@ class TagSearch
     /**
      * Evaluate a single condition against the tags
      *
-     * @param  string[]  $tags
+     * @param  array<string, ?scalar>  $tags
      *
      * @throws TSDBException
      */
@@ -78,9 +80,11 @@ class TagSearch
      * Advanced search with support for sequential logical operations
      * Processes conditions left-to-right with proper operator precedence
      *
-     * @param  array<string, mixed>  $tags  Array of tag => value pairs
+     * @param  array<string, ?scalar>  $tags  Array of tag => value pairs
      * @param  TagCondition[]  $conditions  Array of TagCondition objects
      * @return bool True if the logical expression evaluates to true
+     *
+     * @throws TSDBException
      */
     public static function advancedSearch(array $tags, array $conditions): bool
     {
@@ -110,9 +114,11 @@ class TagSearch
      * Complex search with explicit grouping support
      * Allows for more sophisticated logical operations by grouping conditions
      *
-     * @param  array<string, mixed>  $tags  Array of tag => value pairs
+     * @param  array<string, ?scalar>  $tags  Array of tag => value pairs
      * @param  array<array{'conditions': TagCondition[], 'operator'?: 'OR'|'AND'}>  $conditionGroups  Array of condition groups, each with 'conditions' and 'operator'
      * @return bool True if the grouped expression evaluates to true
+     *
+     * @throws TSDBException
      */
     public static function groupedSearch(array $tags, array $conditionGroups): bool
     {
