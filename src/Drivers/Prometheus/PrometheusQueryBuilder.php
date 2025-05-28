@@ -18,17 +18,15 @@ class PrometheusQueryBuilder implements QueryBuilderContract
         // Build label selectors from conditions
         $labelSelectors = [];
         foreach ($query->getConditions() as $condition) {
-            $field = $condition['field'];
-            $operator = $condition['operator'];
-            $value = $condition['value'];
+            $field = $condition->getField();
+            $operator = $condition->getOperator();
+            $value = $condition->getScalarValue();
 
             // Convert operators to Prometheus format
             switch ($operator) {
                 case '=':
                 case '==':
-                    if (! is_array($value)) {
-                        $labelSelectors[] = "{$field}=\"{$value}\"";
-                    }
+                    $labelSelectors[] = "{$field}=\"{$value}\"";
                     break;
                 case '!=':
                 case '<>':
@@ -41,20 +39,12 @@ class PrometheusQueryBuilder implements QueryBuilderContract
                     $labelSelectors[] = "{$field}!~\"{$value}\"";
                     break;
                 case 'IN':
-                    if (is_array($value) && count($value) > 0) {
-                        $values = array_map(function ($v) {
-                            return "\"$v\"";
-                        }, $value);
-                        $labelSelectors[] = "{$field}=~\"^(".implode('|', $value).')$"';
-                    }
+                    $values = array_map(fn ($v) => "\"$v\"", $condition->getValues());
+                    $labelSelectors[] = "{$field}=~\"^(".implode('|', $values).')$"';
                     break;
                 case 'NOT IN':
-                    if (is_array($value) && count($value) > 0) {
-                        $values = array_map(function ($v) {
-                            return "\"$v\"";
-                        }, $value);
-                        $labelSelectors[] = "{$field}!~\"^(".implode('|', $value).')$"';
-                    }
+                    $values = array_map(fn ($v) => "\"$v\"", $condition->getValues());
+                    $labelSelectors[] = "{$field}!~\"^(".implode('|', $values).')$"';
                     break;
                     // Other operators like >, <, >=, <= are not directly supported in label selectors
                     // They would need to be handled in post-processing or with specific functions

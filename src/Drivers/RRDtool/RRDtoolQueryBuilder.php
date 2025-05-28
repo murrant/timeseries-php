@@ -5,6 +5,7 @@ namespace TimeSeriesPhp\Drivers\RRDtool;
 use InvalidArgumentException;
 use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Core\QueryBuilderContract;
+use TimeSeriesPhp\Core\QueryCondition;
 use TimeSeriesPhp\Core\RawQueryContract;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyContract;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\TagCondition;
@@ -91,8 +92,8 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
         foreach ($conditions as $condition) {
             // Assuming tag conditions are identifiable by context
             // This might need adjustment based on your tag strategy
-            if ($condition['operator'] === '=' || $condition['operator'] === 'IN') {
-                $tagConditions[] = new TagCondition($condition['field'], $condition['operator'], $condition['value']);
+            if ($condition->getOperator() === '=' || $condition->getOperator() === 'IN') {
+                $tagConditions[] = new TagCondition($condition->getField(), $condition->getOperator(), $condition->getValue());
             }
         }
 
@@ -345,12 +346,12 @@ class RRDtoolQueryBuilder implements QueryBuilderContract
     }
 
     /**
-     * @param  array<array{'field': string}>  $conditions
+     * @param  array<int, QueryCondition>  $conditions
      */
     private function hasFieldConditions(string $field, array $conditions): bool
     {
         foreach ($conditions as $condition) {
-            if ($condition['field'] === $field) {
+            if ($condition->getField() === $field) {
                 return true;
             }
         }

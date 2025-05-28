@@ -15,7 +15,7 @@ class Query
     private array $fields = ['*'];
 
     /**
-     * @var array<int, array{'field': string, 'operator': string, 'value': float|int|string|null|array<float|int|string|null>, 'type'?: 'AND'|'OR'}>
+     * @var array<int, QueryCondition>
      */
     private array $conditions = [];
 
@@ -95,31 +95,21 @@ class Query
     // More flexible condition building
 
     /**
-     * @param  float|int|string|null  $value
+     * @param  float|int|string|null|array<float|int|string|null>  $value
      */
     public function where(string $field, string $operator, mixed $value): self
     {
-        $this->conditions[] = [
-            'field' => $field,
-            'operator' => $operator,
-            'value' => $value,
-            'type' => 'AND',
-        ];
+        $this->conditions[] = QueryCondition::where($field, $operator, $value);
 
         return $this;
     }
 
     /**
-     * @param  float|int|string|null  $value
+     * @param  float|int|string|null|array<float|int|string|null>  $value
      */
     public function orWhere(string $field, string $operator, mixed $value): self
     {
-        $this->conditions[] = [
-            'field' => $field,
-            'operator' => $operator,
-            'value' => $value,
-            'type' => 'OR',
-        ];
+        $this->conditions[] = QueryCondition::orWhere($field, $operator, $value);
 
         return $this;
     }
@@ -129,12 +119,7 @@ class Query
      */
     public function whereIn(string $field, array $values): self
     {
-        $this->conditions[] = [
-            'field' => $field,
-            'operator' => 'IN',
-            'value' => $values,
-            'type' => 'AND',
-        ];
+        $this->conditions[] = QueryCondition::whereIn($field, $values);
 
         return $this;
     }
@@ -144,36 +129,21 @@ class Query
      */
     public function whereNotIn(string $field, array $values): self
     {
-        $this->conditions[] = [
-            'field' => $field,
-            'operator' => 'NOT IN',
-            'value' => $values,
-            'type' => 'AND',
-        ];
+        $this->conditions[] = QueryCondition::whereNotIn($field, $values);
 
         return $this;
     }
 
     public function whereBetween(string $field, int|float $min, int|float $max): self
     {
-        $this->conditions[] = [
-            'field' => $field,
-            'operator' => 'BETWEEN',
-            'value' => [$min, $max],
-            'type' => 'AND',
-        ];
+        $this->conditions[] = QueryCondition::whereBetween($field, $min, $max);
 
         return $this;
     }
 
     public function whereRegex(string $field, string $pattern): self
     {
-        $this->conditions[] = [
-            'field' => $field,
-            'operator' => 'REGEX',
-            'value' => $pattern,
-            'type' => 'AND',
-        ];
+        $this->conditions[] = QueryCondition::whereRegex($field, $pattern);
 
         return $this;
     }
@@ -422,11 +392,21 @@ class Query
     }
 
     /**
-     * @return array<int, array{'field': string, 'operator': string, 'value': float|int|string|null|array<float|int|string|null>, 'type'?: 'AND'|'OR'}>
+     * @return array<int, QueryCondition>
      */
     public function getConditions(): array
     {
         return $this->conditions;
+    }
+
+    /**
+     * Get the conditions as array representation
+     *
+     * @return array<int, array{'field': string, 'operator': string, 'value': float|int|string|null|array<float|int|string|null>, 'type': 'AND'|'OR'}>
+     */
+    public function getConditionsAsArray(): array
+    {
+        return array_map(fn (QueryCondition $condition) => $condition->toArray(), $this->conditions);
     }
 
     public function getStartTime(): ?DateTime
@@ -527,6 +507,72 @@ class Query
     public function hasTimeGrouping(): bool
     {
         return ! empty($this->interval);
+    }
+
+    /**
+     * Check if a condition exists for a specific field
+     */
+    public function hasConditionForField(string $field): bool
+    {
+        foreach ($this->conditions as $condition) {
+            if ($condition->getField() === $field) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Get all conditions for a specific field
+     *
+     * @return array<int, QueryCondition>
+     */
+    public function getConditionsForField(string $field): array
+    {
+        return array_filter(
+            $this->conditions,
+            fn (QueryCondition $condition) => $condition->getField() === $field
+        );
+    }
+
+    /**
+     * Get all conditions with a specific operator
+     *
+     * @return array<int, QueryCondition>
+     */
+    public function getConditionsByOperator(string $operator): array
+    {
+        return array_filter(
+            $this->conditions,
+            fn (QueryCondition $condition) => $condition->getOperator() === $operator
+        );
+    }
+
+    /**
+     * Get all AND conditions
+     *
+     * @return array<int, QueryCondition>
+     */
+    public function getAndConditions(): array
+    {
+        return array_filter(
+            $this->conditions,
+            fn (QueryCondition $condition) => $condition->getType() === 'AND'
+        );
+    }
+
+    /**
+     * Get all OR conditions
+     *
+     * @return array<int, QueryCondition>
+     */
+    public function getOrConditions(): array
+    {
+        return array_filter(
+            $this->conditions,
+            fn (QueryCondition $condition) => $condition->getType() === 'OR'
+        );
     }
 
     /**

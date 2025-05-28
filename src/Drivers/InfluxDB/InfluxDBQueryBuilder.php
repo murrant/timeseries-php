@@ -17,6 +17,9 @@ class InfluxDBQueryBuilder implements QueryBuilderContract
         $this->bucket = $bucket;
     }
 
+    /**
+     * @throws QueryException
+     */
     public function build(Query $query): RawQueryContract
     {
         $fields = $query->getFields();
@@ -53,10 +56,10 @@ class InfluxDBQueryBuilder implements QueryBuilderContract
 
         // Add conditions (where clauses)
         foreach ($query->getConditions() as $condition) {
-            $field = $condition['field'];
-            $operator = $this->mapOperator($condition['operator']);
-            $value = $this->formatValue($condition['value']);
-            $type = $condition['type'] ?? 'AND';
+            $field = $condition->getField();
+            $operator = $this->mapOperator($condition->getOperator());
+            $value = $this->formatValue($condition->getValue());
+            $type = $condition->getType();
 
             // For InfluxDB, we need to handle different types of conditions
             if ($field === 'time') {
@@ -74,28 +77,24 @@ class InfluxDBQueryBuilder implements QueryBuilderContract
                 } elseif ($operator === '!=') {
                     $fluxQuery .= "  |> filter(fn: (r) => r._time != {$value})\n";
                 }
-            } elseif ($operator === 'IN' && is_array($condition['value'])) {
+            } elseif ($operator === 'IN') {
                 // Handle IN operator
-                $values = array_map(function ($v) {
-                    return $this->formatValue($v);
-                }, $condition['value']);
+                $values = array_map(fn ($v) => $this->formatValue($v), $condition->getValues());
                 $valuesList = implode(', ', $values);
                 $fluxQuery .= "  |> filter(fn: (r) => contains(value: r[\"$field\"], set: [$valuesList]))\n";
-            } elseif ($operator === 'NOT IN' && is_array($condition['value'])) {
+            } elseif ($operator === 'NOT IN') {
                 // Handle NOT IN operator
-                $values = array_map(function ($v) {
-                    return $this->formatValue($v);
-                }, $condition['value']);
+                $values = array_map(fn ($v) => $this->formatValue($v), $condition->getValues());
                 $valuesList = implode(', ', $values);
                 $fluxQuery .= "  |> filter(fn: (r) => not contains(value: r[\"$field\"], set: [$valuesList]))\n";
-            } elseif ($operator === 'BETWEEN' && is_array($condition['value']) && count($condition['value']) === 2) {
+            } elseif ($operator === 'BETWEEN' && is_array($condition->getValue()) && count($condition->getValue()) === 2) {
                 // Handle BETWEEN operator
-                $min = $this->formatValue($condition['value'][0]);
-                $max = $this->formatValue($condition['value'][1]);
+                $min = $this->formatValue($condition->getValue()[0]);
+                $max = $this->formatValue($condition->getValue()[1]);
                 $fluxQuery .= "  |> filter(fn: (r) => r[\"$field\"] >= $min and r[\"$field\"] <= $max)\n";
-            } elseif ($operator === 'REGEX' && is_string($condition['value'])) {
+            } elseif ($operator === 'REGEX') {
                 // Handle REGEX operator
-                $pattern = $condition['value'];
+                $pattern = $condition->getScalarValue();
                 $fluxQuery .= "  |> filter(fn: (r) => r[\"$field\"] =~ /$pattern/)\n";
             } else {
                 // Standard operators

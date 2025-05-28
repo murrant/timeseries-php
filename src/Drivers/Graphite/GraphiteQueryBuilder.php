@@ -108,24 +108,20 @@ class GraphiteQueryBuilder implements QueryBuilderContract
         // Graphite doesn't have direct equivalents for SQL-like where clauses
         // We can use functions like exclude(), grep(), etc. for some filtering
         foreach ($query->getConditions() as $condition) {
-            $field = $condition['field'];
-            $operator = $condition['operator'];
-            $value = $condition['value'];
-
-            if ($operator !== 'IN' && is_array($value)) {
-                throw new QueryException(new RawQuery(''), 'Graphite only supports multiple values for IN operator');
-            }
+            $field = $condition->getField();
+            $operator = $condition->getOperator();
+            $scalarValue = $condition->getScalarValue();
 
             // We can only handle certain types of conditions in Graphite
-            if (($operator === '=' || $operator === '==') && ! is_array($value)) {
+            if (($operator === '=' || $operator === '==')) {
                 // For equality, we can use a more specific path
-                $target = str_replace('*', (string) $value, $target);
-            } elseif (($operator === '!=' || $operator === '<>') && ! is_array($value)) {
+                $target = str_replace('*', (string) $scalarValue, $target);
+            } elseif (($operator === '!=' || $operator === '<>')) {
                 // For inequality, we can use exclude()
-                $target = "exclude($target, \"$value\")";
-            } elseif ($operator === 'REGEX' && ! is_array($value)) {
+                $target = "exclude($target, \"$scalarValue\")";
+            } elseif ($operator === 'REGEX') {
                 // For regex, we can use grep()
-                $target = "grep($target, \"$value\")";
+                $target = "grep($target, \"$scalarValue\")";
             }
         }
 
