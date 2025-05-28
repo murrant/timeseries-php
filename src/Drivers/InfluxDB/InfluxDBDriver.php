@@ -263,10 +263,26 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
             $health = $this->client->ping();
 
+            // The return types from upstream give us a bit of trouble :/
+            $build = 'Unknown';
+            $version = 'Unknown';
+
+            if (isset($health['X-Influxdb-Build']) && is_array($health['X-Influxdb-Build']) && isset($health['X-Influxdb-Build'][0])) {
+                if (is_scalar($health['X-Influxdb-Build'][0])) {
+                    $build = (string) $health['X-Influxdb-Build'][0];
+                }
+            }
+
+            if (isset($health['X-Influxdb-Version']) && is_array($health['X-Influxdb-Version']) && isset($health['X-Influxdb-Version'][0])) {
+                if (is_scalar($health['X-Influxdb-Version'][0])) {
+                    $version = (string) $health['X-Influxdb-Version'][0];
+                }
+            }
+
             return [
                 'status' => 'success',
-                'build' => $health['X-Influxdb-Build'][0] ?? 'Unknown',
-                'version' => $health['X-Influxdb-Version'][0] ?? 'Unknown',
+                'build' => $build,
+                'version' => $version,
             ];
         } catch (Exception $e) {
             return [

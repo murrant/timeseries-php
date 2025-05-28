@@ -68,8 +68,8 @@ class PrometheusDriverTest extends TestCase
 
         // Configure the mock client to return appropriate responses
         $mockClient->method('get')
-            ->willReturnCallback(function ($url, $options) use ($configResponse, $queryResponse) {
-                if (strpos($url, '/api/v1/status/config') !== false) {
+            ->willReturnCallback(function (string $url, $options) use ($configResponse, $queryResponse) {
+                if (str_contains($url, '/api/v1/status/config')) {
                     return $configResponse;
                 }
 

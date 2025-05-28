@@ -10,7 +10,7 @@ class Query
     private string $measurement;
 
     /**
-     * @var array<int, string>
+     * @var string[]
      */
     private array $fields = ['*'];
 
@@ -384,7 +384,7 @@ class Query
     }
 
     /**
-     * @return array<int, string>
+     * @return string[]
      */
     public function getFields(): array
     {

@@ -28,18 +28,38 @@ class ConnectionConfig extends AbstractDriverConfig
         $this->addValidator('pool_size', fn ($size) => is_int($size) && $size > 0 && $size <= 100);
         $this->addValidator('max_idle_time', fn ($time) => is_int($time) && $time > 0);
         $this->addValidator('connection_lifetime', fn ($time) => is_int($time) && $time > 0);
+        $this->addValidator('circuit_breaker', fn ($breaker) => is_array($breaker));
 
         parent::__construct($config);
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<string, bool|float|int|string|null>
      *
      * @throws ConfigurationException
      */
     public function getCircuitBreakerConfig(): array
     {
-        return $this->getArray('circuit_breaker');
+        $config = $this->getArray('circuit_breaker');
+        $typedConfig = [];
+
+        foreach ($config as $key => $value) {
+            if (is_string($key)) {
+                if (is_bool($value) || is_float($value) || is_int($value) || is_string($value) || is_null($value)) {
+                    $typedConfig[$key] = $value;
+                } else {
+                    // For objects with __toString method, convert to string
+                    if (is_object($value) && method_exists($value, '__toString')) {
+                        $typedConfig[$key] = (string) $value;
+                    } else {
+                        // For other non-scalar types, use a default string
+                        $typedConfig[$key] = 'Object';
+                    }
+                }
+            }
+        }
+
+        return $typedConfig;
     }
 
     /**

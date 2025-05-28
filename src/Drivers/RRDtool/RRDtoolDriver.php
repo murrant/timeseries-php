@@ -360,7 +360,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     }
 
     /**
-     * @param  string[]  $tags
+     * @param  array<string, string>  $tags
      * @param  array<string, string|string[]>  $graphConfig
      *
      * @throws Exception
