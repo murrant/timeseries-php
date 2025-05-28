@@ -33,6 +33,7 @@ class PrometheusConfig extends AbstractDriverConfig
 
     /**
      * @return array{'url': string, 'timeout': int, 'verify_ssl': bool, 'debug': bool}
+     *
      * @throws ConfigurationException
      */
     public function getClientConfig(): array

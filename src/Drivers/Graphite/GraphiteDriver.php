@@ -154,7 +154,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
     }
 
     /**
-     * @param array<string, string> $tags
+     * @param  array<string, string>  $tags
      */
     private function formatTagPath(array $tags): string
     {
@@ -271,6 +271,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
 
     /**
      * @return resource
+     *
      * @throws ConnectionException
      */
     protected function getSocket(): mixed

@@ -95,7 +95,7 @@ class Query
     // More flexible condition building
 
     /**
-     * @param float|int|string|null $value
+     * @param  float|int|string|null  $value
      */
     public function where(string $field, string $operator, mixed $value): self
     {
@@ -110,7 +110,7 @@ class Query
     }
 
     /**
-     * @param float|int|string|null $value
+     * @param  float|int|string|null  $value
      */
     public function orWhere(string $field, string $operator, mixed $value): self
     {
@@ -373,7 +373,7 @@ class Query
     }
 
     /**
-     * @param float|int|string|null $value
+     * @param  float|int|string|null  $value
      */
     public function having(string $field, string $operator, mixed $value): self
     {

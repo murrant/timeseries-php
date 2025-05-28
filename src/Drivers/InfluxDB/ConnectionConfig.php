@@ -34,6 +34,7 @@ class ConnectionConfig extends AbstractDriverConfig
 
     /**
      * @return array<string, mixed>
+     *
      * @throws ConfigurationException
      */
     public function getCircuitBreakerConfig(): array

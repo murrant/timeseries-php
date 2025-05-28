@@ -48,6 +48,7 @@ class CacheConfig extends AbstractConfig
 
     /**
      * @return array<mixed, mixed>
+     *
      * @throws ConfigurationException
      */
     public function getDriverConfig(?string $driver = null): array

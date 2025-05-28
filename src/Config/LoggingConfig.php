@@ -25,6 +25,7 @@ class LoggingConfig extends AbstractConfig
 
     /**
      * @param  array<string, mixed>  $config
+     *
      * @throws ConfigurationException
      */
     public function __construct(array $config = [])

@@ -7,7 +7,6 @@ use TimeSeriesPhp\Core\QueryBuilderContract;
 use TimeSeriesPhp\Core\RawQuery;
 use TimeSeriesPhp\Core\RawQueryContract;
 use TimeSeriesPhp\Exceptions\QueryException;
-use TimeSeriesPhp\Exceptions\WriteException;
 
 class InfluxDBQueryBuilder implements QueryBuilderContract
 {

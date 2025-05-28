@@ -15,6 +15,7 @@ class File
     public static function sanitize(string $name): string
     {
         $replaced = preg_replace('/[^a-zA-Z0-9\-_. ]/', '', $name);
+
         return trim($replaced ?? '');
     }
 

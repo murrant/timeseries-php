@@ -102,6 +102,7 @@ class MultiDatabaseConfig extends AbstractDriverConfig
 
     /**
      * @return list<int|string>
+     *
      * @throws ConfigurationException
      */
     public function getConnectionNames(): array
@@ -110,7 +111,8 @@ class MultiDatabaseConfig extends AbstractDriverConfig
     }
 
     /**
-     * @param array<string, string> $config
+     * @param  array<string, string>  $config
+     *
      * @throws ConfigurationException
      */
     public function addConnection(string $name, array $config): self
@@ -138,7 +140,7 @@ class MultiDatabaseConfig extends AbstractDriverConfig
         $strategy = $this->getArray('load_balancing')['strategy'] ?? 'round_robin';
 
         if (! is_string($strategy)) {
-            throw new ConfigurationException("Load balancing strategy must be a string");
+            throw new ConfigurationException('Load balancing strategy must be a string');
         }
 
         return $strategy;
