@@ -12,6 +12,11 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
 
     protected QueryBuilderContract $queryBuilder;
 
+    public function isConnected(): bool
+    {
+        return $this->connected;
+    }
+
     public function connect(ConfigInterface $config): bool
     {
         $this->config = $config;

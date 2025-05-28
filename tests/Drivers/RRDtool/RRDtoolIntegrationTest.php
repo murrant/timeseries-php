@@ -17,7 +17,6 @@ use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
  * and creates real RRD artifacts in tests/Drivers/RRDtool/data.
  * 
  * @group integration
- * @requires extension exec
  */
 class RRDtoolIntegrationTest extends TestCase
 {
@@ -28,20 +27,26 @@ class RRDtoolIntegrationTest extends TestCase
 
     protected function setUp(): void
     {
+        // Skip test if exec function is not available
+        if (!function_exists('exec')) {
+            $this->markTestSkipped('exec function is not available');
+        }
+
         // Skip test if rrdtool is not available
         exec('which rrdtool', $output, $returnCode);
         if ($returnCode !== 0) {
             $this->markTestSkipped('rrdtool is not available');
         }
+        $this->rrdtoolPath = trim($output[0]);
 
         // Use the data directory for RRD files
-        $this->dataDir = __DIR__ . '/data/';
-        
+        $this->dataDir = rtrim(__DIR__ . '/data', '/') . '/';
+
         // Ensure the directory exists and is writable
         if (!is_dir($this->dataDir)) {
             mkdir($this->dataDir, 0777, true);
         }
-        
+
         if (!is_writable($this->dataDir)) {
             $this->markTestSkipped('Data directory is not writable: ' . $this->dataDir);
         }
@@ -69,13 +74,13 @@ class RRDtoolIntegrationTest extends TestCase
     {
         // Close the driver connection
         $this->driver->close();
-        
+
         // Clean up RRD files but leave the directory
         $files = glob($this->dataDir . '*.rrd') ?: [];
         foreach ($files as $file) {
             unlink($file);
         }
-        
+
         // Also clean up any graph files
         $graphFiles = glob($this->dataDir . 'graph_*.png') ?: [];
         foreach ($graphFiles as $file) {
@@ -215,6 +220,7 @@ class RRDtoolIntegrationTest extends TestCase
         ];
 
         $outputPath = $this->driver->getRRDGraph('graph_test', ['host' => 'server1'], $graphConfig);
+
         $this->assertFileExists($outputPath);
         $this->assertStringContainsString('.png', $outputPath);
     }
@@ -224,7 +230,7 @@ class RRDtoolIntegrationTest extends TestCase
         // First create and write to an RRD
         $now = new DateTime();
         $startTime = $now->getTimestamp();
-        
+
         $dataPoint = new DataPoint(
             'query_test',
             ['value' => 23.5],
@@ -251,12 +257,14 @@ class RRDtoolIntegrationTest extends TestCase
             ->def('val', $this->dataDir . 'query_test_host-server1.rrd', 'value', 'AVERAGE')
             ->xport('val', 'value');
 
+        // The field name in the result will be 'value', not 'val'
+
         $result = $this->driver->rawQuery($rawQuery);
 
         $this->assertInstanceOf(QueryResult::class, $result);
         $series = $result->getSeries();
         $this->assertNotEmpty($series);
-        
+
         // The result should contain our data points
         $this->assertArrayHasKey('value', $series[0]);
     }
@@ -270,8 +278,11 @@ class RRDtoolIntegrationTest extends TestCase
 
     public function test_list_databases(): void
     {
-        // Create a test database directory
-        mkdir($this->dataDir . 'test_db', 0777, true);
+        // Create a test database directory if it doesn't exist
+        $testDbPath = $this->dataDir . 'test_db';
+        if (!is_dir($testDbPath)) {
+            mkdir($testDbPath, 0777, true);
+        }
 
         $databases = $this->driver->listDatabases();
         $this->assertContains('test_db', $databases);

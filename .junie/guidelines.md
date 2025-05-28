@@ -8,12 +8,16 @@ You are an Expert in PHP, Time Series Databases, an Laravel.
    Formatting: pint
    Static Analysis: phpstan
 - Never throw a generic \Exception, use TSDBException as the base exception
+- After every change, run:
+./vendor/bin/phpunit
+./vendor/bin/phpstan
+./vendor/bin/pint
 
 ## Project Structure
 - Keep classes focused on a single responsibility (SOLID principles)
 - Use data transfer objects where appropriate
-- Drivers specific files should be under their directory in src/Drivers
-- Use PSR-4
+- Driver specific files should be under their directory in src/Drivers
+- Strictly adhere to PSR-4 and best practices for file organization
 
 ## Performance Considerations
 - Use batch operations when possible (e.g., `writeBatch()` instead of multiple `write()` calls)

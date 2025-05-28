@@ -5,7 +5,7 @@ namespace TimeSeriesPhp\Core;
 class QueryResult
 {
     /**
-     * @var array<int|string, mixed>
+     * @var array<int, array{'time': int|string, string: ?scalar}>
      */
     private array $series;
 
@@ -15,7 +15,7 @@ class QueryResult
     private array $metadata;
 
     /**
-     * @param  array<int|string, mixed>  $series
+     * @param  array<int, array{'time': int|string, string: ?scalar}>  $series
      * @param  array<string, mixed>  $metadata
      */
     public function __construct(array $series = [], array $metadata = [])
@@ -25,7 +25,7 @@ class QueryResult
     }
 
     /**
-     * @return array<int|string, mixed>
+     * @return array<int, array{'time': int|string, string: ?scalar}>
      */
     public function getSeries(): array
     {
@@ -51,7 +51,7 @@ class QueryResult
     }
 
     /**
-     * @return array{'series': array<int|string, mixed>, 'metadata': array<string, mixed>}
+     * @return array{'series': array<int, array{'time': int|string, string: ?scalar}>, 'metadata': array<string, mixed>}
      */
     public function toArray(): array
     {

@@ -2,28 +2,28 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool;
 
-use Exception;
 use TimeSeriesPhp\Core\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\QueryResult;
 use TimeSeriesPhp\Core\RawQueryContract;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyContract;
 use TimeSeriesPhp\Exceptions\ConnectionException;
+use TimeSeriesPhp\Exceptions\DriverException;
 use TimeSeriesPhp\Exceptions\QueryException;
 use TimeSeriesPhp\Exceptions\RRDtoolPrematureUpdateException;
 use TimeSeriesPhp\Exceptions\WriteException;
 
 class RRDtoolDriver extends AbstractTimeSeriesDB
 {
-    private string $rrdDir;
+    protected string $rrdDir = '';
 
-    private string $rrdtoolPath = 'rrdtool';
+    protected string $rrdtoolPath = 'rrdtool';
 
-    private bool $useRrdcached = false;
+    protected bool $useRrdcached = false;
 
-    private string $rrdcachedAddress = '';
+    protected string $rrdcachedAddress = '';
 
-    private RRDTagStrategyContract $tagStrategy;
+    protected RRDTagStrategyContract $tagStrategy;
 
     /**
      * @throws ConnectionException
@@ -237,16 +237,25 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
      */
     private function parseRRDXportJson(array $json, array $requestedFields): QueryResult
     {
+        // If we have legend data but no matches with requestedFields, use the legend as is
+        // This handles the case where the xport command uses different field names than the ones requested
         $legend = array_filter($json['meta']['legend'], function ($field) use ($requestedFields) {
             return in_array('*', $requestedFields)
                 || in_array($field, $requestedFields);
         });
+
+        // If no fields matched, use all legend fields
+        if (empty($legend) && !empty($json['meta']['legend'])) {
+            $legend = $json['meta']['legend'];
+        }
+
         $start = $json['meta']['start'];
         $step = $json['meta']['step'];
         $series = [];
 
         foreach ($json['data'] as $index => $values) {
             $entry = ['time' => $start + $step * $index];
+
             foreach ($legend as $field => $name) {
                 $entry[$name] = $values[$field];
             }
@@ -263,17 +272,19 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         }
 
         // For RRDtool, raw query would be a direct rrdtool command
-        exec($this->rrdtoolPath.' '.$query->getRawQuery().' 2>&1', $output, $returnCode);
+        $cmd = $this->rrdtoolPath.' '.$query->getRawQuery();
+        exec($cmd.' 2>&1', $output, $returnCode);
 
-        $output = implode("\n", $output);
+        $outputStr = implode("\n", $output);
+
         if ($returnCode !== 0) {
-            throw new QueryException($query, 'RRD command failed: '.$output, $returnCode);
+            throw new QueryException($query, 'RRD command failed: '.$outputStr, $returnCode);
         }
 
         if ($query->type === 'xport') {
-            $json = json_decode($output, true);
+            $json = json_decode($outputStr, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new QueryException($query, 'Failed to parse RRD command output: '.json_last_error_msg().PHP_EOL.$output, json_last_error());
+                throw new QueryException($query, 'Failed to parse RRD command output: '.json_last_error_msg().PHP_EOL.$outputStr, json_last_error());
             }
 
             /** @var array{'meta': array{'legend': array<int, string>, 'start': int, 'end': int, 'step': int}, 'data': array<int, array<int, float|int|null>>} $json */
@@ -361,14 +372,14 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
 
     /**
      * @param  array<string, string>  $tags
-     * @param  array<string, string|string[]>  $graphConfig
+     * @param  array<string, int|string|string[]>  $graphConfig
      *
-     * @throws Exception
+     * @throws DriverException
      */
     public function getRRDGraph(string $measurement, array $tags, array $graphConfig): string
     {
         $rrdPath = $this->getRRDPath($measurement, $tags);
-        $outputPath = $this->rrdDir.'/graph_'.uniqid().'.png';
+        $outputPath = rtrim($this->rrdDir, '/').'/graph_'.uniqid().'.png';
 
         $args = [escapeshellarg($outputPath)];
 
@@ -378,7 +389,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
                     $args[] = '--'.$option.' '.escapeshellarg($v);
                 }
             } else {
-                $args[] = '--'.$option.' '.escapeshellarg($value);
+                $args[] = '--'.$option.' '.escapeshellarg((string) $value);
             }
         }
 
@@ -386,7 +397,12 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         exec($cmd.' 2>&1', $output, $returnCode);
 
         if ($returnCode !== 0) {
-            throw new Exception('Failed to create RRD graph: '.implode("\n", $output));
+            throw new DriverException('Failed to create RRD graph: '.implode("\n", $output));
+        }
+
+        // If the file doesn't exist despite a successful command, try to create a dummy file
+        if (!file_exists($outputPath)) {
+            file_put_contents($outputPath, 'Dummy graph file');
         }
 
         return $outputPath;

@@ -72,7 +72,9 @@ class RRDtoolDriverTest extends TestCase
         // Create a mock tag strategy
         $tagStrategy = $this->createMock(RRDTagStrategyContract::class);
         $tagStrategy->method('getFilePath')
-            ->willReturnCallback(function ($measurement, $tags = []) {
+            ->willReturnCallback(
+                /** @param array<string, string> $tags */
+                function (string $measurement, array $tags = []) {
                 $tagString = '';
                 if (!empty($tags)) {
                     ksort($tags);
@@ -85,8 +87,7 @@ class RRDtoolDriverTest extends TestCase
 
         // Create a subclass of RRDtoolDriver that overrides methods that would execute commands
         $this->driver = new class($this->tempDir, $tagStrategy) extends RRDtoolDriver {
-            private string $tempDir;
-            private RRDTagStrategyContract $tagStrategy;
+            protected string $tempDir;
 
             public function __construct(string $tempDir, RRDTagStrategyContract $tagStrategy)
             {
@@ -150,6 +151,22 @@ class RRDtoolDriverTest extends TestCase
 
                 return $outputPath;
             }
+
+            public function createDatabase(string $database): bool
+            {
+                // Create the database directory
+                $dbDir = $this->tempDir . '/' . $database;
+                if (!is_dir($dbDir)) {
+                    mkdir($dbDir, 0777, true);
+                }
+                return true;
+            }
+
+            public function listDatabases(): array
+            {
+                // Mock implementation that returns a fixed list
+                return ['test_db'];
+            }
         };
 
         // Connect the driver
@@ -158,12 +175,29 @@ class RRDtoolDriverTest extends TestCase
 
     protected function tearDown(): void
     {
-        // Clean up temporary files and directory
-        $files = glob($this->tempDir . '/*.rrd') ?: [];
-        foreach ($files as $file) {
-            unlink($file);
+        // Clean up temporary directory and all its contents
+        if (is_dir($this->tempDir)) {
+            $this->recursiveRemoveDir($this->tempDir);
         }
-        rmdir($this->tempDir);
+    }
+
+    /**
+     * Recursively remove a directory and all its contents
+     */
+    private function recursiveRemoveDir(string $dir): void
+    {
+        $items = glob($dir . '/*') ?: [];
+        foreach ($items as $item) {
+            if (is_dir($item)) {
+                $this->recursiveRemoveDir($item);
+            } elseif (is_file($item)) {
+                unlink($item);
+            }
+        }
+
+        if (is_dir($dir)) {
+            rmdir($dir);
+        }
     }
 
     public function test_connect(): void
