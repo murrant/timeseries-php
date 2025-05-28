@@ -24,13 +24,13 @@ abstract class ConfigTestCase extends TestCase
             'timeout' => 30,
         ]);
 
-        $this->assertEquals('localhost', $config->get('host'));
-        $this->assertEquals(8086, $config->get('port'));
-        $this->assertEquals('admin', $config->get('username'));
-        $this->assertEquals('password', $config->get('password'));
-        $this->assertEquals('metrics', $config->get('database'));
-        $this->assertTrue($config->get('ssl'));
-        $this->assertEquals(30, $config->get('timeout'));
+        $this->assertEquals('localhost', $config->getString('host'));
+        $this->assertEquals(8086, $config->getInt('port'));
+        $this->assertEquals('admin', $config->getString('username'));
+        $this->assertEquals('password', $config->getString('password'));
+        $this->assertEquals('metrics', $config->getString('database'));
+        $this->assertTrue($config->getBool('ssl'));
+        $this->assertEquals(30, $config->getInt('timeout'));
     }
 
     public function test_get_non_existing_key_with_default(): void

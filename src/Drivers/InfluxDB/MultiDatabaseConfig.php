@@ -32,21 +32,24 @@ class MultiDatabaseConfig extends AbstractDriverConfig
         $this->validateConnections();
     }
 
+    /**
+     * @throws ConfigurationException
+     */
     private function validateConnections(): void
     {
-        $connections = $this->get('connections', []);
+        $connections = $this->getArray('connections');
 
         if (empty($connections)) {
             throw new ConfigurationException('At least one connection must be configured');
         }
 
-        $default = $this->get('default');
+        $default = $this->getString('default');
         if ($default && ! isset($connections[$default])) {
             throw new ConfigurationException("Default connection '{$default}' is not defined in connections");
         }
 
         foreach ($connections as $name => $config) {
-            if (! isset($config['driver'])) {
+            if (! is_array($config) || ! isset($config['driver'])) {
                 throw new ConfigurationException("Driver not specified for connection '{$name}'");
             }
         }
@@ -59,13 +62,30 @@ class MultiDatabaseConfig extends AbstractDriverConfig
      */
     public function getConnection(string $name): array
     {
-        $connections = $this->get('connections', []);
+        $connections = $this->getArray('connections');
 
         if (! isset($connections[$name])) {
             throw new ConfigurationException("Connection '{$name}' not found");
         }
 
-        return $connections[$name];
+        $connection = $connections[$name];
+
+        if (! is_array($connection)) {
+            throw new ConfigurationException("Connection '{$name}' is not an array");
+        }
+
+        foreach ($connection as $key => $value) {
+            if (! is_string($key)) {
+                throw new ConfigurationException("Connection '{$name}' has invalid key");
+            }
+
+            if (! is_string($value)) {
+                throw new ConfigurationException("Connection '{$name}' has invalid value");
+            }
+        }
+
+        /** @var array<string, string> $connection */
+        return $connection;
     }
 
     /**
@@ -75,44 +95,60 @@ class MultiDatabaseConfig extends AbstractDriverConfig
      */
     public function getDefaultConnection(): array
     {
-        $default = $this->get('default');
+        $default = $this->getString('default');
 
         return $this->getConnection($default);
     }
 
     /**
      * @return list<int|string>
+     * @throws ConfigurationException
      */
     public function getConnectionNames(): array
     {
-        return array_keys($this->get('connections', []));
+        return array_keys($this->getArray('connections'));
     }
 
     /**
-     * @param  array<string, string>  $config
-     * @return $this
+     * @param array<string, string> $config
+     * @throws ConfigurationException
      */
     public function addConnection(string $name, array $config): self
     {
-        $connections = $this->get('connections', []);
+        $connections = $this->getArray('connections');
         $connections[$name] = $config;
         $this->set('connections', $connections);
 
         return $this;
     }
 
+    /**
+     * @throws ConfigurationException
+     */
     public function isLoadBalancingEnabled(): bool
     {
-        return $this->get('load_balancing')['enabled'] ?? false;
+        return (bool) ($this->getArray('load_balancing')['enabled'] ?? false);
     }
 
+    /**
+     * @throws ConfigurationException
+     */
     public function getLoadBalancingStrategy(): string
     {
-        return $this->get('load_balancing')['strategy'] ?? 'round_robin';
+        $strategy = $this->getArray('load_balancing')['strategy'] ?? 'round_robin';
+
+        if (! is_string($strategy)) {
+            throw new ConfigurationException("Load balancing strategy must be a string");
+        }
+
+        return $strategy;
     }
 
+    /**
+     * @throws ConfigurationException
+     */
     public function isFailoverEnabled(): bool
     {
-        return $this->get('failover')['enabled'] ?? false;
+        return (bool) ($this->getArray('failover')['enabled'] ?? false);
     }
 }

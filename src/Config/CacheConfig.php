@@ -2,6 +2,8 @@
 
 namespace TimeSeriesPhp\Config;
 
+use TimeSeriesPhp\Exceptions\ConfigurationException;
+
 class CacheConfig extends AbstractConfig
 {
     /**
@@ -41,16 +43,19 @@ class CacheConfig extends AbstractConfig
 
     public function isEnabled(): bool
     {
-        return $this->get('enabled', false);
+        return $this->getBool('enabled');
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<mixed, mixed>
+     * @throws ConfigurationException
      */
     public function getDriverConfig(?string $driver = null): array
     {
-        $driver = $driver ?: $this->get('driver');
+        if (empty($driver)) {
+            $driver = $this->getString('driver');
+        }
 
-        return $this->get($driver, []);
+        return $this->getArray($driver);
     }
 }

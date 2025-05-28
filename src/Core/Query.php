@@ -15,7 +15,7 @@ class Query
     private array $fields = ['*'];
 
     /**
-     * @var array<int, array{'field': string, 'operator': string, 'value': mixed, 'type'?: 'AND'|'OR'}>
+     * @var array<int, array{'field': string, 'operator': string, 'value': float|int|string|null|array<float|int|string|null>, 'type'?: 'AND'|'OR'}>
      */
     private array $conditions = [];
 
@@ -47,7 +47,7 @@ class Query
     private array $orderBy = [];
 
     /**
-     * @var array<array{'field': string, 'operator': string, 'value': mixed}>
+     * @var array<array{'field': string, 'operator': string, 'value': float|int|string|null}>
      */
     private array $having = [];
 
@@ -93,6 +93,10 @@ class Query
     }
 
     // More flexible condition building
+
+    /**
+     * @param float|int|string|null $value
+     */
     public function where(string $field, string $operator, mixed $value): self
     {
         $this->conditions[] = [
@@ -105,6 +109,9 @@ class Query
         return $this;
     }
 
+    /**
+     * @param float|int|string|null $value
+     */
     public function orWhere(string $field, string $operator, mixed $value): self
     {
         $this->conditions[] = [
@@ -118,7 +125,7 @@ class Query
     }
 
     /**
-     * @param  array<int, mixed>  $values
+     * @param  array<int, float|int|string|null>  $values
      */
     public function whereIn(string $field, array $values): self
     {
@@ -133,7 +140,7 @@ class Query
     }
 
     /**
-     * @param  array<int, mixed>  $values
+     * @param  array<int, float|int|string|null>  $values
      */
     public function whereNotIn(string $field, array $values): self
     {
@@ -365,6 +372,9 @@ class Query
         return $this->orderBy('time', $direction);
     }
 
+    /**
+     * @param float|int|string|null $value
+     */
     public function having(string $field, string $operator, mixed $value): self
     {
         $this->having[] = [
@@ -412,7 +422,7 @@ class Query
     }
 
     /**
-     * @return array<int, array{'field': string, 'operator': string, 'value': mixed, 'type'?: 'AND'|'OR'}>
+     * @return array<int, array{'field': string, 'operator': string, 'value': float|int|string|null|array<float|int|string|null>, 'type'?: 'AND'|'OR'}>
      */
     public function getConditions(): array
     {
@@ -474,7 +484,7 @@ class Query
     }
 
     /**
-     * @return array<array{'field': string, 'operator': string, 'value': mixed}>
+     * @return array<array{'field': string, 'operator': string, 'value': float|int|string|null}>
      */
     public function getHaving(): array
     {

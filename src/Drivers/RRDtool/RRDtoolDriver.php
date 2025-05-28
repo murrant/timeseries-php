@@ -30,10 +30,10 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
      */
     protected function doConnect(): bool
     {
-        $this->rrdDir = $this->config->get('rrd_dir');
-        $this->rrdtoolPath = $this->config->get('rrdtool_path');
-        $this->useRrdcached = $this->config->get('use_rrdcached');
-        $this->rrdcachedAddress = $this->config->get('rrdcached_address');
+        $this->rrdDir = $this->config->getString('rrd_dir');
+        $this->rrdtoolPath = $this->config->getString('rrdtool_path');
+        $this->useRrdcached = $this->config->getBool('use_rrdcached');
+        $this->rrdcachedAddress = $this->config->getString('rrdcached_address');
 
         if (! is_dir($this->rrdDir)) {
             if (! mkdir($this->rrdDir, 0755, true)) {
@@ -49,7 +49,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
             throw new ConnectionException('rrdcached address must be specified when use_rrdcached is true');
         }
 
-        $tagStrategyClass = $this->config->get('tag_strategy');
+        $tagStrategyClass = $this->config->getString('tag_strategy');
         $instance = new $tagStrategyClass($this->rrdDir);
         if (! $instance instanceof RRDTagStrategyContract) {
             throw new ConnectionException('Invalid tag strategy class, must implement RRDTagStrategyContract');
@@ -108,7 +108,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
             return; // Already exists
         }
 
-        $step = $this->config->get('default_step');
+        $step = $this->config->getInt('default_step');
 
         // Build data source definitions
         $dataSources = [];
@@ -118,7 +118,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         }
 
         // Use default archives from config
-        $archives = $this->config->get('default_archives');
+        $archives = $this->config->getArray('default_archives');
 
         $args = [
             escapeshellarg($rrdPath),
@@ -329,9 +329,9 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     {
         $rrdPath = $this->getRRDPath($measurement, $tags);
 
-        $step = $config['step'] ?? $this->config->get('default_step');
+        $step = $config['step'] ?? $this->config->getInt('default_step');
         $dataSources = $config['data_sources'] ?? [];
-        $archives = $config['archives'] ?? $this->config->get('default_archives');
+        $archives = $config['archives'] ?? $this->config->getArray('default_archives');
 
         if (empty($dataSources)) {
             throw new WriteException('Data sources must be specified for custom RRD creation');

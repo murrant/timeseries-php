@@ -12,16 +12,16 @@ class GraphiteConfigTest extends TestCase
     {
         $config = new GraphiteConfig;
 
-        $this->assertEquals('localhost', $config->get('host'));
-        $this->assertEquals(2003, $config->get('port'));
-        $this->assertEquals('tcp', $config->get('protocol'));
-        $this->assertEquals(30, $config->get('timeout'));
-        $this->assertEquals('', $config->get('prefix'));
-        $this->assertEquals(500, $config->get('batch_size'));
-        $this->assertEquals('localhost', $config->get('web_host'));
-        $this->assertEquals(8080, $config->get('web_port'));
-        $this->assertEquals('http', $config->get('web_protocol'));
-        $this->assertEquals('/render', $config->get('web_path'));
+        $this->assertEquals('localhost', $config->getString('host'));
+        $this->assertEquals(2003, $config->getInt('port'));
+        $this->assertEquals('tcp', $config->getString('protocol'));
+        $this->assertEquals(30, $config->getInt('timeout'));
+        $this->assertEquals('', $config->getString('prefix'));
+        $this->assertEquals(500, $config->getInt('batch_size'));
+        $this->assertEquals('localhost', $config->getString('web_host'));
+        $this->assertEquals(8080, $config->getInt('web_port'));
+        $this->assertEquals('http', $config->getString('web_protocol'));
+        $this->assertEquals('/render', $config->getString('web_path'));
     }
 
     public function test_custom_values(): void
@@ -39,16 +39,16 @@ class GraphiteConfigTest extends TestCase
             'web_path' => '/api/render',
         ]);
 
-        $this->assertEquals('graphite.example.com', $config->get('host'));
-        $this->assertEquals(2004, $config->get('port'));
-        $this->assertEquals('udp', $config->get('protocol'));
-        $this->assertEquals(60, $config->get('timeout'));
-        $this->assertEquals('myapp', $config->get('prefix'));
-        $this->assertEquals(1000, $config->get('batch_size'));
-        $this->assertEquals('graphite-web.example.com', $config->get('web_host'));
-        $this->assertEquals(8081, $config->get('web_port'));
-        $this->assertEquals('https', $config->get('web_protocol'));
-        $this->assertEquals('/api/render', $config->get('web_path'));
+        $this->assertEquals('graphite.example.com', $config->getString('host'));
+        $this->assertEquals(2004, $config->getInt('port'));
+        $this->assertEquals('udp', $config->getString('protocol'));
+        $this->assertEquals(60, $config->getInt('timeout'));
+        $this->assertEquals('myapp', $config->getString('prefix'));
+        $this->assertEquals(1000, $config->getInt('batch_size'));
+        $this->assertEquals('graphite-web.example.com', $config->getString('web_host'));
+        $this->assertEquals(8081, $config->getInt('web_port'));
+        $this->assertEquals('https', $config->getString('web_protocol'));
+        $this->assertEquals('/api/render', $config->getString('web_path'));
     }
 
     public function test_missing_required_fields(): void

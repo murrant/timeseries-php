@@ -31,17 +31,17 @@ class PerformanceConfig extends AbstractDriverConfig
 
     public function isProfilingEnabled(): bool
     {
-        return $this->get('enable_query_profiling', false);
+        return $this->getBool('enable_query_profiling');
     }
 
     public function isMetricsEnabled(): bool
     {
-        return $this->get('enable_metrics', false);
+        return $this->getBool('enable_metrics');
     }
 
     public function getMemoryLimitBytes(): int
     {
-        $limit = $this->get('memory_limit');
+        $limit = $this->getString('memory_limit');
 
         return $this->parseMemoryLimit($limit);
     }

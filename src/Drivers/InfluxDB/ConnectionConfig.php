@@ -3,6 +3,7 @@
 namespace TimeSeriesPhp\Drivers\InfluxDB;
 
 use TimeSeriesPhp\Config\AbstractDriverConfig;
+use TimeSeriesPhp\Exceptions\ConfigurationException;
 
 class ConnectionConfig extends AbstractDriverConfig
 {
@@ -33,14 +34,18 @@ class ConnectionConfig extends AbstractDriverConfig
 
     /**
      * @return array<string, mixed>
+     * @throws ConfigurationException
      */
     public function getCircuitBreakerConfig(): array
     {
-        return $this->get('circuit_breaker', []);
+        return $this->getArray('circuit_breaker');
     }
 
+    /**
+     * @throws ConfigurationException
+     */
     public function isCircuitBreakerEnabled(): bool
     {
-        return $this->get('circuit_breaker')['enabled'] ?? false;
+        return (bool) ($this->getArray('circuit_breaker')['enabled'] ?? false);
     }
 }

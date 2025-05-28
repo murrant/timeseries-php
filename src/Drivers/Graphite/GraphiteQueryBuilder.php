@@ -6,6 +6,7 @@ use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Core\QueryBuilderContract;
 use TimeSeriesPhp\Core\RawQuery;
 use TimeSeriesPhp\Core\RawQueryContract;
+use TimeSeriesPhp\Exceptions\QueryException;
 
 class GraphiteQueryBuilder implements QueryBuilderContract
 {
@@ -16,6 +17,9 @@ class GraphiteQueryBuilder implements QueryBuilderContract
         $this->prefix = $prefix;
     }
 
+    /**
+     * @throws QueryException
+     */
     public function build(Query $query): RawQueryContract
     {
         $measurement = $query->getMeasurement();
@@ -108,14 +112,18 @@ class GraphiteQueryBuilder implements QueryBuilderContract
             $operator = $condition['operator'];
             $value = $condition['value'];
 
+            if ($operator !== 'IN' && is_array($value)) {
+                throw new QueryException(new RawQuery(''), 'Graphite only supports multiple values for IN operator');
+            }
+
             // We can only handle certain types of conditions in Graphite
-            if ($operator === '=' || $operator === '==') {
+            if (($operator === '=' || $operator === '==') && ! is_array($value)) {
                 // For equality, we can use a more specific path
-                $target = str_replace('*', $value, $target);
-            } elseif ($operator === '!=' || $operator === '<>') {
+                $target = str_replace('*', (string) $value, $target);
+            } elseif (($operator === '!=' || $operator === '<>') && ! is_array($value)) {
                 // For inequality, we can use exclude()
                 $target = "exclude($target, \"$value\")";
-            } elseif ($operator === 'REGEX') {
+            } elseif ($operator === 'REGEX' && ! is_array($value)) {
                 // For regex, we can use grep()
                 $target = "grep($target, \"$value\")";
             }

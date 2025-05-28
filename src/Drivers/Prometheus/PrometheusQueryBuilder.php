@@ -26,7 +26,9 @@ class PrometheusQueryBuilder implements QueryBuilderContract
             switch ($operator) {
                 case '=':
                 case '==':
-                    $labelSelectors[] = "{$field}=\"{$value}\"";
+                    if (! is_array($value)) {
+                        $labelSelectors[] = "{$field}=\"{$value}\"";
+                    }
                     break;
                 case '!=':
                 case '<>':

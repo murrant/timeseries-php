@@ -25,6 +25,7 @@ use TimeSeriesPhp\Exceptions\ConfigurationException;
 use TimeSeriesPhp\Exceptions\ConnectionException;
 use TimeSeriesPhp\Exceptions\QueryException;
 use TimeSeriesPhp\Exceptions\WriteException;
+use TimeSeriesPhp\Utils\Convert;
 
 class InfluxDBDriver extends AbstractTimeSeriesDB
 {
@@ -54,8 +55,8 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             $this->queryApi = $this->client->createQueryApi();
 
             // Store config values for easier access
-            $this->org = $this->config->get('org');
-            $this->bucket = $this->config->get('bucket');
+            $this->org = $this->config->getString('org');
+            $this->bucket = $this->config->getString('bucket');
 
             $this->queryBuilder = new InfluxDBQueryBuilder($this->bucket);
 
@@ -85,15 +86,9 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
         // Add fields
         foreach ($dataPoint->getFields() as $key => $value) {
             if (is_numeric($value)) {
-                if (is_int($value)) {
-                    $point->addField($key, $value);
-                } else {
-                    $point->addField($key, floatval($value));
-                }
-            } elseif (is_bool($value)) {
-                $point->addField($key, $value);
+                $point->addField($key, Convert::toNumber($value));
             } else {
-                $point->addField($key, strval($value));
+                $point->addField($key, $value);
             }
         }
 

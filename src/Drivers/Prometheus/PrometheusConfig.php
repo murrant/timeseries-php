@@ -32,15 +32,16 @@ class PrometheusConfig extends AbstractDriverConfig
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array{'url': string, 'timeout': int, 'verify_ssl': bool, 'debug': bool}
+     * @throws ConfigurationException
      */
     public function getClientConfig(): array
     {
         return [
-            'url' => $this->get('url'),
-            'timeout' => $this->get('timeout'),
-            'verify_ssl' => $this->get('verify_ssl'),
-            'debug' => $this->get('debug'),
+            'url' => $this->getString('url'),
+            'timeout' => $this->getInt('timeout'),
+            'verify_ssl' => $this->getBool('verify_ssl'),
+            'debug' => $this->getBool('debug'),
         ];
     }
 }

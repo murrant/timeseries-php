@@ -6,6 +6,8 @@ use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Core\QueryBuilderContract;
 use TimeSeriesPhp\Core\RawQuery;
 use TimeSeriesPhp\Core\RawQueryContract;
+use TimeSeriesPhp\Exceptions\QueryException;
+use TimeSeriesPhp\Exceptions\WriteException;
 
 class InfluxDBQueryBuilder implements QueryBuilderContract
 {
@@ -73,26 +75,26 @@ class InfluxDBQueryBuilder implements QueryBuilderContract
                 } elseif ($operator === '!=') {
                     $fluxQuery .= "  |> filter(fn: (r) => r._time != {$value})\n";
                 }
-            } elseif ($operator === 'IN') {
+            } elseif ($operator === 'IN' && is_array($condition['value'])) {
                 // Handle IN operator
                 $values = array_map(function ($v) {
                     return $this->formatValue($v);
                 }, $condition['value']);
                 $valuesList = implode(', ', $values);
                 $fluxQuery .= "  |> filter(fn: (r) => contains(value: r[\"$field\"], set: [$valuesList]))\n";
-            } elseif ($operator === 'NOT IN') {
+            } elseif ($operator === 'NOT IN' && is_array($condition['value'])) {
                 // Handle NOT IN operator
                 $values = array_map(function ($v) {
                     return $this->formatValue($v);
                 }, $condition['value']);
                 $valuesList = implode(', ', $values);
                 $fluxQuery .= "  |> filter(fn: (r) => not contains(value: r[\"$field\"], set: [$valuesList]))\n";
-            } elseif ($operator === 'BETWEEN') {
+            } elseif ($operator === 'BETWEEN' && is_array($condition['value']) && count($condition['value']) === 2) {
                 // Handle BETWEEN operator
                 $min = $this->formatValue($condition['value'][0]);
                 $max = $this->formatValue($condition['value'][1]);
                 $fluxQuery .= "  |> filter(fn: (r) => r[\"$field\"] >= $min and r[\"$field\"] <= $max)\n";
-            } elseif ($operator === 'REGEX') {
+            } elseif ($operator === 'REGEX' && is_string($condition['value'])) {
                 // Handle REGEX operator
                 $pattern = $condition['value'];
                 $fluxQuery .= "  |> filter(fn: (r) => r[\"$field\"] =~ /$pattern/)\n";
@@ -262,6 +264,9 @@ class InfluxDBQueryBuilder implements QueryBuilderContract
         return $operatorMap[$operator] ?? $operator;
     }
 
+    /**
+     * @throws QueryException
+     */
     private function formatValue(mixed $value): string
     {
         if (is_string($value)) {
@@ -272,9 +277,11 @@ class InfluxDBQueryBuilder implements QueryBuilderContract
             return 'null';
         } elseif ($value instanceof \DateTime) {
             return 'time(v: "'.$value->format('c').'")';
-        } else {
-            return (string) $value;
+        } elseif (is_numeric($value)) {
+            return strval($value);
         }
+
+        throw new QueryException(new RawQuery(''), 'Unsupported value type: '.gettype($value).' ('.var_export($value, true).')');
     }
 
     private function formatDateInterval(\DateInterval $interval): string

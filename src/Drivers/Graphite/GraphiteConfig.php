@@ -48,7 +48,7 @@ class GraphiteConfig extends AbstractDriverConfig
      */
     public function getConnectionString(): string
     {
-        return $this->get('host').':'.$this->get('port');
+        return $this->getString('host').':'.$this->getInt('port');
     }
 
     /**
@@ -56,6 +56,6 @@ class GraphiteConfig extends AbstractDriverConfig
      */
     public function getWebUrl(): string
     {
-        return $this->get('web_protocol').'://'.$this->get('web_host').':'.$this->get('web_port').$this->get('web_path');
+        return $this->getString('web_protocol').'://'.$this->getString('web_host').':'.$this->getInt('web_port').$this->getString('web_path');
     }
 }

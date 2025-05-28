@@ -4,7 +4,7 @@ You are an Expert in PHP, Time Series Databases, an Laravel.
 - Use PHP v8.2 features
 - Enforce strict types and array shapes
 - Use the following tools:
-   Tests: phpunit
+   Tests: phpunit (always run this with vendor/bin/phpunit)
    Formatting: pint
    Static Analysis: phpstan
 - Never throw a generic \Exception, use TSDBException as the base exception

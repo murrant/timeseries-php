@@ -45,7 +45,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB
 
             // Test connection by pinging the API
             $response = $this->makeApiRequest('/api/v1/status/config');
-            $this->connected = isset($response['status']) && $response['status'] === 'success';
+            $this->connected = $response['status'] === 'success';
 
             return $this->connected;
         } catch (Exception $e) {
@@ -146,7 +146,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB
      *
      * @param  string  $endpoint  The API endpoint
      * @param  array<string, string>  $params  Query parameters
-     * @return array<string, mixed> The response data
+     * @return array{'status': string, 'error'?: string, 'data': array{'result'?: array{'metric': string, 'value': float|int|string|null}}} The response data
      *
      * @throws Exception
      */
@@ -192,6 +192,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB
                 throw new TSDBException('Failed to parse API response: '.json_last_error_msg());
             }
 
+            /** @var array{'status': string, 'error'?: string, 'data': array{'result'?: array{'metric': string, 'value': float|int|string|null}}} $data */
             return $data;
         } catch (GuzzleException $e) {
             if ($this->debug) {

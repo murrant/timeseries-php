@@ -16,9 +16,9 @@ class CacheConfigTest extends ConfigTestCase
         $config = $this->createConfig([]);
 
         $this->assertFalse($config->isEnabled());
-        $this->assertEquals('memory', $config->get('driver'));
-        $this->assertEquals(300, $config->get('ttl'));
-        $this->assertEquals('php', $config->get('serialization'));
+        $this->assertEquals('memory', $config->getString('driver'));
+        $this->assertEquals(300, $config->getInt('ttl'));
+        $this->assertEquals('php', $config->getString('serialization'));
     }
 
     public function test_is_enabled(): void

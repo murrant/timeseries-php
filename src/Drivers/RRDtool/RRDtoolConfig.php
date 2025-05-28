@@ -46,7 +46,7 @@ class RRDtoolConfig extends AbstractDriverConfig
         });
 
         $this->addValidator('rrdcached_address', function ($address) {
-            if ($this->get('use_rrdcached', false) && empty($address)) {
+            if ($this->getBool('use_rrdcached') && empty($address)) {
                 return false;
             }
 
@@ -76,7 +76,7 @@ class RRDtoolConfig extends AbstractDriverConfig
      */
     public function getTagStrategy(): RRDTagStrategyContract
     {
-        $strategyClass = $this->get('tag_strategy');
+        $strategyClass = $this->getString('tag_strategy');
         $instance = new $strategyClass;
 
         if (! $instance instanceof RRDTagStrategyContract) {

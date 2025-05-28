@@ -2,6 +2,7 @@
 
 namespace TimeSeriesPhp\Support;
 
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use TimeSeriesPhp\Config\DriverConfigFactory;

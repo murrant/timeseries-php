@@ -2,6 +2,8 @@
 
 namespace TimeSeriesPhp\Config;
 
+use TimeSeriesPhp\Exceptions\ConfigurationException;
+
 class LoggingConfig extends AbstractConfig
 {
     /**
@@ -23,6 +25,7 @@ class LoggingConfig extends AbstractConfig
 
     /**
      * @param  array<string, mixed>  $config
+     * @throws ConfigurationException
      */
     public function __construct(array $config = [])
     {
@@ -34,11 +37,11 @@ class LoggingConfig extends AbstractConfig
 
     public function isEnabled(): bool
     {
-        return $this->get('enabled', false);
+        return $this->getBool('enabled');
     }
 
     public function shouldLogChannel(string $channel): bool
     {
-        return in_array($channel, $this->get('channels', []));
+        return in_array($channel, $this->getArray('channels'));
     }
 }

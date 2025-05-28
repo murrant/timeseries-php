@@ -44,14 +44,14 @@ class InfluxDBConfig extends AbstractConfig
     public function getClientConfig(): array
     {
         return [
-            'url' => $this->get('url'),
-            'token' => $this->get('token'),
-            'bucket' => $this->get('bucket'),
-            'org' => $this->get('org'),
-            'precision' => $this->get('precision'),
-            'timeout' => $this->get('timeout'),
-            'verifySSL' => $this->get('verify_ssl'),
-            'debug' => $this->get('debug'),
+            'url' => $this->getString('url'),
+            'token' => $this->getString('token'),
+            'bucket' => $this->getString('bucket'),
+            'org' => $this->getString('org'),
+            'precision' => $this->getString('precision'),
+            'timeout' => $this->getInt('timeout'),
+            'verifySSL' => $this->getBool('verify_ssl'),
+            'debug' => $this->getBool('debug'),
         ];
     }
 }

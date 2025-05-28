@@ -52,10 +52,19 @@ class GraphiteDriverTest extends TestCase
                 return true;
             }
 
-            protected function openSocket(): void
+            /**
+             * @return resource
+             */
+            protected function getSocket(): mixed
             {
                 // Mock implementation that doesn't actually open a socket
-                $this->socket = fopen('php://memory', 'r+');
+                $this->socket = fopen('php://memory', 'r+') ?: null;
+
+                if ($this->socket === null) {
+                    throw new ConnectionException('Failed to open socket');
+                }
+
+                return $this->socket;
             }
 
             protected function closeSocket(): void
