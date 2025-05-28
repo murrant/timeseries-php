@@ -144,20 +144,19 @@ class RRDtoolDriverTest extends TestCase
                 ]);
             }
 
-            public function createRRDWithCustomConfig(string $measurement, array $tags, array $config): bool
+            public function createRRDWithCustomConfig(string $filename, array $data_sources, ?int $step = null, ?array $archives = null): bool
             {
                 // Mock implementation that doesn't execute commands
-                $rrdPath = $this->tagStrategy->getFilePath($measurement, $tags);
 
                 // Simulate creating the RRD file
-                if (! file_exists($rrdPath)) {
-                    touch($rrdPath);
+                if (! file_exists($filename)) {
+                    touch($filename);
                 }
 
-                return true;
+                return $filename;
             }
 
-            public function getRRDGraph(string $measurement, array $tags, array $graphConfig): string
+            public function getRRDGraph(RRDtoolRawQuery $graphConfig): string
             {
                 // Mock implementation that doesn't execute commands
                 $outputPath = $this->tempDir.'/graph_'.uniqid().'.png';
@@ -302,34 +301,37 @@ class RRDtoolDriverTest extends TestCase
 
     public function test_create_rrd_with_custom_config(): void
     {
-        $customConfig = [
-            'step' => 60,
-            'data_sources' => [
-                'DS:value:GAUGE:120:U:U',
-                'DS:max:GAUGE:120:U:U',
-            ],
-            'archives' => [
-                'RRA:AVERAGE:0.5:1:1440',  // 1min for 1 day
-                'RRA:MAX:0.5:1:1440',      // 1min max for 1 day
-            ],
+        $dataSources = [
+            'DS:value:GAUGE:120:U:U',
+            'DS:max:GAUGE:120:U:U',
         ];
+        $archives = [
+            'RRA:AVERAGE:0.5:1:1440',  // 1min for 1 day
+            'RRA:MAX:0.5:1:1440',      // 1min max for 1 day
+        ];
+        $file = $this->driver->getRRDPath('custom_metric', ['host' => 'server1']);
 
-        $result = $this->driver->createRRDWithCustomConfig('custom_metric', ['host' => 'server1'], $customConfig);
+        $result = $this->driver->createRRDWithCustomConfig($file, $dataSources, 80, $archives);
+
         $this->assertTrue($result);
+        $this->assertFileExists($file);
     }
 
     public function test_get_rrd_graph(): void
     {
-        $graphConfig = [
-            'title' => 'CPU Usage',
-            'vertical-label' => 'Percent',
-            'width' => '800',
-            'height' => '400',
-            'start' => '-1d',
-            'end' => 'now',
-        ];
+        $rrdPath = $this->driver->getRRDPath('cpu_usage', ['host' => 'server1']);
 
-        $outputPath = $this->driver->getRRDGraph('cpu_usage', ['host' => 'server1'], $graphConfig);
+        $outputPath = $this->tempDir.'/graph_'.uniqid().'.png';
+        $rawQuery = new RRDtoolRawQuery('graph', $outputPath);
+        $rawQuery->param('--title', 'CPU Usage');
+        $rawQuery->param('--vertical-label', 'Percent');
+        $rawQuery->param('--width', '800');
+        $rawQuery->param('--height', '400');
+        $rawQuery->param('--start', '-1d');
+        $rawQuery->param('--end', 'now');
+        $rawQuery->def('value', $rrdPath, 'value', 'AVERAGE');
+
+        $outputPath = $this->driver->getRRDGraph($rawQuery);
         $this->assertStringContainsString($this->tempDir, $outputPath);
     }
 }

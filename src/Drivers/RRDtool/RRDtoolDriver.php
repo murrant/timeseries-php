@@ -15,6 +15,7 @@ use TimeSeriesPhp\Exceptions\DriverException;
 use TimeSeriesPhp\Exceptions\QueryException;
 use TimeSeriesPhp\Exceptions\RRDtoolCommandTimeoutException;
 use TimeSeriesPhp\Exceptions\RRDtoolException;
+use TimeSeriesPhp\Exceptions\RRDtoolPrematureUpdateException;
 use TimeSeriesPhp\Exceptions\WriteException;
 
 class RRDtoolDriver extends AbstractTimeSeriesDB
@@ -90,7 +91,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
      * @param  array<string, string>  $tags  The tags as key-value pairs
      * @return string The full path to the RRD file
      */
-    private function getRRDPath(string $measurement, array $tags = []): string
+    public function getRRDPath(string $measurement, array $tags = []): string
     {
         return $this->tagStrategy->getFilePath($measurement, $tags);
     }
@@ -111,14 +112,29 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
             array_push($args, '--daemon', $this->rrdcachedAddress);
         }
 
+        if ($this->debug) {
+            error_log('running rrdtool command: '.implode(' ', $args).PHP_EOL);
+        }
+
         if ($this->persistentProcess) {
-            $this->persistentInput->write($command.' '.implode(' ', $args)."\n");
+            $this->persistentInput->write(implode(' ', $args)."\n");
             $timeout = time() + $this->commandTimeout;
             $this->persistentProcess->waitUntil(function ($type, $output) use ($command, $args, $timeout) {
-                dump($type, $output); // FIXME debug output?
+                // FIXME debug output?
+                if ($this->debug && function_exists('dump')) {
+                    dump("Type: $type  $output");
+                }
 
-                if (str_starts_with($output, 'OK')) {
+                if (preg_match('/^OK/m', $output)) {
                     return true;
+                }
+
+                if ($type == Process::OUT && str_starts_with($output, 'ERROR:')) {
+                    if (preg_match('/illegal attempt to update using time \d+ when last update time is/', $output)) {
+                        throw new RRDtoolPrematureUpdateException($command, $args, $output);
+                    }
+
+                    throw new RRDtoolException($command, $args, $output);
                 }
 
                 if (time() > $timeout) {
@@ -129,6 +145,13 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
             });
 
             $output = $this->persistentProcess->getOutput();
+
+            // trim ok line
+            $lastLinePos = strrpos($output, "\n", -2);
+            if ($lastLinePos !== false) {
+                $output = substr($output, 0, $lastLinePos);
+            }
+
             $this->persistentProcess->clearOutput();
 
             return $output;
@@ -153,43 +176,6 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         }
     }
 
-    /**
-     * @param  array<string, mixed>  $fields
-     *
-     * @throws WriteException
-     */
-    private function createRRD(string $rrdPath, array $fields): void
-    {
-        if (file_exists($rrdPath)) {
-            return; // Already exists
-        }
-
-        $step = $this->config->getInt('default_step');
-
-        // Build data source definitions
-        $dataSources = [];
-        foreach ($fields as $field => $value) {
-            $type = $this->guessDataSourceType($value);
-            $dataSources[] = "DS:{$field}:{$type}:600:U:U";
-        }
-
-        // Use default archives from config
-        $archives = $this->config->getArray('default_archives');
-
-        $args = [
-            escapeshellarg($rrdPath),
-            '--step '.$step,
-            implode(' ', $dataSources),
-            implode(' ', $archives),
-        ];
-
-        try {
-            $this->runRrdtoolCommand('create', $args);
-        } catch (RRDtoolException $e) {
-            throw new WriteException('Failed to create RRD file: '.$e->getDebugMessage($this->debug), $e->getCode(), $e);
-        }
-    }
-
     private function guessDataSourceType(mixed $value): string
     {
         if (is_int($value)) {
@@ -204,12 +190,8 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
 
     public function write(DataPoint $dataPoint): bool
     {
-        $rrdPath = $this->getRRDPath($dataPoint->getMeasurement(), $dataPoint->getTags());
-
         // Create RRD if it doesn't exist
-        if (! file_exists($rrdPath)) {
-            $this->createRRD($rrdPath, $dataPoint->getFields());
-        }
+        $rrdPath = $this->createRRD($dataPoint->getMeasurement(), $dataPoint->getTags(), $dataPoint->getFields());
 
         // Prepare update string
         $timestamp = $dataPoint->getTimestamp()->getTimestamp();
@@ -370,35 +352,62 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
 
     public function close(): void
     {
+        $this->persistentProcess?->stop();
         $this->connected = false;
     }
 
-    // RRDtool-specific methods
+    public function rrdExists(string $measurement_or_filename, ?array $tags = null): bool
+    {
+        $filename = $tags === null ? $measurement_or_filename : $this->getRRDPath($measurement_or_filename, $tags);
+
+        return file_exists($filename);
+    }
 
     /**
-     * @param  array<string, string>  $tags
-     * @param  array<string, mixed>  $config
+     * @param  array<string, mixed>  $fields
      *
      * @throws WriteException
      */
-    public function createRRDWithCustomConfig(string $measurement, array $tags, array $config): bool
+    protected function createRRD(string $measurement, array $tags, array $fields): string
     {
         $rrdPath = $this->getRRDPath($measurement, $tags);
 
-        $step = isset($config['step']) && is_numeric($config['step']) ? (int) $config['step'] : $this->config->getInt('default_step');
-        $dataSources = $config['data_sources'] ?? [];
-        $archives = $config['archives'] ?? $this->config->getArray('default_archives');
+        $dataSources = [];
+        foreach ($fields as $field => $value) {
+            $type = $this->guessDataSourceType($value);
+            $dataSources[] = "DS:{$field}:{$type}:600:U:U";
+        }
 
-        if (empty($dataSources) || ! is_array($dataSources)) {
+        $this->createRRDWithCustomConfig($rrdPath, $dataSources);
+
+        return $rrdPath;
+    }
+
+    /**
+     * @param  string[]  $data_sources
+     * @param  string[]|null  $archives
+     *
+     * @throws WriteException
+     */
+    public function createRRDWithCustomConfig(string $filename, array $data_sources, ?int $step = null, ?array $archives = null): bool
+    {
+        if ($this->rrdExists($filename)) {
+            return false;
+        }
+
+        $step ??= $this->config->getInt('default_step');
+        $archives ??= $this->config->getArray('default_archives');
+
+        if (empty($data_sources)) {
             throw new WriteException('Data sources must be specified for custom RRD creation');
         }
 
-        if (empty($archives) || ! is_array($archives)) {
+        if (empty($archives)) {
             throw new WriteException('Archives must be specified for custom RRD creation');
         }
 
-        $args = [$rrdPath, '--step', $step];
-        $args = array_merge($args, $dataSources, $archives);
+        $args = [$filename, '--step', $step];
+        $args = array_merge($args, $data_sources, $archives);
 
         try {
             $this->runRrdtoolCommand('create', $args);
@@ -407,37 +416,37 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         } catch (RRDtoolException $e) {
             throw new WriteException('Failed to create RRD file: '.$e->getDebugMessage($this->debug), $e->getCode(), $e);
         }
-
     }
 
     /**
-     * @param  array<string, string>  $tags
-     * @param  array<string, int|string|string[]>  $graphConfig
+     * @return string filename or raw graph data
      *
      * @throws DriverException
      */
-    public function getRRDGraph(string $measurement, array $tags, array $graphConfig): string
+    public function getRRDGraph(RRDtoolRawQuery $graphConfig): string
     {
-        $outputPath = tempnam(sys_get_temp_dir(), 'rrdgraph_').'.png';
-        $args = [$outputPath];
-
-        foreach ($graphConfig as $option => $value) {
-            foreach ((array) $value as $v) {
-                array_push($args, '--'.$option, $v);
-            }
-        }
-
         try {
-            $this->runRrdtoolCommand('graph', $args);
+            // set up a temp file for output if file output is requested and no file is specified
+            if ($this->config->getString('graph_output') === 'file' && $graphConfig->filename == '-') {
+                $imgFormat = $graphConfig->getParam('--imgformat') ?? $graphConfig->getParam('-a');
+                $suffix = $imgFormat ? '.'.strtolower($imgFormat) : '.png';
+
+                $graphConfig->filename = sys_get_temp_dir().DIRECTORY_SEPARATOR.uniqid('rrdgraph_').$suffix;
+            }
+
+            $result = $this->runRrdtoolCommand('graph', $graphConfig->getArgs());
+
+            if ($graphConfig->filename == '-') {
+                return $result;
+            }
+
+            if (! file_exists($graphConfig->filename)) {
+                throw new DriverException('Failed to create RRD graph');
+            }
+
+            return $graphConfig->filename;
         } catch (RRDtoolException $e) {
             throw new DriverException('Failed to create RRD graph: '.$e->getDebugMessage($this->debug), $e->getCode(), $e);
         }
-
-        // If the file doesn't exist despite a successful command, try to create a dummy file
-        if (! file_exists($outputPath)) {
-            throw new DriverException('Failed to create RRD graph');
-        }
-
-        return $outputPath;
     }
 }

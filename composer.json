@@ -20,6 +20,7 @@
     }
   },
   "require-dev": {
+    "ext-fileinfo":  "*",
     "phpstan/phpstan": "^2.1",
     "phpunit/phpunit": "^9.5",
     "symfony/var-dumper": "^7.2",

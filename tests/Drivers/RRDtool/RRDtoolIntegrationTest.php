@@ -61,6 +61,9 @@ class RRDtoolIntegrationTest extends TestCase
             'use_rrdcached' => false,
             'default_step' => 60, // Use a smaller step for testing
             'tag_strategy' => FileNameStrategy::class,
+            'debug' => false,
+            'persistent_process' => false,
+            'graph_output' => 'file',
             'default_archives' => [
                 'RRA:AVERAGE:0.5:1:1440',  // 1min for 1 day
                 'RRA:MAX:0.5:1:1440',      // 1min max for 1 day
@@ -94,6 +97,12 @@ class RRDtoolIntegrationTest extends TestCase
     public function test_connect(): void
     {
         $this->assertTrue($this->driver->isConnected());
+    }
+
+    public function test_rrd_path(): void
+    {
+        $file = $this->driver->getRRDPath('cpu_usage', ['host' => 'server1']);
+        $this->assertEquals($this->dataDir.'cpu_usage_host-server1.rrd', $file);
     }
 
     public function test_create_and_write_to_rrd(): void
@@ -158,23 +167,20 @@ class RRDtoolIntegrationTest extends TestCase
 
     public function test_create_rrd_with_custom_config(): void
     {
-        $customConfig = [
-            'step' => 60,
-            'data_sources' => [
-                'DS:value:GAUGE:120:U:U',
-                'DS:max:GAUGE:120:U:U',
-            ],
-            'archives' => [
-                'RRA:AVERAGE:0.5:1:1440',  // 1min for 1 day
-                'RRA:MAX:0.5:1:1440',      // 1min max for 1 day
-            ],
+        $rrdFile = $this->driver->getRRDPath('custom_metric', ['host' => 'server1']);
+        $data_sources = [
+            'DS:value:GAUGE:120:U:U',
+            'DS:max:GAUGE:120:U:U',
+        ];
+        $archives = [
+            'RRA:AVERAGE:0.5:1:1440',  // 1min for 1 day
+            'RRA:MAX:0.5:1:1440',      // 1min max for 1 day
         ];
 
-        $result = $this->driver->createRRDWithCustomConfig('custom_metric', ['host' => 'server1'], $customConfig);
+        $result = $this->driver->createRRDWithCustomConfig($rrdFile, $data_sources, 80, $archives);
         $this->assertTrue($result);
 
         // Verify the RRD file was created
-        $rrdFile = $this->dataDir.'custom_metric_host-server1.rrd';
         $this->assertFileExists($rrdFile);
 
         // Write data to the custom RRD
@@ -191,41 +197,48 @@ class RRDtoolIntegrationTest extends TestCase
 
     public function test_get_rrd_graph(): void
     {
-        // First create and write to an RRD
         $now = new DateTime;
+        $measurement = 'graph_test';
+        $tags = ['host' => 'server1'];
+        $rrdFile = $this->driver->getRRDPath($measurement, $tags);
+        if (file_exists($rrdFile)) {
+            unlink($rrdFile);
+        }
+
+        // First create and write to an RRD
         $dataPoint = new DataPoint(
-            'graph_test',
+            $measurement,
             ['value' => 23.5],
-            ['host' => 'server1'],
+            $tags,
             $now
         );
-
         $this->driver->write($dataPoint);
 
         // Write another data point 60 seconds later
         $dataPoint = new DataPoint(
-            'graph_test',
+            $measurement,
             ['value' => 25.0],
-            ['host' => 'server1'],
+            $tags,
             new DateTime('@'.($now->getTimestamp() + 60))
         );
-
         $this->driver->write($dataPoint);
 
         // Create a graph
-        $graphConfig = [
-            'title' => 'Test Graph',
-            'vertical-label' => 'Value',
-            'width' => '400',
-            'height' => '200',
-            'start' => $now->getTimestamp(),
-            'end' => $now->getTimestamp() + 120,
-        ];
+        $rawQuery = (new RRDtoolRawQuery('graph'))
+            ->param('--title', 'Test Graph')
+            ->param('--vertical-label', 'Value')
+            ->param('--imgformat', 'PNG')
+            ->param('--width', '400')
+            ->param('--height', '200')
+            ->param('--start', $now->getTimestamp() - 120)
+            ->param('--end', $now->getTimestamp() + 120)
+            ->def('valueout', $rrdFile, 'value', 'AVERAGE');
 
-        $outputPath = $this->driver->getRRDGraph('graph_test', ['host' => 'server1'], $graphConfig);
+        $outputPath = $this->driver->getRRDGraph($rawQuery);
 
         $this->assertFileExists($outputPath);
         $this->assertStringContainsString('.png', $outputPath);
+        $this->assertEquals('image/png', mime_content_type($outputPath));
     }
 
     public function test_raw_query(): void
@@ -233,11 +246,17 @@ class RRDtoolIntegrationTest extends TestCase
         // First create and write to an RRD
         $now = new DateTime;
         $startTime = $now->getTimestamp();
+        $measurement = 'query_test';
+        $tags = ['host' => 'server1'];
+        $rrdFile = $this->driver->getRRDPath($measurement, $tags);
+        if (file_exists($rrdFile)) {
+            unlink($rrdFile);
+        }
 
         $dataPoint = new DataPoint(
-            'query_test',
+            $measurement,
             ['value' => 23.5],
-            ['host' => 'server1'],
+            $tags,
             $now
         );
 
@@ -245,9 +264,9 @@ class RRDtoolIntegrationTest extends TestCase
 
         // Write another data point 60 seconds later
         $dataPoint = new DataPoint(
-            'query_test',
+            $measurement,
             ['value' => 25.0],
-            ['host' => 'server1'],
+            $tags,
             new DateTime('@'.($startTime + 60))
         );
 
@@ -257,7 +276,7 @@ class RRDtoolIntegrationTest extends TestCase
         $rawQuery = new RRDtoolRawQuery('xport');
         $rawQuery->param('-s', (string) $startTime)
             ->param('-e', (string) ($startTime + 120))
-            ->def('val', $this->dataDir.'query_test_host-server1.rrd', 'value', 'AVERAGE')
+            ->def('val', $rrdFile, 'value', 'AVERAGE')
             ->xport('val', 'value');
 
         // The field name in the result will be 'value', not 'val'

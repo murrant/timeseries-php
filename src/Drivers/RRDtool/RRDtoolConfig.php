@@ -20,6 +20,7 @@ class RRDtoolConfig extends AbstractDriverConfig
         'rrdcached_address' => '',
         'default_step' => 300,
         'debug' => false,
+        'graph_output' => 'string', // or file
         'tag_strategy' => FileNameStrategy::class,
         'default_archives' => [
             'RRA:AVERAGE:0.5:1:2016',      // 5min for 1 week
@@ -39,6 +40,7 @@ class RRDtoolConfig extends AbstractDriverConfig
         $this->addValidator('rrdtool_path', fn ($path) => is_string($path) && ! empty($path));
         $this->addValidator('rrd_dir', fn ($dir) => is_string($dir) && ! empty($dir));
         $this->addValidator('debug', fn ($debug) => is_bool($debug));
+        $this->addValidator('graph_output', fn ($out) => is_string($out) && in_array($out, ['string', 'file']));
         $this->addValidator('use_rrdcached', fn ($use) => is_bool($use));
         $this->addValidator('persistent_process', fn ($persistent) => is_bool($persistent));
         $this->addValidator('command_timeout', fn ($timeout) => is_int($timeout) && $timeout >= 0);

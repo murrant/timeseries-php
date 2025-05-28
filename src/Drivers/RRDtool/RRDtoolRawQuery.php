@@ -17,16 +17,20 @@ class RRDtoolRawQuery implements RawQueryContract
     protected array $data = [];
 
     public function __construct(
-        public readonly string $command = 'xport'
+        public readonly string $command = 'xport',
+        public string $filename = '',
     ) {
         if ($command === 'xport') {
             $this->param('--json');
+        }
+        if ($command === 'graph' && empty($filename)) {
+            $this->filename = '-'; // stdout
         }
     }
 
     public function param(string $param, ?string $value = null): self
     {
-        $this->parameters[$param] = $value;
+        $this->parameters[$param] = $value !== null ? $this->escapeString($value) : null;
 
         return $this;
     }
@@ -92,7 +96,7 @@ class RRDtoolRawQuery implements RawQueryContract
     {
         $this->data[] = [
             'XPORT',
-            $vname.($legend ? ":$legend" : ''),
+            $vname.($legend ? ':'.$this->escapeString($legend) : ''),
         ];
 
         return $this;
@@ -108,7 +112,7 @@ class RRDtoolRawQuery implements RawQueryContract
 
     public function getArgs(): array
     {
-        $args = [];
+        $args = $this->filename ? [$this->filename] : [];
 
         foreach ($this->parameters as $param => $value) {
             if ($value === null) {
@@ -125,6 +129,11 @@ class RRDtoolRawQuery implements RawQueryContract
         return $args;
     }
 
+    public function getParam(string $param): ?string
+    {
+        return $this->parameters[$param] ?? null;
+    }
+
     /**
      * @return string[]
      */
@@ -139,5 +148,15 @@ class RRDtoolRawQuery implements RawQueryContract
         }
 
         return $fields;
+    }
+
+    private function escapeString(string $string): string
+    {
+        $str = addcslashes($string, ":'\"\\");
+        if (str_contains($str, ' ')) {
+            $str = '"'.$str.'"';
+        }
+
+        return $str;
     }
 }
