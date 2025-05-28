@@ -2,6 +2,9 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool;
 
+use Symfony\Component\Process\Exception\ProcessTimedOutException;
+use Symfony\Component\Process\InputStream;
+use Symfony\Component\Process\Process;
 use TimeSeriesPhp\Core\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\QueryResult;
@@ -10,30 +13,43 @@ use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyContract;
 use TimeSeriesPhp\Exceptions\ConnectionException;
 use TimeSeriesPhp\Exceptions\DriverException;
 use TimeSeriesPhp\Exceptions\QueryException;
-use TimeSeriesPhp\Exceptions\RRDtoolPrematureUpdateException;
+use TimeSeriesPhp\Exceptions\RRDtoolCommandTimeoutException;
+use TimeSeriesPhp\Exceptions\RRDtoolException;
 use TimeSeriesPhp\Exceptions\WriteException;
 
 class RRDtoolDriver extends AbstractTimeSeriesDB
 {
+    protected bool $debug = false;
+
     protected string $rrdDir = '';
 
     protected string $rrdtoolPath = 'rrdtool';
 
-    protected bool $useRrdcached = false;
-
     protected string $rrdcachedAddress = '';
 
     protected RRDTagStrategyContract $tagStrategy;
+
+    private ?Process $persistentProcess = null;
+
+    private ?InputStream $persistentInput = null;
+
+    private int $commandTimeout = 180;
 
     /**
      * @throws ConnectionException
      */
     protected function doConnect(): bool
     {
+        $this->debug = $this->config->getBool('debug');
         $this->rrdDir = $this->config->getString('rrd_dir');
+        $this->commandTimeout = $this->config->getInt('command_timeout');
         $this->rrdtoolPath = $this->config->getString('rrdtool_path');
-        $this->useRrdcached = $this->config->getBool('use_rrdcached');
-        $this->rrdcachedAddress = $this->config->getString('rrdcached_address');
+        if ($this->config->getBool('use_rrdcached')) {
+            $this->rrdcachedAddress = $this->config->getString('rrdcached_address');
+            if (empty($this->rrdcachedAddress)) {
+                throw new ConnectionException('rrdcached address must be specified when use_rrdcached is true');
+            }
+        }
 
         if (! is_dir($this->rrdDir)) {
             if (! mkdir($this->rrdDir, 0755, true)) {
@@ -45,10 +61,6 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
             throw new ConnectionException("RRD directory is not writable: {$this->rrdDir}");
         }
 
-        if ($this->useRrdcached && empty($this->rrdcachedAddress)) {
-            throw new ConnectionException('rrdcached address must be specified when use_rrdcached is true');
-        }
-
         $tagStrategyClass = $this->config->getString('tag_strategy');
         $instance = new $tagStrategyClass($this->rrdDir);
         if (! $instance instanceof RRDTagStrategyContract) {
@@ -57,6 +69,14 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
 
         $this->tagStrategy = $instance;
         $this->queryBuilder = new RRDtoolQueryBuilder($this->tagStrategy);
+
+        if ($this->config->getBool('persistent_process')) {
+            $this->persistentProcess = new Process([$this->rrdtoolPath, '-']);
+            $this->persistentInput = new InputStream;
+            $this->persistentProcess->setInput($this->persistentInput);
+            $this->persistentProcess->setTimeout(null);
+            $this->persistentProcess->start();
+        }
 
         $this->connected = true;
 
@@ -80,21 +100,57 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
      *
      * @param  string  $command  The rrdtool command (create, update, fetch, etc.)
      * @param  string[]  $args  The command arguments
-     * @return string The full command string
+     * @return string The command output
+     *
+     * @throws RRDtoolException
      */
-    private function buildRrdtoolCommand(string $command, array $args): string
+    private function runRrdtoolCommand(string $command, array $args): string
     {
-        $cmd = $this->rrdtoolPath.' '.$command;
-
-        if ($this->useRrdcached && in_array($command, ['update', 'fetch', 'info', 'last'])) {
-            $cmd .= ' --daemon '.escapeshellarg($this->rrdcachedAddress);
+        array_unshift($args, $command);
+        if ($this->rrdcachedAddress) {
+            array_push($args, '--daemon', $this->rrdcachedAddress);
         }
 
-        foreach ($args as $arg) {
-            $cmd .= ' '.$arg;
+        if ($this->persistentProcess) {
+            $this->persistentInput->write($command.' '.implode(' ', $args)."\n");
+            $timeout = time() + $this->commandTimeout;
+            $this->persistentProcess->waitUntil(function ($type, $output) use ($command, $args, $timeout) {
+                dump($type, $output); // FIXME debug output?
+
+                if (str_starts_with($output, 'OK')) {
+                    return true;
+                }
+
+                if (time() > $timeout) {
+                    throw new RRDtoolCommandTimeoutException($command, $args, $output);
+                }
+
+                return false;
+            });
+
+            $output = $this->persistentProcess->getOutput();
+            $this->persistentProcess->clearOutput();
+
+            return $output;
         }
 
-        return $cmd;
+        array_unshift($args, $this->rrdtoolPath);
+        $process = new Process($args);
+        $process->setTimeout($this->commandTimeout);
+
+        try {
+            $process->run();
+
+            if ($process->getExitCode() !== 0) {
+                throw (new RRDtoolException($command, $args))
+                    ->setOutput($process->getOutput())
+                    ->setErrorOutput($process->getErrorOutput());
+            }
+
+            return $process->getOutput();
+        } catch (ProcessTimedOutException) {
+            throw new RRDtoolCommandTimeoutException($command, $args);
+        }
     }
 
     /**
@@ -127,11 +183,10 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
             implode(' ', $archives),
         ];
 
-        $cmd = $this->buildRrdtoolCommand('create', $args);
-        exec($cmd.' 2>&1', $output, $returnCode);
-
-        if ($returnCode !== 0) {
-            throw new WriteException('Failed to create RRD: '.implode("\n", $output));
+        try {
+            $this->runRrdtoolCommand('create', $args);
+        } catch (RRDtoolException $e) {
+            throw new WriteException('Failed to create RRD file: '.$e->getDebugMessage($this->debug), $e->getCode(), $e);
         }
     }
 
@@ -172,24 +227,15 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         $updateString = $timestamp.':'.implode(':', $values);
 
         // Build the command using the helper
-        $args = [
-            escapeshellarg($rrdPath),
-            escapeshellarg($updateString),
-        ];
+        $args = [$rrdPath, $updateString];
 
-        $cmd = $this->buildRrdtoolCommand('update', $args);
-        exec($cmd.' 2>&1', $output, $returnCode);
+        try {
+            $this->runRrdtoolCommand('update', $args);
 
-        if ($returnCode !== 0) {
-            $message = 'Failed to update RRD: '.implode("\n", $output);
-            if (preg_match('/illegal attempt to update using time \d+ when last update time is/', $message)) {
-                throw new RRDtoolPrematureUpdateException($message);
-            }
-
-            throw new WriteException($message, $returnCode);
+            return true;
+        } catch (RRDtoolException $e) {
+            throw new WriteException($e->getDebugMessage($this->debug), $e->getCode(), $e);
         }
-
-        return true;
     }
 
     /**
@@ -197,22 +243,20 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
      */
     private function getRRDInfo(string $rrdPath): array
     {
-        $args = [escapeshellarg($rrdPath)];
-        $cmd = $this->buildRrdtoolCommand('info', $args);
-        exec($cmd.' 2>&1', $output, $returnCode);
+        try {
+            $output = $this->runRrdtoolCommand('info', [$rrdPath]);
 
-        if ($returnCode !== 0) {
+            $info = [];
+            foreach (explode("\n", $output) as $line) {
+                if (preg_match('/^([^=]+)\s*=\s*(.+)$/', $line, $matches)) {
+                    $info[trim($matches[1])] = trim($matches[2], '"');
+                }
+            }
+
+            return $info;
+        } catch (RRDtoolException) {
             return [];
         }
-
-        $info = [];
-        foreach ($output as $line) {
-            if (preg_match('/^([^=]+)\s*=\s*(.+)$/', $line, $matches)) {
-                $info[trim($matches[1])] = trim($matches[2], '"');
-            }
-        }
-
-        return $info;
     }
 
     /**
@@ -271,33 +315,28 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         }
 
         // For RRDtool, raw query would be a direct rrdtool command
-        $cmd = $this->rrdtoolPath.' '.$query->getRawQuery();
-        exec($cmd.' 2>&1', $output, $returnCode);
+        try {
+            $output = $this->runRrdtoolCommand($query->command, $query->getArgs());
+            if ($query->command === 'xport') {
+                $json = json_decode($output, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    throw new QueryException($query, 'Failed to parse RRD command output: '.json_last_error_msg().PHP_EOL.$output, json_last_error());
+                }
 
-        $outputStr = implode("\n", $output);
-
-        if ($returnCode !== 0) {
-            throw new QueryException($query, 'RRD command failed: '.$outputStr, $returnCode);
-        }
-
-        if ($query->type === 'xport') {
-            $json = json_decode($outputStr, true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new QueryException($query, 'Failed to parse RRD command output: '.json_last_error_msg().PHP_EOL.$outputStr, json_last_error());
+                /** @var array{'meta': array{'legend': array<int, string>, 'start': int, 'end': int, 'step': int}, 'data': array<int, array<int, float|int|null>>} $json */
+                return $this->parseRRDXportJson($json, $query->getFields() ?: ['*']);
             }
 
-            /** @var array{'meta': array{'legend': array<int, string>, 'start': int, 'end': int, 'step': int}, 'data': array<int, array<int, float|int|null>>} $json */
-
-            return $this->parseRRDXportJson($json, $query->getFields() ?: ['*']);
+            // Create a result with a time key and a value key for non-xport queries
+            return new QueryResult([
+                'output' => [[
+                    'date' => time(),
+                    'value' => $output,
+                ]],
+            ]);
+        } catch (RRDtoolException $e) {
+            throw new QueryException($query, $e->getDebugMessage($this->debug), $e->getCode(), $e);
         }
-
-        // Create a result with a time key and a value key for non-xport queries
-        return new QueryResult([
-            'output' => [[
-                'date' => time(),
-                'value' => implode("\n", $output),
-            ]],
-        ]);
     }
 
     public function createDatabase(string $database): bool
@@ -358,21 +397,17 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
             throw new WriteException('Archives must be specified for custom RRD creation');
         }
 
-        $args = [
-            escapeshellarg($rrdPath),
-            '--step '.$step,
-            implode(' ', $dataSources),
-            implode(' ', $archives),
-        ];
+        $args = [$rrdPath, '--step', $step];
+        $args = array_merge($args, $dataSources, $archives);
 
-        $cmd = $this->buildRrdtoolCommand('create', $args);
-        exec($cmd.' 2>&1', $output, $returnCode);
+        try {
+            $this->runRrdtoolCommand('create', $args);
 
-        if ($returnCode !== 0) {
-            throw new WriteException('Failed to create custom RRD: '.implode("\n", $output));
+            return true;
+        } catch (RRDtoolException $e) {
+            throw new WriteException('Failed to create RRD file: '.$e->getDebugMessage($this->debug), $e->getCode(), $e);
         }
 
-        return true;
     }
 
     /**
@@ -383,31 +418,24 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
      */
     public function getRRDGraph(string $measurement, array $tags, array $graphConfig): string
     {
-        $rrdPath = $this->getRRDPath($measurement, $tags);
-        $outputPath = rtrim($this->rrdDir, '/').'/graph_'.uniqid().'.png';
-
-        $args = [escapeshellarg($outputPath)];
+        $outputPath = tempnam(sys_get_temp_dir(), 'rrdgraph_').'.png';
+        $args = [$outputPath];
 
         foreach ($graphConfig as $option => $value) {
-            if (is_array($value)) {
-                foreach ($value as $v) {
-                    $args[] = '--'.$option.' '.escapeshellarg($v);
-                }
-            } else {
-                $args[] = '--'.$option.' '.escapeshellarg((string) $value);
+            foreach ((array) $value as $v) {
+                array_push($args, '--'.$option, $v);
             }
         }
 
-        $cmd = $this->buildRrdtoolCommand('graph', $args);
-        exec($cmd.' 2>&1', $output, $returnCode);
-
-        if ($returnCode !== 0) {
-            throw new DriverException('Failed to create RRD graph: '.implode("\n", $output));
+        try {
+            $this->runRrdtoolCommand('graph', $args);
+        } catch (RRDtoolException $e) {
+            throw new DriverException('Failed to create RRD graph: '.$e->getDebugMessage($this->debug), $e->getCode(), $e);
         }
 
         // If the file doesn't exist despite a successful command, try to create a dummy file
         if (! file_exists($outputPath)) {
-            file_put_contents($outputPath, 'Dummy graph file');
+            throw new DriverException('Failed to create RRD graph');
         }
 
         return $outputPath;

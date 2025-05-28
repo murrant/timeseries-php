@@ -127,7 +127,7 @@ class RRDtoolDriverTest extends TestCase
             public function rawQuery(\TimeSeriesPhp\Core\RawQueryContract $query): \TimeSeriesPhp\Core\QueryResult
             {
                 // Mock implementation that doesn't execute commands
-                if ($query instanceof \TimeSeriesPhp\Drivers\RRDtool\RRDtoolRawQuery && $query->type === 'xport') {
+                if ($query instanceof \TimeSeriesPhp\Drivers\RRDtool\RRDtoolRawQuery && $query->command === 'xport') {
                     return new \TimeSeriesPhp\Core\QueryResult([
                         'cpu_usage' => [
                             ['date' => time(), 'value' => 23.5],

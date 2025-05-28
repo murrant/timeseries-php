@@ -2,4 +2,4 @@
 
 namespace TimeSeriesPhp\Exceptions;
 
-class RRDtoolPrematureUpdateException extends WriteException {}
+class RRDtoolPrematureUpdateException extends RRDtoolException {}

@@ -17,9 +17,9 @@ class RRDtoolRawQuery implements RawQueryContract
     protected array $data = [];
 
     public function __construct(
-        public readonly string $type = 'xport'
+        public readonly string $command = 'xport'
     ) {
-        if ($type === 'xport') {
+        if ($command === 'xport') {
             $this->param('--json');
         }
     }
@@ -100,21 +100,29 @@ class RRDtoolRawQuery implements RawQueryContract
 
     public function getRawQuery(): string
     {
-        $rawQuery = $this->type.' ';
+        $args = $this->getArgs();
+        array_unshift($args, $this->command);
+
+        return implode(' ', array_map(fn ($arg) => escapeshellarg($arg), $args));
+    }
+
+    public function getArgs(): array
+    {
+        $args = [];
 
         foreach ($this->parameters as $param => $value) {
             if ($value === null) {
-                $rawQuery .= escapeshellarg($param).' ';
+                $args[] = $param;
             } else {
-                $rawQuery .= escapeshellarg($param).' '.escapeshellarg($value).' ';
+                array_push($args, $param, $value);
             }
         }
 
         foreach ($this->data as $data) {
-            $rawQuery .= escapeshellarg(implode(':', $data)).' ';
+            $args[] = implode(':', $data);
         }
 
-        return $rawQuery;
+        return $args;
     }
 
     /**

@@ -29,7 +29,8 @@
     "php": ">=8.2",
     "influxdata/influxdb-client-php": "^3.7",
     "guzzlehttp/guzzle": "^7.9",
-    "illuminate/support": "^12.15"
+    "illuminate/support": "^12.15",
+    "symfony/process": "^7.2"
   },
   "config": {
     "allow-plugins": {

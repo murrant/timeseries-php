@@ -15,8 +15,11 @@ class RRDtoolConfig extends AbstractDriverConfig
         'rrdtool_path' => 'rrdtool',
         'rrd_dir' => '/tmp/rrd',
         'use_rrdcached' => false,
+        'persistent_process' => true,
+        'command_timeout' => 180,
         'rrdcached_address' => '',
         'default_step' => 300,
+        'debug' => false,
         'tag_strategy' => FileNameStrategy::class,
         'default_archives' => [
             'RRA:AVERAGE:0.5:1:2016',      // 5min for 1 week
@@ -33,37 +36,18 @@ class RRDtoolConfig extends AbstractDriverConfig
 
     public function __construct(array $config = [])
     {
-        $this->addValidator('rrdtool_path', function ($path) {
-            return is_string($path) && ! empty($path);
-        });
-
-        $this->addValidator('rrd_dir', function ($dir) {
-            return is_string($dir) && ! empty($dir);
-        });
-
-        $this->addValidator('use_rrdcached', function ($use) {
-            return is_bool($use);
-        });
-
-        $this->addValidator('rrdcached_address', function ($address) {
-            if ($this->getBool('use_rrdcached') && empty($address)) {
-                return false;
-            }
-
-            return true;
-        });
-
-        $this->addValidator('default_step', function ($step) {
-            return is_int($step) && $step > 0;
-        });
-
+        $this->addValidator('rrdtool_path', fn ($path) => is_string($path) && ! empty($path));
+        $this->addValidator('rrd_dir', fn ($dir) => is_string($dir) && ! empty($dir));
+        $this->addValidator('debug', fn ($debug) => is_bool($debug));
+        $this->addValidator('use_rrdcached', fn ($use) => is_bool($use));
+        $this->addValidator('persistent_process', fn ($persistent) => is_bool($persistent));
+        $this->addValidator('command_timeout', fn ($timeout) => is_int($timeout) && $timeout >= 0);
+        $this->addValidator('rrdcached_address', fn ($address) => ! ($this->getBool('use_rrdcached') && empty($address)));
+        $this->addValidator('default_step', fn ($step) => is_int($step) && $step > 0);
+        $this->addValidator('default_archives', fn ($archives) => is_array($archives) && ! empty($archives));
         $this->addValidator('tag_strategy', function ($strategy) {
             return is_string($strategy) && class_exists($strategy) &&
                    is_subclass_of($strategy, RRDTagStrategyContract::class);
-        });
-
-        $this->addValidator('default_archives', function ($archives) {
-            return is_array($archives) && ! empty($archives);
         });
 
         parent::__construct($config);
