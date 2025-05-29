@@ -229,15 +229,15 @@ class RRDtoolXmlIntegrationTest extends TestCase
         $rrdFile = $this->dataDir.'cpu_usage_host-server1.rrd';
         $this->assertFileExists($rrdFile, "RRD file does not exist: $rrdFile");
 
-        // Create a RRDtoolRawQuery for graph generation
+        // Create a simplified RRDtoolRawQuery for graph generation
         $graphQuery = new RRDtoolRawQuery('graph');
 
         // Set SVG format
         $graphQuery->param('--imgformat', 'SVG');
 
         // Set graph dimensions and title
-        $graphQuery->param('--width', '400');
-        $graphQuery->param('--height', '200');
+        $graphQuery->param('--width', '800');
+        $graphQuery->param('--height', '400');
         $graphQuery->param('--title', 'CPU Usage Test');
 
         // Set time range - ensure we're using the exact time range that has data
@@ -246,18 +246,11 @@ class RRDtoolXmlIntegrationTest extends TestCase
         $graphQuery->param('--start', $startTime);
         $graphQuery->param('--end', $endTime);
 
-        // Add additional parameters to ensure the graph shows data properly
-        $graphQuery->param('--vertical-label', 'CPU %');
-        $graphQuery->param('--lower-limit', '0');
-        $graphQuery->param('--upper-limit', '30');
-        $graphQuery->param('--rigid'); // Enforce the limits
-        $graphQuery->param('--alt-y-grid'); // Make the Y-axis grid more visible
-
-        // Define data source
+        // Define data source - just one simple data source
         $graphQuery->def('cpu', $rrdFile, 'value', 'AVERAGE');
 
-        // Add a thicker line (LINE3 is thicker than LINE1)
-        $graphQuery->statement('LINE3', 'cpu#FF0000', 'CPU Usage');
+        // Add a simple line
+        $graphQuery->statement('LINE1', 'cpu#FF0000:CPU Usage');
 
         try {
             // Generate the graph
@@ -269,6 +262,7 @@ class RRDtoolXmlIntegrationTest extends TestCase
 
             // Read the SVG content
             $svgContent = file_get_contents($graphFile);
+            $this->assertNotFalse($svgContent, 'Failed to read SVG content');
             $this->assertNotEmpty($svgContent, 'SVG content is empty');
 
             // Validate SVG structure
@@ -300,11 +294,6 @@ class RRDtoolXmlIntegrationTest extends TestCase
 
             $this->assertNotEmpty($paths, 'SVG does not contain any path elements');
 
-            // For debugging, save the SVG content to a file
-            $debugFile = sys_get_temp_dir().'/debug_svg_'.uniqid().'.svg';
-            file_put_contents($debugFile, $svgContent);
-            echo "Debug SVG saved to: $debugFile".PHP_EOL;
-
             // Check for the presence of data lines - be more flexible in how we search
             // Count the number of path elements - a graph with data should have multiple paths
             $this->assertGreaterThan(1, count($paths), 'SVG does not contain enough path elements to display data');
@@ -328,13 +317,6 @@ class RRDtoolXmlIntegrationTest extends TestCase
             // Clean up the graph file
             unlink($graphFile);
         } catch (\Exception $e) {
-            echo 'Error generating graph: '.$e->getMessage().PHP_EOL;
-            if (method_exists($e, 'getDebugMessage')) {
-                $debugMessage = $e->getDebugMessage(true);
-                if (is_string($debugMessage)) {
-                    echo 'Debug: '.$debugMessage.PHP_EOL;
-                }
-            }
             throw $e;
         }
     }

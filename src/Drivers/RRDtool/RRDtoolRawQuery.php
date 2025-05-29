@@ -105,6 +105,38 @@ class RRDtoolRawQuery implements RawQueryInterface
         return $this;
     }
 
+    /**
+     * Add a LINE statement to the graph
+     *
+     * @param  string  $width  Line width (1, 2, 3)
+     * @param  string  $value  Data source name
+     * @param  string  $color  Color in #RRGGBB format
+     * @param  string|null  $legend  Legend text
+     * @param  bool  $stack  Whether to stack this line on top of the previous one
+     */
+    public function line(string $width, string $value, string $color, ?string $legend = null, bool $stack = false): self
+    {
+        // Ensure color starts with #
+        if (! str_starts_with($color, '#')) {
+            $color = '#'.$color;
+        }
+
+        // Format: LINE[width]:value[#color][:[legend][:STACK]]
+        $lineValue = $value.$color;
+
+        if ($legend) {
+            if ($stack) {
+                $this->statement('LINE'.$width, $lineValue, $this->escapeString($legend), 'STACK');
+            } else {
+                $this->statement('LINE'.$width, $lineValue, $this->escapeString($legend));
+            }
+        } else {
+            $this->statement('LINE'.$width, $lineValue);
+        }
+
+        return $this;
+    }
+
     public function getRawQuery(): string
     {
         // FIXME: use escapeshellarg() but it keeps using double quotes for some reason
@@ -163,11 +195,8 @@ class RRDtoolRawQuery implements RawQueryInterface
 
     private function escapeString(string $string): string
     {
-        $str = addcslashes($string, ":'\"\\");
-        if (str_contains($str, ' ')) {
-            $str = '"'.$str.'"';
-        }
-
-        return $str;
+        // Only escape colons and backslashes, as they are special in RRDtool syntax
+        // Don't escape quotes or add additional quotes, as this can cause issues
+        return addcslashes($string, ':\\');
     }
 }

@@ -61,7 +61,10 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
             $operator = $this->mapOperator($condition->getOperator());
             $type = $condition->getType();
 
-            // Skip formatting value for operators that handle arrays differently
+            // Initialize $value to null
+            $value = null;
+
+            // Format value for operators that don't handle arrays differently
             if (! in_array($operator, ['IN', 'NOT IN', 'BETWEEN'])) {
                 $value = $this->formatValue($condition->getValue());
             }
