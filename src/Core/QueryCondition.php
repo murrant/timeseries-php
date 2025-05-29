@@ -12,13 +12,13 @@ readonly class QueryCondition
     /**
      * @param  string  $field  The field name to apply the condition to
      * @param  string  $operator  The operator for the condition (=, >, <, etc.)
-     * @param  scalar|null|array<?scalar>  $value  The value to compare against
+     * @param  null|bool|float|int|string|array<?scalar>  $value  The value to compare against
      * @param  'AND'|'OR'  $type  The type of condition (AND or OR)
      */
     public function __construct(
         private string $field,
         private string $operator,
-        private float|int|bool|string|null|array $value,
+        private null|bool|float|int|string|array $value,
         private string $type = 'AND',
     ) {}
 
@@ -41,14 +41,14 @@ readonly class QueryCondition
     /**
      * Get the value
      *
-     * @return scalar|null|array<?scalar>
+     * @return null|bool|float|int|string|array<?scalar>
      */
-    public function getValue(): float|int|bool|string|null|array
+    public function getValue(): null|bool|float|int|string|array
     {
         return $this->value;
     }
 
-    public function getScalarValue(): float|int|bool|string|null
+    public function getScalarValue(): null|bool|float|int|string
     {
         return is_array($this->value) ? $this->value[0] ?? null : $this->value;
     }
@@ -91,9 +91,9 @@ readonly class QueryCondition
      *
      * @param  string  $field  The field name
      * @param  string  $operator  The operator
-     * @param  scalar|null|array<?scalar>  $value  The value
+     * @param  null|bool|float|int|string|array<?scalar>  $value  The value
      */
-    public static function where(string $field, string $operator, float|int|bool|string|null|array $value): self
+    public static function where(string $field, string $operator, null|bool|float|int|string|array $value): self
     {
         return new self($field, $operator, $value, 'AND');
     }
@@ -103,9 +103,9 @@ readonly class QueryCondition
      *
      * @param  string  $field  The field name
      * @param  string  $operator  The operator
-     * @param  scalar|null|array<?scalar>  $value  The value
+     * @param  null|bool|float|int|string|array<?scalar>  $value  The value
      */
-    public static function orWhere(string $field, string $operator, float|int|bool|string|null|array $value): self
+    public static function orWhere(string $field, string $operator, null|bool|float|int|string|array $value): self
     {
         return new self($field, $operator, $value, 'OR');
     }

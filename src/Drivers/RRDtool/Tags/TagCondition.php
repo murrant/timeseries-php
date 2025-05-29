@@ -8,12 +8,12 @@ use TimeSeriesPhp\Utils\File;
 readonly class TagCondition
 {
     /**
-     * @param  array<?scalar>|scalar|null  $value
+     * @param  null|bool|float|int|string|array<?scalar>  $value
      */
     public function __construct(
         public string $tag,
         public string $operator,
-        public float|int|bool|string|null|array $value,
+        public null|bool|float|int|string|array $value,
         public string $condition = 'AND',
     ) {}
 
@@ -37,7 +37,7 @@ readonly class TagCondition
         return (string) $this->getScalarValue();
     }
 
-    public function getScalarValue(): float|int|bool|string|null
+    public function getScalarValue(): null|bool|float|int|string
     {
         return is_array($this->value) ? $this->value[0] ?? null : $this->value;
     }
