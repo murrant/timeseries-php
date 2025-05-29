@@ -87,7 +87,7 @@ When adding new features or fixing bugs, always add corresponding tests. Follow 
 4. Use descriptive test method names that explain what is being tested
 5. Test both normal operation and edge cases/error conditions
 6. Use PHPUnit assertions to verify expected behavior
-7. Do not use assertStringContainsString in QueryBuilder tests.
+7. Do not use assertStringContainsString in QueryBuilder tests. Tests should test `assertEquals($nativeQuery, $queryString)`. $nativeQuery should be a valid working query for the intended query language. 
 
 Example of a simple test:
 
