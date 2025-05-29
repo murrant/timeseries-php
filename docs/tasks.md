@@ -66,6 +66,10 @@
     - Add support for Prometheus' remote write API
     - Implement more query types
 
+[ ] 13. Implement a retry mechanism
+    - limit and backoff
+    - persist to cache (requires serializable jobs) for playback when online again
+
 ## Configuration and Usability
 [ ] 14. Enhance configuration system
     - Implement environment variable support for configuration

@@ -22,6 +22,22 @@ You are an Expert in PHP, Time Series Databases, an Laravel.
 - Strictly adhere to PSR-4 and best practices for file organization
 - When examining the entire project's file structure recursively list all files with ls -Rla
 
+The project is organized as follows:
+```
+src/
+├── Contracts/    # Interfaces and contracts
+├── Core/         # Core components and functionality
+├── Drivers/      # Database driver implementations
+├── Exceptions/   # Exception classes
+├── Support/      # Support and helper classes
+└── Utils/        # Utility functions and classes
+
+tests/            # Tests mirror the src structure
+config/           # Configuration files
+docs/             # Documentation
+examples/         # Example code
+```
+
 ## Performance Considerations
 - Use batch operations when possible (e.g., `writeBatch()` instead of multiple `write()` calls)
 - Be mindful of memory usage when handling large result sets
@@ -58,9 +74,12 @@ Tests are organized to mirror the source code structure:
 
 ```
 tests/
-├── Config/       # Tests for configuration classes
+├── Contracts/    # Tests for interfaces and contracts
 ├── Core/         # Tests for core components
-└── Drivers/      # Tests for database drivers
+├── Drivers/      # Tests for database drivers
+├── Exceptions/   # Tests for exception classes
+├── Support/      # Tests for support and helper classes
+└── Utils/        # Tests for utility functions and classes
 ```
 
 ### Running Tests
@@ -101,16 +120,16 @@ namespace TimeSeriesPhp\Tests\Core;
 use PHPUnit\Framework\TestCase;
 use TimeSeriesPhp\Core\DataPoint;
 
-class DataPointTest extends TestCase
+class data_point_test extends TestCase
 {
     public function testAddTag()
     {
         $dataPoint = new DataPoint('cpu_usage', ['value' => 85.5]);
         $result = $dataPoint->addTag('host', 'server1');
-        
+
         // Verify method returns $this for chaining
         $this->assertSame($dataPoint, $result);
-        
+
         // Verify tag was added
         $this->assertEquals(['host' => 'server1'], $dataPoint->getTags());
     }
@@ -129,20 +148,31 @@ The project uses PHPStan for static analysis:
 ### Architecture Overview
 The library follows a layered architecture:
 
-1. **Core Layer**: Contains the main interfaces and abstract classes
+1. **Contracts Layer**: Contains interfaces and contracts
+   - Defines the contracts that other components must implement
+   - Provides a clear separation of concerns
+
+2. **Core Layer**: Contains the main components and functionality
    - `TimeSeriesInterface`: Main interface for all database drivers
    - `AbstractTimeSeriesDB`: Abstract implementation with common functionality
    - `Query`, `DataPoint`, `QueryResult`: Core data structures
-
-2. **Config Layer**: Contains configuration classes
-   - `ConfigInterface`: Interface for all configuration classes
-   - `ConnectionConfig`: Configuration for database connections
-   - `DatabaseConfig`: Configuration for database-specific settings
 
 3. **Drivers Layer**: Contains specific database driver implementations
    - `InfluxDBDriver`: Driver for InfluxDB
    - `RRDtoolDriver`: Driver for RRDtool
    - `PrometheusDriver`: Driver for Prometheus
+
+4. **Exceptions Layer**: Contains exception classes
+   - `TSDBException`: Base exception class for the library
+   - Specific exception classes for different error types
+
+5. **Support Layer**: Contains support and helper classes
+   - Provides utility functions and classes to support the core functionality
+   - Includes helper methods for common operations
+
+6. **Utils Layer**: Contains utility functions and classes
+   - General-purpose utility functions
+   - Helper classes for common tasks
 
 ### Adding a New Driver
 To add a new database driver:
@@ -160,6 +190,3 @@ Example of registering a new driver:
 // In TSDBFactory.php
 TSDBFactory::registerDriver('newdriver', NewDriverConfig::class, NewDriver::class);
 ```
-
-
-
