@@ -8,7 +8,7 @@ use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Query\Query;
 use TimeSeriesPhp\Drivers\InfluxDB\Config\InfluxDBConfig;
-use TimeSeriesPhp\Drivers\InfluxDB\Driver as InfluxDBDriver;
+use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
 use TimeSeriesPhp\Drivers\InfluxDB\Query\InfluxDBQueryBuilder;
 
 class InfluxDBDriverTest extends TestCase

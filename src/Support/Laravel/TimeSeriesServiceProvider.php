@@ -9,17 +9,57 @@ use TimeSeriesPhp\Core\Factory\TSDBFactory;
 use TimeSeriesPhp\Drivers\Graphite\Config\GraphiteConfig;
 use TimeSeriesPhp\Drivers\Graphite\Driver as GraphiteDriver;
 use TimeSeriesPhp\Drivers\InfluxDB\Config\InfluxDBConfig;
-use TimeSeriesPhp\Drivers\InfluxDB\Driver as InfluxDBDriver;
+use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
 use TimeSeriesPhp\Drivers\Prometheus\Config\PrometheusConfig;
 use TimeSeriesPhp\Drivers\Prometheus\Driver as PrometheusDriver;
 use TimeSeriesPhp\Drivers\RRDtool\Config\RRDtoolConfig;
 use TimeSeriesPhp\Drivers\RRDtool\Driver as RRDtoolDriver;
 use TimeSeriesPhp\Exceptions\Driver\DriverException;
 
+/**
+ * Laravel Service Provider for TimeSeriesPhp
+ * 
+ * This service provider registers the TimeSeriesPhp library with Laravel.
+ * It registers all available drivers, binds them to the Laravel container,
+ * and sets up a singleton for the 'time-series' service.
+ * 
+ * To use this service provider, add it to the providers array in config/app.php:
+ * 
+ * ```php
+ * 'providers' => [
+ *     // Other Service Providers
+ *     TimeSeriesPhp\Support\Laravel\TimeSeriesServiceProvider::class,
+ * ],
+ * ```
+ * 
+ * Then publish the configuration file:
+ * 
+ * ```bash
+ * php artisan vendor:publish --tag=time-series-config
+ * ```
+ * 
+ * You can then use the 'time-series' service in your application:
+ * 
+ * ```php
+ * $db = app('time-series');
+ * ```
+ * 
+ * Or inject it into your controllers:
+ * 
+ * ```php
+ * public function index(\TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface $timeSeries)
+ * {
+ *     // Use $timeSeries
+ * }
+ * ```
+ */
 class TimeSeriesServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
+     * 
+     * This method registers all available drivers, binds them to the Laravel container,
+     * and sets up a singleton for the 'time-series' service.
      */
     public function register(): void
     {

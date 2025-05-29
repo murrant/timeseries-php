@@ -54,7 +54,19 @@ return [
         ],
 
         'prometheus' => [
-            // Placeholder for future Prometheus configuration
+            'url' => env('PROMETHEUS_URL', 'http://localhost:9090'),
+            'timeout' => env('PROMETHEUS_TIMEOUT', 30),
+            'verify_ssl' => env('PROMETHEUS_VERIFY_SSL', true),
+            'debug' => env('PROMETHEUS_DEBUG', false),
+        ],
+
+        'graphite' => [
+            'host' => env('GRAPHITE_HOST', 'localhost'),
+            'port' => env('GRAPHITE_PORT', 2003),
+            'protocol' => env('GRAPHITE_PROTOCOL', 'tcp'),
+            'timeout' => env('GRAPHITE_TIMEOUT', 30),
+            'prefix' => env('GRAPHITE_PREFIX', ''),
+            'debug' => env('GRAPHITE_DEBUG', false),
         ],
     ],
 ];

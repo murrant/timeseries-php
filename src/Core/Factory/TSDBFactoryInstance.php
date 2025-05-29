@@ -62,8 +62,8 @@ class TSDBFactoryInstance
     public function registerDefaultDrivers(): void
     {
         // Register InfluxDB driver if available
-        if (class_exists('TimeSeriesPhp\Drivers\InfluxDB\Driver')) {
-            $this->registerDriver('influxdb', 'TimeSeriesPhp\Drivers\InfluxDB\Driver');
+        if (class_exists('TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver')) {
+            $this->registerDriver('influxdb', 'TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver');
         }
 
         // Register Prometheus driver if available

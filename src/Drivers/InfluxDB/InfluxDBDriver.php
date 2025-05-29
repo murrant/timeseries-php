@@ -29,7 +29,7 @@ use TimeSeriesPhp\Exceptions\Query\RawQueryException;
 use TimeSeriesPhp\Support\Logs\Logger;
 use TimeSeriesPhp\Utils\Convert;
 
-class Driver extends AbstractTimeSeriesDB
+class InfluxDBDriver extends AbstractTimeSeriesDB
 {
     protected ?Client $client = null;
 

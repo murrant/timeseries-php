@@ -524,8 +524,88 @@ echo "    }\n";
 echo "}\n";
 echo "```\n";
 
-// Step 9: Testing with Laravel
-echo "\nStep 9: Testing with Laravel...\n";
+// Step 9: Using the DriverManager
+echo "\nStep 9: Using the DriverManager...\n";
+
+// Example of using the DriverManager class
+echo "Example of using the DriverManager class:\n";
+
+echo "```php\n";
+echo "namespace App\\Services;\n\n";
+echo "use TimeSeriesPhp\\Core\\Factory\\DriverManager;\n";
+echo "use TimeSeriesPhp\\Contracts\\Driver\\TimeSeriesInterface;\n\n";
+echo "class TimeSeriesService\n";
+echo "{\n";
+echo "    protected DriverManager \$driverManager;\n\n";
+echo "    public function __construct(DriverManager \$driverManager)\n";
+echo "    {\n";
+echo "        \$this->driverManager = \$driverManager;\n";
+echo "    }\n\n";
+echo "    public function getDriver(string \$driver): TimeSeriesInterface\n";
+echo "    {\n";
+echo "        // Create a driver instance with the DriverManager\n";
+echo "        return \$this->driverManager->create(\$driver);\n";
+echo "    }\n\n";
+echo "    public function listAvailableDrivers(): array\n";
+echo "    {\n";
+echo "        // Get a list of all registered drivers\n";
+echo "        return \$this->driverManager->getAvailableDrivers();\n";
+echo "    }\n\n";
+echo "    public function registerCustomDriver(string \$name, string \$className, ?string \$configClassName = null): void\n";
+echo "    {\n";
+echo "        // Register a custom driver\n";
+echo "        \$this->driverManager->registerDriver(\$name, \$className, \$configClassName);\n";
+echo "    }\n";
+echo "}\n";
+echo "```\n";
+
+// Step 10: Using Driver-Specific Raw Queries
+echo "\nStep 10: Using Driver-Specific Raw Queries...\n";
+
+// Example of using the InfluxDBRawQuery class
+echo "Example of using the InfluxDBRawQuery class:\n";
+
+echo "```php\n";
+echo "namespace App\\Http\\Controllers;\n\n";
+echo "use Illuminate\\Http\\Request;\n";
+echo "use TimeSeriesPhp\\Support\\TimeSeriesFacade as TimeSeries;\n";
+echo "use TimeSeriesPhp\\Drivers\\InfluxDB\\Query\\InfluxDBRawQuery;\n\n";
+echo "class AdvancedMetricsController extends Controller\n";
+echo "{\n";
+echo "    public function queryWithFlux(Request \$request)\n";
+echo "    {\n";
+echo "        // Create a Flux query using the InfluxDBRawQuery class\n";
+echo "        \$fluxQuery = new InfluxDBRawQuery(\n";
+echo "            'from(bucket: \"' . config('time-series.drivers.influxdb.bucket') . '\")'\n";
+echo "            . '|> range(start: -24h)'\n";
+echo "            . '|> filter(fn: (r) => r._measurement == \"api_requests\")'\n";
+echo "            . '|> filter(fn: (r) => r._field == \"duration\")'\n";
+echo "            . '|> aggregateWindow(every: 1h, fn: mean)'\n";
+echo "            . '|> yield(name: \"mean\")',\n";
+echo "            true // isFlux parameter\n";
+echo "        );\n\n";
+echo "        // Execute the raw query\n";
+echo "        \$result = TimeSeries::connection('influxdb')->rawQuery(\$fluxQuery);\n\n";
+echo "        return response()->json(\$result->getSeries());\n";
+echo "    }\n\n";
+echo "    public function queryWithInfluxQL(Request \$request)\n";
+echo "    {\n";
+echo "        // Create an InfluxQL query using the InfluxDBRawQuery class\n";
+echo "        \$influxQLQuery = new InfluxDBRawQuery(\n";
+echo "            'SELECT mean(\"duration\") FROM \"api_requests\" '\n";
+echo "            . 'WHERE time > now() - 24h '\n";
+echo "            . 'GROUP BY time(1h)',\n";
+echo "            false // isFlux parameter (false for InfluxQL)\n";
+echo "        );\n\n";
+echo "        // Execute the raw query\n";
+echo "        \$result = TimeSeries::connection('influxdb')->rawQuery(\$influxQLQuery);\n\n";
+echo "        return response()->json(\$result->getSeries());\n";
+echo "    }\n";
+echo "}\n";
+echo "```\n";
+
+// Step 11: Testing with Laravel
+echo "\nStep 11: Testing with Laravel...\n";
 
 // Example of testing TimeSeriesPhp in a Laravel application
 echo "Example of testing TimeSeriesPhp in a Laravel application:\n";
