@@ -4,7 +4,7 @@ namespace TimeSeriesPhp\Tests\Utils;
 
 use PHPUnit\Framework\TestCase;
 use TimeSeriesPhp\Config\LoggingConfig;
-use TimeSeriesPhp\Support\Logging\Logger;
+use TimeSeriesPhp\Support\Logs\Logger;
 
 class LoggerTest extends TestCase
 {

@@ -3,7 +3,7 @@
 namespace TimeSeriesPhp\Config;
 
 use TimeSeriesPhp\Exceptions\ConfigurationException;
-use TimeSeriesPhp\Support\Logging\LogLevel;
+use TimeSeriesPhp\Support\Logs\LogLevel;
 
 class LoggingConfig extends AbstractConfig
 {
@@ -30,13 +30,7 @@ class LoggingConfig extends AbstractConfig
      */
     public function __construct(array $config = [])
     {
-        $this->addValidator('level', function ($level) {
-            if ($level instanceof LogLevel) {
-                return true;
-            }
-
-            return is_string($level) && in_array($level, ['debug', 'info', 'warning', 'error']);
-        });
+        $this->addValidator('level', fn ($level) => $level instanceof LogLevel || (is_string($level) && LogLevel::tryFrom($level) !== null));
         $this->addValidator('log_file', fn ($path) => is_string($path) && ! empty($path));
 
         parent::__construct($config);
@@ -55,29 +49,17 @@ class LoggingConfig extends AbstractConfig
     /**
      * Check if a log level is enabled
      *
-     * @param  LogLevel|string  $level  The log level to check
+     * @param  LogLevel  $level  The log level to check
      * @return bool True if the level is enabled
      */
-    public function isLevelEnabled(LogLevel|string $level): bool
+    public function isLevelEnabled(LogLevel $level): bool
     {
         if (! $this->isEnabled()) {
             return false;
         }
 
-        // Convert level to LogLevel enum if it's a string
-        $levelEnum = is_string($level) ? LogLevel::fromString($level) : $level;
-        if ($levelEnum === null) {
-            // If the level is not recognized, default to info
-            $levelEnum = LogLevel::INFO;
-        }
+        $configLevel = LogLevel::tryFrom($this->getString('level')) ?? LogLevel::INFO;
 
-        // Get the configured level
-        $configLevel = $this->get('level');
-        $configLevelEnum = $configLevel instanceof LogLevel
-            ? $configLevel
-            : LogLevel::fromString($this->getString('level')) ?? LogLevel::INFO;
-
-        // Level is enabled if it's greater than or equal to the configured level
-        return $levelEnum->getNumericValue() >= $configLevelEnum->getNumericValue();
+        return $level->isGreaterOrEqualTo($configLevel);
     }
 }

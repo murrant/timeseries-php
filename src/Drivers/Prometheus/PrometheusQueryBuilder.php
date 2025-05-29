@@ -2,6 +2,7 @@
 
 namespace TimeSeriesPhp\Drivers\Prometheus;
 
+use TimeSeriesPhp\Core\ComparisonOperator;
 use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Core\QueryBuilderInterface;
 use TimeSeriesPhp\Core\RawQuery;
@@ -23,26 +24,50 @@ class PrometheusQueryBuilder implements QueryBuilderInterface
             $value = $condition->getScalarValue();
 
             // Convert operators to Prometheus format
-            if ($operator !== 'BETWEEN') {
-                $labelSelectors[] = match ($operator) {
-                    '=', '==' => "{$field}=\"{$value}\"",
-                    '!=', '<>' => "{$field}!=\"{$value}\"",
-                    'REGEX' => "{$field}=~\"{$value}\"",
-                    'NOT REGEX' => "{$field}!~\"{$value}\"",
-                    'IN' => (function () use ($field, $condition) {
-                        $values = $condition->getValues();
+            if ($operator instanceof ComparisonOperator) {
+                if ($operator !== ComparisonOperator::BETWEEN) {
+                    $labelSelectors[] = match ($operator) {
+                        ComparisonOperator::EQUALS, ComparisonOperator::SAME => "{$field}=\"{$value}\"",
+                        ComparisonOperator::NOT_EQUALS, ComparisonOperator::NOT_EQUALS_ALT => "{$field}!=\"{$value}\"",
+                        ComparisonOperator::REGEX => "{$field}=~\"{$value}\"",
+                        ComparisonOperator::IN => (function () use ($field, $condition) {
+                            $values = $condition->getValues();
 
-                        return "{$field}=~\"^(".implode('|', $values).')$"';
-                    })(),
-                    'NOT IN' => (function () use ($field, $condition) {
-                        $values = $condition->getValues();
+                            return "{$field}=~\"^(".implode('|', $values).')$"';
+                        })(),
+                        ComparisonOperator::NOT_IN => (function () use ($field, $condition) {
+                            $values = $condition->getValues();
 
-                        return "{$field}!~\"^(".implode('|', $values).')$"';
-                    })(),
-                    // Other operators like >, <, >=, <= are not directly supported in label selectors
-                    // They would need to be handled in post-processing or with specific functions
-                    default => "{$field}=\"{$value}\"", // Default to equality
-                };
+                            return "{$field}!~\"^(".implode('|', $values).')$"';
+                        })(),
+                        // Other operators like >, <, >=, <= are not directly supported in label selectors
+                        // They would need to be handled in post-processing or with specific functions
+                        default => "{$field}=\"{$value}\"", // Default to equality
+                    };
+                }
+            } else {
+                // For backward compatibility with string operators
+                if ($operator !== 'BETWEEN') {
+                    $labelSelectors[] = match ($operator) {
+                        '=', '==' => "{$field}=\"{$value}\"",
+                        '!=', '<>' => "{$field}!=\"{$value}\"",
+                        'REGEX' => "{$field}=~\"{$value}\"",
+                        'NOT REGEX' => "{$field}!~\"{$value}\"",
+                        'IN' => (function () use ($field, $condition) {
+                            $values = $condition->getValues();
+
+                            return "{$field}=~\"^(".implode('|', $values).')$"';
+                        })(),
+                        'NOT IN' => (function () use ($field, $condition) {
+                            $values = $condition->getValues();
+
+                            return "{$field}!~\"^(".implode('|', $values).')$"';
+                        })(),
+                        // Other operators like >, <, >=, <= are not directly supported in label selectors
+                        // They would need to be handled in post-processing or with specific functions
+                        default => "{$field}=\"{$value}\"", // Default to equality
+                    };
+                }
             }
         }
 

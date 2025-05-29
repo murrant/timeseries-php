@@ -2,6 +2,7 @@
 
 namespace TimeSeriesPhp\Drivers\InfluxDB;
 
+use TimeSeriesPhp\Core\ComparisonOperator;
 use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Core\QueryBuilderInterface;
 use TimeSeriesPhp\Core\RawQuery;
@@ -63,7 +64,8 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
             $value = null;
 
             // Format value for operators that don't handle arrays differently
-            if (! in_array($operator, ['IN', 'NOT IN', 'BETWEEN'])) {
+            $comparisonOperator = ComparisonOperator::from($operator);
+            if ($comparisonOperator === null || ! $comparisonOperator->requiresArrayValue()) {
                 $value = $this->formatValue($condition->getValue());
             }
 
@@ -265,21 +267,20 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
         return new RawQuery($fluxQuery);
     }
 
-    private function mapOperator(string $operator): string
+    private function mapOperator(ComparisonOperator|string $operator): string
     {
-        // Map SQL-like operators to Flux operators
-        $operatorMap = [
-            '=' => '==',
-            '!=' => '!=',
-            '<>' => '!=',
-            '>' => '>',
-            '>=' => '>=',
-            '<' => '<',
-            '<=' => '<=',
-            'LIKE' => '=~',
-        ];
+        if ($operator instanceof ComparisonOperator) {
+            return $operator->toFluxOperator();
+        }
 
-        return $operatorMap[$operator] ?? $operator;
+        // Try to convert string to ComparisonOperator
+        $comparisonOperator = ComparisonOperator::tryFrom($operator);
+        if ($comparisonOperator !== null) {
+            return $comparisonOperator->toFluxOperator();
+        }
+
+        // Fallback to original operator if not found in enum
+        return $operator;
     }
 
     /**

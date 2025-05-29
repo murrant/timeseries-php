@@ -24,7 +24,7 @@ use TimeSeriesPhp\Exceptions\ConnectionException;
 use TimeSeriesPhp\Exceptions\DatabaseException;
 use TimeSeriesPhp\Exceptions\RawQueryException;
 use TimeSeriesPhp\Exceptions\WriteException;
-use TimeSeriesPhp\Support\Logging\Logger;
+use TimeSeriesPhp\Support\Logs\Logger;
 use TimeSeriesPhp\Utils\Convert;
 
 class InfluxDBDriver extends AbstractTimeSeriesDB

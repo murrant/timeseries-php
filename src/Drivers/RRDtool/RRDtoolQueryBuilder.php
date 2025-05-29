@@ -2,6 +2,7 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool;
 
+use TimeSeriesPhp\Core\ComparisonOperator;
 use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Core\QueryBuilderInterface;
 use TimeSeriesPhp\Core\QueryCondition;
@@ -92,8 +93,16 @@ class RRDtoolQueryBuilder implements QueryBuilderInterface
         foreach ($conditions as $condition) {
             // Assuming tag conditions are identifiable by context
             // This might need adjustment based on your tag strategy
-            if ($condition->getOperator() === '=' || $condition->getOperator() === 'IN') {
-                $tagConditions[] = new TagCondition($condition->getField(), $condition->getOperator(), $condition->getValue());
+            $operator = $condition->getOperator();
+            if ($operator instanceof ComparisonOperator) {
+                if ($operator === ComparisonOperator::EQUALS || $operator === ComparisonOperator::IN) {
+                    $tagConditions[] = new TagCondition($condition->getField(), $operator->value, $condition->getValue());
+                }
+            } else {
+                // For backward compatibility with string operators
+                if ($operator === '=' || $operator === 'IN') {
+                    $tagConditions[] = new TagCondition($condition->getField(), $operator, $condition->getValue());
+                }
             }
         }
 

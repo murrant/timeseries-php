@@ -10,7 +10,7 @@ use TimeSeriesPhp\Exceptions\ConfigurationException;
 use TimeSeriesPhp\Exceptions\ConnectionException;
 use TimeSeriesPhp\Exceptions\RawQueryException;
 use TimeSeriesPhp\Exceptions\WriteException;
-use TimeSeriesPhp\Support\Logging\Logger;
+use TimeSeriesPhp\Support\Logs\Logger;
 
 class GraphiteDriver extends AbstractTimeSeriesDB
 {

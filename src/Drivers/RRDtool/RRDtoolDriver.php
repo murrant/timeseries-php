@@ -17,7 +17,7 @@ use TimeSeriesPhp\Exceptions\RRDtoolCommandTimeoutException;
 use TimeSeriesPhp\Exceptions\RRDtoolException;
 use TimeSeriesPhp\Exceptions\RRDtoolPrematureUpdateException;
 use TimeSeriesPhp\Exceptions\WriteException;
-use TimeSeriesPhp\Support\Logging\Logger;
+use TimeSeriesPhp\Support\Logs\Logger;
 
 class RRDtoolDriver extends AbstractTimeSeriesDB
 {

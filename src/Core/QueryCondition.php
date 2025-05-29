@@ -11,13 +11,13 @@ readonly class QueryCondition
 {
     /**
      * @param  string  $field  The field name to apply the condition to
-     * @param  string  $operator  The operator for the condition (=, >, <, etc.)
+     * @param  ComparisonOperator|string  $operator  The operator for the condition (=, >, <, etc.)
      * @param  null|bool|float|int|string|array<?scalar>  $value  The value to compare against
      * @param  'AND'|'OR'  $type  The type of condition (AND or OR)
      */
     public function __construct(
         private string $field,
-        private string $operator,
+        private ComparisonOperator|string $operator,
         private null|bool|float|int|string|array $value,
         private string $type = 'AND',
     ) {}
@@ -33,7 +33,7 @@ readonly class QueryCondition
     /**
      * Get the operator
      */
-    public function getOperator(): string
+    public function getOperator(): ComparisonOperator|string
     {
         return $this->operator;
     }
@@ -78,9 +78,11 @@ readonly class QueryCondition
      */
     public function toArray(): array
     {
+        $operator = $this->operator instanceof ComparisonOperator ? $this->operator->value : $this->operator;
+
         return [
             'field' => $this->field,
-            'operator' => $this->operator,
+            'operator' => $operator,
             'value' => $this->value,
             'type' => $this->type,
         ];
@@ -90,10 +92,10 @@ readonly class QueryCondition
      * Create a new condition with AND type
      *
      * @param  string  $field  The field name
-     * @param  string  $operator  The operator
+     * @param  ComparisonOperator|string  $operator  The operator
      * @param  null|bool|float|int|string|array<?scalar>  $value  The value
      */
-    public static function where(string $field, string $operator, null|bool|float|int|string|array $value): self
+    public static function where(string $field, ComparisonOperator|string $operator, null|bool|float|int|string|array $value): self
     {
         return new self($field, $operator, $value, 'AND');
     }
@@ -102,10 +104,10 @@ readonly class QueryCondition
      * Create a new condition with OR type
      *
      * @param  string  $field  The field name
-     * @param  string  $operator  The operator
+     * @param  ComparisonOperator|string  $operator  The operator
      * @param  null|bool|float|int|string|array<?scalar>  $value  The value
      */
-    public static function orWhere(string $field, string $operator, null|bool|float|int|string|array $value): self
+    public static function orWhere(string $field, ComparisonOperator|string $operator, null|bool|float|int|string|array $value): self
     {
         return new self($field, $operator, $value, 'OR');
     }
@@ -118,7 +120,7 @@ readonly class QueryCondition
      */
     public static function whereIn(string $field, array $values): self
     {
-        return new self($field, 'IN', $values, 'AND');
+        return new self($field, ComparisonOperator::IN, $values, 'AND');
     }
 
     /**
@@ -129,7 +131,7 @@ readonly class QueryCondition
      */
     public static function whereNotIn(string $field, array $values): self
     {
-        return new self($field, 'NOT IN', $values, 'AND');
+        return new self($field, ComparisonOperator::NOT_IN, $values, 'AND');
     }
 
     /**
@@ -141,7 +143,7 @@ readonly class QueryCondition
      */
     public static function whereBetween(string $field, int|float $min, int|float $max): self
     {
-        return new self($field, 'BETWEEN', [$min, $max], 'AND');
+        return new self($field, ComparisonOperator::BETWEEN, [$min, $max], 'AND');
     }
 
     /**
@@ -152,6 +154,6 @@ readonly class QueryCondition
      */
     public static function whereRegex(string $field, string $pattern): self
     {
-        return new self($field, 'REGEX', $pattern, 'AND');
+        return new self($field, ComparisonOperator::REGEX, $pattern, 'AND');
     }
 }

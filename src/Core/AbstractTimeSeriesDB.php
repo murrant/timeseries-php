@@ -6,7 +6,7 @@ use DateTime;
 use TimeSeriesPhp\Config\ConfigInterface;
 use TimeSeriesPhp\Exceptions\DatabaseException;
 use TimeSeriesPhp\Exceptions\WriteException;
-use TimeSeriesPhp\Support\Logging\Logger;
+use TimeSeriesPhp\Support\Logs\Logger;
 
 abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
 {

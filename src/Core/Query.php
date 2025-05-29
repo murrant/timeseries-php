@@ -48,7 +48,7 @@ class Query
     private array $orderBy = [];
 
     /**
-     * @var array<array{'field': string, 'operator': string, 'value': ?scalar}>
+     * @var array<array{'field': string, 'operator': ComparisonOperator|string, 'value': ?scalar}>
      */
     private array $having = [];
 
@@ -98,7 +98,7 @@ class Query
     /**
      * @param  scalar|null|array<?scalar>  $value
      */
-    public function where(string $field, string $operator, float|int|bool|string|null|array $value): self
+    public function where(string $field, ComparisonOperator|string $operator, float|int|bool|string|null|array $value): self
     {
         $this->conditions[] = QueryCondition::where($field, $operator, $value);
 
@@ -108,7 +108,7 @@ class Query
     /**
      * @param  scalar|null|array<?scalar>  $value
      */
-    public function orWhere(string $field, string $operator, float|int|bool|string|null|array $value): self
+    public function orWhere(string $field, ComparisonOperator|string $operator, float|int|bool|string|null|array $value): self
     {
         $this->conditions[] = QueryCondition::orWhere($field, $operator, $value);
 
@@ -346,7 +346,7 @@ class Query
     /**
      * @param  ?scalar  $value
      */
-    public function having(string $field, string $operator, float|int|bool|string|null $value): self
+    public function having(string $field, ComparisonOperator|string $operator, float|int|bool|string|null $value): self
     {
         $this->having[] = [
             'field' => $field,
@@ -469,7 +469,7 @@ class Query
     }
 
     /**
-     * @return array<array{'field': string, 'operator': string, 'value': ?scalar}>
+     * @return array<array{'field': string, 'operator': ComparisonOperator|string, 'value': ?scalar}>
      */
     public function getHaving(): array
     {
@@ -546,7 +546,7 @@ class Query
      *
      * @return array<int, QueryCondition>
      */
-    public function getConditionsByOperator(string $operator): array
+    public function getConditionsByOperator(ComparisonOperator|string $operator): array
     {
         return array_filter(
             $this->conditions,

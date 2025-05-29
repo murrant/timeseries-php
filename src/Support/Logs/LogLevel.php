@@ -1,6 +1,6 @@
 <?php
 
-namespace TimeSeriesPhp\Support\Logging;
+namespace TimeSeriesPhp\Support\Logs;
 
 enum LogLevel: string
 {
