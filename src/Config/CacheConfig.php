@@ -16,6 +16,9 @@ class CacheConfig extends AbstractConfig
         'prefix' => 'tsdb_cache',
         'serialization' => 'php', // php, json, msgpack
         'compression' => false,
+        'memory' => [
+            // No specific configuration needed for memory driver
+        ],
         'redis' => [
             'host' => 'localhost',
             'port' => 6379,

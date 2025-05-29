@@ -88,19 +88,97 @@ abstract class AbstractConfig implements ConfigInterface
 
     public function get(string $key, mixed $default = null): mixed
     {
-        return $this->config[$key] ?? $default;
+        if (! str_contains($key, '.')) {
+            return $this->config[$key] ?? $default;
+        }
+
+        return $this->getNestedValue($this->config, $key, $default);
     }
 
     public function set(string $key, mixed $value): ConfigInterface
     {
-        $this->config[$key] = $value;
+        if (! str_contains($key, '.')) {
+            $this->config[$key] = $value;
+
+            return $this;
+        }
+
+        $this->setNestedValue($this->config, $key, $value);
 
         return $this;
     }
 
     public function has(string $key): bool
     {
-        return array_key_exists($key, $this->config);
+        if (! str_contains($key, '.')) {
+            return array_key_exists($key, $this->config);
+        }
+
+        return $this->hasNestedKey($this->config, $key);
+    }
+
+    /**
+     * Get a nested value from an array using dot notation
+     *
+     * @param  array<string, mixed>  $array
+     */
+    protected function getNestedValue(array $array, string $key, mixed $default = null): mixed
+    {
+        $keys = explode('.', $key);
+        $current = $array;
+
+        foreach ($keys as $segment) {
+            if (! is_array($current) || ! array_key_exists($segment, $current)) {
+                return $default;
+            }
+            $current = $current[$segment];
+        }
+
+        return $current;
+    }
+
+    /**
+     * Set a nested value in an array using dot notation
+     *
+     * @param  array<string, mixed>  $array
+     */
+    protected function setNestedValue(array &$array, string $key, mixed $value): void
+    {
+        $keys = explode('.', $key);
+        $current = &$array;
+
+        foreach ($keys as $i => $segment) {
+            if ($i === count($keys) - 1) {
+                $current[$segment] = $value;
+                break;
+            }
+
+            if (! isset($current[$segment]) || ! is_array($current[$segment])) {
+                $current[$segment] = [];
+            }
+
+            $current = &$current[$segment];
+        }
+    }
+
+    /**
+     * Check if a nested key exists in an array using dot notation
+     *
+     * @param  array<string, mixed>  $array
+     */
+    protected function hasNestedKey(array $array, string $key): bool
+    {
+        $keys = explode('.', $key);
+        $current = $array;
+
+        foreach ($keys as $segment) {
+            if (! is_array($current) || ! array_key_exists($segment, $current)) {
+                return false;
+            }
+            $current = $current[$segment];
+        }
+
+        return true;
     }
 
     /**
@@ -124,9 +202,13 @@ abstract class AbstractConfig implements ConfigInterface
     /**
      * @throws ConfigurationException
      */
-    public function getString(string $key): string
+    public function getString(string $key, ?string $default = null): string
     {
         $str = $this->get($key);
+
+        if ($str === null && $default !== null) {
+            return $default;
+        }
 
         if (! is_string($str) && ! is_bool($str) && ! is_numeric($str) && ! is_null($str)) {
             throw new ConfigurationException("Configuration field '{$key}' is not a string");
@@ -138,9 +220,13 @@ abstract class AbstractConfig implements ConfigInterface
     /**
      * @throws ConfigurationException
      */
-    public function getInt(string $key): int
+    public function getInt(string $key, ?int $default = null): int
     {
         $int = $this->get($key);
+
+        if ($int === null && $default !== null) {
+            return $default;
+        }
 
         if (! is_numeric($int)) {
             throw new ConfigurationException("Configuration field '{$key}' is not an integer");
@@ -149,9 +235,13 @@ abstract class AbstractConfig implements ConfigInterface
         return (int) $int;
     }
 
-    public function getFloat(string $key): float
+    public function getFloat(string $key, ?float $default = null): float
     {
         $float = $this->get($key);
+
+        if ($float === null && $default !== null) {
+            return $default;
+        }
 
         if (! is_numeric($float)) {
             throw new ConfigurationException("Configuration field '{$key}' is not a float");
@@ -160,19 +250,31 @@ abstract class AbstractConfig implements ConfigInterface
         return (float) $float;
     }
 
-    public function getBool(string $key): bool
+    public function getBool(string $key, ?bool $default = null): bool
     {
-        return (bool) $this->get($key);
+        $value = $this->get($key);
+
+        if ($value === null && $default !== null) {
+            return $default;
+        }
+
+        return (bool) $value;
     }
 
     /**
+     * @param string $key
+     * @param array<mixed, mixed>|null $default
      * @return array<mixed, mixed>
      *
      * @throws ConfigurationException
      */
-    public function getArray(string $key): array
+    public function getArray(string $key, ?array $default = null): array
     {
         $array = $this->get($key);
+
+        if ($array === null && $default !== null) {
+            return $default;
+        }
 
         if (! is_array($array)) {
             throw new ConfigurationException("Configuration field '{$key}' is not an array");

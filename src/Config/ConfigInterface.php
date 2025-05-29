@@ -13,18 +13,20 @@ interface ConfigInterface
 
     public function get(string $key, mixed $default = null): mixed;
 
-    public function getString(string $key): string;
+    public function getString(string $key, ?string $default = null): string;
 
-    public function getInt(string $key): int;
+    public function getInt(string $key, ?int $default = null): int;
 
-    public function getFloat(string $key): float;
+    public function getFloat(string $key, ?float $default = null): float;
 
-    public function getBool(string $key): bool;
+    public function getBool(string $key, ?bool $default = null): bool;
 
     /**
+     * @param string $key
+     * @param array<mixed, mixed>|null $default
      * @return array<mixed, mixed>
      */
-    public function getArray(string $key): array;
+    public function getArray(string $key, ?array $default = null): array;
 
     public function set(string $key, mixed $value): self;
 

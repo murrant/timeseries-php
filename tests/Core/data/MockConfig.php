@@ -36,28 +36,28 @@ class MockConfig implements ConfigInterface
         return true;
     }
 
-    public function getString(string $key): string
+    public function getString(string $key, ?string $default = null): string
     {
-        return '';
+        return $default ?? '';
     }
 
-    public function getInt(string $key): int
+    public function getInt(string $key, ?int $default = null): int
     {
-        return 0;
+        return $default ?? 0;
     }
 
-    public function getFloat(string $key): float
+    public function getFloat(string $key, ?float $default = null): float
     {
-        return 0.0;
+        return $default ?? 0.0;
     }
 
-    public function getBool(string $key): bool
+    public function getBool(string $key, ?bool $default = null): bool
     {
-        return false;
+        return $default ?? false;
     }
 
-    public function getArray(string $key): array
+    public function getArray(string $key, ?array $default = null): array
     {
-        return [];
+        return $default ?? [];
     }
 }

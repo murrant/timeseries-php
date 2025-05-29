@@ -31,7 +31,8 @@
     "influxdata/influxdb-client-php": "^3.7",
     "guzzlehttp/guzzle": "^7.9",
     "illuminate/support": "^12.15",
-    "symfony/process": "^7.2"
+    "symfony/process": "^7.2",
+    "psr/simple-cache": "^3.0"
   },
   "config": {
     "allow-plugins": {
