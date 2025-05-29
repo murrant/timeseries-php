@@ -31,7 +31,7 @@ class RRDtoolException extends TSDBException
 
     public function setErrorOutput(string $output): self
     {
-        $this->output = $output;
+        $this->errorOutput = $output;
 
         return $this;
     }

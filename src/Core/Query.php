@@ -4,6 +4,7 @@ namespace TimeSeriesPhp\Core;
 
 use DateInterval;
 use DateTime;
+use TimeSeriesPhp\Exceptions\QueryException;
 
 class Query
 {
@@ -357,6 +358,10 @@ class Query
     }
 
     // Utility methods
+
+    /**
+     * @throws QueryException
+     */
     private function parseDuration(string $duration): DateInterval
     {
         // Simple duration parser - extend as needed
@@ -374,7 +379,7 @@ class Query
                 case 'y': return new DateInterval("P{$amount}Y");
             }
         }
-        throw new \InvalidArgumentException("Invalid duration format: {$duration}");
+        throw new QueryException("Invalid duration format: {$duration}");
     }
 
     // Enhanced getters

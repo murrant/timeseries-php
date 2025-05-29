@@ -6,7 +6,6 @@ use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Core\QueryBuilderInterface;
 use TimeSeriesPhp\Core\RawQuery;
 use TimeSeriesPhp\Core\RawQueryInterface;
-use TimeSeriesPhp\Exceptions\QueryException;
 
 class GraphiteQueryBuilder implements QueryBuilderInterface
 {
@@ -17,9 +16,6 @@ class GraphiteQueryBuilder implements QueryBuilderInterface
         $this->prefix = $prefix;
     }
 
-    /**
-     * @throws QueryException
-     */
     public function build(Query $query): RawQueryInterface
     {
         $measurement = $query->getMeasurement();

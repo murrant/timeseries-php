@@ -7,6 +7,7 @@ use TimeSeriesPhp\Config\ConfigInterface;
 use TimeSeriesPhp\Exceptions\ConnectionException;
 use TimeSeriesPhp\Exceptions\DatabaseException;
 use TimeSeriesPhp\Exceptions\QueryException;
+use TimeSeriesPhp\Exceptions\RawQueryException;
 use TimeSeriesPhp\Exceptions\WriteException;
 
 interface TimeSeriesInterface
@@ -64,7 +65,7 @@ interface TimeSeriesInterface
      * @param  RawQueryInterface  $query  The raw query to execute
      * @return QueryResult The query result
      *
-     * @throws QueryException If query fails
+     * @throws RawQueryException If query fails
      */
     public function rawQuery(RawQueryInterface $query): QueryResult;
 

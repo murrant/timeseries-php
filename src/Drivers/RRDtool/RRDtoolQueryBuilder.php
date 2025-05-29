@@ -2,13 +2,13 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool;
 
-use InvalidArgumentException;
 use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Core\QueryBuilderInterface;
 use TimeSeriesPhp\Core\QueryCondition;
 use TimeSeriesPhp\Core\RawQueryInterface;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\TagCondition;
+use TimeSeriesPhp\Exceptions\QueryException;
 
 class RRDtoolQueryBuilder implements QueryBuilderInterface
 {
@@ -19,12 +19,15 @@ class RRDtoolQueryBuilder implements QueryBuilderInterface
         $this->tagStrategy = $tagStrategy;
     }
 
+    /**
+     * @throws QueryException
+     */
     public function build(Query $query): RawQueryInterface
     {
         // Validate the query first
         $errors = $query->validate();
         if (! empty($errors)) {
-            throw new InvalidArgumentException('Query validation failed: '.implode(', ', $errors));
+            throw new QueryException('Query validation failed: '.implode(', ', $errors));
         }
 
         $rawQuery = new RRDtoolRawQuery;

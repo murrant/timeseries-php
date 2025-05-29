@@ -5,6 +5,7 @@ namespace TimeSeriesPhp\Tests\Drivers\RRDtool;
 use PHPUnit\Framework\TestCase;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\TagCondition;
+use TimeSeriesPhp\Exceptions\RRDtoolTagException;
 
 class FileNameStrategyTest extends TestCase
 {
@@ -35,7 +36,7 @@ class FileNameStrategyTest extends TestCase
 
     public function test_constructor_requires_trailing_slash(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(RRDtoolTagException::class);
         $this->expectExceptionMessage('Base directory must end with a slash');
 
         new FileNameStrategy($this->tempDir); // Missing trailing slash

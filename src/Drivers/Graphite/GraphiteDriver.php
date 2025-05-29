@@ -2,14 +2,13 @@
 
 namespace TimeSeriesPhp\Drivers\Graphite;
 
-use Exception;
 use TimeSeriesPhp\Core\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\QueryResult;
 use TimeSeriesPhp\Core\RawQueryInterface;
 use TimeSeriesPhp\Exceptions\ConfigurationException;
 use TimeSeriesPhp\Exceptions\ConnectionException;
-use TimeSeriesPhp\Exceptions\QueryException;
+use TimeSeriesPhp\Exceptions\RawQueryException;
 use TimeSeriesPhp\Exceptions\WriteException;
 
 class GraphiteDriver extends AbstractTimeSeriesDB
@@ -61,7 +60,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
             $this->connected = true;
 
             return true;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log('Graphite connection failed: '.$e->getMessage());
             $this->connected = false;
 
@@ -98,7 +97,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
             $this->closeSocket();
 
             return (bool) $success;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log('Graphite write failed: '.$e->getMessage());
             $this->closeSocket();
             throw new WriteException('Failed to write data to Graphite: '.$e->getMessage());
@@ -146,7 +145,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
             $this->closeSocket();
 
             return (bool) $success;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log('Graphite batch write failed: '.$e->getMessage());
             $this->closeSocket();
             throw new WriteException('Failed to write batch data to Graphite: '.$e->getMessage());
@@ -185,12 +184,12 @@ class GraphiteDriver extends AbstractTimeSeriesDB
     }
 
     /**
-     * @throws QueryException
+     * @throws RawQueryException|ConnectionException
      */
     public function rawQuery(RawQueryInterface $query): QueryResult
     {
         if (! $this->isConnected()) {
-            throw new QueryException($query, 'Not connected to Graphite');
+            throw new ConnectionException('Not connected to Graphite');
         }
 
         try {
@@ -206,14 +205,14 @@ class GraphiteDriver extends AbstractTimeSeriesDB
             $response = file_get_contents($url, false, $context);
 
             if ($response === false) {
-                throw new Exception('Failed to get response from Graphite');
+                throw new ConnectionException('Failed to get response from Graphite');
             }
 
             /** @var array<array{'target': string, 'datapoints': array<array{string, int}>}> $data */
             $data = json_decode($response, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new Exception('Failed to parse JSON response: '.json_last_error_msg());
+                throw new RawQueryException($query, 'Failed to parse JSON response: '.json_last_error_msg());
             }
 
             // Transform Graphite response to a standard format
@@ -230,8 +229,8 @@ class GraphiteDriver extends AbstractTimeSeriesDB
             }
 
             return $result;
-        } catch (Exception $e) {
-            throw new QueryException($query, 'Query execution failed: '.$e->getMessage());
+        } catch (\Exception $e) {
+            throw new RawQueryException($query, 'Query execution failed: '.$e->getMessage());
         }
     }
 

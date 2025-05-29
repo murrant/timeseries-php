@@ -11,6 +11,7 @@ use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolRawQuery;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
+use TimeSeriesPhp\Exceptions\RRDtoolTagException;
 
 class RRDtoolDriverTest extends TestCase
 {
@@ -82,7 +83,7 @@ class RRDtoolDriverTest extends TestCase
                         ksort($tags);
                         foreach ($tags as $key => $value) {
                             if (! is_scalar($value)) {
-                                throw new \InvalidArgumentException('Tag value must be a scalar');
+                                throw new RRDtoolTagException('Tag value must be a scalar');
                             }
 
                             $tagString .= "_{$key}-".str_replace('.', '\\.', (string) $value);

@@ -2,7 +2,7 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 
-use TimeSeriesPhp\Exceptions\TSDBException;
+use TimeSeriesPhp\Exceptions\RRDtoolTagException;
 use TimeSeriesPhp\Utils\File;
 
 readonly class TagCondition
@@ -18,7 +18,7 @@ readonly class TagCondition
     ) {}
 
     /**
-     * @throws TSDBException
+     * @throws RRDtoolTagException
      */
     public function matches(string $value): bool
     {
@@ -28,7 +28,7 @@ readonly class TagCondition
             'REGEX' => (bool) preg_match($this->getStringValue(), File::sanitizeTag($value)),
             'NOT IN' => ! in_array(File::sanitizeTag($value), array_map(fn ($v) => File::sanitizeTag((string) $v), $this->getValues())),
             'BETWEEN' => $value >= $this->getValues()[0] && $value <= $this->getValues()[1],
-            default => throw new TSDBException("Operator $this->operator not supported"),
+            default => throw new RRDtoolTagException("Operator $this->operator not supported"),
         };
     }
 

@@ -2,7 +2,7 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 
-use TimeSeriesPhp\Exceptions\TSDBException;
+use TimeSeriesPhp\Exceptions\RRDtoolTagException;
 
 class TagSearch
 {
@@ -13,7 +13,7 @@ class TagSearch
      * @param  TagCondition[]  $conditions  Array of TagCondition objects
      * @return bool True if all conditions are satisfied
      *
-     * @throws TSDBException
+     * @throws RRDtoolTagException
      */
     public static function search(array $tags, array $conditions): bool
     {
@@ -62,7 +62,7 @@ class TagSearch
      *
      * @param  array<string, ?scalar>  $tags
      *
-     * @throws TSDBException
+     * @throws RRDtoolTagException
      */
     private static function evaluateCondition(array $tags, TagCondition $condition): bool
     {
@@ -84,7 +84,7 @@ class TagSearch
      * @param  TagCondition[]  $conditions  Array of TagCondition objects
      * @return bool True if the logical expression evaluates to true
      *
-     * @throws TSDBException
+     * @throws RRDtoolTagException
      */
     public static function advancedSearch(array $tags, array $conditions): bool
     {
@@ -118,7 +118,7 @@ class TagSearch
      * @param  array<array{'conditions': TagCondition[], 'operator'?: 'OR'|'AND'}>  $conditionGroups  Array of condition groups, each with 'conditions' and 'operator'
      * @return bool True if the grouped expression evaluates to true
      *
-     * @throws TSDBException
+     * @throws RRDtoolTagException
      */
     public static function groupedSearch(array $tags, array $conditionGroups): bool
     {

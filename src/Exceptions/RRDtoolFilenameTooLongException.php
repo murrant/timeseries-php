@@ -2,4 +2,4 @@
 
 namespace TimeSeriesPhp\Exceptions;
 
-class RRDtoolFilenameTooLongException extends RRDtoolException {}
+class RRDtoolFilenameTooLongException extends RRDtoolTagException {}

@@ -11,7 +11,7 @@ use TimeSeriesPhp\Core\QueryResult;
 use TimeSeriesPhp\Core\RawQueryInterface;
 use TimeSeriesPhp\Exceptions\ConfigurationException;
 use TimeSeriesPhp\Exceptions\ConnectionException;
-use TimeSeriesPhp\Exceptions\QueryException;
+use TimeSeriesPhp\Exceptions\RawQueryException;
 use TimeSeriesPhp\Exceptions\TSDBException;
 
 class PrometheusDriver extends AbstractTimeSeriesDB
@@ -64,7 +64,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB
     }
 
     /**
-     * @throws QueryException
+     * @throws RawQueryException|ConnectionException
      */
     public function rawQuery(RawQueryInterface $query): QueryResult
     {
@@ -109,7 +109,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB
             $response = $this->makeApiRequest($endpoint, $params);
 
             if ($response['status'] !== 'success') {
-                throw new QueryException($query, 'Query execution failed: '.($response['error'] ?? 'Unknown error'));
+                throw new RawQueryException($query, 'Query execution failed: '.($response['error'] ?? 'Unknown error'));
             }
 
             // Process the result
@@ -135,7 +135,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB
 
             return $result;
         } catch (Exception $e) {
-            throw new QueryException($query, 'Query execution failed: '.$e->getMessage());
+            throw new RawQueryException($query, 'Query execution failed: '.$e->getMessage());
         }
     }
 

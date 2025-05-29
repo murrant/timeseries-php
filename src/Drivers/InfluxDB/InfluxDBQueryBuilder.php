@@ -7,6 +7,7 @@ use TimeSeriesPhp\Core\QueryBuilderInterface;
 use TimeSeriesPhp\Core\RawQuery;
 use TimeSeriesPhp\Core\RawQueryInterface;
 use TimeSeriesPhp\Exceptions\QueryException;
+use TimeSeriesPhp\Exceptions\RawQueryException;
 
 class InfluxDBQueryBuilder implements QueryBuilderInterface
 {
@@ -18,7 +19,7 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
     }
 
     /**
-     * @throws QueryException
+     * @throws RawQueryException
      */
     public function build(Query $query): RawQueryInterface
     {
@@ -165,7 +166,7 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
                     break;
                 default:
                     // Handle percentile
-                    if (strpos($function, 'percentile_') === 0) {
+                    if (str_starts_with($function, 'percentile_')) {
                         $percentile = substr($function, 11);
                         $fluxQuery .= "  |> quantile(q: {$percentile}, column: \"{$field}\")\n";
                     } else {
@@ -279,7 +280,7 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
             return strval($value);
         }
 
-        throw new QueryException(new RawQuery(''), 'Unsupported value type: '.gettype($value).' ('.var_export($value, true).')');
+        throw new QueryException('Unsupported value type: '.gettype($value).' ('.var_export($value, true).')');
     }
 
     private function formatDateInterval(\DateInterval $interval): string

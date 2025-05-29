@@ -2,17 +2,21 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 
+use TimeSeriesPhp\Exceptions\RRDtoolTagException;
 use TimeSeriesPhp\Utils\File;
 
 class NoTagsStrategy implements RRDTagStrategyInterface
 {
     protected string $folderSeparator = '/';
 
+    /**
+     * @throws RRDtoolTagException
+     */
     public function __construct(
         public readonly string $baseDir
     ) {
         if (! str_ends_with($this->baseDir, $this->folderSeparator)) {
-            throw new \InvalidArgumentException('Base directory must end with a slash');
+            throw new RRDtoolTagException('Base directory must end with a slash');
         }
     }
 

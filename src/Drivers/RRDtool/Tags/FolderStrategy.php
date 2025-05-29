@@ -3,19 +3,24 @@
 namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 
 use SplFileInfo;
+use TimeSeriesPhp\Exceptions\RRDtoolTagException;
 use TimeSeriesPhp\Utils\File;
 
 class FolderStrategy implements RRDTagStrategyInterface
 {
     use EncodesTagsInFilename;
 
-    /** @param string[] $folderTags */
+    /**
+     * @param  string[]  $folderTags
+     *
+     * @throws RRDtoolTagException
+     */
     public function __construct(
         public readonly string $baseDir,
         protected array $folderTags = [],
     ) {
         if (! str_ends_with($this->baseDir, File::DIRECTORY_SEPARATOR)) {
-            throw new \InvalidArgumentException('Base directory must end with a slash');
+            throw new RRDtoolTagException('Base directory must end with a slash');
         }
     }
 
@@ -24,9 +29,6 @@ class FolderStrategy implements RRDTagStrategyInterface
         return $this->baseDir;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function getFilePath(string $measurement, array $tags = []): string
     {
         $path = $this->baseDir;

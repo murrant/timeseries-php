@@ -15,6 +15,7 @@ use TimeSeriesPhp\Drivers\Prometheus\PrometheusConfig;
 use TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
+use TimeSeriesPhp\Exceptions\DriverException;
 
 class TimeSeriesServiceProvider extends ServiceProvider
 {
@@ -57,13 +58,13 @@ class TimeSeriesServiceProvider extends ServiceProvider
             $driver = $configRepository->get('time-series.driver');
 
             if (! is_string($driver)) {
-                throw new \InvalidArgumentException('Driver must be a string');
+                throw new DriverException('Driver must be a string');
             }
 
             $driverConfig = $configRepository->get('time-series.drivers.'.$driver, []);
 
             if (! is_array($driverConfig)) {
-                throw new \InvalidArgumentException('Driver configuration must be an array');
+                throw new DriverException('Driver configuration must be an array');
             }
 
             /** @var array<string, mixed> $driverConfig */

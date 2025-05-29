@@ -12,7 +12,7 @@ use TimeSeriesPhp\Core\RawQueryInterface;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
 use TimeSeriesPhp\Exceptions\ConnectionException;
 use TimeSeriesPhp\Exceptions\DriverException;
-use TimeSeriesPhp\Exceptions\QueryException;
+use TimeSeriesPhp\Exceptions\RawQueryException;
 use TimeSeriesPhp\Exceptions\RRDtoolCommandTimeoutException;
 use TimeSeriesPhp\Exceptions\RRDtoolException;
 use TimeSeriesPhp\Exceptions\RRDtoolPrematureUpdateException;
@@ -297,7 +297,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     public function rawQuery(RawQueryInterface $query): QueryResult
     {
         if (! $query instanceof RRDtoolRawQuery) {
-            throw new QueryException($query, 'Invalid query type');
+            throw new RawQueryException($query, 'Invalid query type');
         }
 
         // For RRDtool, raw query would be a direct rrdtool command
@@ -306,7 +306,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
             if ($query->command === 'xport') {
                 $json = json_decode($output, true);
                 if (json_last_error() !== JSON_ERROR_NONE) {
-                    throw new QueryException($query, 'Failed to parse RRD command output: '.json_last_error_msg().PHP_EOL.$output, json_last_error());
+                    throw new RawQueryException($query, 'Failed to parse RRD command output: '.json_last_error_msg().PHP_EOL.$output, json_last_error());
                 }
 
                 /** @var array{'meta': array{'legend': array<int, string>, 'start': int, 'end': int, 'step': int}, 'data': array<int, array<int, float|int|null>>} $json */
@@ -321,7 +321,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
                 ]],
             ]);
         } catch (RRDtoolException $e) {
-            throw new QueryException($query, $e->getDebugMessage($this->debug), $e->getCode(), $e);
+            throw new RawQueryException($query, $e->getDebugMessage($this->debug), $e->getCode(), $e);
         }
     }
 

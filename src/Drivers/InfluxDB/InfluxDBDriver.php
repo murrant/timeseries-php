@@ -16,14 +16,14 @@ use InfluxDB2\Service\BucketsService;
 use InfluxDB2\Service\DeleteService;
 use InfluxDB2\Service\OrganizationsService;
 use InfluxDB2\WriteApi;
-use RuntimeException;
 use TimeSeriesPhp\Core\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\QueryResult;
 use TimeSeriesPhp\Core\RawQueryInterface;
 use TimeSeriesPhp\Exceptions\ConfigurationException;
 use TimeSeriesPhp\Exceptions\ConnectionException;
-use TimeSeriesPhp\Exceptions\QueryException;
+use TimeSeriesPhp\Exceptions\DatabaseException;
+use TimeSeriesPhp\Exceptions\RawQueryException;
 use TimeSeriesPhp\Exceptions\WriteException;
 use TimeSeriesPhp\Utils\Convert;
 
@@ -146,16 +146,16 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     }
 
     /**
-     * @throws QueryException
+     * @throws RawQueryException
      */
     public function rawQuery(RawQueryInterface $query): QueryResult
     {
         if (! $this->isConnected()) {
-            throw new QueryException($query, 'Not connected to InfluxDB');
+            throw new RawQueryException($query, 'Not connected to InfluxDB');
         }
 
         if ($this->queryApi === null) {
-            throw new QueryException($query, 'QueryApi is not initialized');
+            throw new RawQueryException($query, 'QueryApi is not initialized');
         }
 
         try {
@@ -180,7 +180,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
             return $result;
         } catch (Exception $e) {
-            throw new QueryException($query, 'Query execution failed: '.$e->getMessage());
+            throw new RawQueryException($query, 'Query execution failed: '.$e->getMessage());
         }
     }
 
@@ -215,7 +215,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             $bucketsService = $this->getBucketsService();
             $buckets = $bucketsService->getBuckets(org_id: $this->getOrgId());
             if (! $buckets instanceof Buckets) {
-                throw new RuntimeException('Invalid object returned from getBuckets');
+                throw new DatabaseException('Invalid object returned from getBuckets');
             }
 
             $bucketNames = [];
@@ -234,6 +234,9 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
         }
     }
 
+    /**
+     * @throws ConnectionException
+     */
     public function deleteMeasurement(string $measurement, ?DateTime $start = null, ?DateTime $stop = null): bool
     {
         if ($this->client === null) {
@@ -300,6 +303,10 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
         }
     }
 
+    /**
+     * @throws ConnectionException
+     * @throws DatabaseException
+     */
     private function getOrgId(): string
     {
         if ($this->orgId === null) {
@@ -309,12 +316,12 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
             $orgService = $this->client->createService(OrganizationsService::class);
             if (! $orgService instanceof OrganizationsService) {
-                throw new RuntimeException('Failed to create OrganizationsService');
+                throw new DatabaseException('Failed to create OrganizationsService');
             }
 
             $organizations = $orgService->getOrgs();
             if (! $organizations instanceof Organizations) {
-                throw new RuntimeException('Invalid object returned from getOrgs');
+                throw new DatabaseException('Invalid object returned from getOrgs');
             }
 
             $orgs = $organizations->getOrgs();
@@ -335,6 +342,10 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
         return $this->orgId;
     }
 
+    /**
+     * @throws ConnectionException
+     * @throws DatabaseException
+     */
     private function getBucketsService(): BucketsService
     {
         if ($this->bucketsService === null) {
@@ -345,7 +356,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             $service = $this->client->createService(BucketsService::class);
 
             if (! $service instanceof BucketsService) {
-                throw new RuntimeException('Failed to create BucketsService');
+                throw new DatabaseException('Failed to create BucketsService');
             }
 
             $this->bucketsService = $service;

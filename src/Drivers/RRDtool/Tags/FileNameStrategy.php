@@ -3,6 +3,8 @@
 namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 
 use SplFileInfo;
+use TimeSeriesPhp\Exceptions\RRDtoolFilenameTooLongException;
+use TimeSeriesPhp\Exceptions\RRDtoolTagException;
 use TimeSeriesPhp\Utils\File;
 
 class FileNameStrategy implements RRDTagStrategyInterface
@@ -13,7 +15,7 @@ class FileNameStrategy implements RRDTagStrategyInterface
         public readonly string $baseDir
     ) {
         if (! str_ends_with($this->baseDir, File::DIRECTORY_SEPARATOR)) {
-            throw new \InvalidArgumentException('Base directory must end with a slash');
+            throw new RRDtoolTagException('Base directory must end with a slash');
         }
     }
 
@@ -24,6 +26,8 @@ class FileNameStrategy implements RRDTagStrategyInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @throws RRDtoolFilenameTooLongException
      */
     public function getFilePath(string $measurement, array $tags = []): string
     {
