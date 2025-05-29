@@ -135,6 +135,7 @@ class GraphiteQueryBuilder implements QueryBuilderInterface
             $query->getInterval() => (function () use ($target, $query) {
                 // No aggregations, just handle time grouping if needed
                 $interval = $this->convertIntervalToGraphite($query->getInterval());
+
                 return "summarize($target, \"$interval\", \"avg\")";
             })(),
             default => $target

@@ -1,6 +1,6 @@
 <?php
 
-namespace TimeSeriesPhp\Utils;
+namespace TimeSeriesPhp\Support\Logging;
 
 use TimeSeriesPhp\Config\LoggingConfig;
 
@@ -9,6 +9,7 @@ use TimeSeriesPhp\Config\LoggingConfig;
  */
 class Logger
 {
+    // Constants kept for backward compatibility
     public const LEVEL_DEBUG = 'debug';
 
     public const LEVEL_INFO = 'info';
@@ -51,7 +52,7 @@ class Logger
      */
     public static function debug(string $message, array $context = []): void
     {
-        self::log(self::LEVEL_DEBUG, $message, $context);
+        self::log(LogLevel::DEBUG, $message, $context);
     }
 
     /**
@@ -62,7 +63,7 @@ class Logger
      */
     public static function info(string $message, array $context = []): void
     {
-        self::log(self::LEVEL_INFO, $message, $context);
+        self::log(LogLevel::INFO, $message, $context);
     }
 
     /**
@@ -73,7 +74,7 @@ class Logger
      */
     public static function warning(string $message, array $context = []): void
     {
-        self::log(self::LEVEL_WARNING, $message, $context);
+        self::log(LogLevel::WARNING, $message, $context);
     }
 
     /**
@@ -84,22 +85,22 @@ class Logger
      */
     public static function error(string $message, array $context = []): void
     {
-        self::log(self::LEVEL_ERROR, $message, $context);
+        self::log(LogLevel::ERROR, $message, $context);
     }
 
     /**
      * Log a message with the specified level
      *
-     * @param  string  $level  The log level
+     * @param  LogLevel  $level  The log level
      * @param  string  $message  The message to log
      * @param  array<string, mixed>  $context  Additional context data
      */
-    public static function log(string $level, string $message, array $context = []): void
+    public static function log(LogLevel $level, string $message, array $context = []): void
     {
         $config = self::getConfig();
 
         // Check if this level is enabled
-        if (! $config->isLevelEnabled($level)) {
+        if (! $config->isLevelEnabled($level->value)) {
             return;
         }
 
@@ -127,15 +128,15 @@ class Logger
     /**
      * Format a log message
      *
-     * @param  string  $level  The log level
+     * @param  LogLevel  $level  The log level
      * @param  string  $message  The message to log
      * @param  array<string, mixed>  $context  Additional context data
      * @return string The formatted message
      */
-    private static function formatMessage(string $level, string $message, array $context = []): string
+    private static function formatMessage(LogLevel $level, string $message, array $context = []): string
     {
         $timestamp = date('Y-m-d H:i:s');
-        $levelUpper = strtoupper($level);
+        $levelUpper = strtoupper($level->value);
 
         // Replace placeholders in the message
         $replacements = [];

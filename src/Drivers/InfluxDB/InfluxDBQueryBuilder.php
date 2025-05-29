@@ -31,10 +31,12 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
             $query->getStartTime() && $query->getEndTime() => (function () use ($query) {
                 $start = $query->getStartTime()->format('c');
                 $stop = $query->getEndTime()->format('c');
+
                 return "  |> range(start: {$start}, stop: {$stop})\n";
             })(),
             $query->getStartTime() => (function () use ($query) {
                 $start = $query->getStartTime()->format('c');
+
                 return "  |> range(start: {$start})\n";
             })(),
             $query->getRelativeTime() !== null => '  |> range(start: -'.$this->formatDateInterval($query->getRelativeTime()).")\n",
@@ -79,6 +81,7 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
                 $operator === 'IN' => (function () use ($field, $condition) {
                     $values = array_map(fn ($v) => $this->formatValue($v), $condition->getValues());
                     $valuesList = implode(', ', $values);
+
                     return "  |> filter(fn: (r) => contains(value: r[\"$field\"], set: [$valuesList]))\n";
                 })(),
                 $operator === 'NOT IN' => (function () use ($field, $condition) {
@@ -89,15 +92,18 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
                         $conditions[] = "r[\"$field\"] != $formattedValue";
                     }
                     $conditionString = implode(' and ', $conditions);
+
                     return "  |> filter(fn: (r) => $conditionString)\n";
                 })(),
                 $operator === 'BETWEEN' && is_array($condition->getValue()) && count($condition->getValue()) === 2 => (function () use ($field, $condition) {
                     $min = $this->formatValue($condition->getValue()[0]);
                     $max = $this->formatValue($condition->getValue()[1]);
+
                     return "  |> filter(fn: (r) => r[\"$field\"] >= $min and r[\"$field\"] <= $max)\n";
                 })(),
                 $operator === 'REGEX' => (function () use ($field, $condition) {
                     $pattern = $condition->getScalarValue();
+
                     return "  |> filter(fn: (r) => r[\"$field\"] =~ /$pattern/)\n";
                 })(),
                 default => "  |> filter(fn: (r) => r[\"$field\"] $operator $value)\n", // Standard operators

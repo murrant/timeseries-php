@@ -13,7 +13,7 @@ use TimeSeriesPhp\Exceptions\ConfigurationException;
 use TimeSeriesPhp\Exceptions\ConnectionException;
 use TimeSeriesPhp\Exceptions\RawQueryException;
 use TimeSeriesPhp\Exceptions\TSDBException;
-use TimeSeriesPhp\Utils\Logger;
+use TimeSeriesPhp\Support\Logging\Logger;
 
 class PrometheusDriver extends AbstractTimeSeriesDB
 {
@@ -94,12 +94,14 @@ class PrometheusDriver extends AbstractTimeSeriesDB
                 preg_match('/#\s*time range:\s*([^\s]+)\s+to\s+([^\s]+)/', $queryString, $matches) => (function () use (&$timeParams, $queryString, $matches) {
                     $timeParams['start'] = $matches[1];
                     $timeParams['end'] = $matches[2];
+
                     // Remove the comment from the query
                     return preg_replace('/#\s*time range:[^\n]+/', '', $queryString) ?? $queryString;
                 })(),
                 preg_match('/#\s*relative time:\s*([^\n]+)/', $queryString, $matches) => (function () use (&$timeParams, $queryString, $matches) {
                     // Convert relative time to absolute time
                     $timeParams['time'] = $matches[1];
+
                     // Remove the comment from the query
                     return preg_replace('/#\s*relative time:[^\n]+/', '', $queryString) ?? $queryString;
                 })(),
@@ -117,11 +119,11 @@ class PrometheusDriver extends AbstractTimeSeriesDB
                         'start' => $timeParams['start'],
                         'end' => $timeParams['end'],
                         'step' => '15s', // Default step
-                    ])
+                    ]),
                 ],
                 isset($timeParams['time']) => [
                     '/api/v1/query',
-                    array_merge($params, ['time' => $timeParams['time']])
+                    array_merge($params, ['time' => $timeParams['time']]),
                 ],
                 default => ['/api/v1/query', $params]
             };
