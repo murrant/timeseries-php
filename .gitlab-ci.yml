@@ -21,6 +21,8 @@ default:
     paths:
       - vendor/
   before_script:
+    # Install RRDtool
+    - apt-get update -qq && apt-get install -y -qq rrdtool
     # Install composer dependencies
     - wget https://composer.github.io/installer.sig -O - -q | tr -d '\n' > installer.sig
     - php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
@@ -43,4 +45,3 @@ static-anlysis-job:   # This job also runs in the test stage.
   script:
     - echo "Running phpstan..."
     - vendor/bin/phpstan
-

@@ -27,6 +27,9 @@ jobs:
                   php_version: "8.2"
                   php_extensions: "fileinfo"
 
+            - name: Install RRDtool
+              run: sudo apt-get update -qq && sudo apt-get install -y -qq rrdtool
+
             - name: PHPUnit tests
               uses: php-actions/phpunit@v3
               with:
