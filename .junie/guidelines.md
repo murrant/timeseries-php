@@ -9,6 +9,7 @@ You are an Expert in PHP, Time Series Databases, an Laravel.
    Static Analysis: phpstan
 - Never throw a generic \Exception, use TSDBException as the base exception
 - Never use eval()
+- Inline code comments should only be used when they are needed to explain something that is not obvious.
 - After every change, run:
 ./vendor/bin/phpunit
 ./vendor/bin/phpstan

@@ -214,19 +214,19 @@ class RRDtoolXmlIntegrationTest extends TestCase
 
     /**
      * Test generating an SVG graph from RRD data
-     * 
+     *
      * This test verifies that the RRDtool driver can generate an SVG graph
      * from RRD data and that the SVG has the expected structure.
      */
     public function test_generate_svg_graph(): void
     {
         // Skip test if simplexml extension is not available
-        if (!extension_loaded('simplexml')) {
+        if (! extension_loaded('simplexml')) {
             $this->markTestSkipped('simplexml extension is not available');
         }
 
         // Get the RRD file path
-        $rrdFile = $this->dataDir . 'cpu_usage_host-server1.rrd';
+        $rrdFile = $this->dataDir.'cpu_usage_host-server1.rrd';
         $this->assertFileExists($rrdFile, "RRD file does not exist: $rrdFile");
 
         // Create a RRDtoolRawQuery for graph generation
@@ -240,47 +240,54 @@ class RRDtoolXmlIntegrationTest extends TestCase
         $graphQuery->param('--height', '200');
         $graphQuery->param('--title', 'CPU Usage Test');
 
-        // Set time range
+        // Set time range - ensure we're using the exact time range that has data
         $startTime = '1685314800'; // 2023-05-28 23:00:00 UTC
         $endTime = '1685316540';   // 2023-05-28 23:29:00 UTC
         $graphQuery->param('--start', $startTime);
         $graphQuery->param('--end', $endTime);
 
+        // Add additional parameters to ensure the graph shows data properly
+        $graphQuery->param('--vertical-label', 'CPU %');
+        $graphQuery->param('--lower-limit', '0');
+        $graphQuery->param('--upper-limit', '30');
+        $graphQuery->param('--rigid'); // Enforce the limits
+        $graphQuery->param('--alt-y-grid'); // Make the Y-axis grid more visible
+
         // Define data source
         $graphQuery->def('cpu', $rrdFile, 'value', 'AVERAGE');
 
-        // Add a simple line
-        $graphQuery->statement('LINE1', 'cpu#FF0000', 'CPU Usage');
+        // Add a thicker line (LINE3 is thicker than LINE1)
+        $graphQuery->statement('LINE3', 'cpu#FF0000', 'CPU Usage');
 
         try {
             // Generate the graph
             $graphFile = $this->driver->getRRDGraph($graphQuery);
 
             // Verify the graph file exists
-            $this->assertFileExists($graphFile, "Graph file was not created");
-            $this->assertStringEndsWith('.svg', $graphFile, "Graph file does not have .svg extension");
+            $this->assertFileExists($graphFile, 'Graph file was not created');
+            $this->assertStringEndsWith('.svg', $graphFile, 'Graph file does not have .svg extension');
 
             // Read the SVG content
             $svgContent = file_get_contents($graphFile);
-            $this->assertNotEmpty($svgContent, "SVG content is empty");
+            $this->assertNotEmpty($svgContent, 'SVG content is empty');
 
             // Validate SVG structure
-            $this->assertStringContainsString('<?xml version', $svgContent, "SVG does not contain XML declaration");
-            $this->assertStringContainsString('<svg', $svgContent, "SVG does not contain SVG tag");
+            $this->assertStringContainsString('<?xml version', $svgContent, 'SVG does not contain XML declaration');
+            $this->assertStringContainsString('<svg', $svgContent, 'SVG does not contain SVG tag');
 
             // Parse the SVG XML
             $svg = simplexml_load_string($svgContent);
-            $this->assertNotFalse($svg, "Failed to parse SVG XML");
+            $this->assertNotFalse($svg, 'Failed to parse SVG XML');
 
             // Get the SVG element
             $svgElements = $svg->xpath('//*[local-name()="svg"]');
-            $this->assertNotEmpty($svgElements, "SVG does not contain an SVG element");
+            $this->assertNotEmpty($svgElements, 'SVG does not contain an SVG element');
             $svgElement = $svgElements[0];
 
             // Validate SVG attributes
-            $this->assertTrue(isset($svgElement['width']), "SVG does not have width attribute");
-            $this->assertTrue(isset($svgElement['height']), "SVG does not have height attribute");
-            $this->assertTrue(isset($svgElement['viewBox']), "SVG does not have viewBox attribute");
+            $this->assertTrue(isset($svgElement['width']), 'SVG does not have width attribute');
+            $this->assertTrue(isset($svgElement['height']), 'SVG does not have height attribute');
+            $this->assertTrue(isset($svgElement['viewBox']), 'SVG does not have viewBox attribute');
 
             // Validate SVG content - use namespace-aware XPath
             $svg->registerXPathNamespace('svg', 'http://www.w3.org/2000/svg');
@@ -291,14 +298,42 @@ class RRDtoolXmlIntegrationTest extends TestCase
                 $paths = $svg->xpath('//*[local-name()="path"]');
             }
 
-            $this->assertNotEmpty($paths, "SVG does not contain any path elements");
+            $this->assertNotEmpty($paths, 'SVG does not contain any path elements');
+
+            // For debugging, save the SVG content to a file
+            $debugFile = sys_get_temp_dir().'/debug_svg_'.uniqid().'.svg';
+            file_put_contents($debugFile, $svgContent);
+            echo "Debug SVG saved to: $debugFile".PHP_EOL;
+
+            // Check for the presence of data lines - be more flexible in how we search
+            // Count the number of path elements - a graph with data should have multiple paths
+            $this->assertGreaterThan(1, count($paths), 'SVG does not contain enough path elements to display data');
+
+            // Look for paths with specific attributes or styles that indicate data lines
+            $foundDataLine = false;
+            foreach ($paths as $path) {
+                $style = (string) $path['style'];
+                $stroke = (string) $path['stroke'];
+                $d = (string) $path['d'];
+
+                // A data line typically has a non-empty d attribute with multiple points
+                if (! empty($d) && strlen($d) > 20 && (str_contains($style, 'stroke') || ! empty($stroke))) {
+                    $foundDataLine = true;
+                    break;
+                }
+            }
+
+            $this->assertTrue($foundDataLine, 'SVG does not contain a path that looks like a data line');
 
             // Clean up the graph file
             unlink($graphFile);
         } catch (\Exception $e) {
-            echo "Error generating graph: " . $e->getMessage() . PHP_EOL;
+            echo 'Error generating graph: '.$e->getMessage().PHP_EOL;
             if (method_exists($e, 'getDebugMessage')) {
-                echo "Debug: " . (string)$e->getDebugMessage(true) . PHP_EOL;
+                $debugMessage = $e->getDebugMessage(true);
+                if (is_string($debugMessage)) {
+                    echo 'Debug: '.$debugMessage.PHP_EOL;
+                }
             }
             throw $e;
         }
