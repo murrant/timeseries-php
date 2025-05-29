@@ -1,4 +1,4 @@
-name: PHPUnit Coverage Report
+name: PHPUnit Tests and Coverage Report
 
 on:
     push:
@@ -6,9 +6,13 @@ on:
         paths:
             - '.github/workflows/test.yaml'
             - '**.php'
+    pull_request:
+        branches: ["main"]
+        paths:
+            - '**.php'
 
 jobs:
-    build:
+    unit-tests:
         runs-on: ubuntu-latest
 
         steps:
@@ -35,6 +39,7 @@ jobs:
               with:
                   php_extensions: "xdebug"
                   coverage_cobertura: coverage.cobertura.xml
+                  args: --exclude-group integration,benchmark
               env:
                   XDEBUG_MODE: coverage
 
@@ -43,3 +48,159 @@ jobs:
               with:
                   badge: true
                   filename: coverage.cobertura.xml
+
+    integration-tests:
+        runs-on: ubuntu-latest
+        needs: unit-tests
+        continue-on-error: true  # Integration tests may fail if services are not available
+
+        services:
+            influxdb:
+                image: influxdb:2.0
+                ports:
+                    - 8086:8086
+                env:
+                    DOCKER_INFLUXDB_INIT_MODE: setup
+                    DOCKER_INFLUXDB_INIT_USERNAME: admin
+                    DOCKER_INFLUXDB_INIT_PASSWORD: password123
+                    DOCKER_INFLUXDB_INIT_ORG: my-org
+                    DOCKER_INFLUXDB_INIT_BUCKET: my-bucket
+                    DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: my-token
+                options: >-
+                    --health-cmd "curl -f http://localhost:8086/ping || exit 1"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+
+            prometheus:
+                image: prom/prometheus:latest
+                ports:
+                    - 9090:9090
+                options: >-
+                    --health-cmd "wget -q --spider http://localhost:9090/-/healthy || exit 1"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+
+            graphite:
+                image: graphiteapp/graphite-statsd:latest
+                ports:
+                    - 2003:2003
+                    - 8080:8080
+                options: >-
+                    --health-cmd "nc -z localhost 2003 || exit 1"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Cache Composer dependencies
+              uses: actions/cache@v3
+              with:
+                  path: ./vendor
+                  key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+
+            - name: Composer Init
+              uses: php-actions/composer@v6
+              with:
+                  php_version: "8.2"
+                  php_extensions: "fileinfo"
+
+            - name: Install RRDtool
+              run: sudo apt-get update -qq && sudo apt-get install -y -qq rrdtool
+
+            - name: Run Integration Tests
+              uses: php-actions/phpunit@v3
+              with:
+                  php_extensions: "xdebug"
+                  args: --group integration
+              env:
+                  INFLUXDB_URL: http://localhost:8086
+                  INFLUXDB_TOKEN: my-token
+                  INFLUXDB_ORG: my-org
+                  INFLUXDB_BUCKET: my-bucket
+                  PROMETHEUS_URL: http://localhost:9090
+                  GRAPHITE_HOST: localhost
+                  GRAPHITE_PORT: 2003
+                  GRAPHITE_QUERY_PORT: 8080
+
+    benchmarks:
+        runs-on: ubuntu-latest
+        needs: unit-tests
+        continue-on-error: true  # Benchmarks may fail if services are not available
+
+        services:
+            influxdb:
+                image: influxdb:2.0
+                ports:
+                    - 8086:8086
+                env:
+                    DOCKER_INFLUXDB_INIT_MODE: setup
+                    DOCKER_INFLUXDB_INIT_USERNAME: admin
+                    DOCKER_INFLUXDB_INIT_PASSWORD: password123
+                    DOCKER_INFLUXDB_INIT_ORG: my-org
+                    DOCKER_INFLUXDB_INIT_BUCKET: benchmark_test
+                    DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: my-token
+                options: >-
+                    --health-cmd "curl -f http://localhost:8086/ping || exit 1"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+
+            prometheus:
+                image: prom/prometheus:latest
+                ports:
+                    - 9090:9090
+                options: >-
+                    --health-cmd "wget -q --spider http://localhost:9090/-/healthy || exit 1"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+
+            graphite:
+                image: graphiteapp/graphite-statsd:latest
+                ports:
+                    - 2003:2003
+                    - 8080:8080
+                options: >-
+                    --health-cmd "nc -z localhost 2003 || exit 1"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Cache Composer dependencies
+              uses: actions/cache@v3
+              with:
+                  path: ./vendor
+                  key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+
+            - name: Composer Init
+              uses: php-actions/composer@v6
+              with:
+                  php_version: "8.2"
+                  php_extensions: "fileinfo"
+
+            - name: Install RRDtool
+              run: sudo apt-get update -qq && sudo apt-get install -y -qq rrdtool
+
+            - name: Run Benchmarks
+              uses: php-actions/phpunit@v3
+              with:
+                  php_extensions: "xdebug"
+                  args: --group benchmark
+              env:
+                  INFLUXDB_URL: http://localhost:8086
+                  INFLUXDB_TOKEN: my-token
+                  INFLUXDB_ORG: my-org
+                  INFLUXDB_BUCKET: benchmark_test
+                  PROMETHEUS_URL: http://localhost:9090
+                  GRAPHITE_HOST: localhost
+                  GRAPHITE_PORT: 2003
+                  GRAPHITE_QUERY_PORT: 8080

@@ -8,10 +8,10 @@ use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Drivers\RRDtool\Config\RRDtoolConfig;
 use TimeSeriesPhp\Drivers\RRDtool\Driver;
+use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolTagException;
 use TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolRawQuery;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
-use TimeSeriesPhp\Exceptions\Driver\RRDtoolTagException;
 
 class RRDtoolDriverTest extends TestCase
 {

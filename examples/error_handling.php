@@ -13,12 +13,11 @@ use TimeSeriesPhp\Exceptions\Write\WriteException;
 
 /**
  * Error Handling Example
- * 
+ *
  * This example demonstrates robust error handling strategies when working with
  * time series databases, including exception handling, retry mechanisms, and
  * circuit breakers.
  */
-
 echo "TimeSeriesPhp Error Handling Example\n";
 echo "===================================\n\n";
 
@@ -32,18 +31,18 @@ echo "Step 1: Basic exception handling...\n";
 try {
     // Intentionally use an invalid configuration to trigger an exception
     $invalidConfig = createInvalidConfig($driver);
-    
+
     // This should throw a ConfigurationException
     $db = TSDBFactory::create($driver, $invalidConfig);
-    
+
     echo "This line should not be reached.\n";
 } catch (ConfigurationException $e) {
-    echo "Caught ConfigurationException: " . $e->getMessage() . "\n";
-    echo "Exception type: " . get_class($e) . "\n";
+    echo 'Caught ConfigurationException: '.$e->getMessage()."\n";
+    echo 'Exception type: '.get_class($e)."\n";
 } catch (TSDBException $e) {
-    echo "Caught TSDBException: " . $e->getMessage() . "\n";
+    echo 'Caught TSDBException: '.$e->getMessage()."\n";
 } catch (\Exception $e) {
-    echo "Caught generic Exception: " . $e->getMessage() . "\n";
+    echo 'Caught generic Exception: '.$e->getMessage()."\n";
 }
 
 // Step 2: Hierarchical exception handling
@@ -52,34 +51,34 @@ echo "\nStep 2: Hierarchical exception handling...\n";
 try {
     // Create a valid configuration
     $config = createConfig($driver);
-    
+
     // Create database instance
     $db = TSDBFactory::create($driver, $config);
     echo "Successfully connected to {$driver}.\n";
-    
+
     // Try to write a data point with an invalid measurement name
     $invalidDataPoint = new DataPoint(
         '', // Empty measurement name (invalid)
         ['value' => 42]
     );
-    
+
     // This should throw a WriteException
     $db->write($invalidDataPoint);
-    
+
     echo "This line should not be reached.\n";
 } catch (ConnectionException $e) {
     // Handle connection-specific errors
-    echo "Caught ConnectionException: " . $e->getMessage() . "\n";
+    echo 'Caught ConnectionException: '.$e->getMessage()."\n";
 } catch (WriteException $e) {
     // Handle write-specific errors
-    echo "Caught WriteException: " . $e->getMessage() . "\n";
-    echo "Exception type: " . get_class($e) . "\n";
+    echo 'Caught WriteException: '.$e->getMessage()."\n";
+    echo 'Exception type: '.get_class($e)."\n";
 } catch (TSDBException $e) {
     // Handle any other TimeSeriesPhp-specific errors
-    echo "Caught TSDBException: " . $e->getMessage() . "\n";
+    echo 'Caught TSDBException: '.$e->getMessage()."\n";
 } catch (\Exception $e) {
     // Handle any other unexpected errors
-    echo "Caught generic Exception: " . $e->getMessage() . "\n";
+    echo 'Caught generic Exception: '.$e->getMessage()."\n";
 }
 
 // Step 3: Handling query errors
@@ -87,25 +86,25 @@ echo "\nStep 3: Handling query errors...\n";
 
 try {
     // Create a valid configuration and connect
-    if (!isset($db) || !$db) {
+    if (! isset($db) || ! $db) {
         $config = createConfig($driver);
         $db = TSDBFactory::create($driver, $config);
     }
-    
+
     // Create an invalid query (e.g., with a syntax error in the raw query)
-    $invalidQuery = "This is not a valid query";
-    
+    $invalidQuery = 'This is not a valid query';
+
     // This should throw a QueryException
     $result = $db->rawQuery($invalidQuery);
-    
+
     echo "This line should not be reached.\n";
 } catch (QueryException $e) {
-    echo "Caught QueryException: " . $e->getMessage() . "\n";
-    echo "Exception type: " . get_class($e) . "\n";
+    echo 'Caught QueryException: '.$e->getMessage()."\n";
+    echo 'Exception type: '.get_class($e)."\n";
 } catch (TSDBException $e) {
-    echo "Caught TSDBException: " . $e->getMessage() . "\n";
+    echo 'Caught TSDBException: '.$e->getMessage()."\n";
 } catch (\Exception $e) {
-    echo "Caught generic Exception: " . $e->getMessage() . "\n";
+    echo 'Caught generic Exception: '.$e->getMessage()."\n";
 }
 
 // Step 4: Implementing a retry mechanism
@@ -118,12 +117,12 @@ function retryWithExponentialBackoff(callable $callback, array $retryableExcepti
 {
     $attempt = 0;
     $delay = $initialDelay;
-    
+
     while (true) {
         try {
             $attempt++;
             echo "Attempt {$attempt}...\n";
-            
+
             // Execute the callback
             return $callback();
         } catch (\Exception $e) {
@@ -135,19 +134,19 @@ function retryWithExponentialBackoff(callable $callback, array $retryableExcepti
                     break;
                 }
             }
-            
+
             // If we shouldn't retry or we've reached max retries, rethrow
-            if (!$shouldRetry || $attempt >= $maxRetries) {
+            if (! $shouldRetry || $attempt >= $maxRetries) {
                 throw $e;
             }
-            
+
             // Log the error and wait before retrying
-            echo "Error on attempt {$attempt}: " . $e->getMessage() . "\n";
-            echo "Retrying in " . ($delay / 1000) . " seconds...\n";
-            
+            echo "Error on attempt {$attempt}: ".$e->getMessage()."\n";
+            echo 'Retrying in '.($delay / 1000)." seconds...\n";
+
             // Wait before retrying (convert milliseconds to microseconds)
             usleep($delay * 1000);
-            
+
             // Exponential backoff
             $delay *= 2;
         }
@@ -157,35 +156,35 @@ function retryWithExponentialBackoff(callable $callback, array $retryableExcepti
 // Example of using the retry mechanism for writing data
 try {
     // Create a valid configuration and connect if not already connected
-    if (!isset($db) || !$db) {
+    if (! isset($db) || ! $db) {
         $config = createConfig($driver);
         $db = TSDBFactory::create($driver, $config);
     }
-    
+
     // Define which exceptions are retryable
     $retryableExceptions = [
         ConnectionException::class,
-        WriteException::class
+        WriteException::class,
     ];
-    
+
     // Create a valid data point
     $dataPoint = new DataPoint(
         'error_handling_example',
         ['value' => 42],
         ['test' => 'retry_mechanism']
     );
-    
+
     // Use the retry mechanism
     $result = retryWithExponentialBackoff(
-        function() use ($db, $dataPoint) {
+        function () use ($db, $dataPoint) {
             // For demonstration, let's simulate a failure on the first attempt
             static $attempts = 0;
             $attempts++;
-            
+
             if ($attempts === 1) {
-                throw new ConnectionException("Simulated connection error for retry demonstration");
+                throw new ConnectionException('Simulated connection error for retry demonstration');
             }
-            
+
             // This should succeed on the second attempt
             return $db->write($dataPoint);
         },
@@ -193,10 +192,10 @@ try {
         3,  // Max retries
         500 // Initial delay in milliseconds
     );
-    
-    echo "Write operation " . ($result ? "succeeded" : "failed") . " after retries.\n";
+
+    echo 'Write operation '.($result ? 'succeeded' : 'failed')." after retries.\n";
 } catch (\Exception $e) {
-    echo "Retry mechanism failed: " . $e->getMessage() . "\n";
+    echo 'Retry mechanism failed: '.$e->getMessage()."\n";
 }
 
 // Step 5: Implementing a circuit breaker
@@ -208,74 +207,80 @@ echo "\nStep 5: Implementing a circuit breaker...\n";
 class CircuitBreaker
 {
     const STATE_CLOSED = 'CLOSED';       // Normal operation, requests go through
+
     const STATE_OPEN = 'OPEN';           // Circuit is open, requests fail fast
+
     const STATE_HALF_OPEN = 'HALF_OPEN'; // Testing if the service is back
-    
+
     private $state = self::STATE_CLOSED;
+
     private $failureThreshold;
+
     private $failureCount = 0;
+
     private $resetTimeout;
+
     private $lastFailureTime = 0;
-    
+
     public function __construct(int $failureThreshold = 3, int $resetTimeout = 30)
     {
         $this->failureThreshold = $failureThreshold;
         $this->resetTimeout = $resetTimeout;
     }
-    
+
     public function execute(callable $callback)
     {
         $this->checkState();
-        
+
         if ($this->state === self::STATE_OPEN) {
-            throw new \RuntimeException("Circuit breaker is open - failing fast");
+            throw new \RuntimeException('Circuit breaker is open - failing fast');
         }
-        
+
         try {
             $result = $callback();
-            
+
             // If we're in half-open state and the call succeeded, close the circuit
             if ($this->state === self::STATE_HALF_OPEN) {
                 $this->state = self::STATE_CLOSED;
                 $this->failureCount = 0;
                 echo "Circuit is now CLOSED\n";
             }
-            
+
             return $result;
         } catch (\Exception $e) {
             $this->recordFailure();
             throw $e;
         }
     }
-    
+
     private function recordFailure()
     {
         $this->failureCount++;
         $this->lastFailureTime = time();
-        
+
         if ($this->failureCount >= $this->failureThreshold) {
             $this->state = self::STATE_OPEN;
             echo "Circuit is now OPEN\n";
         }
     }
-    
+
     private function checkState()
     {
         if ($this->state === self::STATE_OPEN) {
             $timeElapsed = time() - $this->lastFailureTime;
-            
+
             if ($timeElapsed >= $this->resetTimeout) {
                 $this->state = self::STATE_HALF_OPEN;
                 echo "Circuit is now HALF_OPEN\n";
             }
         }
     }
-    
+
     public function getState()
     {
         return $this->state;
     }
-    
+
     public function reset()
     {
         $this->state = self::STATE_CLOSED;
@@ -288,7 +293,7 @@ class CircuitBreaker
 $circuitBreaker = new CircuitBreaker(3, 5); // 3 failures, 5 second timeout
 
 // Create a valid configuration and connect if not already connected
-if (!isset($db) || !$db) {
+if (! isset($db) || ! $db) {
     $config = createConfig($driver);
     $db = TSDBFactory::create($driver, $config);
 }
@@ -296,35 +301,35 @@ if (!isset($db) || !$db) {
 // Run a series of operations with the circuit breaker
 for ($i = 1; $i <= 10; $i++) {
     echo "\nOperation {$i}:\n";
-    
+
     try {
-        $result = $circuitBreaker->execute(function() use ($db, $i) {
+        $result = $circuitBreaker->execute(function () use ($db, $i) {
             // Simulate failures for the first 4 operations
             if ($i <= 4) {
-                throw new ConnectionException("Simulated failure for circuit breaker demonstration");
+                throw new ConnectionException('Simulated failure for circuit breaker demonstration');
             }
-            
+
             // This should succeed for operations 5-10
             $dataPoint = new DataPoint(
                 'error_handling_example',
                 ['value' => $i],
                 ['test' => 'circuit_breaker']
             );
-            
+
             return $db->write($dataPoint);
         });
-        
+
         echo "Operation succeeded.\n";
     } catch (\RuntimeException $e) {
         // This is thrown when the circuit is open
-        echo "Circuit breaker prevented operation: " . $e->getMessage() . "\n";
+        echo 'Circuit breaker prevented operation: '.$e->getMessage()."\n";
     } catch (\Exception $e) {
-        echo "Operation failed: " . $e->getMessage() . "\n";
+        echo 'Operation failed: '.$e->getMessage()."\n";
     }
-    
+
     // Show the current state of the circuit breaker
-    echo "Circuit breaker state: " . $circuitBreaker->getState() . "\n";
-    
+    echo 'Circuit breaker state: '.$circuitBreaker->getState()."\n";
+
     // Wait a bit between operations
     sleep(1);
 }
@@ -342,34 +347,34 @@ switch ($driver) {
             // Example: Try to query a non-existent bucket/database
             $result = $db->rawQuery('from(bucket: "non_existent_bucket") |> range(start: -1h)');
         } catch (QueryException $e) {
-            echo "InfluxDB-specific error: " . $e->getMessage() . "\n";
+            echo 'InfluxDB-specific error: '.$e->getMessage()."\n";
         }
         break;
-        
+
     case 'prometheus':
         try {
             // Example: Try to query with invalid PromQL syntax
             $result = $db->rawQuery('invalid_metric{');
         } catch (QueryException $e) {
-            echo "Prometheus-specific error: " . $e->getMessage() . "\n";
+            echo 'Prometheus-specific error: '.$e->getMessage()."\n";
         }
         break;
-        
+
     case 'graphite':
         try {
             // Example: Try to query with invalid function
             $result = $db->rawQuery('nonexistentFunction(servers.*.cpu)');
         } catch (QueryException $e) {
-            echo "Graphite-specific error: " . $e->getMessage() . "\n";
+            echo 'Graphite-specific error: '.$e->getMessage()."\n";
         }
         break;
-        
+
     case 'rrdtool':
         try {
             // Example: Try to query a non-existent RRD file
             $result = $db->rawQuery('fetch nonexistent.rrd AVERAGE');
         } catch (QueryException $e) {
-            echo "RRDtool-specific error: " . $e->getMessage() . "\n";
+            echo 'RRDtool-specific error: '.$e->getMessage()."\n";
         }
         break;
 }
@@ -394,16 +399,16 @@ function withGracefulDegradation(callable $primaryOperation, callable $fallbackO
                 break;
             }
         }
-        
-        if (!$shouldFallback) {
+
+        if (! $shouldFallback) {
             // If it's not a fallback exception, rethrow
             throw $e;
         }
-        
+
         // Log the error
-        echo "Primary operation failed: " . $e->getMessage() . "\n";
+        echo 'Primary operation failed: '.$e->getMessage()."\n";
         echo "Falling back to alternative operation...\n";
-        
+
         // Execute the fallback operation
         return $fallbackOperation();
     }
@@ -412,49 +417,50 @@ function withGracefulDegradation(callable $primaryOperation, callable $fallbackO
 // Example of using graceful degradation for querying
 try {
     // Create a valid configuration and connect if not already connected
-    if (!isset($db) || !$db) {
+    if (! isset($db) || ! $db) {
         $config = createConfig($driver);
         $db = TSDBFactory::create($driver, $config);
     }
-    
+
     // Define which exceptions should trigger the fallback
     $fallbackExceptions = [
         ConnectionException::class,
-        QueryException::class
+        QueryException::class,
     ];
-    
+
     // Use the graceful degradation pattern
     $result = withGracefulDegradation(
-        function() use ($db) {
+        function () use ($db) {
             // Primary operation - complex query that might fail
             $query = new Query('error_handling_example');
             $query->select(['value'])
-                  ->where('test', '=', 'non_existent_tag')
-                  ->timeRange(new DateTime('-1 hour'), new DateTime())
-                  ->groupByTime('5m')
-                  ->avg('value', 'avg_value');
-                  
+                ->where('test', '=', 'non_existent_tag')
+                ->timeRange(new DateTime('-1 hour'), new DateTime)
+                ->groupByTime('5m')
+                ->avg('value', 'avg_value');
+
             // Simulate a failure
-            throw new QueryException("Simulated query error for graceful degradation demonstration");
-            
+            throw new QueryException('Simulated query error for graceful degradation demonstration');
+
             return $db->query($query);
         },
-        function() use ($db) {
+        function () use ($db) {
             // Fallback operation - simpler query that's more likely to succeed
             $query = new Query('error_handling_example');
             $query->select(['value'])
-                  ->timeRange(new DateTime('-1 hour'), new DateTime());
-                  
+                ->timeRange(new DateTime('-1 hour'), new DateTime);
+
             echo "Executing fallback query...\n";
+
             return $db->query($query);
         },
         $fallbackExceptions
     );
-    
+
     echo "Query completed with graceful degradation.\n";
-    echo "Result contains " . count($result->getSeries()) . " data points.\n";
+    echo 'Result contains '.count($result->getSeries())." data points.\n";
 } catch (\Exception $e) {
-    echo "Both primary and fallback operations failed: " . $e->getMessage() . "\n";
+    echo 'Both primary and fallback operations failed: '.$e->getMessage()."\n";
 }
 
 // Step 8: Logging and monitoring
@@ -466,23 +472,25 @@ echo "\nStep 8: Logging and monitoring...\n";
 class LoggingWrapper
 {
     private $db;
+
     private $logger;
-    
+
     public function __construct($db, callable $logger)
     {
         $this->db = $db;
         $this->logger = $logger;
     }
-    
+
     public function write(DataPoint $dataPoint)
     {
         $startTime = microtime(true);
         $success = false;
         $error = null;
-        
+
         try {
             $result = $this->db->write($dataPoint);
             $success = $result;
+
             return $result;
         } catch (\Exception $e) {
             $error = $e;
@@ -490,7 +498,7 @@ class LoggingWrapper
         } finally {
             $endTime = microtime(true);
             $duration = round(($endTime - $startTime) * 1000, 2);
-            
+
             // Log the operation
             call_user_func($this->logger, [
                 'operation' => 'write',
@@ -498,20 +506,21 @@ class LoggingWrapper
                 'success' => $success,
                 'duration_ms' => $duration,
                 'error' => $error ? $error->getMessage() : null,
-                'timestamp' => date('Y-m-d H:i:s')
+                'timestamp' => date('Y-m-d H:i:s'),
             ]);
         }
     }
-    
+
     public function query(Query $query)
     {
         $startTime = microtime(true);
         $success = false;
         $error = null;
-        
+
         try {
             $result = $this->db->query($query);
             $success = true;
+
             return $result;
         } catch (\Exception $e) {
             $error = $e;
@@ -519,7 +528,7 @@ class LoggingWrapper
         } finally {
             $endTime = microtime(true);
             $duration = round(($endTime - $startTime) * 1000, 2);
-            
+
             // Log the operation
             call_user_func($this->logger, [
                 'operation' => 'query',
@@ -527,11 +536,11 @@ class LoggingWrapper
                 'success' => $success,
                 'duration_ms' => $duration,
                 'error' => $error ? $error->getMessage() : null,
-                'timestamp' => date('Y-m-d H:i:s')
+                'timestamp' => date('Y-m-d H:i:s'),
             ]);
         }
     }
-    
+
     // Proxy other methods to the underlying database
     public function __call($method, $args)
     {
@@ -540,8 +549,8 @@ class LoggingWrapper
 }
 
 // Create a simple logger function
-$logger = function($data) {
-    echo "[LOG] " . json_encode($data) . "\n";
+$logger = function ($data) {
+    echo '[LOG] '.json_encode($data)."\n";
 };
 
 // Create a logging wrapper around the database
@@ -555,22 +564,22 @@ try {
         ['value' => 100],
         ['test' => 'logging']
     );
-    
+
     $loggingDb->write($dataPoint);
-    
+
     // Execute a query
     $query = new Query('error_handling_example');
     $query->select(['value'])
-          ->where('test', '=', 'logging')
-          ->timeRange(new DateTime('-1 hour'), new DateTime());
-          
+        ->where('test', '=', 'logging')
+        ->timeRange(new DateTime('-1 hour'), new DateTime);
+
     $result = $loggingDb->query($query);
-    
+
     // Try an operation that will fail
     $invalidQuery = new Query('');
     $loggingDb->query($invalidQuery);
 } catch (\Exception $e) {
-    echo "Expected error: " . $e->getMessage() . "\n";
+    echo 'Expected error: '.$e->getMessage()."\n";
 }
 
 // Close the connection
@@ -594,25 +603,25 @@ function createInvalidConfig($driver)
                 'org' => '',  // Invalid empty org
                 'bucket' => 'example-bucket',
             ]);
-            
+
         case 'prometheus':
             return new \TimeSeriesPhp\Drivers\Prometheus\PrometheusConfig([
                 'url' => 'http://non-existent-host:9090',
             ]);
-            
+
         case 'graphite':
             return new \TimeSeriesPhp\Drivers\Graphite\GraphiteConfig([
                 'host' => 'non-existent-host',
                 'port' => 2003,
                 'protocol' => 'invalid-protocol', // Invalid protocol
             ]);
-            
+
         case 'rrdtool':
             return new \TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig([
                 'path' => '/non/existent/path',
                 'rrdtool_bin' => '/non/existent/rrdtool',
             ]);
-            
+
         default:
             throw new \InvalidArgumentException("Unsupported driver: {$driver}");
     }
@@ -626,40 +635,40 @@ function createConfig($driver)
     switch ($driver) {
         case 'influxdb':
             // For InfluxDB, try to read token from file or use a default
-            $token = file_exists(__DIR__ . '/.influx_db_token') 
-                ? trim(file_get_contents(__DIR__ . '/.influx_db_token')) 
+            $token = file_exists(__DIR__.'/.influx_db_token')
+                ? trim(file_get_contents(__DIR__.'/.influx_db_token'))
                 : 'your-token';
-                
+
             return new \TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig([
                 'url' => 'http://localhost:8086',
                 'token' => $token,
                 'org' => 'example-org',
                 'bucket' => 'example-bucket',
             ]);
-            
+
         case 'prometheus':
             return new \TimeSeriesPhp\Drivers\Prometheus\PrometheusConfig([
                 'url' => 'http://localhost:9090',
             ]);
-            
+
         case 'graphite':
             return new \TimeSeriesPhp\Drivers\Graphite\GraphiteConfig([
                 'host' => 'localhost',
                 'port' => 2003,
                 'protocol' => 'tcp',
             ]);
-            
+
         case 'rrdtool':
-            $rrdPath = __DIR__ . '/rrd_files';
-            if (!is_dir($rrdPath)) {
+            $rrdPath = __DIR__.'/rrd_files';
+            if (! is_dir($rrdPath)) {
                 mkdir($rrdPath, 0755, true);
             }
-            
+
             return new \TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig([
                 'path' => $rrdPath,
                 'rrdtool_bin' => '/usr/bin/rrdtool',
             ]);
-            
+
         default:
             throw new \InvalidArgumentException("Unsupported driver: {$driver}");
     }

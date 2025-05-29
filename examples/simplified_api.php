@@ -9,11 +9,10 @@ use TimeSeriesPhp\Drivers\InfluxDB\Config\InfluxDBConfig;
 
 /**
  * Simplified API Example
- * 
+ *
  * This example demonstrates how to use the simplified API provided by the TimeSeries class.
  * The TimeSeries class provides a more intuitive API for common operations with time series databases.
  */
-
 echo "TimeSeriesPhp Simplified API Example\n";
 echo "===================================\n\n";
 
@@ -21,8 +20,8 @@ echo "===================================\n\n";
 echo "Step 1: Creating configuration...\n";
 $config = new InfluxDBConfig([
     'url' => 'http://localhost:8086',
-    'token' => file_exists(__DIR__ . '/.influx_db_token') 
-        ? trim(file_get_contents(__DIR__ . '/.influx_db_token')) 
+    'token' => file_exists(__DIR__.'/.influx_db_token')
+        ? trim(file_get_contents(__DIR__.'/.influx_db_token'))
         : 'your-token',
     'org' => 'example-org',
     'bucket' => 'example-bucket',
@@ -35,35 +34,72 @@ try {
     $ts = new TimeSeries('influxdb', $config);
     echo "TimeSeries instance created successfully.\n\n";
 } catch (\Exception $e) {
-    echo "Error creating TimeSeries instance: " . $e->getMessage() . "\n";
+    echo 'Error creating TimeSeries instance: '.$e->getMessage()."\n";
     echo "This example will continue with simulated responses.\n\n";
-    
+
     // Create a mock driver for demonstration purposes
-    $mockDriver = new class implements \TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface {
-        public function connect(\TimeSeriesPhp\Contracts\Config\ConfigInterface $config): bool { return true; }
-        public function isConnected(): bool { return true; }
-        public function write(DataPoint $dataPoint): bool { return true; }
-        public function writeBatch(array $dataPoints): bool { return true; }
-        public function query(Query $query): \TimeSeriesPhp\Core\Data\QueryResult { 
-            return new \TimeSeriesPhp\Core\Data\QueryResult([]); 
+    $mockDriver = new class implements \TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface
+    {
+        public function connect(\TimeSeriesPhp\Contracts\Config\ConfigInterface $config): bool
+        {
+            return true;
         }
-        public function rawQuery(\TimeSeriesPhp\Contracts\Query\RawQueryInterface $query): \TimeSeriesPhp\Core\Data\QueryResult { 
-            return new \TimeSeriesPhp\Core\Data\QueryResult([]); 
+
+        public function isConnected(): bool
+        {
+            return true;
         }
-        public function createDatabase(string $database): bool { return true; }
-        public function deleteDatabase(string $database): bool { return true; }
-        public function getDatabases(): array { return ['example-bucket']; }
-        public function deleteMeasurement(string $measurement, ?\DateTime $start = null, ?\DateTime $stop = null): bool { return true; }
+
+        public function write(DataPoint $dataPoint): bool
+        {
+            return true;
+        }
+
+        public function writeBatch(array $dataPoints): bool
+        {
+            return true;
+        }
+
+        public function query(Query $query): \TimeSeriesPhp\Core\Data\QueryResult
+        {
+            return new \TimeSeriesPhp\Core\Data\QueryResult([]);
+        }
+
+        public function rawQuery(\TimeSeriesPhp\Contracts\Query\RawQueryInterface $query): \TimeSeriesPhp\Core\Data\QueryResult
+        {
+            return new \TimeSeriesPhp\Core\Data\QueryResult([]);
+        }
+
+        public function createDatabase(string $database): bool
+        {
+            return true;
+        }
+
+        public function deleteDatabase(string $database): bool
+        {
+            return true;
+        }
+
+        public function getDatabases(): array
+        {
+            return ['example-bucket'];
+        }
+
+        public function deleteMeasurement(string $measurement, ?\DateTime $start = null, ?\DateTime $stop = null): bool
+        {
+            return true;
+        }
+
         public function close(): void {}
     };
-    
+
     // Use reflection to set the private driver property
     $ts = new TimeSeries('influxdb', $config, false);
     $reflection = new \ReflectionClass($ts);
     $property = $reflection->getProperty('driver');
     $property->setAccessible(true);
     $property->setValue($ts, $mockDriver);
-    
+
     echo "Mock TimeSeries instance created for demonstration.\n\n";
 }
 
@@ -77,7 +113,7 @@ $result = $ts->write(
     ['host' => 'server1']         // tags
 );
 
-echo "Write result: " . ($result ? "Success" : "Failed") . "\n";
+echo 'Write result: '.($result ? 'Success' : 'Failed')."\n";
 
 // Using the writePoint helper method
 $result = $ts->writePoint(
@@ -86,7 +122,7 @@ $result = $ts->writePoint(
     ['host' => 'server1']         // tags
 );
 
-echo "WritePoint result: " . ($result ? "Success" : "Failed") . "\n\n";
+echo 'WritePoint result: '.($result ? 'Success' : 'Failed')."\n\n";
 
 // Step 4: Writing batch data
 echo "Step 4: Writing batch data...\n";
@@ -100,7 +136,7 @@ $dataPoints = [
 
 // Write batch data
 $result = $ts->writeBatch($dataPoints);
-echo "WriteBatch result: " . ($result ? "Success" : "Failed") . "\n\n";
+echo 'WriteBatch result: '.($result ? 'Success' : 'Failed')."\n\n";
 
 // Step 5: Querying data using helper methods
 echo "Step 5: Querying data using helper methods...\n";
@@ -121,7 +157,7 @@ $result = $ts->queryAvg(
     'cpu_usage',                  // measurement
     'value',                      // field
     new DateTime('-1 hour'),      // start time
-    new DateTime(),               // end time
+    new DateTime,               // end time
     ['host' => 'server1']         // tags
 );
 echo "QueryAvg executed successfully.\n";
@@ -132,7 +168,7 @@ $result = $ts->querySum(
     'cpu_usage',                  // measurement
     'value',                      // field
     new DateTime('-1 hour'),      // start time
-    new DateTime(),               // end time
+    new DateTime,               // end time
     ['host' => 'server1']         // tags
 );
 echo "QuerySum executed successfully.\n";
@@ -143,7 +179,7 @@ $result = $ts->queryCount(
     'cpu_usage',                  // measurement
     'value',                      // field
     new DateTime('-1 hour'),      // start time
-    new DateTime(),               // end time
+    new DateTime,               // end time
     ['host' => 'server1']         // tags
 );
 echo "QueryCount executed successfully.\n";
@@ -154,7 +190,7 @@ $result = $ts->queryMin(
     'cpu_usage',                  // measurement
     'value',                      // field
     new DateTime('-1 hour'),      // start time
-    new DateTime(),               // end time
+    new DateTime,               // end time
     ['host' => 'server1']         // tags
 );
 echo "QueryMin executed successfully.\n";
@@ -165,7 +201,7 @@ $result = $ts->queryMax(
     'cpu_usage',                  // measurement
     'value',                      // field
     new DateTime('-1 hour'),      // start time
-    new DateTime(),               // end time
+    new DateTime,               // end time
     ['host' => 'server1']         // tags
 );
 echo "QueryMax executed successfully.\n\n";
@@ -176,10 +212,10 @@ echo "Step 6: Using the traditional Query builder with the TimeSeries class...\n
 // Create a query using the Query builder
 $query = new Query('cpu_usage');
 $query->select(['value'])
-      ->where('host', '=', 'server1')
-      ->timeRange(new DateTime('-1 hour'), new DateTime())
-      ->groupByTime('5m')
-      ->avg('value', 'avg_value');
+    ->where('host', '=', 'server1')
+    ->timeRange(new DateTime('-1 hour'), new DateTime)
+    ->groupByTime('5m')
+    ->avg('value', 'avg_value');
 
 // Execute the query using the TimeSeries class
 $result = $ts->query($query);
@@ -192,9 +228,9 @@ echo "Step 7: Deleting data...\n";
 $result = $ts->deleteMeasurement(
     'cpu_usage',                  // measurement
     new DateTime('-1 day'),       // start time
-    new DateTime()                // end time
+    new DateTime                // end time
 );
-echo "DeleteMeasurement result: " . ($result ? "Success" : "Failed") . "\n\n";
+echo 'DeleteMeasurement result: '.($result ? 'Success' : 'Failed')."\n\n";
 
 // Step 8: Closing the connection
 echo "Step 8: Closing the connection...\n";

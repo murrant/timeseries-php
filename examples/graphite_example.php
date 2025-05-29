@@ -185,14 +185,14 @@ try {
         'protocol' => 'udp',    // Using UDP for faster, non-blocking writes
         'prefix' => 'example.',
     ]);
-    
+
     $udpGraphite = \TimeSeriesPhp\Core\TSDBFactory::create('graphite', $udpConfig);
-    
+
     echo "Using UDP protocol (faster but less reliable):\n";
     $udpDataPoint = new DataPoint('servers.server1.protocol.udp', ['value' => 1]);
     $success = $udpGraphite->write($udpDataPoint);
     echo $success ? "Successfully wrote UDP data point.\n" : "Failed to write UDP data point.\n";
-    
+
     $udpGraphite->close();
 } catch (\Exception $e) {
     echo "Error with UDP protocol: {$e->getMessage()}\n";

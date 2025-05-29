@@ -1,6 +1,6 @@
 <?php
 
-namespace TimeSeriesPhp\Exceptions\Driver;
+namespace TimeSeriesPhp\Drivers\RRDtool\Exception;
 
 class RRDtoolCommandTimeoutException extends RRDtoolException
 {

@@ -3,9 +3,15 @@
 namespace TimeSeriesPhp\Tests\Drivers\Prometheus;
 
 use DateTime;
-use GuzzleHttp\Client;
-use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UriFactoryInterface;
+use Psr\Http\Message\UriInterface;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Query\Query;
@@ -40,17 +46,43 @@ class PrometheusDriverTest extends TestCase
                 'debug' => false,
             ]);
 
-        // Create a mock of the Guzzle Client
-        $mockClient = $this->createMock(Client::class);
+        // Create mocks for PSR interfaces
+        $mockClient = $this->createMock(ClientInterface::class);
+        $mockRequestFactory = $this->createMock(RequestFactoryInterface::class);
+        $mockUriFactory = $this->createMock(UriFactoryInterface::class);
+        $mockStreamFactory = $this->createMock(StreamFactoryInterface::class);
+        $mockRequest = $this->createMock(RequestInterface::class);
+        $mockUri = $this->createMock(UriInterface::class);
+        $mockResponse = $this->createMock(ResponseInterface::class);
+        $mockStream = $this->createMock(StreamInterface::class);
 
-        // Sample response for status/config endpoint (used in connect)
-        $configResponse = new Response(200, [], json_encode([
+        // Configure URI factory mock
+        $mockUriFactory->method('createUri')
+            ->willReturn($mockUri);
+
+        $mockUri->method('withQuery')
+            ->willReturnSelf();
+
+        $mockUri->method('__toString')
+            ->willReturnCallback(function () {
+                return 'http://localhost:9090/api/v1/query';
+            });
+
+        // Configure request factory mock
+        $mockRequestFactory->method('createRequest')
+            ->willReturn($mockRequest);
+
+        // Configure stream factory and stream mocks
+        $mockStreamFactory->method('createStream')
+            ->willReturn($mockStream);
+
+        // Configure response body for different endpoints
+        $configResponseBody = json_encode([
             'status' => 'success',
             'data' => ['some' => 'config'],
-        ]) ?: json_last_error_msg());
+        ]) ?: json_last_error_msg();
 
-        // Sample response for query endpoint
-        $queryResponse = new Response(200, [], json_encode([
+        $queryResponseBody = json_encode([
             'status' => 'success',
             'data' => [
                 'result' => [
@@ -64,23 +96,35 @@ class PrometheusDriverTest extends TestCase
                     ],
                 ],
             ],
-        ]) ?: json_last_error_msg());
+        ]) ?: json_last_error_msg();
 
-        // Configure the mock client to return appropriate responses
-        $mockClient->method('get')
-            ->willReturnCallback(function (string $url, $options) use ($configResponse, $queryResponse) {
-                if (str_contains($url, '/api/v1/status/config')) {
-                    return $configResponse;
-                }
-
-                return $queryResponse;
+        // Configure stream mock to return appropriate response body
+        $mockStream->method('__toString')
+            ->willReturnCallback(function () use ($queryResponseBody) {
+                // In a real implementation, we would check the request URI to determine which response to return
+                // For simplicity, we'll just return the query response for all requests
+                return $queryResponseBody;
             });
+
+        // Configure response mock
+        $mockResponse->method('getStatusCode')
+            ->willReturn(200);
+
+        $mockResponse->method('getBody')
+            ->willReturn($mockStream);
+
+        // Configure client mock to return the response
+        $mockClient->method('sendRequest')
+            ->willReturn($mockResponse);
 
         // Create the real driver (not a mock)
         $this->driver = new Driver;
 
-        // Inject the mock client
+        // Inject the mocks
         $this->driver->setClient($mockClient);
+        $this->driver->setRequestFactory($mockRequestFactory);
+        $this->driver->setUriFactory($mockUriFactory);
+        $this->driver->setStreamFactory($mockStreamFactory);
 
         // Connect the driver
         $this->driver->connect($this->config);

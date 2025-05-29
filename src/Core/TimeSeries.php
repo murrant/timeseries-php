@@ -15,7 +15,7 @@ use TimeSeriesPhp\Exceptions\Query\QueryException;
 
 /**
  * Simplified entry point for TimeSeriesPhp
- * 
+ *
  * This class provides a simpler API for common operations with time series databases.
  * It's a wrapper around the TSDBFactory and TimeSeriesInterface that reduces boilerplate
  * for common operations.
@@ -26,11 +26,11 @@ class TimeSeries
 
     /**
      * Create a new TimeSeries instance
-     * 
-     * @param string $driver The name of the driver to use
-     * @param ConfigInterface|null $config The configuration for the driver
-     * @param bool $autoConnect Whether to automatically connect to the database
-     * 
+     *
+     * @param  string  $driver  The name of the driver to use
+     * @param  ConfigInterface|null  $config  The configuration for the driver
+     * @param  bool  $autoConnect  Whether to automatically connect to the database
+     *
      * @throws DriverException If the driver is not registered or doesn't implement TimeSeriesInterface
      */
     public function __construct(string $driver, ?ConfigInterface $config = null, bool $autoConnect = true)
@@ -40,7 +40,7 @@ class TimeSeries
 
     /**
      * Get the underlying driver instance
-     * 
+     *
      * @return TimeSeriesInterface The driver instance
      */
     public function getDriver(): TimeSeriesInterface
@@ -50,29 +50,30 @@ class TimeSeries
 
     /**
      * Write a data point to the database
-     * 
+     *
      * This is a simplified version of the write method that creates a DataPoint internally.
-     * 
-     * @param string $measurement The measurement name
-     * @param array<string, ?scalar> $fields The fields to write
-     * @param array<string, string> $tags The tags to associate with the data point
-     * @param DateTime|null $timestamp The timestamp for the data point (defaults to now)
+     *
+     * @param  string  $measurement  The measurement name
+     * @param  array<string, ?scalar>  $fields  The fields to write
+     * @param  array<string, string>  $tags  The tags to associate with the data point
+     * @param  DateTime|null  $timestamp  The timestamp for the data point (defaults to now)
      * @return bool True if the write was successful
-     * 
+     *
      * @throws WriteException If the write fails
      */
     public function write(string $measurement, array $fields, array $tags = [], ?DateTime $timestamp = null): bool
     {
         $dataPoint = new DataPoint($measurement, $fields, $tags, $timestamp);
+
         return $this->driver->write($dataPoint);
     }
 
     /**
      * Write multiple data points to the database
-     * 
-     * @param array<DataPoint> $dataPoints The data points to write
+     *
+     * @param  array<DataPoint>  $dataPoints  The data points to write
      * @return bool True if all data points were written successfully
-     * 
+     *
      * @throws WriteException If the write fails
      */
     public function writeBatch(array $dataPoints): bool
@@ -82,13 +83,13 @@ class TimeSeries
 
     /**
      * Create and write a data point in one call
-     * 
-     * @param string $measurement The measurement name
-     * @param array<string, ?scalar> $fields The fields to write
-     * @param array<string, string> $tags The tags to associate with the data point
-     * @param DateTime|null $timestamp The timestamp for the data point (defaults to now)
+     *
+     * @param  string  $measurement  The measurement name
+     * @param  array<string, ?scalar>  $fields  The fields to write
+     * @param  array<string, string>  $tags  The tags to associate with the data point
+     * @param  DateTime|null  $timestamp  The timestamp for the data point (defaults to now)
      * @return bool True if the write was successful
-     * 
+     *
      * @throws WriteException If the write fails
      */
     public function writePoint(string $measurement, array $fields, array $tags = [], ?DateTime $timestamp = null): bool
@@ -98,10 +99,10 @@ class TimeSeries
 
     /**
      * Execute a query
-     * 
-     * @param Query $query The query to execute
+     *
+     * @param  Query  $query  The query to execute
      * @return QueryResult The query result
-     * 
+     *
      * @throws QueryException If the query fails
      */
     public function query(Query $query): QueryResult
@@ -111,12 +112,12 @@ class TimeSeries
 
     /**
      * Get the last value for a field in a measurement
-     * 
-     * @param string $measurement The measurement name
-     * @param string $field The field to query
-     * @param array<string, string> $tags The tags to filter by
+     *
+     * @param  string  $measurement  The measurement name
+     * @param  string  $field  The field to query
+     * @param  array<string, string>  $tags  The tags to filter by
      * @return QueryResult The query result
-     * 
+     *
      * @throws QueryException If the query fails
      */
     public function queryLast(string $measurement, string $field, array $tags = []): QueryResult
@@ -137,12 +138,12 @@ class TimeSeries
 
     /**
      * Get the first value for a field in a measurement
-     * 
-     * @param string $measurement The measurement name
-     * @param string $field The field to query
-     * @param array<string, string> $tags The tags to filter by
+     *
+     * @param  string  $measurement  The measurement name
+     * @param  string  $field  The field to query
+     * @param  array<string, string>  $tags  The tags to filter by
      * @return QueryResult The query result
-     * 
+     *
      * @throws QueryException If the query fails
      */
     public function queryFirst(string $measurement, string $field, array $tags = []): QueryResult
@@ -163,22 +164,22 @@ class TimeSeries
 
     /**
      * Get the average value for a field in a measurement over a time range
-     * 
-     * @param string $measurement The measurement name
-     * @param string $field The field to query
-     * @param DateTime $start The start time
-     * @param DateTime $end The end time
-     * @param array<string, string> $tags The tags to filter by
+     *
+     * @param  string  $measurement  The measurement name
+     * @param  string  $field  The field to query
+     * @param  DateTime  $start  The start time
+     * @param  DateTime  $end  The end time
+     * @param  array<string, string>  $tags  The tags to filter by
      * @return QueryResult The query result
-     * 
+     *
      * @throws QueryException If the query fails
      */
     public function queryAvg(string $measurement, string $field, DateTime $start, DateTime $end, array $tags = []): QueryResult
     {
         $query = new Query($measurement);
         $query->select([$field])
-              ->timeRange($start, $end)
-              ->avg($field, 'avg_' . $field);
+            ->timeRange($start, $end)
+            ->avg($field, 'avg_'.$field);
 
         // Add tag filters
         foreach ($tags as $key => $value) {
@@ -190,22 +191,22 @@ class TimeSeries
 
     /**
      * Get the sum of values for a field in a measurement over a time range
-     * 
-     * @param string $measurement The measurement name
-     * @param string $field The field to query
-     * @param DateTime $start The start time
-     * @param DateTime $end The end time
-     * @param array<string, string> $tags The tags to filter by
+     *
+     * @param  string  $measurement  The measurement name
+     * @param  string  $field  The field to query
+     * @param  DateTime  $start  The start time
+     * @param  DateTime  $end  The end time
+     * @param  array<string, string>  $tags  The tags to filter by
      * @return QueryResult The query result
-     * 
+     *
      * @throws QueryException If the query fails
      */
     public function querySum(string $measurement, string $field, DateTime $start, DateTime $end, array $tags = []): QueryResult
     {
         $query = new Query($measurement);
         $query->select([$field])
-              ->timeRange($start, $end)
-              ->sum($field, 'sum_' . $field);
+            ->timeRange($start, $end)
+            ->sum($field, 'sum_'.$field);
 
         // Add tag filters
         foreach ($tags as $key => $value) {
@@ -217,22 +218,22 @@ class TimeSeries
 
     /**
      * Get the count of values for a field in a measurement over a time range
-     * 
-     * @param string $measurement The measurement name
-     * @param string $field The field to query
-     * @param DateTime $start The start time
-     * @param DateTime $end The end time
-     * @param array<string, string> $tags The tags to filter by
+     *
+     * @param  string  $measurement  The measurement name
+     * @param  string  $field  The field to query
+     * @param  DateTime  $start  The start time
+     * @param  DateTime  $end  The end time
+     * @param  array<string, string>  $tags  The tags to filter by
      * @return QueryResult The query result
-     * 
+     *
      * @throws QueryException If the query fails
      */
     public function queryCount(string $measurement, string $field, DateTime $start, DateTime $end, array $tags = []): QueryResult
     {
         $query = new Query($measurement);
         $query->select([$field])
-              ->timeRange($start, $end)
-              ->count($field, 'count_' . $field);
+            ->timeRange($start, $end)
+            ->count($field, 'count_'.$field);
 
         // Add tag filters
         foreach ($tags as $key => $value) {
@@ -244,22 +245,22 @@ class TimeSeries
 
     /**
      * Get the minimum value for a field in a measurement over a time range
-     * 
-     * @param string $measurement The measurement name
-     * @param string $field The field to query
-     * @param DateTime $start The start time
-     * @param DateTime $end The end time
-     * @param array<string, string> $tags The tags to filter by
+     *
+     * @param  string  $measurement  The measurement name
+     * @param  string  $field  The field to query
+     * @param  DateTime  $start  The start time
+     * @param  DateTime  $end  The end time
+     * @param  array<string, string>  $tags  The tags to filter by
      * @return QueryResult The query result
-     * 
+     *
      * @throws QueryException If the query fails
      */
     public function queryMin(string $measurement, string $field, DateTime $start, DateTime $end, array $tags = []): QueryResult
     {
         $query = new Query($measurement);
         $query->select([$field])
-              ->timeRange($start, $end)
-              ->min($field, 'min_' . $field);
+            ->timeRange($start, $end)
+            ->min($field, 'min_'.$field);
 
         // Add tag filters
         foreach ($tags as $key => $value) {
@@ -271,22 +272,22 @@ class TimeSeries
 
     /**
      * Get the maximum value for a field in a measurement over a time range
-     * 
-     * @param string $measurement The measurement name
-     * @param string $field The field to query
-     * @param DateTime $start The start time
-     * @param DateTime $end The end time
-     * @param array<string, string> $tags The tags to filter by
+     *
+     * @param  string  $measurement  The measurement name
+     * @param  string  $field  The field to query
+     * @param  DateTime  $start  The start time
+     * @param  DateTime  $end  The end time
+     * @param  array<string, string>  $tags  The tags to filter by
      * @return QueryResult The query result
-     * 
+     *
      * @throws QueryException If the query fails
      */
     public function queryMax(string $measurement, string $field, DateTime $start, DateTime $end, array $tags = []): QueryResult
     {
         $query = new Query($measurement);
         $query->select([$field])
-              ->timeRange($start, $end)
-              ->max($field, 'max_' . $field);
+            ->timeRange($start, $end)
+            ->max($field, 'max_'.$field);
 
         // Add tag filters
         foreach ($tags as $key => $value) {
@@ -298,10 +299,10 @@ class TimeSeries
 
     /**
      * Delete a measurement
-     * 
-     * @param string $measurement The measurement name
-     * @param DateTime|null $start The start time for deletion range
-     * @param DateTime|null $stop The end time for deletion range
+     *
+     * @param  string  $measurement  The measurement name
+     * @param  DateTime|null  $start  The start time for deletion range
+     * @param  DateTime|null  $stop  The end time for deletion range
      * @return bool True if the measurement was deleted successfully
      */
     public function deleteMeasurement(string $measurement, ?DateTime $start = null, ?DateTime $stop = null): bool

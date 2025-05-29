@@ -3,9 +3,9 @@
 namespace TimeSeriesPhp\Tests\Drivers\RRDtool;
 
 use PHPUnit\Framework\TestCase;
+use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolTagException;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\NoTagsStrategy;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\TagCondition;
-use TimeSeriesPhp\Exceptions\Driver\RRDtoolTagException;
 
 class NoTagsStrategyTest extends TestCase
 {

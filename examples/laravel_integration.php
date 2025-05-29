@@ -6,15 +6,14 @@ use TimeSeriesPhp\Core\TSDBFactory;
 
 /**
  * Laravel Integration Example
- * 
+ *
  * This example demonstrates how to use TimeSeriesPhp with Laravel, including
  * configuration, service provider, facade, and dependency injection.
- * 
+ *
  * Note: This is a simulation of Laravel integration since we can't run a full
  * Laravel application in this example. The code shows how you would integrate
  * TimeSeriesPhp in a real Laravel application.
  */
-
 echo "TimeSeriesPhp Laravel Integration Example\n";
 echo "=======================================\n\n";
 
@@ -31,8 +30,8 @@ $laravelConfig = [
     'drivers' => [
         'influxdb' => [
             'url' => 'http://localhost:8086',
-            'token' => file_exists(__DIR__ . '/.influx_db_token') 
-                ? trim(file_get_contents(__DIR__ . '/.influx_db_token')) 
+            'token' => file_exists(__DIR__.'/.influx_db_token')
+                ? trim(file_get_contents(__DIR__.'/.influx_db_token'))
                 : 'your-token',
             'org' => 'example-org',
             'bucket' => 'example-bucket',
@@ -58,7 +57,7 @@ $laravelConfig = [
 
         'rrdtool' => [
             'rrdtool_path' => '/usr/bin/rrdtool',
-            'rrd_dir' => __DIR__ . '/rrd_files',
+            'rrd_dir' => __DIR__.'/rrd_files',
             'use_rrdcached' => false,
             'rrdcached_address' => '',
             'default_step' => 300, // 5 minutes
@@ -78,7 +77,7 @@ $laravelConfig = [
 
 echo "Laravel configuration would be stored in config/time-series.php\n";
 echo "Example configuration:\n";
-echo json_encode($laravelConfig, JSON_PRETTY_PRINT) . "\n";
+echo json_encode($laravelConfig, JSON_PRETTY_PRINT)."\n";
 
 // Step 2: Service Provider
 echo "\nStep 2: Service Provider...\n";
@@ -141,7 +140,7 @@ class Application implements \ArrayAccess
     public function __construct()
     {
         $this->bindings['config'] = [
-            'time-series' => $GLOBALS['laravelConfig']
+            'time-series' => $GLOBALS['laravelConfig'],
         ];
     }
 
@@ -190,6 +189,7 @@ class Application implements \ArrayAccess
 class TimeSeriesManager
 {
     protected $app;
+
     protected $connections = [];
 
     public function __construct($app)
@@ -201,7 +201,7 @@ class TimeSeriesManager
     {
         $name = $name ?: $this->getDefaultConnection();
 
-        if (!isset($this->connections[$name])) {
+        if (! isset($this->connections[$name])) {
             $this->connections[$name] = $this->makeConnection($name);
         }
 
@@ -212,12 +212,12 @@ class TimeSeriesManager
     {
         $config = $this->getConnectionConfig($name);
 
-        if (!isset($config['driver'])) {
+        if (! isset($config['driver'])) {
             throw new \InvalidArgumentException("The time-series driver [{$name}] is missing a driver configuration.");
         }
 
         $driver = $config['driver'];
-        $method = 'create' . ucfirst($driver) . 'Driver';
+        $method = 'create'.ucfirst($driver).'Driver';
 
         if (method_exists($this, $method)) {
             return $this->$method($config);
@@ -230,7 +230,7 @@ class TimeSeriesManager
     protected function createDriver($driver, array $config)
     {
         // Create the driver configuration
-        $configClass = "\\TimeSeriesPhp\\Drivers\\".ucfirst($driver)."\\".ucfirst($driver)."Config";
+        $configClass = '\\TimeSeriesPhp\\Drivers\\'.ucfirst($driver).'\\'.ucfirst($driver).'Config';
         $driverConfig = new $configClass($config);
 
         // Create the driver instance
@@ -247,7 +247,7 @@ class TimeSeriesManager
     {
         $drivers = $this->app['config']['time-series']['drivers'];
 
-        if (!isset($drivers[$name])) {
+        if (! isset($drivers[$name])) {
             throw new \InvalidArgumentException("Time-series driver [{$name}] is not configured.");
         }
 
@@ -291,7 +291,7 @@ class TimeSeries
 }
 
 // Create a simulated Laravel application
-$app = new Application();
+$app = new Application;
 
 // Register the service provider
 $serviceProvider = new TimeSeriesServiceProvider($app);

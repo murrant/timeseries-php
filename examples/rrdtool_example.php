@@ -14,8 +14,8 @@ use TimeSeriesPhp\Exceptions\Driver\DriverException;
 echo "Initializing RRDtool driver...\n";
 
 // Create a directory for RRD files if it doesn't exist
-$rrdPath = __DIR__ . '/rrd_files';
-if (!is_dir($rrdPath)) {
+$rrdPath = __DIR__.'/rrd_files';
+if (! is_dir($rrdPath)) {
     mkdir($rrdPath, 0755, true);
     echo "Created directory for RRD files: {$rrdPath}\n";
 }
@@ -60,38 +60,38 @@ try {
                 'type' => 'GAUGE',    // DS type (GAUGE, COUNTER, DERIVE, ABSOLUTE)
                 'min' => 0,           // Minimum value
                 'max' => 100,         // Maximum value
-                'heartbeat' => 600    // Heartbeat (2 * step)
-            ]
+                'heartbeat' => 600,    // Heartbeat (2 * step)
+            ],
         ],
         [                             // Round Robin Archives
             [
                 'cf' => 'AVERAGE',    // Consolidation function (AVERAGE, MIN, MAX, LAST)
                 'steps' => 1,         // Steps per data point
-                'rows' => 2016        // Number of data points to store (1 week at 5-minute intervals)
+                'rows' => 2016,        // Number of data points to store (1 week at 5-minute intervals)
             ],
             [
                 'cf' => 'AVERAGE',
                 'steps' => 12,        // 1 hour (12 * 5 minutes)
-                'rows' => 1440        // 2 months of hourly data
+                'rows' => 1440,        // 2 months of hourly data
             ],
             [
                 'cf' => 'AVERAGE',
                 'steps' => 288,       // 1 day (288 * 5 minutes)
-                'rows' => 365         // 1 year of daily data
+                'rows' => 365,         // 1 year of daily data
             ],
             [
                 'cf' => 'MIN',        // Minimum values
                 'steps' => 1,
-                'rows' => 2016
+                'rows' => 2016,
             ],
             [
                 'cf' => 'MAX',        // Maximum values
                 'steps' => 1,
-                'rows' => 2016
-            ]
+                'rows' => 2016,
+            ],
         ]
     );
-    
+
     if ($success) {
         echo "Successfully created RRD file: {$cpuRrdFile}\n";
     } else {
@@ -112,15 +112,15 @@ try {
             ['name' => 'memory', 'type' => 'GAUGE', 'min' => 0, 'max' => 100, 'heartbeat' => 600],
             ['name' => 'disk', 'type' => 'GAUGE', 'min' => 0, 'max' => 100, 'heartbeat' => 600],
             ['name' => 'network_in', 'type' => 'COUNTER', 'min' => 0, 'max' => 'U', 'heartbeat' => 600],
-            ['name' => 'network_out', 'type' => 'COUNTER', 'min' => 0, 'max' => 'U', 'heartbeat' => 600]
+            ['name' => 'network_out', 'type' => 'COUNTER', 'min' => 0, 'max' => 'U', 'heartbeat' => 600],
         ],
         [
             ['cf' => 'AVERAGE', 'steps' => 1, 'rows' => 2016],
             ['cf' => 'MIN', 'steps' => 1, 'rows' => 2016],
-            ['cf' => 'MAX', 'steps' => 1, 'rows' => 2016]
+            ['cf' => 'MAX', 'steps' => 1, 'rows' => 2016],
         ]
     );
-    
+
     if ($success) {
         echo "Successfully created RRD file: {$metricsRrdFile}\n";
     } else {
@@ -141,7 +141,7 @@ try {
         'server1_cpu',        // Measurement name (matches RRD file name without .rrd)
         ['usage' => 45.2]     // Field name (matches DS name)
     );
-    
+
     if ($rrdtool->write($dataPoint)) {
         echo "Successfully wrote data point to server1_cpu.rrd!\n";
     } else {
@@ -153,16 +153,16 @@ try {
 
 // Write a data point with a specific timestamp
 try {
-    $timestamp = new DateTime();
+    $timestamp = new DateTime;
     $timestamp->modify('-1 hour');
-    
+
     $dataPoint = new DataPoint(
         'server1_cpu',
         ['usage' => 65.8],
         [],                  // No tags (RRDtool doesn't support tags)
         $timestamp
     );
-    
+
     if ($rrdtool->write($dataPoint)) {
         echo "Successfully wrote historical data point to server1_cpu.rrd!\n";
     } else {
@@ -181,10 +181,10 @@ try {
             'memory' => 65.2,
             'disk' => 45.8,
             'network_in' => 1024000,
-            'network_out' => 512000
+            'network_out' => 512000,
         ]
     );
-    
+
     if ($rrdtool->write($dataPoint)) {
         echo "Successfully wrote data point to server1_metrics.rrd!\n";
     } else {
@@ -290,7 +290,7 @@ try {
 
 // Dump an RRD file to XML (for backup or migration)
 try {
-    $dumpFile = $rrdPath . '/server1_cpu.xml';
+    $dumpFile = $rrdPath.'/server1_cpu.xml';
     $dumpResult = $rrdtool->rawQuery("dump server1_cpu.rrd > {$dumpFile}");
     echo "RRD file dumped to XML: {$dumpFile}\n";
 } catch (\Exception $e) {

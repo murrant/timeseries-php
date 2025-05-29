@@ -2,7 +2,7 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 
-use TimeSeriesPhp\Exceptions\Driver\RRDtoolTagException;
+use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolTagException;
 
 interface RRDTagStrategyInterface
 {

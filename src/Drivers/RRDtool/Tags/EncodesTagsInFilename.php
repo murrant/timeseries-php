@@ -2,7 +2,7 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 
-use TimeSeriesPhp\Exceptions\Driver\RRDtoolFilenameTooLongException;
+use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolFilenameTooLongException;
 use TimeSeriesPhp\Utils\File;
 
 trait EncodesTagsInFilename

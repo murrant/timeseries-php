@@ -3,8 +3,13 @@
 namespace TimeSeriesPhp\Drivers\Prometheus;
 
 use Exception;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
+use Http\Discovery\Psr17FactoryDiscovery;
+use Http\Discovery\Psr18ClientDiscovery;
+use Psr\Http\Client\ClientExceptionInterface;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Message\UriFactoryInterface;
 use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
@@ -27,7 +32,13 @@ class Driver extends AbstractTimeSeriesDB
 
     private bool $debug;
 
-    private ?Client $client = null;
+    private ?ClientInterface $client = null;
+
+    private ?RequestFactoryInterface $requestFactory = null;
+
+    private ?UriFactoryInterface $uriFactory = null;
+
+    private ?StreamFactoryInterface $streamFactory = null;
 
     protected function doConnect(): bool
     {
@@ -165,7 +176,7 @@ class Driver extends AbstractTimeSeriesDB
     }
 
     /**
-     * Make an API request to the Prometheus HTTP API using Guzzle
+     * Make an API request to the Prometheus HTTP API using PSR-18 HTTP Client
      *
      * @param  string  $endpoint  The API endpoint
      * @param  array<string, string>  $params  Query parameters
@@ -175,34 +186,33 @@ class Driver extends AbstractTimeSeriesDB
      */
     private function makeApiRequest(string $endpoint, array $params = []): array
     {
-        $url = $this->apiUrl.$endpoint;
+        // Initialize factories if not already set
+        $this->requestFactory = $this->requestFactory ?? Psr17FactoryDiscovery::findRequestFactory();
+        $this->uriFactory = $this->uriFactory ?? Psr17FactoryDiscovery::findUriFactory();
+        $this->streamFactory = $this->streamFactory ?? Psr17FactoryDiscovery::findStreamFactory();
 
-        // Use injected client or create a new one
-        $client = $this->client ?? new Client([
-            'timeout' => $this->timeout,
-            'verify' => $this->verifySSL,
-        ]);
+        // Use injected client or discover one
+        $client = $this->client ?? Psr18ClientDiscovery::find();
 
-        // Prepare request options
-        $options = [];
+        // Build the URL with query parameters
+        $uri = $this->uriFactory->createUri($this->apiUrl.$endpoint);
         if (! empty($params)) {
-            $options['query'] = $params;
+            $uri = $uri->withQuery(http_build_query($params));
         }
 
+        // Create the request
+        $request = $this->requestFactory->createRequest('GET', $uri);
+
         if ($this->debug) {
-            $fullUrl = $url;
-            if (! empty($params)) {
-                $fullUrl .= '?'.http_build_query($params);
-            }
             Logger::debug('Prometheus API request', [
-                'url' => $fullUrl,
+                'url' => (string) $uri,
                 'params' => $params,
             ]);
         }
 
         try {
             // Execute the request
-            $response = $client->get($url, $options);
+            $response = $client->sendRequest($request);
             $httpCode = $response->getStatusCode();
             $responseBody = (string) $response->getBody();
 
@@ -222,11 +232,11 @@ class Driver extends AbstractTimeSeriesDB
 
             /** @var array{'status': string, 'error'?: string, 'data': array{'result'?: array{'metric': string, 'value': ?scalar}}} $data */
             return $data;
-        } catch (GuzzleException $e) {
+        } catch (ClientExceptionInterface $e) {
             if ($this->debug) {
                 Logger::error('Prometheus API request failed: '.$e->getMessage(), [
                     'exception' => get_class($e),
-                    'url' => $url,
+                    'url' => (string) $uri,
                     'params' => $params,
                 ]);
             }
@@ -266,8 +276,35 @@ class Driver extends AbstractTimeSeriesDB
      * Set the HTTP client for API requests
      * This is primarily used for testing to inject a mock client
      */
-    public function setClient(Client $client): void
+    public function setClient(ClientInterface $client): void
     {
         $this->client = $client;
+    }
+
+    /**
+     * Set the request factory for creating PSR-7 requests
+     * This is primarily used for testing to inject a mock factory
+     */
+    public function setRequestFactory(RequestFactoryInterface $requestFactory): void
+    {
+        $this->requestFactory = $requestFactory;
+    }
+
+    /**
+     * Set the URI factory for creating PSR-7 URIs
+     * This is primarily used for testing to inject a mock factory
+     */
+    public function setUriFactory(UriFactoryInterface $uriFactory): void
+    {
+        $this->uriFactory = $uriFactory;
+    }
+
+    /**
+     * Set the stream factory for creating PSR-7 streams
+     * This is primarily used for testing to inject a mock factory
+     */
+    public function setStreamFactory(StreamFactoryInterface $streamFactory): void
+    {
+        $this->streamFactory = $streamFactory;
     }
 }

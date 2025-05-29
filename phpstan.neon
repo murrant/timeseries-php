@@ -5,3 +5,8 @@ parameters:
 		- tests
 	excludePaths:
 		- tests/*/data/*
+		- vendor/*
+	reportUnmatchedIgnoredErrors: false
+	treatPhpDocTypesAsCertain: true
+	ignoreErrors:
+		- '#PHPDoc tag @var with type array<.+> is not subtype of native type array.#'

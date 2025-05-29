@@ -62,10 +62,10 @@ $dataPoint = new DataPoint(
     'server_metrics',                      // measurement name
     ['cpu_usage' => 45.2, 'memory' => 78], // fields (actual data)
     [
-        'host' => 'web-01', 
+        'host' => 'web-01',
         'region' => 'us-west',
-        'job' => 'node'                    // job label is important for Prometheus
-    ] 
+        'job' => 'node',                    // job label is important for Prometheus
+    ]
 );
 
 // Write the data point
@@ -98,7 +98,7 @@ for ($i = 1; $i <= 5; $i++) {
             'host' => 'web-'.str_pad($i % 3 + 1, 2, '0', STR_PAD_LEFT),
             'region' => ($i % 2 == 0) ? 'us-east' : 'us-west',
             'environment' => ($i % 3 == 0) ? 'production' : 'staging',
-            'job' => 'node'
+            'job' => 'node',
         ],
         $timestamp
     );

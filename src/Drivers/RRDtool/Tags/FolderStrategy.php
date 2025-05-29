@@ -3,7 +3,7 @@
 namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 
 use SplFileInfo;
-use TimeSeriesPhp\Exceptions\Driver\RRDtoolTagException;
+use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolTagException;
 use TimeSeriesPhp\Utils\File;
 
 class FolderStrategy implements RRDTagStrategyInterface

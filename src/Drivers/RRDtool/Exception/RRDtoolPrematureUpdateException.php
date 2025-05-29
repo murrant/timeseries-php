@@ -1,5 +1,5 @@
 <?php
 
-namespace TimeSeriesPhp\Exceptions\Driver;
+namespace TimeSeriesPhp\Drivers\RRDtool\Exception;
 
 class RRDtoolPrematureUpdateException extends RRDtoolException {}

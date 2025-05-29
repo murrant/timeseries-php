@@ -36,12 +36,12 @@ class TimeSeriesTest extends TestCase
         $this->timeSeries = new TestableTimeSeries($this->mockDriver);
     }
 
-    public function testWrite(): void
+    public function test_write(): void
     {
         $measurement = 'cpu_usage';
         $fields = ['value' => 85.5];
         $tags = ['host' => 'server1'];
-        $timestamp = new DateTime();
+        $timestamp = new DateTime;
 
         $this->mockDriver->expects($this->once())
             ->method('write')
@@ -57,12 +57,12 @@ class TimeSeriesTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function testWritePoint(): void
+    public function test_write_point(): void
     {
         $measurement = 'cpu_usage';
         $fields = ['value' => 85.5];
         $tags = ['host' => 'server1'];
-        $timestamp = new DateTime();
+        $timestamp = new DateTime;
 
         $this->mockDriver->expects($this->once())
             ->method('write')
@@ -78,7 +78,7 @@ class TimeSeriesTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function testWriteBatch(): void
+    public function test_write_batch(): void
     {
         $dataPoints = [
             new DataPoint('cpu_usage', ['value' => 85.5], ['host' => 'server1']),
@@ -94,7 +94,7 @@ class TimeSeriesTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function testQuery(): void
+    public function test_query(): void
     {
         $query = new Query('cpu_usage');
         $queryResult = $this->createMock(QueryResult::class);
@@ -108,7 +108,7 @@ class TimeSeriesTest extends TestCase
         $this->assertSame($queryResult, $result);
     }
 
-    public function testQueryLast(): void
+    public function test_query_last(): void
     {
         $measurement = 'cpu_usage';
         $field = 'value';
@@ -130,7 +130,7 @@ class TimeSeriesTest extends TestCase
         $this->assertSame($queryResult, $result);
     }
 
-    public function testQueryFirst(): void
+    public function test_query_first(): void
     {
         $measurement = 'cpu_usage';
         $field = 'value';
@@ -152,12 +152,12 @@ class TimeSeriesTest extends TestCase
         $this->assertSame($queryResult, $result);
     }
 
-    public function testQueryAvg(): void
+    public function test_query_avg(): void
     {
         $measurement = 'cpu_usage';
         $field = 'value';
         $start = new DateTime('-1 hour');
-        $end = new DateTime();
+        $end = new DateTime;
         $tags = ['host' => 'server1'];
         $queryResult = $this->createMock(QueryResult::class);
 
@@ -179,11 +179,11 @@ class TimeSeriesTest extends TestCase
         $this->assertSame($queryResult, $result);
     }
 
-    public function testDeleteMeasurement(): void
+    public function test_delete_measurement(): void
     {
         $measurement = 'cpu_usage';
         $start = new DateTime('-1 hour');
-        $end = new DateTime();
+        $end = new DateTime;
 
         $this->mockDriver->expects($this->once())
             ->method('deleteMeasurement')
@@ -194,7 +194,7 @@ class TimeSeriesTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function testClose(): void
+    public function test_close(): void
     {
         $this->mockDriver->expects($this->once())
             ->method('close');
