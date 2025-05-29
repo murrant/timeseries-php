@@ -108,7 +108,7 @@ class RRDtoolRawQuery implements RawQueryInterface
     public function getRawQuery(): string
     {
         $args = $this->getArgs();
-        array_unshift($args, $this->command);
+        array_unshift($args, escapeshellarg($this->command));
 
         return implode(' ', array_map(fn ($arg) => escapeshellarg($arg), $args));
     }
