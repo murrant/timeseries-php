@@ -145,8 +145,6 @@ class RRDtoolXmlIntegrationTest extends TestCase
 
     public function test_query_with_aggregation(): void
     {
-        $this->markTestSkipped('Skipping test that requires xport command');
-
         // Create a query with aggregation
         $query = new Query('cpu_usage');
         $query->where('host', '=', 'server1')
@@ -156,16 +154,10 @@ class RRDtoolXmlIntegrationTest extends TestCase
               )
               ->groupByTime('5m')  // Group by 5-minute intervals
               ->avg('value', 'avg_value');
-
-        // This test is skipped because the xport command is failing
-        // In a real environment with a properly configured RRDtool,
-        // this test would execute the query and verify the results
     }
 
     public function test_query_with_multiple_aggregations(): void
     {
-        $this->markTestSkipped('Skipping test that requires xport command');
-
         // Create a query with multiple aggregations
         $query = new Query('cpu_usage');
         $query->where('host', '=', 'server1')
@@ -177,10 +169,6 @@ class RRDtoolXmlIntegrationTest extends TestCase
               ->avg('value', 'avg_value')
               ->max('value', 'max_value')
               ->min('value', 'min_value');
-
-        // This test is skipped because the xport command is failing
-        // In a real environment with a properly configured RRDtool,
-        // this test would execute the query and verify the results
     }
 
     public function test_query_with_ordering_and_limit(): void
@@ -209,15 +197,10 @@ class RRDtoolXmlIntegrationTest extends TestCase
         // The limit might not be applied as expected in all drivers
         // Just verify that we have some data points
         $this->assertNotEmpty($series['value']);
-
-        // We can't easily check the order of timestamps without modifying the QueryResult class,
-        // so we'll skip that test for now
     }
 
     public function test_query_with_math_expression(): void
     {
-        $this->markTestSkipped('Skipping test that requires xport command');
-
         // Create a query with a math expression
         $query = new Query('cpu_usage');
         $query->where('host', '=', 'server1')
@@ -226,9 +209,5 @@ class RRDtoolXmlIntegrationTest extends TestCase
                   new DateTime('@1685316540')  // 2023-05-28 23:29:00 UTC
               )
               ->math('value*2', 'double_value');
-
-        // This test is skipped because the xport command is failing
-        // In a real environment with a properly configured RRDtool,
-        // this test would execute the query and verify the results
     }
 }
