@@ -3,7 +3,6 @@
 namespace TimeSeriesPhp\Drivers\InfluxDB;
 
 use DateTime;
-use Exception;
 use InfluxDB2\Client;
 use InfluxDB2\Model\BucketRetentionRules;
 use InfluxDB2\Model\Buckets;
@@ -65,11 +64,11 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             $this->connected = ! empty($ping);
 
             return $this->connected;
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log('InfluxDB connection failed: '.$e->getMessage());
             $this->connected = false;
 
-            return false;
+            throw new ConnectionException('Failed to connect to InfluxDB: '.$e->getMessage(), 0, $e);
         }
     }
 
@@ -111,10 +110,10 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             $this->writeApi->close();
 
             return true;
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log('InfluxDB write failed: '.$e->getMessage());
 
-            return false;
+            throw new WriteException('Failed to write data point: '.$e->getMessage(), 0, $e);
         }
     }
 
@@ -138,10 +137,10 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             $this->writeApi->close();
 
             return true;
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log('InfluxDB batch write failed: '.$e->getMessage());
 
-            return false;
+            throw new WriteException('Failed to write batch data: '.$e->getMessage(), 0, $e);
         }
     }
 
@@ -179,8 +178,8 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             }
 
             return $result;
-        } catch (Exception $e) {
-            throw new RawQueryException($query, 'Query execution failed: '.$e->getMessage());
+        } catch (\Throwable $e) {
+            throw new RawQueryException($query, 'Query execution failed: '.$e->getMessage(), 0, $e);
         }
     }
 
@@ -199,10 +198,10 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             $bucketsService->postBuckets($bucketRequest);
 
             return true;
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log('Failed to create bucket: '.$e->getMessage());
 
-            return false;
+            throw new DatabaseException('Failed to create database: '.$e->getMessage(), 0, $e);
         }
     }
 
@@ -227,10 +226,10 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             }
 
             return $bucketNames;
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log('Failed to list buckets: '.$e->getMessage());
 
-            return [];
+            throw new DatabaseException('Failed to list databases: '.$e->getMessage(), 0, $e);
         }
     }
 
@@ -254,10 +253,10 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             $service->postDelete($predicate, bucket: $this->bucket, org_id: $this->getOrgId());
 
             return true;
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log('Failed to delete measurement: '.$e->getMessage());
 
-            return false;
+            throw new DatabaseException('Failed to delete measurement: '.$e->getMessage(), 0, $e);
         }
     }
 
@@ -294,7 +293,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
                 'build' => $build,
                 'version' => $version,
             ];
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             return [
                 'status' => 'fail',
                 'build' => $e->getMessage(),

@@ -17,6 +17,11 @@ class TSDBFactoryTest extends TestCase
         $driversProperty = $reflectionClass->getProperty('drivers');
         $driversProperty->setAccessible(true);
         $driversProperty->setValue(null, []);
+
+        // Reset the config classes as well
+        $configClassesProperty = $reflectionClass->getProperty('configClasses');
+        $configClassesProperty->setAccessible(true);
+        $configClassesProperty->setValue(null, []);
     }
 
     public function test_register_driver(): void
@@ -24,11 +29,34 @@ class TSDBFactoryTest extends TestCase
         // Create a mock driver class
         $mockDriverClass = get_class($this->createMock(TimeSeriesInterface::class));
 
-        // Register the driver
-        TSDBFactory::registerDriver('mock', $mockDriverClass);
+        // Create a mock config class
+        $mockConfigClass = get_class($this->createMock(ConfigInterface::class));
+
+        // Register the driver with explicit config class
+        TSDBFactory::registerDriver('mock', $mockDriverClass, $mockConfigClass);
 
         // Check if the driver is available
         $this->assertContains('mock', TSDBFactory::getAvailableDrivers());
+
+        // Check if the config class is registered
+        $this->assertEquals($mockConfigClass, TSDBFactory::getConfigClass('mock'));
+    }
+
+    public function test_register_driver_with_inferred_config(): void
+    {
+        // Use the test driver class from the data directory
+        $mockDriverClass = 'TimeSeriesPhp\Tests\Core\data\TestDriver';
+        $mockConfigClass = 'TimeSeriesPhp\Tests\Core\data\TestConfig';
+
+        // Register the driver without specifying the config class
+        /** @var class-string<\TimeSeriesPhp\Tests\Core\data\TestDriver> $mockDriverClass */
+        TSDBFactory::registerDriver('test', $mockDriverClass);
+
+        // Check if the driver is available
+        $this->assertContains('test', TSDBFactory::getAvailableDrivers());
+
+        // Check if the config class was correctly inferred
+        $this->assertEquals($mockConfigClass, TSDBFactory::getConfigClass('test'));
     }
 
     public function test_get_available_drivers(): void
@@ -38,87 +66,33 @@ class TSDBFactoryTest extends TestCase
 
         // Register some drivers
         $mockDriverClass = get_class($this->createMock(TimeSeriesInterface::class));
-        TSDBFactory::registerDriver('mock1', $mockDriverClass);
-        TSDBFactory::registerDriver('mock2', $mockDriverClass);
+        $mockConfigClass = get_class($this->createMock(ConfigInterface::class));
+        TSDBFactory::registerDriver('mock1', $mockDriverClass, $mockConfigClass);
+        TSDBFactory::registerDriver('mock2', $mockDriverClass, $mockConfigClass);
 
         // Check available drivers
         $this->assertEquals(['mock1', 'mock2'], TSDBFactory::getAvailableDrivers());
     }
 
-    public function test_create_with_valid_driver(): void
+    public function test_create_with_valid_driver_and_explicit_config(): void
     {
         // Create a mock config
         $mockConfig = $this->createMock(ConfigInterface::class);
 
-        // Create a mock driver class
-        $mockDriverClass = 'TimeSeriesPhp\Tests\Core\MockDriver';
+        // Use the mock driver class from the data directory
+        $mockDriverClass = 'TimeSeriesPhp\Tests\Core\data\MockDriver';
+        $mockConfigClass = 'TimeSeriesPhp\Tests\Core\data\MockConfig';
 
-        // Create the mock driver class if it doesn't exist
-        if (! class_exists($mockDriverClass)) {
-            eval('
-                namespace TimeSeriesPhp\Tests\Core;
-
-                use TimeSeriesPhp\Core\TimeSeriesInterface;
-                use TimeSeriesPhp\Config\ConfigInterface;
-
-                class MockDriver implements TimeSeriesInterface {
-                    public static $connectCalled = false;
-
-                    public function connect(ConfigInterface $config): bool {
-                        self::$connectCalled = true;
-                        return true;
-                    }
-
-                    public function isConnected(): bool {
-                        return true;
-                    }
-
-                    public function query(\TimeSeriesPhp\Core\Query $query): \TimeSeriesPhp\Core\QueryResult {
-                        return new \TimeSeriesPhp\Core\QueryResult([]);
-                    }
-
-                    public function rawQuery(\TimeSeriesPhp\Core\RawQueryInterface $query): \TimeSeriesPhp\Core\QueryResult {
-                        return new \TimeSeriesPhp\Core\QueryResult([]);
-                    }
-
-                    public function write(\TimeSeriesPhp\Core\DataPoint $dataPoint): bool {
-                        return true;
-                    }
-
-                    public function writeBatch(array $dataPoints): bool {
-                        return true;
-                    }
-
-                    public function createDatabase(string $database): bool {
-                        return true;
-                    }
-
-                    public function deleteDatabase(string $database): bool {
-                        return true;
-                    }
-
-                    public function getDatabases(): array {
-                        return [];
-                    }
-
-                    public function deleteMeasurement(string $measurement, ?\DateTime $start = null, ?\DateTime $stop = null): bool {
-                        return true;
-                    }
-
-                    public function close(): void {
-                    }
-                }
-            ');
-        }
-
-        // Reset the static flag
+        // Reset the static flags
         $mockDriverClass::$connectCalled = false;
+        $mockDriverClass::$lastConfig = null;
 
         // Register the driver
-        // @phpstan-ignore-next-line
-        TSDBFactory::registerDriver('mock', $mockDriverClass);
+        /** @var class-string<\TimeSeriesPhp\Tests\Core\data\MockDriver> $mockDriverClass */
+        /** @var class-string<\TimeSeriesPhp\Tests\Core\data\MockConfig> $mockConfigClass */
+        TSDBFactory::registerDriver('mock', $mockDriverClass, $mockConfigClass);
 
-        // Create an instance using the factory
+        // Create an instance using the factory with explicit config
         $instance = TSDBFactory::create('mock', $mockConfig);
 
         // Verify the instance is our mock class
@@ -126,6 +100,39 @@ class TSDBFactoryTest extends TestCase
 
         // Verify connect was called
         $this->assertTrue($mockDriverClass::$connectCalled, 'connect() method was not called');
+
+        // Verify the correct config was passed
+        $this->assertSame($mockConfig, $mockDriverClass::$lastConfig, 'Explicit config was not passed to connect()');
+    }
+
+    public function test_create_with_valid_driver_and_default_config(): void
+    {
+        // Use the mock driver class from the data directory
+        /** @var class-string<\TimeSeriesPhp\Tests\Core\data\MockDriver> $mockDriverClass */
+        $mockDriverClass = 'TimeSeriesPhp\Tests\Core\data\MockDriver';
+
+        // Use the mock config class from the data directory
+        /** @var class-string<\TimeSeriesPhp\Tests\Core\data\MockConfig> $mockConfigClass */
+        $mockConfigClass = 'TimeSeriesPhp\Tests\Core\data\MockConfig';
+
+        // Reset the static flags
+        $mockDriverClass::$connectCalled = false;
+        $mockDriverClass::$lastConfig = null;
+
+        // Register the driver
+        TSDBFactory::registerDriver('mock', $mockDriverClass, $mockConfigClass);
+
+        // Create an instance using the factory without providing a config
+        $instance = TSDBFactory::create('mock');
+
+        // Verify the instance is our mock class
+        $this->assertTrue($instance instanceof $mockDriverClass);
+
+        // Verify connect was called
+        $this->assertTrue($mockDriverClass::$connectCalled, 'connect() method was not called');
+
+        // Verify a default config was created and passed
+        $this->assertInstanceOf($mockConfigClass, $mockDriverClass::$lastConfig, 'Default config was not created');
     }
 
     public function test_create_with_invalid_driver(): void
@@ -149,9 +156,58 @@ class TSDBFactoryTest extends TestCase
         $this->expectExceptionMessageMatches('/must implement TimeSeriesInterface/');
 
         // Register the invalid driver - this should throw the exception
-        TSDBFactory::registerDriver('invalid', $mockClass);
+        TSDBFactory::registerDriver('invalid', $mockClass, get_class($mockConfig));
 
         // This line should not be reached
         TSDBFactory::create('invalid', $mockConfig);
+    }
+
+    public function test_create_config(): void
+    {
+        // Create a mock config class
+        $mockConfigClass = get_class($this->createMock(ConfigInterface::class));
+        $mockDriverClass = get_class($this->createMock(TimeSeriesInterface::class));
+
+        // Register the driver
+        TSDBFactory::registerDriver('mock', $mockDriverClass, $mockConfigClass);
+
+        // Create a config instance
+        $config = TSDBFactory::createConfig('mock', ['option' => 'value']);
+
+        // Check that the config is an instance of the expected class
+        $this->assertInstanceOf($mockConfigClass, $config);
+    }
+
+    public function test_create_config_with_invalid_driver(): void
+    {
+        $this->expectException(DriverException::class);
+        $this->expectExceptionMessage('No configuration class registered for driver: invalid');
+
+        // Try to create a config for an unregistered driver
+        TSDBFactory::createConfig('invalid');
+    }
+
+    public function test_infer_config_class_name(): void
+    {
+        // Use reflection to access the private method
+        $reflectionClass = new \ReflectionClass(TSDBFactory::class);
+        $method = $reflectionClass->getMethod('inferConfigClassName');
+        $method->setAccessible(true);
+
+        // Test with various driver class names
+        $this->assertEquals(
+            'TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig',
+            $method->invoke(null, 'TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver')
+        );
+
+        $this->assertEquals(
+            'TimeSeriesPhp\Drivers\Prometheus\PrometheusConfig',
+            $method->invoke(null, 'TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver')
+        );
+
+        $this->assertEquals(
+            'App\CustomConfig',
+            $method->invoke(null, 'App\CustomDriver')
+        );
     }
 }

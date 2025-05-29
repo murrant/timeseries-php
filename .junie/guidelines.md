@@ -8,6 +8,7 @@ You are an Expert in PHP, Time Series Databases, an Laravel.
    Formatting: pint
    Static Analysis: phpstan
 - Never throw a generic \Exception, use TSDBException as the base exception
+- Never use eval()
 - After every change, run:
 ./vendor/bin/phpunit
 ./vendor/bin/phpstan

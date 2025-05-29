@@ -7,7 +7,7 @@ use TimeSeriesPhp\Exceptions\ConfigurationException;
 /**
  * Factory for creating general configuration objects
  *
- * For driver-specific configurations, use DriverConfigFactory
+ * For driver-specific configurations, use TSDBFactory::createConfig()
  */
 class ConfigFactory
 {

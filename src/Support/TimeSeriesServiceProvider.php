@@ -5,7 +5,6 @@ namespace TimeSeriesPhp\Support;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
-use TimeSeriesPhp\Config\DriverConfigFactory;
 use TimeSeriesPhp\Core\TSDBFactory;
 use TimeSeriesPhp\Drivers\Graphite\GraphiteConfig;
 use TimeSeriesPhp\Drivers\Graphite\GraphiteDriver;
@@ -29,27 +28,21 @@ class TimeSeriesServiceProvider extends ServiceProvider
         );
 
         // Register driver classes
-        TSDBFactory::registerDriver('influxdb', InfluxDBDriver::class);
+        TSDBFactory::registerDriver('influxdb', InfluxDBDriver::class, InfluxDBConfig::class);
         $this->app->bind(InfluxDBDriver::class);
         $this->app->alias(InfluxDBDriver::class, 'time-series.influxdb');
 
-        TSDBFactory::registerDriver('rrdtool', RRDtoolDriver::class);
+        TSDBFactory::registerDriver('rrdtool', RRDtoolDriver::class, RRDtoolConfig::class);
         $this->app->bind(RRDtoolDriver::class);
         $this->app->alias(RRDtoolDriver::class, 'time-series.rrdtool');
 
-        TSDBFactory::registerDriver('prometheus', PrometheusDriver::class);
+        TSDBFactory::registerDriver('prometheus', PrometheusDriver::class, PrometheusConfig::class);
         $this->app->bind(PrometheusDriver::class);
         $this->app->alias(PrometheusDriver::class, 'time-series.prometheus');
 
-        TSDBFactory::registerDriver('graphite', GraphiteDriver::class);
+        TSDBFactory::registerDriver('graphite', GraphiteDriver::class, GraphiteConfig::class);
         $this->app->bind(GraphiteDriver::class);
         $this->app->alias(GraphiteDriver::class, 'time-series.graphite');
-
-        // Register driver config classes
-        DriverConfigFactory::registerDriverConfig('influxdb', InfluxDBConfig::class);
-        DriverConfigFactory::registerDriverConfig('rrdtool', RRDtoolConfig::class);
-        DriverConfigFactory::registerDriverConfig('prometheus', PrometheusConfig::class);
-        DriverConfigFactory::registerDriverConfig('graphite', GraphiteConfig::class);
 
         // Register the time-series singleton
         $this->app->singleton('time-series', function (Application $app) {
@@ -69,8 +62,8 @@ class TimeSeriesServiceProvider extends ServiceProvider
 
             /** @var array<string, mixed> $driverConfig */
 
-            // Create the driver config using the DriverConfigFactory
-            $config = DriverConfigFactory::create($driver, $driverConfig);
+            // Create the driver config using TSDBFactory
+            $config = TSDBFactory::createConfig($driver, $driverConfig);
 
             // Create and return the driver instance
             return TSDBFactory::create($driver, $config);

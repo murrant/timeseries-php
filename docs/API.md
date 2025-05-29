@@ -22,10 +22,12 @@ TimeSeriesPhp is a PHP library for working with time series databases. It provid
 ## Installation
 
 ```bash
-composer require timeseries-php/timeseries-php
+composer require librenms/timeseries-php
 ```
 
 ## Basic Usage
+
+### With Explicit Configuration
 
 ```php
 <?php
@@ -43,7 +45,7 @@ $config = new InfluxDBConfig([
     'bucket' => 'your-bucket',
 ]);
 
-// Create a database instance
+// Create a database instance with explicit config
 $db = TSDBFactory::create('influxdb', $config);
 
 // Write a data point
@@ -65,17 +67,38 @@ $result = $db->query($query);
 $db->close();
 ```
 
+### With Default Configuration
+
+```php
+<?php
+
+use TimeSeriesPhp\Core\TSDBFactory;
+use TimeSeriesPhp\Core\DataPoint;
+use TimeSeriesPhp\Core\Query;
+
+// Create a database instance with default config
+// Note: Default config may not have all required settings for your environment
+$db = TSDBFactory::create('influxdb');
+
+// The rest of the usage is the same
+// ...
+```
+
 ## Factory
 
 The `TSDBFactory` class is the main entry point for creating database instances.
 
 ### Methods
 
-#### `registerDriver(string $name, string $className): void`
+#### `registerDriver(string $name, string $className, ?string $configClassName = null): void`
 
-Registers a driver with the factory.
+Registers a driver with the factory. If `$configClassName` is not provided, it will be inferred from the driver class name by replacing "Driver" with "Config".
 
 ```php
+// With explicit config class
+TSDBFactory::registerDriver('custom', CustomDriver::class, CustomConfig::class);
+
+// With inferred config class (CustomConfig will be inferred from CustomDriver)
 TSDBFactory::registerDriver('custom', CustomDriver::class);
 ```
 
@@ -87,12 +110,16 @@ Unregisters a driver from the factory.
 TSDBFactory::unregisterDriver('custom');
 ```
 
-#### `create(string $driver, ConfigInterface $config, bool $autoConnect = true): TimeSeriesInterface`
+#### `create(string $driver, ?ConfigInterface $config = null, bool $autoConnect = true): TimeSeriesInterface`
 
-Creates a new instance of a time series database driver.
+Creates a new instance of a time series database driver. If `$config` is not provided, a default configuration will be created using the registered config class for the driver.
 
 ```php
+// With explicit config
 $db = TSDBFactory::create('influxdb', $config);
+
+// With default config
+$db = TSDBFactory::create('influxdb');
 ```
 
 #### `getAvailableDrivers(): array`
@@ -110,6 +137,17 @@ Checks if a driver is registered.
 ```php
 if (TSDBFactory::hasDriver('influxdb')) {
     // Use InfluxDB driver
+}
+```
+
+#### `getConfigClass(string $name): ?string`
+
+Gets the config class for a driver.
+
+```php
+$configClass = TSDBFactory::getConfigClass('influxdb');
+if ($configClass) {
+    $config = new $configClass([/* config options */]);
 }
 ```
 
