@@ -9,9 +9,9 @@ class RetryableOperationTest extends TestCase
 {
     public function test_execute_successful_operation(): void
     {
-        $result = RetryableOperation::execute(function () {
+        $result = RetryableOperation::make(function () {
             return 'success';
-        });
+        })->run();
 
         $this->assertEquals('success', $result);
     }
@@ -21,20 +21,19 @@ class RetryableOperationTest extends TestCase
         $attempts = 0;
         $maxAttempts = 3;
 
-        $result = RetryableOperation::execute(
-            function () use (&$attempts, $maxAttempts) {
-                $attempts++;
-                if ($attempts < $maxAttempts) {
-                    throw new \Exception("Attempt {$attempts} failed");
-                }
+        $result = RetryableOperation::make(function () use (&$attempts, $maxAttempts) {
+            $attempts++;
+            if ($attempts < $maxAttempts) {
+                throw new \Exception("Attempt {$attempts} failed");
+            }
 
-                return 'success after retry';
-            },
-            $maxAttempts - 1, // max retries
-            10, // delay in ms
-            1.0, // backoff factor
-            [\Exception::class] // retryable exceptions
-        );
+            return 'success after retry';
+        })
+            ->retries($maxAttempts - 1) // max retries
+            ->delay(10) // delay in ms
+            ->backoffFactor(1.0) // backoff factor
+            ->retryableExceptions([\Exception::class]) // retryable exceptions
+            ->run();
 
         $this->assertEquals('success after retry', $result);
         $this->assertEquals($maxAttempts, $attempts);
@@ -45,15 +44,14 @@ class RetryableOperationTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Non-retryable exception');
 
-        RetryableOperation::execute(
-            function () {
-                throw new \RuntimeException('Non-retryable exception');
-            },
-            3, // max retries
-            10, // delay in ms
-            1.0, // backoff factor
-            [\Exception::class] // retryable exceptions (not including RuntimeException)
-        );
+        RetryableOperation::make(function () {
+            throw new \RuntimeException('Non-retryable exception');
+        })
+            ->retries(3) // max retries
+            ->delay(10) // delay in ms
+            ->backoffFactor(1.0) // backoff factor
+            ->retryableExceptions([\Exception::class]) // retryable exceptions (not including RuntimeException)
+            ->run();
     }
 
     public function test_execute_with_max_retries_exceeded(): void
@@ -64,16 +62,15 @@ class RetryableOperationTest extends TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Max retries exceeded');
 
-        RetryableOperation::execute(
-            function () use (&$attempts) {
-                $attempts++;
-                throw new \Exception('Max retries exceeded');
-            },
-            $maxRetries,
-            10, // delay in ms
-            1.0, // backoff factor
-            [\Exception::class] // retryable exceptions
-        );
+        RetryableOperation::make(function () use (&$attempts) {
+            $attempts++;
+            throw new \Exception('Max retries exceeded');
+        })
+            ->retries($maxRetries)
+            ->delay(10) // delay in ms
+            ->backoffFactor(1.0) // backoff factor
+            ->retryableExceptions([\Exception::class]) // retryable exceptions
+            ->run();
 
         $this->assertEquals($maxRetries + 1, $attempts);
     }
@@ -92,13 +89,15 @@ class RetryableOperationTest extends TestCase
             return "success with param: {$param}";
         };
 
-        $retryableOperation = RetryableOperation::makeRetryable(
-            $operation,
-            $maxAttempts - 1, // max retries
-            10, // delay in ms
-            1.0, // backoff factor
-            [\Exception::class] // retryable exceptions
-        );
+        // Create a retryable operation using the fluent interface
+        $retryableOperation = function (string $param) use ($operation, $maxAttempts) {
+            return RetryableOperation::make(fn () => $operation($param))
+                ->retries($maxAttempts - 1) // max retries
+                ->delay(10) // delay in ms
+                ->backoffFactor(1.0) // backoff factor
+                ->retryableExceptions([\Exception::class]) // retryable exceptions
+                ->run();
+        };
 
         $result = $retryableOperation('test');
 

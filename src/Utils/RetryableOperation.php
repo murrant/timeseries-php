@@ -7,30 +7,51 @@ namespace TimeSeriesPhp\Utils;
  */
 class RetryableOperation
 {
+    /** @var callable */
+    protected $operation;
+
+    protected int $maxRetries = 3;
+
+    protected int $delay = 100;
+
+    protected float $backoffFactor = 2.0;
+
+    /** @var array<class-string<\Throwable>> */
+    protected array $retryableExceptions = [\Exception::class];
+
     /**
-     * Execute a callable with retry logic
+     * Create a new RetryableOperation instance with the given operation
+     *
+     * This is the starting point for the fluent interface. After creating an instance,
+     * you can configure it using the fluent methods (retries(), delay(), etc.) and
+     * then execute it using run().
      *
      * @param  callable  $operation  The operation to execute
-     * @param  int  $maxRetries  Maximum number of retries (default: 3)
-     * @param  int  $delay  Delay between retries in milliseconds (default: 100)
-     * @param  float  $backoffFactor  Factor to increase delay by after each retry (default: 2.0)
-     * @param  array<class-string<\Throwable>>  $retryableExceptions  Exceptions that should trigger a retry
+     * @return self A new RetryableOperation instance
+     */
+    public static function make(callable $operation): self
+    {
+        return new self($operation);
+    }
+
+    /**
+     * Execute the operation with retry logic
+     *
+     * This is the final step in the fluent interface. It executes the operation with
+     * the configured retry settings.
+     *
      * @return mixed The result of the operation
      *
      * @throws \Throwable If the operation fails after all retries
      */
-    public static function execute(
-        callable $operation,
-        int $maxRetries = 3,
-        int $delay = 100,
-        float $backoffFactor = 2.0,
-        array $retryableExceptions = [\Exception::class]
-    ): mixed {
-        $attempt = 0;
-        $currentDelay = $delay;
+    public function run(): mixed
+    {
         $lastException = null;
+        $operation = $this->operation;
+        $currentDelay = $this->delay;
+        $attempt = 0;
 
-        while ($attempt <= $maxRetries) {
+        while ($attempt <= $this->maxRetries) {
             try {
                 return $operation();
             } catch (\Throwable $e) {
@@ -38,7 +59,7 @@ class RetryableOperation
 
                 // Check if this exception should trigger a retry
                 $shouldRetry = false;
-                foreach ($retryableExceptions as $exceptionClass) {
+                foreach ($this->retryableExceptions as $exceptionClass) {
                     if ($e instanceof $exceptionClass) {
                         $shouldRetry = true;
                         break;
@@ -46,7 +67,7 @@ class RetryableOperation
                 }
 
                 // If this is not a retryable exception or we've reached max retries, throw it
-                if (! $shouldRetry || $attempt >= $maxRetries) {
+                if (! $shouldRetry || $attempt >= $this->maxRetries) {
                     throw $e;
                 }
 
@@ -56,7 +77,7 @@ class RetryableOperation
                 }
 
                 // Increase delay for next retry
-                $currentDelay = (int) ($currentDelay * $backoffFactor);
+                $currentDelay = (int) ($currentDelay * $this->backoffFactor);
                 $attempt++;
             }
         }
@@ -65,31 +86,45 @@ class RetryableOperation
         throw $lastException ?? new \RuntimeException('Operation failed after retries');
     }
 
+    public function retries(int $maxRetries): self
+    {
+        $this->maxRetries = $maxRetries;
+
+        return $this;
+    }
+
+    public function delay(int $delay): self
+    {
+        $this->delay = $delay;
+
+        return $this;
+    }
+
+    public function backoffFactor(float $backoffFactor): self
+    {
+        $this->backoffFactor = $backoffFactor;
+
+        return $this;
+    }
+
     /**
-     * Create a retryable version of a callable
-     *
-     * @param  callable  $operation  The operation to make retryable
-     * @param  int  $maxRetries  Maximum number of retries (default: 3)
-     * @param  int  $delay  Delay between retries in milliseconds (default: 100)
-     * @param  float  $backoffFactor  Factor to increase delay by after each retry (default: 2.0)
-     * @param  array<class-string<\Throwable>>  $retryableExceptions  Exceptions that should trigger a retry
-     * @return callable A new callable that will retry the operation
+     * @param  array<class-string<\Throwable>>  $retryableExceptions
      */
-    public static function makeRetryable(
-        callable $operation,
-        int $maxRetries = 3,
-        int $delay = 100,
-        float $backoffFactor = 2.0,
-        array $retryableExceptions = [\Exception::class]
-    ): callable {
-        return function (...$args) use ($operation, $maxRetries, $delay, $backoffFactor, $retryableExceptions) {
-            return self::execute(
-                fn () => $operation(...$args),
-                $maxRetries,
-                $delay,
-                $backoffFactor,
-                $retryableExceptions
-            );
-        };
+    public function retryableExceptions(array $retryableExceptions): self
+    {
+        $this->retryableExceptions = $retryableExceptions;
+
+        return $this;
+    }
+
+    public function __invoke(): mixed
+    {
+        return $this->run();
+    }
+
+    protected function __construct(
+        callable $operation
+    ) {
+        $this->operation = $operation;
     }
 }
