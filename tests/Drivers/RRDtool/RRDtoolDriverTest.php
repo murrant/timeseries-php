@@ -154,7 +154,7 @@ class RRDtoolDriverTest extends TestCase
                 return true;
             }
 
-            public function rawQuery(\TimeSeriesPhp\Core\RawQueryInterface $query): \TimeSeriesPhp\Core\QueryResult
+            public function rawQuery(\TimeSeriesPhp\Support\Query\RawQueryInterface $query): \TimeSeriesPhp\Core\QueryResult
             {
                 // Mock implementation that doesn't execute commands
                 if ($query instanceof \TimeSeriesPhp\Drivers\RRDtool\RRDtoolRawQuery && $query->command === 'xport') {

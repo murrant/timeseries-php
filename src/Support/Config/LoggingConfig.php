@@ -1,6 +1,6 @@
 <?php
 
-namespace TimeSeriesPhp\Config;
+namespace TimeSeriesPhp\Support\Config;
 
 use TimeSeriesPhp\Exceptions\ConfigurationException;
 use TimeSeriesPhp\Support\Logs\LogLevel;

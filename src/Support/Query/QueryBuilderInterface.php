@@ -1,6 +1,8 @@
 <?php
 
-namespace TimeSeriesPhp\Core;
+namespace TimeSeriesPhp\Support\Query;
+
+use TimeSeriesPhp\Core\Query;
 
 interface QueryBuilderInterface
 {

@@ -2,7 +2,7 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool;
 
-use TimeSeriesPhp\Core\RawQueryInterface;
+use TimeSeriesPhp\Support\Query\RawQueryInterface;
 
 class RRDtoolRawQuery implements RawQueryInterface
 {

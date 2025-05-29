@@ -2,11 +2,11 @@
 
 namespace TimeSeriesPhp\Drivers\Graphite;
 
-use TimeSeriesPhp\Core\ComparisonOperator;
 use TimeSeriesPhp\Core\Query;
-use TimeSeriesPhp\Core\QueryBuilderInterface;
-use TimeSeriesPhp\Core\RawQuery;
-use TimeSeriesPhp\Core\RawQueryInterface;
+use TimeSeriesPhp\Support\Query\ComparisonOperator;
+use TimeSeriesPhp\Support\Query\QueryBuilderInterface;
+use TimeSeriesPhp\Support\Query\RawQuery;
+use TimeSeriesPhp\Support\Query\RawQueryInterface;
 
 class GraphiteQueryBuilder implements QueryBuilderInterface
 {

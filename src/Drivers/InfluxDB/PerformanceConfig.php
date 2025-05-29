@@ -2,7 +2,7 @@
 
 namespace TimeSeriesPhp\Drivers\InfluxDB;
 
-use TimeSeriesPhp\Config\AbstractDriverConfig;
+use TimeSeriesPhp\Support\Config\AbstractDriverConfig;
 
 class PerformanceConfig extends AbstractDriverConfig
 {

@@ -2,8 +2,8 @@
 
 namespace TimeSeriesPhp\Drivers\Prometheus;
 
-use TimeSeriesPhp\Config\AbstractDriverConfig;
 use TimeSeriesPhp\Exceptions\ConfigurationException;
+use TimeSeriesPhp\Support\Config\AbstractDriverConfig;
 
 class PrometheusConfig extends AbstractDriverConfig
 {

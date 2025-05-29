@@ -2,8 +2,8 @@
 
 namespace TimeSeriesPhp\Tests\Core\data;
 
-use TimeSeriesPhp\Config\ConfigInterface;
 use TimeSeriesPhp\Core\TimeSeriesInterface;
+use TimeSeriesPhp\Support\Config\ConfigInterface;
 
 class MockDriver implements TimeSeriesInterface
 {
@@ -29,7 +29,7 @@ class MockDriver implements TimeSeriesInterface
         return new \TimeSeriesPhp\Core\QueryResult([]);
     }
 
-    public function rawQuery(\TimeSeriesPhp\Core\RawQueryInterface $query): \TimeSeriesPhp\Core\QueryResult
+    public function rawQuery(\TimeSeriesPhp\Support\Query\RawQueryInterface $query): \TimeSeriesPhp\Core\QueryResult
     {
         return new \TimeSeriesPhp\Core\QueryResult([]);
     }

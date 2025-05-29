@@ -1,9 +1,10 @@
 <?php
 
-namespace TimeSeriesPhp\Core;
+namespace TimeSeriesPhp\Support;
 
-use TimeSeriesPhp\Config\ConfigInterface;
+use TimeSeriesPhp\Core\TimeSeriesInterface;
 use TimeSeriesPhp\Exceptions\DriverException;
+use TimeSeriesPhp\Support\Config\ConfigInterface;
 
 /**
  * Non-static version of TSDBFactory that can be injected as a dependency.

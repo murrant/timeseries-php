@@ -1,12 +1,12 @@
 <?php
 
-namespace TimeSeriesPhp\Tests\Config;
+namespace TimeSeriesPhp\Tests\Support\Config;
 
-use TimeSeriesPhp\Config\CacheConfig;
+use TimeSeriesPhp\Support\Config\CacheConfig;
 
 class CacheConfigTest extends ConfigTestCase
 {
-    protected function createConfig(array $config): CacheConfig
+    protected function createConfig(array $config): \TimeSeriesPhp\Support\Config\ConfigInterface
     {
         return new CacheConfig($config);
     }

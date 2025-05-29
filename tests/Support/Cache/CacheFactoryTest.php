@@ -4,11 +4,11 @@ namespace TimeSeriesPhp\Tests\Support\Cache;
 
 use PHPUnit\Framework\TestCase;
 use Psr\SimpleCache\CacheInterface;
-use TimeSeriesPhp\Config\CacheConfig;
 use TimeSeriesPhp\Exceptions\ConfigurationException;
 use TimeSeriesPhp\Support\Cache\CacheFactory;
 use TimeSeriesPhp\Support\Cache\FileCache;
 use TimeSeriesPhp\Support\Cache\MemoryCache;
+use TimeSeriesPhp\Support\Config\CacheConfig;
 
 class CacheFactoryTest extends TestCase
 {

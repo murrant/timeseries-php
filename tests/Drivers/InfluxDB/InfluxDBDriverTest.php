@@ -99,7 +99,7 @@ class InfluxDBDriverTest extends TestCase
                 ];
             }
 
-            public function rawQuery(\TimeSeriesPhp\Core\RawQueryInterface $query): \TimeSeriesPhp\Core\QueryResult
+            public function rawQuery(\TimeSeriesPhp\Support\Query\RawQueryInterface $query): \TimeSeriesPhp\Core\QueryResult
             {
                 // Mock implementation that doesn't use queryApi
                 return new \TimeSeriesPhp\Core\QueryResult([
@@ -163,7 +163,7 @@ class InfluxDBDriverTest extends TestCase
 
     public function test_raw_query(): void
     {
-        $rawQuery = new \TimeSeriesPhp\Core\RawQuery('SELECT * FROM cpu_usage');
+        $rawQuery = new \TimeSeriesPhp\Support\Query\RawQuery('SELECT * FROM cpu_usage');
         $result = $this->driver->rawQuery($rawQuery);
 
         $this->assertInstanceOf(QueryResult::class, $result);

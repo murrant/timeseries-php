@@ -3,12 +3,13 @@
 namespace TimeSeriesPhp\Core;
 
 use DateTime;
-use TimeSeriesPhp\Config\ConfigInterface;
 use TimeSeriesPhp\Exceptions\ConnectionException;
 use TimeSeriesPhp\Exceptions\DatabaseException;
 use TimeSeriesPhp\Exceptions\QueryException;
 use TimeSeriesPhp\Exceptions\RawQueryException;
 use TimeSeriesPhp\Exceptions\WriteException;
+use TimeSeriesPhp\Support\Config\ConfigInterface;
+use TimeSeriesPhp\Support\Query\RawQueryInterface;
 
 interface TimeSeriesInterface
 {

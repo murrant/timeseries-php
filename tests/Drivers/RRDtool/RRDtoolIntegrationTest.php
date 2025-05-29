@@ -5,7 +5,6 @@ namespace TimeSeriesPhp\Tests\Drivers\RRDtool;
 use DateTime;
 use PHPUnit\Framework\TestCase;
 use TimeSeriesPhp\Core\DataPoint;
-use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Core\QueryResult;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;

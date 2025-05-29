@@ -4,9 +4,9 @@ namespace TimeSeriesPhp\Tests\Utils;
 
 use PHPUnit\Framework\TestCase;
 use Psr\SimpleCache\CacheInterface;
-use TimeSeriesPhp\Config\CacheConfig;
 use TimeSeriesPhp\Exceptions\TSDBException;
 use TimeSeriesPhp\Support\Cache\CacheFactory;
+use TimeSeriesPhp\Support\Config\CacheConfig;
 use TimeSeriesPhp\Utils\RetryableOperation;
 
 class RetryableOperationTest extends TestCase

@@ -40,7 +40,7 @@ class QueryTest extends TestCase
         $this->assertSame($query, $result, 'Method should return $this for chaining');
         $conditions = $query->getConditions();
         $this->assertCount(1, $conditions);
-        $this->assertInstanceOf(\TimeSeriesPhp\Core\QueryCondition::class, $conditions[0]);
+        $this->assertInstanceOf(\TimeSeriesPhp\Support\Query\QueryCondition::class, $conditions[0]);
         $this->assertEquals('host', $conditions[0]->getField());
         $this->assertEquals('=', $conditions[0]->getOperator());
         $this->assertEquals('server01', $conditions[0]->getValue());
@@ -51,13 +51,13 @@ class QueryTest extends TestCase
         $conditions = $query->getConditions();
         $this->assertCount(2, $conditions);
 
-        $this->assertInstanceOf(\TimeSeriesPhp\Core\QueryCondition::class, $conditions[0]);
+        $this->assertInstanceOf(\TimeSeriesPhp\Support\Query\QueryCondition::class, $conditions[0]);
         $this->assertEquals('host', $conditions[0]->getField());
         $this->assertEquals('=', $conditions[0]->getOperator());
         $this->assertEquals('server01', $conditions[0]->getValue());
         $this->assertEquals('AND', $conditions[0]->getType());
 
-        $this->assertInstanceOf(\TimeSeriesPhp\Core\QueryCondition::class, $conditions[1]);
+        $this->assertInstanceOf(\TimeSeriesPhp\Support\Query\QueryCondition::class, $conditions[1]);
         $this->assertEquals('region', $conditions[1]->getField());
         $this->assertEquals('=', $conditions[1]->getOperator());
         $this->assertEquals('us-west', $conditions[1]->getValue());
@@ -171,13 +171,13 @@ class QueryTest extends TestCase
         $conditions = $query->getConditions();
         $this->assertCount(2, $conditions);
 
-        $this->assertInstanceOf(\TimeSeriesPhp\Core\QueryCondition::class, $conditions[0]);
+        $this->assertInstanceOf(\TimeSeriesPhp\Support\Query\QueryCondition::class, $conditions[0]);
         $this->assertEquals('host', $conditions[0]->getField());
         $this->assertEquals('=', $conditions[0]->getOperator());
         $this->assertEquals('server01', $conditions[0]->getValue());
         $this->assertEquals('AND', $conditions[0]->getType());
 
-        $this->assertInstanceOf(\TimeSeriesPhp\Core\QueryCondition::class, $conditions[1]);
+        $this->assertInstanceOf(\TimeSeriesPhp\Support\Query\QueryCondition::class, $conditions[1]);
         $this->assertEquals('region', $conditions[1]->getField());
         $this->assertEquals('=', $conditions[1]->getOperator());
         $this->assertEquals('us-west', $conditions[1]->getValue());

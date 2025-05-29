@@ -3,8 +3,8 @@
 namespace TimeSeriesPhp\Tests\Support\Cache;
 
 use PHPUnit\Framework\TestCase;
-use TimeSeriesPhp\Config\CacheConfig;
 use TimeSeriesPhp\Support\Cache\MemoryCache;
+use TimeSeriesPhp\Support\Config\CacheConfig;
 
 class MemoryCacheTest extends TestCase
 {

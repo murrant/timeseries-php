@@ -3,8 +3,8 @@
 namespace TimeSeriesPhp\Support\Cache;
 
 use Psr\SimpleCache\CacheInterface;
-use TimeSeriesPhp\Config\CacheConfig;
 use TimeSeriesPhp\Exceptions\TSDBException;
+use TimeSeriesPhp\Support\Config\CacheConfig;
 
 /**
  * Abstract base class for cache implementations

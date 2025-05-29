@@ -5,6 +5,8 @@ namespace TimeSeriesPhp\Core;
 use DateInterval;
 use DateTime;
 use TimeSeriesPhp\Exceptions\QueryException;
+use TimeSeriesPhp\Support\Query\ComparisonOperator;
+use TimeSeriesPhp\Support\Query\QueryCondition;
 
 class Query
 {

@@ -15,16 +15,16 @@ use InfluxDB2\Service\BucketsService;
 use InfluxDB2\Service\DeleteService;
 use InfluxDB2\Service\OrganizationsService;
 use InfluxDB2\WriteApi;
-use TimeSeriesPhp\Core\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\QueryResult;
-use TimeSeriesPhp\Core\RawQueryInterface;
 use TimeSeriesPhp\Exceptions\ConfigurationException;
 use TimeSeriesPhp\Exceptions\ConnectionException;
 use TimeSeriesPhp\Exceptions\DatabaseException;
 use TimeSeriesPhp\Exceptions\RawQueryException;
 use TimeSeriesPhp\Exceptions\WriteException;
+use TimeSeriesPhp\Support\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Support\Logs\Logger;
+use TimeSeriesPhp\Support\Query\RawQueryInterface;
 use TimeSeriesPhp\Utils\Convert;
 
 class InfluxDBDriver extends AbstractTimeSeriesDB

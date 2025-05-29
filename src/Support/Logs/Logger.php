@@ -2,7 +2,7 @@
 
 namespace TimeSeriesPhp\Support\Logs;
 
-use TimeSeriesPhp\Config\LoggingConfig;
+use TimeSeriesPhp\Support\Config\LoggingConfig;
 
 /**
  * Simple logger for the TimeSeriesPhp library.
@@ -100,7 +100,7 @@ class Logger
         $config = self::getConfig();
 
         // Check if this level is enabled
-        if (! $config->isLevelEnabled($level->value)) {
+        if (! $config->isLevelEnabled($level)) {
             return;
         }
 

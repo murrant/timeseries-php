@@ -1,6 +1,6 @@
 <?php
 
-namespace TimeSeriesPhp\Core;
+namespace TimeSeriesPhp\Support\Query;
 
 enum ComparisonOperator: string
 {

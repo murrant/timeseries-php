@@ -1,6 +1,6 @@
 <?php
 
-namespace TimeSeriesPhp\Config;
+namespace TimeSeriesPhp\Support\Config;
 
 abstract class AbstractDriverConfig extends AbstractConfig implements DriverConfigInterface
 {

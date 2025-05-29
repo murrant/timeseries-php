@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TimeSeriesPhp\Core;
+namespace TimeSeriesPhp\Support\Query;
 
 /**
  * Data Transfer Object for query conditions

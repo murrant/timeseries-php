@@ -1,10 +1,11 @@
 <?php
 
-namespace TimeSeriesPhp\Tests\Utils;
+namespace TimeSeriesPhp\Tests\Support\Logs;
 
 use PHPUnit\Framework\TestCase;
-use TimeSeriesPhp\Config\LoggingConfig;
+use TimeSeriesPhp\Support\Config\LoggingConfig;
 use TimeSeriesPhp\Support\Logs\Logger;
+use TimeSeriesPhp\Support\Logs\LogLevel;
 
 class LoggerTest extends TestCase
 {
@@ -45,10 +46,10 @@ class LoggerTest extends TestCase
             'level' => 'warning',
         ]);
 
-        $this->assertFalse($config->isLevelEnabled('debug'));
-        $this->assertFalse($config->isLevelEnabled('info'));
-        $this->assertTrue($config->isLevelEnabled('warning'));
-        $this->assertTrue($config->isLevelEnabled('error'));
+        $this->assertFalse($config->isLevelEnabled(LogLevel::DEBUG));
+        $this->assertFalse($config->isLevelEnabled(LogLevel::INFO));
+        $this->assertTrue($config->isLevelEnabled(LogLevel::WARNING));
+        $this->assertTrue($config->isLevelEnabled(LogLevel::ERROR));
     }
 
     public function test_disabled_logger(): void
@@ -57,10 +58,10 @@ class LoggerTest extends TestCase
             'enabled' => false,
         ]);
 
-        $this->assertFalse($config->isLevelEnabled('debug'));
-        $this->assertFalse($config->isLevelEnabled('info'));
-        $this->assertFalse($config->isLevelEnabled('warning'));
-        $this->assertFalse($config->isLevelEnabled('error'));
+        $this->assertFalse($config->isLevelEnabled(LogLevel::DEBUG));
+        $this->assertFalse($config->isLevelEnabled(LogLevel::INFO));
+        $this->assertFalse($config->isLevelEnabled(LogLevel::WARNING));
+        $this->assertFalse($config->isLevelEnabled(LogLevel::ERROR));
     }
 
     public function test_log_to_file(): void

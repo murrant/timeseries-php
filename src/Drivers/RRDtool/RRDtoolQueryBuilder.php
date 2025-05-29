@@ -2,14 +2,14 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool;
 
-use TimeSeriesPhp\Core\ComparisonOperator;
 use TimeSeriesPhp\Core\Query;
-use TimeSeriesPhp\Core\QueryBuilderInterface;
-use TimeSeriesPhp\Core\QueryCondition;
-use TimeSeriesPhp\Core\RawQueryInterface;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\TagCondition;
 use TimeSeriesPhp\Exceptions\QueryException;
+use TimeSeriesPhp\Support\Query\ComparisonOperator;
+use TimeSeriesPhp\Support\Query\QueryBuilderInterface;
+use TimeSeriesPhp\Support\Query\QueryCondition;
+use TimeSeriesPhp\Support\Query\RawQueryInterface;
 
 class RRDtoolQueryBuilder implements QueryBuilderInterface
 {

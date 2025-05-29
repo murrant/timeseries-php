@@ -3,7 +3,7 @@
 namespace TimeSeriesPhp\Exceptions;
 
 use Throwable;
-use TimeSeriesPhp\Core\RawQueryInterface;
+use TimeSeriesPhp\Support\Query\RawQueryInterface;
 
 class RawQueryException extends QueryException
 {

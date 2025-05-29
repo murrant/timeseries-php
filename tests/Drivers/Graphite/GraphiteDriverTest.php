@@ -7,11 +7,11 @@ use PHPUnit\Framework\TestCase;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Core\QueryResult;
-use TimeSeriesPhp\Core\RawQuery;
 use TimeSeriesPhp\Drivers\Graphite\GraphiteConfig;
 use TimeSeriesPhp\Drivers\Graphite\GraphiteDriver;
 use TimeSeriesPhp\Drivers\Graphite\GraphiteQueryBuilder;
 use TimeSeriesPhp\Exceptions\ConnectionException;
+use TimeSeriesPhp\Support\Query\RawQuery;
 
 class GraphiteDriverTest extends TestCase
 {
@@ -92,7 +92,7 @@ class GraphiteDriverTest extends TestCase
                 return true;
             }
 
-            public function rawQuery(\TimeSeriesPhp\Core\RawQueryInterface $query): \TimeSeriesPhp\Core\QueryResult
+            public function rawQuery(\TimeSeriesPhp\Support\Query\RawQueryInterface $query): \TimeSeriesPhp\Core\QueryResult
             {
                 // Mock implementation that returns a predefined result
                 return new \TimeSeriesPhp\Core\QueryResult([

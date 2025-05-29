@@ -2,8 +2,8 @@
 
 namespace TimeSeriesPhp\Drivers\InfluxDB;
 
-use TimeSeriesPhp\Config\AbstractDriverConfig;
 use TimeSeriesPhp\Exceptions\ConfigurationException;
+use TimeSeriesPhp\Support\Config\AbstractDriverConfig;
 
 class ConnectionConfig extends AbstractDriverConfig
 {

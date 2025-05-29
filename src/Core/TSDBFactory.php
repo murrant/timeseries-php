@@ -2,8 +2,9 @@
 
 namespace TimeSeriesPhp\Core;
 
-use TimeSeriesPhp\Config\ConfigInterface;
 use TimeSeriesPhp\Exceptions\DriverException;
+use TimeSeriesPhp\Support\Config\ConfigInterface;
+use TimeSeriesPhp\Support\TSDBFactoryInstance;
 
 /**
  * Static facade for TSDBFactoryInstance.

@@ -9,9 +9,9 @@ use PHPUnit\Framework\TestCase;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Core\QueryResult;
-use TimeSeriesPhp\Core\RawQuery;
 use TimeSeriesPhp\Drivers\Prometheus\PrometheusConfig;
 use TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver;
+use TimeSeriesPhp\Support\Query\RawQuery;
 
 class PrometheusDriverTest extends TestCase
 {

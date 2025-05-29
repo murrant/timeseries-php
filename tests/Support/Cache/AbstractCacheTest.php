@@ -3,9 +3,9 @@
 namespace TimeSeriesPhp\Tests\Support\Cache;
 
 use PHPUnit\Framework\TestCase;
-use TimeSeriesPhp\Config\CacheConfig;
 use TimeSeriesPhp\Exceptions\TSDBException;
 use TimeSeriesPhp\Support\Cache\AbstractCache;
+use TimeSeriesPhp\Support\Config\CacheConfig;
 
 class AbstractCacheTest extends TestCase
 {

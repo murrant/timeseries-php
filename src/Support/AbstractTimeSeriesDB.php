@@ -1,12 +1,17 @@
 <?php
 
-namespace TimeSeriesPhp\Core;
+namespace TimeSeriesPhp\Support;
 
 use DateTime;
-use TimeSeriesPhp\Config\ConfigInterface;
+use TimeSeriesPhp\Core\DataPoint;
+use TimeSeriesPhp\Core\Query;
+use TimeSeriesPhp\Core\QueryResult;
+use TimeSeriesPhp\Core\TimeSeriesInterface;
 use TimeSeriesPhp\Exceptions\DatabaseException;
 use TimeSeriesPhp\Exceptions\WriteException;
+use TimeSeriesPhp\Support\Config\ConfigInterface;
 use TimeSeriesPhp\Support\Logs\Logger;
+use TimeSeriesPhp\Support\Query\QueryBuilderInterface;
 
 abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
 {

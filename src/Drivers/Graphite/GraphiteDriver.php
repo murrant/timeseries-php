@@ -2,15 +2,15 @@
 
 namespace TimeSeriesPhp\Drivers\Graphite;
 
-use TimeSeriesPhp\Core\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\QueryResult;
-use TimeSeriesPhp\Core\RawQueryInterface;
 use TimeSeriesPhp\Exceptions\ConfigurationException;
 use TimeSeriesPhp\Exceptions\ConnectionException;
 use TimeSeriesPhp\Exceptions\RawQueryException;
 use TimeSeriesPhp\Exceptions\WriteException;
+use TimeSeriesPhp\Support\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Support\Logs\Logger;
+use TimeSeriesPhp\Support\Query\RawQueryInterface;
 
 class GraphiteDriver extends AbstractTimeSeriesDB
 {

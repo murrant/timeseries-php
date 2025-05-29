@@ -2,10 +2,10 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool;
 
-use TimeSeriesPhp\Config\AbstractDriverConfig;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
 use TimeSeriesPhp\Exceptions\ConfigurationException;
+use TimeSeriesPhp\Support\Config\AbstractDriverConfig;
 
 class RRDtoolConfig extends AbstractDriverConfig
 {

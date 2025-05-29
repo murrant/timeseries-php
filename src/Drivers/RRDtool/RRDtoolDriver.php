@@ -5,10 +5,8 @@ namespace TimeSeriesPhp\Drivers\RRDtool;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\InputStream;
 use Symfony\Component\Process\Process;
-use TimeSeriesPhp\Core\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\QueryResult;
-use TimeSeriesPhp\Core\RawQueryInterface;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
 use TimeSeriesPhp\Exceptions\ConnectionException;
 use TimeSeriesPhp\Exceptions\DriverException;
@@ -17,7 +15,9 @@ use TimeSeriesPhp\Exceptions\RRDtoolCommandTimeoutException;
 use TimeSeriesPhp\Exceptions\RRDtoolException;
 use TimeSeriesPhp\Exceptions\RRDtoolPrematureUpdateException;
 use TimeSeriesPhp\Exceptions\WriteException;
+use TimeSeriesPhp\Support\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Support\Logs\Logger;
+use TimeSeriesPhp\Support\Query\RawQueryInterface;
 
 class RRDtoolDriver extends AbstractTimeSeriesDB
 {

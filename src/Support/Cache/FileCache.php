@@ -2,7 +2,7 @@
 
 namespace TimeSeriesPhp\Support\Cache;
 
-use TimeSeriesPhp\Config\CacheConfig;
+use TimeSeriesPhp\Support\Config\CacheConfig;
 
 /**
  * File-based cache implementation

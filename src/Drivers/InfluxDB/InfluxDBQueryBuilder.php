@@ -2,13 +2,13 @@
 
 namespace TimeSeriesPhp\Drivers\InfluxDB;
 
-use TimeSeriesPhp\Core\ComparisonOperator;
 use TimeSeriesPhp\Core\Query;
-use TimeSeriesPhp\Core\QueryBuilderInterface;
-use TimeSeriesPhp\Core\RawQuery;
-use TimeSeriesPhp\Core\RawQueryInterface;
 use TimeSeriesPhp\Exceptions\QueryException;
 use TimeSeriesPhp\Exceptions\RawQueryException;
+use TimeSeriesPhp\Support\Query\ComparisonOperator;
+use TimeSeriesPhp\Support\Query\QueryBuilderInterface;
+use TimeSeriesPhp\Support\Query\RawQuery;
+use TimeSeriesPhp\Support\Query\RawQueryInterface;
 
 class InfluxDBQueryBuilder implements QueryBuilderInterface
 {
