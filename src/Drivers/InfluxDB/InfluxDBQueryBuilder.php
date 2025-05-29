@@ -11,12 +11,9 @@ use TimeSeriesPhp\Exceptions\RawQueryException;
 
 class InfluxDBQueryBuilder implements QueryBuilderInterface
 {
-    private readonly string $bucket;
-
-    public function __construct(string $bucket)
-    {
-        $this->bucket = $bucket;
-    }
+    public function __construct(
+        private readonly string $bucket
+    ) {}
 
     /**
      * @throws RawQueryException

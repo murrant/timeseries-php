@@ -9,12 +9,9 @@ use TimeSeriesPhp\Core\RawQueryInterface;
 
 class GraphiteQueryBuilder implements QueryBuilderInterface
 {
-    private readonly string $prefix;
-
-    public function __construct(string $prefix = '')
-    {
-        $this->prefix = $prefix;
-    }
+    public function __construct(
+        private readonly string $prefix = ''
+    ) {}
 
     public function build(Query $query): RawQueryInterface
     {

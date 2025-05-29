@@ -12,12 +12,9 @@ use TimeSeriesPhp\Exceptions\QueryException;
 
 class RRDtoolQueryBuilder implements QueryBuilderInterface
 {
-    private readonly RRDTagStrategyInterface $tagStrategy;
-
-    public function __construct(RRDTagStrategyInterface $tagStrategy)
-    {
-        $this->tagStrategy = $tagStrategy;
-    }
+    public function __construct(
+        private readonly RRDTagStrategyInterface $tagStrategy
+    ) {}
 
     /**
      * @throws QueryException
