@@ -59,9 +59,22 @@ class GraphiteDriver extends AbstractTimeSeriesDB
 
             $this->connected = true;
 
+            \TimeSeriesPhp\Utils\Logger::info('Connected to Graphite successfully', [
+                'host' => $this->host,
+                'port' => $this->port,
+                'protocol' => $this->protocol,
+                'prefix' => $this->prefix,
+                'batch_size' => $this->batchSize,
+            ]);
+
             return true;
         } catch (\Exception $e) {
-            error_log('Graphite connection failed: '.$e->getMessage());
+            \TimeSeriesPhp\Utils\Logger::error('Graphite connection failed: '.$e->getMessage(), [
+                'exception' => get_class($e),
+                'host' => $this->host,
+                'port' => $this->port,
+                'protocol' => $this->protocol,
+            ]);
             $this->connected = false;
 
             return false;
@@ -98,7 +111,12 @@ class GraphiteDriver extends AbstractTimeSeriesDB
 
             return (bool) $success;
         } catch (\Exception $e) {
-            error_log('Graphite write failed: '.$e->getMessage());
+            \TimeSeriesPhp\Utils\Logger::error('Graphite write failed: '.$e->getMessage(), [
+                'exception' => get_class($e),
+                'measurement' => $dataPoint->getMeasurement(),
+                'tags' => $dataPoint->getTags(),
+                'fields_count' => count($dataPoint->getFields()),
+            ]);
             $this->closeSocket();
             throw new WriteException('Failed to write data to Graphite: '.$e->getMessage());
         }
@@ -146,7 +164,11 @@ class GraphiteDriver extends AbstractTimeSeriesDB
 
             return (bool) $success;
         } catch (\Exception $e) {
-            error_log('Graphite batch write failed: '.$e->getMessage());
+            \TimeSeriesPhp\Utils\Logger::error('Graphite batch write failed: '.$e->getMessage(), [
+                'exception' => get_class($e),
+                'datapoints_count' => count($dataPoints),
+                'batch_size' => $this->batchSize,
+            ]);
             $this->closeSocket();
             throw new WriteException('Failed to write batch data to Graphite: '.$e->getMessage());
         }

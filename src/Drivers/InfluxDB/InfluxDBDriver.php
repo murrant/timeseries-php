@@ -63,9 +63,18 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             $ping = $this->client->ping();
             $this->connected = ! empty($ping);
 
+            \TimeSeriesPhp\Utils\Logger::info('Connected to InfluxDB successfully', [
+                'org' => $this->org,
+                'bucket' => $this->bucket,
+            ]);
+
             return $this->connected;
         } catch (\Throwable $e) {
-            error_log('InfluxDB connection failed: '.$e->getMessage());
+            \TimeSeriesPhp\Utils\Logger::error('InfluxDB connection failed: '.$e->getMessage(), [
+                'exception' => get_class($e),
+                'org' => $this->org,
+                'bucket' => $this->bucket,
+            ]);
             $this->connected = false;
 
             throw new ConnectionException('Failed to connect to InfluxDB: '.$e->getMessage(), 0, $e);
@@ -106,12 +115,34 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
         try {
             $point = $this->formatDataPoint($dataPoint);
-            $this->writeApi->write($point);
+
+            // Use the RetryableOperation utility to retry the write operation if it fails
+            \TimeSeriesPhp\Utils\RetryableOperation::execute(
+                function () use ($point) {
+                    $this->writeApi->write($point);
+
+                    return true;
+                },
+                3, // max retries
+                100, // delay in ms
+                2.0, // backoff factor
+                [\Exception::class] // retryable exceptions
+            );
+
             $this->writeApi->close();
+
+            \TimeSeriesPhp\Utils\Logger::debug('InfluxDB write successful', [
+                'measurement' => $dataPoint->getMeasurement(),
+                'tags' => $dataPoint->getTags(),
+            ]);
 
             return true;
         } catch (\Throwable $e) {
-            error_log('InfluxDB write failed: '.$e->getMessage());
+            \TimeSeriesPhp\Utils\Logger::error('InfluxDB write failed: '.$e->getMessage(), [
+                'exception' => get_class($e),
+                'measurement' => $dataPoint->getMeasurement(),
+                'tags' => $dataPoint->getTags(),
+            ]);
 
             throw new WriteException('Failed to write data point: '.$e->getMessage(), 0, $e);
         }
@@ -133,12 +164,32 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
                 $points[] = $this->formatDataPoint($dataPoint);
             }
 
-            $this->writeApi->write($points);
+            // Use the RetryableOperation utility to retry the write operation if it fails
+            \TimeSeriesPhp\Utils\RetryableOperation::execute(
+                function () use ($points) {
+                    $this->writeApi->write($points);
+
+                    return true;
+                },
+                3, // max retries
+                100, // delay in ms
+                2.0, // backoff factor
+                [\Exception::class] // retryable exceptions
+            );
+
             $this->writeApi->close();
+
+            \TimeSeriesPhp\Utils\Logger::debug('InfluxDB batch write successful', [
+                'count' => count($dataPoints),
+                'measurements' => array_map(fn ($dp) => $dp->getMeasurement(), $dataPoints),
+            ]);
 
             return true;
         } catch (\Throwable $e) {
-            error_log('InfluxDB batch write failed: '.$e->getMessage());
+            \TimeSeriesPhp\Utils\Logger::error('InfluxDB batch write failed: '.$e->getMessage(), [
+                'exception' => get_class($e),
+                'count' => count($dataPoints),
+            ]);
 
             throw new WriteException('Failed to write batch data: '.$e->getMessage(), 0, $e);
         }
@@ -199,7 +250,10 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
             return true;
         } catch (\Throwable $e) {
-            error_log('Failed to create bucket: '.$e->getMessage());
+            \TimeSeriesPhp\Utils\Logger::error('Failed to create bucket: '.$e->getMessage(), [
+                'exception' => get_class($e),
+                'database' => $database,
+            ]);
 
             throw new DatabaseException('Failed to create database: '.$e->getMessage(), 0, $e);
         }
@@ -227,7 +281,9 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
             return $bucketNames;
         } catch (\Throwable $e) {
-            error_log('Failed to list buckets: '.$e->getMessage());
+            \TimeSeriesPhp\Utils\Logger::error('Failed to list buckets: '.$e->getMessage(), [
+                'exception' => get_class($e),
+            ]);
 
             throw new DatabaseException('Failed to list databases: '.$e->getMessage(), 0, $e);
         }
@@ -254,7 +310,12 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
             return true;
         } catch (\Throwable $e) {
-            error_log('Failed to delete measurement: '.$e->getMessage());
+            \TimeSeriesPhp\Utils\Logger::error('Failed to delete measurement: '.$e->getMessage(), [
+                'exception' => get_class($e),
+                'measurement' => $measurement,
+                'start' => $start ? $start->format('c') : null,
+                'stop' => $stop ? $stop->format('c') : null,
+            ]);
 
             throw new DatabaseException('Failed to delete measurement: '.$e->getMessage(), 0, $e);
         }

@@ -81,6 +81,14 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
 
         $this->connected = true;
 
+        \TimeSeriesPhp\Utils\Logger::info('Connected to RRDtool successfully', [
+            'rrd_dir' => $this->rrdDir,
+            'rrdtool_path' => $this->rrdtoolPath,
+            'use_rrdcached' => ! empty($this->rrdcachedAddress),
+            'persistent_process' => $this->persistentProcess !== null,
+            'tag_strategy' => get_class($this->tagStrategy),
+        ]);
+
         return true;
     }
 
@@ -113,7 +121,11 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         }
 
         if ($this->debug) {
-            error_log('running rrdtool command: '.implode(' ', $args).PHP_EOL);
+            \TimeSeriesPhp\Utils\Logger::debug('Running rrdtool command', [
+                'command' => $command,
+                'args' => $args,
+                'full_command' => implode(' ', $args),
+            ]);
         }
 
         if ($this->persistentProcess) {

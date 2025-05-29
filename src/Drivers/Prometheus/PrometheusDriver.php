@@ -47,9 +47,21 @@ class PrometheusDriver extends AbstractTimeSeriesDB
             $response = $this->makeApiRequest('/api/v1/status/config');
             $this->connected = $response['status'] === 'success';
 
+            if ($this->connected) {
+                \TimeSeriesPhp\Utils\Logger::info('Connected to Prometheus successfully', [
+                    'url' => $this->apiUrl,
+                    'timeout' => $this->timeout,
+                    'verify_ssl' => $this->verifySSL,
+                    'debug' => $this->debug,
+                ]);
+            }
+
             return $this->connected;
         } catch (Exception $e) {
-            error_log('Prometheus connection failed: '.$e->getMessage());
+            \TimeSeriesPhp\Utils\Logger::error('Prometheus connection failed: '.$e->getMessage(), [
+                'exception' => get_class($e),
+                'url' => $this->apiUrl,
+            ]);
             $this->connected = false;
 
             return false;
@@ -169,7 +181,10 @@ class PrometheusDriver extends AbstractTimeSeriesDB
             if (! empty($params)) {
                 $fullUrl .= '?'.http_build_query($params);
             }
-            error_log("Prometheus API request: $fullUrl");
+            \TimeSeriesPhp\Utils\Logger::debug('Prometheus API request', [
+                'url' => $fullUrl,
+                'params' => $params,
+            ]);
         }
 
         try {
@@ -179,8 +194,10 @@ class PrometheusDriver extends AbstractTimeSeriesDB
             $responseBody = (string) $response->getBody();
 
             if ($this->debug) {
-                error_log("Prometheus API response code: $httpCode");
-                error_log("Prometheus API response: $responseBody");
+                \TimeSeriesPhp\Utils\Logger::debug('Prometheus API response', [
+                    'http_code' => $httpCode,
+                    'response' => $responseBody,
+                ]);
             }
 
             // Parse the JSON response
@@ -194,7 +211,11 @@ class PrometheusDriver extends AbstractTimeSeriesDB
             return $data;
         } catch (GuzzleException $e) {
             if ($this->debug) {
-                error_log('Prometheus API request failed: '.$e->getMessage());
+                \TimeSeriesPhp\Utils\Logger::error('Prometheus API request failed: '.$e->getMessage(), [
+                    'exception' => get_class($e),
+                    'url' => $url,
+                    'params' => $params,
+                ]);
             }
             throw new TSDBException('API request failed: '.$e->getMessage());
         }
