@@ -59,8 +59,12 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
         foreach ($query->getConditions() as $condition) {
             $field = $condition->getField();
             $operator = $this->mapOperator($condition->getOperator());
-            $value = $this->formatValue($condition->getValue());
             $type = $condition->getType();
+
+            // Skip formatting value for operators that handle arrays differently
+            if (! in_array($operator, ['IN', 'NOT IN', 'BETWEEN'])) {
+                $value = $this->formatValue($condition->getValue());
+            }
 
             // For InfluxDB, we need to handle different types of conditions
             if ($field === 'time') {
@@ -85,9 +89,14 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
                 $fluxQuery .= "  |> filter(fn: (r) => contains(value: r[\"$field\"], set: [$valuesList]))\n";
             } elseif ($operator === 'NOT IN') {
                 // Handle NOT IN operator
-                $values = array_map(fn ($v) => $this->formatValue($v), $condition->getValues());
-                $valuesList = implode(', ', $values);
-                $fluxQuery .= "  |> filter(fn: (r) => not contains(value: r[\"$field\"], set: [$valuesList]))\n";
+                $values = $condition->getValues();
+                $conditions = [];
+                foreach ($values as $value) {
+                    $formattedValue = $this->formatValue($value);
+                    $conditions[] = "r[\"$field\"] != $formattedValue";
+                }
+                $conditionString = implode(' and ', $conditions);
+                $fluxQuery .= "  |> filter(fn: (r) => $conditionString)\n";
             } elseif ($operator === 'BETWEEN' && is_array($condition->getValue()) && count($condition->getValue()) === 2) {
                 // Handle BETWEEN operator
                 $min = $this->formatValue($condition->getValue()[0]);
@@ -141,7 +150,7 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
 
             // Create copies of the original field for each aggregation after the first one
             for ($i = 1; $i < count($aggregations); $i++) {
-                $copyName = $originalField . "_copy" . $i;
+                $copyName = $originalField.'_copy'.$i;
                 $fieldCopies[] = $copyName;
                 $fluxQuery .= "  |> duplicate(column: \"{$originalField}\", as: \"{$copyName}\")\n";
             }

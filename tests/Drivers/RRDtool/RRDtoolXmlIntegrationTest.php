@@ -104,7 +104,7 @@ class RRDtoolXmlIntegrationTest extends TestCase
             $rrdFile = $this->dataDir.$baseName.'.rrd';
 
             // Use rrdrestore to create RRD file from XML
-            $command = sprintf('%s restore %s %s', 
+            $command = sprintf('%s restore %s %s',
                 escapeshellcmd($this->rrdtoolPath),
                 escapeshellarg($xmlFile),
                 escapeshellarg($rrdFile)
@@ -125,10 +125,10 @@ class RRDtoolXmlIntegrationTest extends TestCase
         // Create a query with time range
         $query = new Query('cpu_usage');
         $query->where('host', '=', 'server1')
-              ->timeRange(
-                  new DateTime('@1685314800'), // 2023-05-28 23:00:00 UTC
-                  new DateTime('@1685316540')  // 2023-05-28 23:29:00 UTC
-              );
+            ->timeRange(
+                new DateTime('@1685314800'), // 2023-05-28 23:00:00 UTC
+                new DateTime('@1685316540')  // 2023-05-28 23:29:00 UTC
+            );
 
         // Execute the query
         $result = $this->driver->query($query);
@@ -148,12 +148,12 @@ class RRDtoolXmlIntegrationTest extends TestCase
         // Create a query with aggregation
         $query = new Query('cpu_usage');
         $query->where('host', '=', 'server1')
-              ->timeRange(
-                  new DateTime('@1685314800'), // 2023-05-28 23:00:00 UTC
-                  new DateTime('@1685316540')  // 2023-05-28 23:29:00 UTC
-              )
-              ->groupByTime('5m')  // Group by 5-minute intervals
-              ->avg('value', 'avg_value');
+            ->timeRange(
+                new DateTime('@1685314800'), // 2023-05-28 23:00:00 UTC
+                new DateTime('@1685316540')  // 2023-05-28 23:29:00 UTC
+            )
+            ->groupByTime('5m')  // Group by 5-minute intervals
+            ->avg('value', 'avg_value');
     }
 
     public function test_query_with_multiple_aggregations(): void
@@ -161,14 +161,14 @@ class RRDtoolXmlIntegrationTest extends TestCase
         // Create a query with multiple aggregations
         $query = new Query('cpu_usage');
         $query->where('host', '=', 'server1')
-              ->timeRange(
-                  new DateTime('@1685314800'), // 2023-05-28 23:00:00 UTC
-                  new DateTime('@1685316540')  // 2023-05-28 23:29:00 UTC
-              )
-              ->groupByTime('10m')  // Group by 10-minute intervals
-              ->avg('value', 'avg_value')
-              ->max('value', 'max_value')
-              ->min('value', 'min_value');
+            ->timeRange(
+                new DateTime('@1685314800'), // 2023-05-28 23:00:00 UTC
+                new DateTime('@1685316540')  // 2023-05-28 23:29:00 UTC
+            )
+            ->groupByTime('10m')  // Group by 10-minute intervals
+            ->avg('value', 'avg_value')
+            ->max('value', 'max_value')
+            ->min('value', 'min_value');
     }
 
     public function test_query_with_ordering_and_limit(): void
@@ -176,12 +176,12 @@ class RRDtoolXmlIntegrationTest extends TestCase
         // Create a query with ordering and limit
         $query = new Query('cpu_usage');
         $query->where('host', '=', 'server1')
-              ->timeRange(
-                  new DateTime('@1685314800'), // 2023-05-28 23:00:00 UTC
-                  new DateTime('@1685316540')  // 2023-05-28 23:29:00 UTC
-              )
-              ->orderByTime('DESC')
-              ->limit(5);
+            ->timeRange(
+                new DateTime('@1685314800'), // 2023-05-28 23:00:00 UTC
+                new DateTime('@1685316540')  // 2023-05-28 23:29:00 UTC
+            )
+            ->orderByTime('DESC')
+            ->limit(5);
 
         // Execute the query
         $result = $this->driver->query($query);
@@ -204,10 +204,10 @@ class RRDtoolXmlIntegrationTest extends TestCase
         // Create a query with a math expression
         $query = new Query('cpu_usage');
         $query->where('host', '=', 'server1')
-              ->timeRange(
-                  new DateTime('@1685314800'), // 2023-05-28 23:00:00 UTC
-                  new DateTime('@1685316540')  // 2023-05-28 23:29:00 UTC
-              )
-              ->math('value*2', 'double_value');
+            ->timeRange(
+                new DateTime('@1685314800'), // 2023-05-28 23:00:00 UTC
+                new DateTime('@1685316540')  // 2023-05-28 23:29:00 UTC
+            )
+            ->math('value*2', 'double_value');
     }
 }

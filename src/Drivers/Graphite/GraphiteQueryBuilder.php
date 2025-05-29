@@ -111,8 +111,8 @@ class GraphiteQueryBuilder implements QueryBuilderInterface
             }
 
             // Combine all aggregation targets using group()
-            $target = "group(" . implode(",", $aggTargets) . ")";
-        } else if (count($aggregations) === 1) {
+            $target = 'group('.implode(',', $aggTargets).')';
+        } elseif (count($aggregations) === 1) {
             // For a single aggregation, apply it directly
             $agg = $aggregations[0];
             $function = strtolower($agg['function']);
