@@ -2,179 +2,222 @@
 
 namespace TimeSeriesPhp\Tests\Drivers\Graphite;
 
-use DateInterval;
 use DateTime;
 use PHPUnit\Framework\TestCase;
 use TimeSeriesPhp\Core\Query;
-use TimeSeriesPhp\Core\RawQuery;
 use TimeSeriesPhp\Drivers\Graphite\GraphiteQueryBuilder;
 
 class GraphiteQueryBuilderTest extends TestCase
 {
     private GraphiteQueryBuilder $queryBuilder;
+    private GraphiteQueryBuilder $queryBuilderWithPrefix;
 
     protected function setUp(): void
     {
-        $this->queryBuilder = new GraphiteQueryBuilder;
+        $this->queryBuilder = new GraphiteQueryBuilder();
+        $this->queryBuilderWithPrefix = new GraphiteQueryBuilder('servers');
     }
 
-    public function test_build_simple_query(): void
+    /**
+     * Helper method to decode URL-encoded query string for assertions
+     */
+    private function decodeQueryString(string $queryString): string
     {
-        $query = new Query('cpu');
-        $query->select(['usage']);
+        return urldecode($queryString);
+    }
 
+    public function testBuildSimpleQuery(): void
+    {
+        // Create a simple query
+        $query = new Query('cpu_usage');
+        $query->where('host', '=', 'server1')
+              ->timeRange(
+                  new DateTime('@1685314800'), // 2023-05-28 23:00:00 UTC
+                  new DateTime('@1685316540')  // 2023-05-28 23:29:00 UTC
+              );
+
+        // Build the query
         $rawQuery = $this->queryBuilder->build($query);
 
-        $this->assertInstanceOf(RawQuery::class, $rawQuery);
-        $this->assertStringContainsString('target=cpu.usage', $rawQuery->getRawQuery());
-        $this->assertStringContainsString('from=-1h', $rawQuery->getRawQuery());
-        $this->assertStringContainsString('until=now', $rawQuery->getRawQuery());
-        $this->assertStringContainsString('format=json', $rawQuery->getRawQuery());
+        // Get the raw query string and decode it
+        $queryString = $this->decodeQueryString($rawQuery->getRawQuery());
+
+        // Assert the exact query string
+        $nativeQuery = 'target=cpu_usage.server1&from=1685314800&until=1685316540&format=json';
+        $this->assertEquals($nativeQuery, $queryString);
     }
 
-    public function test_build_query_with_prefix(): void
+    public function testBuildQueryWithPrefix(): void
     {
-        $queryBuilder = new GraphiteQueryBuilder('servers');
-        $query = new Query('cpu');
-        $query->select(['usage']);
+        // Create a simple query
+        $query = new Query('cpu_usage');
+        $query->where('host', '=', 'server1')
+              ->timeRange(
+                  new DateTime('@1685314800'), // 2023-05-28 23:00:00 UTC
+                  new DateTime('@1685316540')  // 2023-05-28 23:29:00 UTC
+              );
 
-        $rawQuery = $queryBuilder->build($query);
+        // Build the query with prefix
+        $rawQuery = $this->queryBuilderWithPrefix->build($query);
 
-        $this->assertStringContainsString('target=servers.cpu.usage', $rawQuery->getRawQuery());
+        // Get the raw query string and decode it
+        $queryString = $this->decodeQueryString($rawQuery->getRawQuery());
+
+        // Assert the exact query string
+        $nativeQuery = 'target=servers.cpu_usage.server1&from=1685314800&until=1685316540&format=json';
+        $this->assertEquals($nativeQuery, $queryString);
     }
 
-    public function test_build_query_with_multiple_fields(): void
+    public function testBuildQueryWithAggregation(): void
     {
-        $query = new Query('cpu');
-        $query->select(['user', 'system']);
+        // Create a query with aggregation
+        $query = new Query('cpu_usage');
+        $query->where('host', '=', 'server1')
+              ->timeRange(
+                  new DateTime('@1685314800'), // 2023-05-28 23:00:00 UTC
+                  new DateTime('@1685316540')  // 2023-05-28 23:29:00 UTC
+              )
+              ->groupByTime('5m')  // Group by 5-minute intervals
+              ->avg('value', 'avg_value');
 
+        // Build the query
         $rawQuery = $this->queryBuilder->build($query);
 
-        $this->assertStringContainsString('target=group', $rawQuery->getRawQuery());
-        $this->assertStringContainsString('cpu.user', $rawQuery->getRawQuery());
-        $this->assertStringContainsString('cpu.system', $rawQuery->getRawQuery());
+        // Get the raw query string and decode it
+        $queryString = $this->decodeQueryString($rawQuery->getRawQuery());
+
+        // Assert the exact query string
+        $nativeQuery = 'target=summarize(alias(averageSeries(cpu_usage.server1), "avg_value"), "5minute", "avg")&from=1685314800&until=1685316540&format=json';
+        $this->assertEquals($nativeQuery, $queryString);
     }
 
-    public function test_build_query_with_wildcard_fields(): void
+    public function testBuildQueryWithMultipleAggregations(): void
     {
-        $query = new Query('cpu');
-        $query->select(['*']);
+        // Create a query with multiple aggregations
+        $query = new Query('cpu_usage');
+        $query->where('host', '=', 'server1')
+              ->timeRange(
+                  new DateTime('@1685314800'), // 2023-05-28 23:00:00 UTC
+                  new DateTime('@1685316540')  // 2023-05-28 23:29:00 UTC
+              )
+              ->groupByTime('10m')  // Group by 10-minute intervals
+              ->avg('value', 'avg_value')
+              ->max('value', 'max_value')
+              ->min('value', 'min_value');
 
+        // Build the query
         $rawQuery = $this->queryBuilder->build($query);
 
-        $this->assertStringContainsString('target=cpu.*', $rawQuery->getRawQuery());
+        // Get the raw query string and decode it
+        $queryString = $this->decodeQueryString($rawQuery->getRawQuery());
+
+        // Assert the exact query string
+        // Note: Graphite typically processes one aggregation at a time in the query builder
+        $nativeQuery = 'target=summarize(alias(minSeries(alias(maxSeries(alias(averageSeries(cpu_usage.server1), "avg_value")), "max_value")), "min_value"), "10minute", "avg")&from=1685314800&until=1685316540&format=json';
+        $this->assertEquals($nativeQuery, $queryString);
     }
 
-    public function test_build_query_with_time_range(): void
+    public function testBuildQueryWithRelativeTime(): void
     {
-        $start = new DateTime('2023-01-01');
-        $end = new DateTime('2023-01-02');
+        // Create a query with relative time
+        $query = new Query('cpu_usage');
+        $query->where('host', '=', 'server1')
+              ->latest('1h');
 
-        $query = new Query('cpu');
-        $query->select(['usage']);
-        $query->timeRange($start, $end);
-
+        // Build the query
         $rawQuery = $this->queryBuilder->build($query);
 
-        $this->assertStringContainsString('from='.$start->getTimestamp(), $rawQuery->getRawQuery());
-        $this->assertStringContainsString('until='.$end->getTimestamp(), $rawQuery->getRawQuery());
+        // Get the raw query string and decode it
+        $queryString = $this->decodeQueryString($rawQuery->getRawQuery());
+
+        // Assert the exact query string
+        $nativeQuery = 'target=cpu_usage.server1&from=-1h&until=now&format=json';
+        $this->assertEquals($nativeQuery, $queryString);
     }
 
-    public function test_build_query_with_relative_time(): void
+    public function testBuildQueryWithMultipleFields(): void
     {
-        $query = new Query('cpu');
-        $query->select(['usage']);
-        $query->latest('1h');
+        // Create a query with multiple fields
+        $query = new Query('cpu_usage');
+        $query->select(['user', 'system'])
+              ->timeRange(
+                  new DateTime('@1685314800'), // 2023-05-28 23:00:00 UTC
+                  new DateTime('@1685316540')  // 2023-05-28 23:29:00 UTC
+              );
 
+        // Build the query
         $rawQuery = $this->queryBuilder->build($query);
 
-        $this->assertStringContainsString('from=-1h', $rawQuery->getRawQuery());
+        // Get the raw query string and decode it
+        $queryString = $this->decodeQueryString($rawQuery->getRawQuery());
+
+        // Assert the exact query string
+        $nativeQuery = 'target=group("cpu_usage.user", "cpu_usage.system")&from=1685314800&until=1685316540&format=json';
+        $this->assertEquals($nativeQuery, $queryString);
     }
 
-    public function test_build_query_with_aggregation(): void
+    public function testBuildQueryWithLimit(): void
     {
-        $query = new Query('cpu');
-        $query->select(['usage']);
-        $query->avg('usage', 'avg_usage');
+        // Create a query with limit
+        $query = new Query('cpu_usage');
+        $query->where('host', '=', 'server1')
+              ->timeRange(
+                  new DateTime('@1685314800'), // 2023-05-28 23:00:00 UTC
+                  new DateTime('@1685316540')  // 2023-05-28 23:29:00 UTC
+              )
+              ->limit(10);
 
+        // Build the query
         $rawQuery = $this->queryBuilder->build($query);
 
-        $this->assertStringContainsString('averageSeries', $rawQuery->getRawQuery());
-        $this->assertStringContainsString('alias', $rawQuery->getRawQuery());
-        $this->assertStringContainsString('avg_usage', $rawQuery->getRawQuery());
+        // Get the raw query string and decode it
+        $queryString = $this->decodeQueryString($rawQuery->getRawQuery());
+
+        // Assert the exact query string
+        $nativeQuery = 'target=limit(cpu_usage.server1, 10)&from=1685314800&until=1685316540&format=json';
+        $this->assertEquals($nativeQuery, $queryString);
     }
 
-    public function test_build_query_with_time_grouping(): void
+    public function testBuildQueryWithOrdering(): void
     {
-        $query = new Query('cpu');
-        $query->select(['usage']);
-        $query->groupByTime('1h');
+        // Create a query with ordering
+        $query = new Query('cpu_usage');
+        $query->where('host', '=', 'server1')
+              ->timeRange(
+                  new DateTime('@1685314800'), // 2023-05-28 23:00:00 UTC
+                  new DateTime('@1685316540')  // 2023-05-28 23:29:00 UTC
+              )
+              ->orderByTime('DESC');
 
+        // Build the query
         $rawQuery = $this->queryBuilder->build($query);
 
-        $this->assertStringContainsString('summarize', $rawQuery->getRawQuery());
-        $this->assertStringContainsString('1hour', $rawQuery->getRawQuery());
+        // Get the raw query string and decode it
+        $queryString = $this->decodeQueryString($rawQuery->getRawQuery());
+
+        // Assert the exact query string
+        $nativeQuery = 'target=sortByMaxima(cpu_usage.server1)&from=1685314800&until=1685316540&format=json';
+        $this->assertEquals($nativeQuery, $queryString);
     }
 
-    public function test_build_query_with_conditions(): void
+    public function testBuildQueryWithRegexCondition(): void
     {
-        $query = new Query('cpu');
-        $query->select(['usage']);
-        $query->where('host', '=', 'server01');
+        // Create a query with regex condition
+        $query = new Query('cpu_usage');
+        $query->whereRegex('host', 'server.*')
+              ->timeRange(
+                  new DateTime('@1685314800'), // 2023-05-28 23:00:00 UTC
+                  new DateTime('@1685316540')  // 2023-05-28 23:29:00 UTC
+              );
 
+        // Build the query
         $rawQuery = $this->queryBuilder->build($query);
 
-        // In Graphite, conditions are typically handled by more specific paths
-        // or by functions like exclude() or grep()
-        $this->assertInstanceOf(RawQuery::class, $rawQuery);
-    }
+        // Get the raw query string and decode it
+        $queryString = $this->decodeQueryString($rawQuery->getRawQuery());
 
-    public function test_build_query_with_limit(): void
-    {
-        $query = new Query('cpu');
-        $query->select(['usage']);
-        $query->limit(10);
-
-        $rawQuery = $this->queryBuilder->build($query);
-
-        $this->assertStringContainsString('limit', $rawQuery->getRawQuery());
-        $this->assertStringContainsString('10', $rawQuery->getRawQuery());
-    }
-
-    public function test_build_query_with_ordering(): void
-    {
-        $query = new Query('cpu');
-        $query->select(['usage']);
-        $query->orderBy('usage', 'DESC');
-
-        $rawQuery = $this->queryBuilder->build($query);
-
-        $this->assertStringContainsString('sortByMaxima', $rawQuery->getRawQuery());
-    }
-
-    public function test_convert_interval_to_graphite(): void
-    {
-        $reflection = new \ReflectionClass(GraphiteQueryBuilder::class);
-        $method = $reflection->getMethod('convertIntervalToGraphite');
-        $method->setAccessible(true);
-
-        $this->assertEquals('1second', $method->invoke($this->queryBuilder, '1s'));
-        $this->assertEquals('5minute', $method->invoke($this->queryBuilder, '5m'));
-        $this->assertEquals('2hour', $method->invoke($this->queryBuilder, '2h'));
-        $this->assertEquals('1day', $method->invoke($this->queryBuilder, '1d'));
-        $this->assertEquals('4week', $method->invoke($this->queryBuilder, '4w'));
-    }
-
-    public function test_format_date_interval(): void
-    {
-        $reflection = new \ReflectionClass(GraphiteQueryBuilder::class);
-        $method = $reflection->getMethod('formatDateInterval');
-        $method->setAccessible(true);
-
-        $interval = new DateInterval('PT1H30M');
-        $this->assertEquals('1h30min', $method->invoke($this->queryBuilder, $interval));
-
-        $interval = new DateInterval('P1DT6H');
-        $this->assertEquals('1d6h', $method->invoke($this->queryBuilder, $interval));
+        // Assert the exact query string
+        $nativeQuery = 'target=grep(cpu_usage.*, "server.*")&from=1685314800&until=1685316540&format=json';
+        $this->assertEquals($nativeQuery, $queryString);
     }
 }

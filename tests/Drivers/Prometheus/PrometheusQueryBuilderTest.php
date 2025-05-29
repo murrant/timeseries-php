@@ -143,9 +143,9 @@ class PrometheusQueryBuilderTest extends TestCase
         // Get the raw query string
         $queryString = $rawQuery->getRawQuery();
 
-        // Assert that the query string contains expected parts
-        $nativeQuery = 'avg(cpu_usage{host="server1"} by (host,cpu))';
-        $this->assertStringContainsString($nativeQuery, $queryString);
+        // Assert the exact query string
+        $nativeQuery = 'avg(cpu_usage{host="server1"} by (host,cpu)) # time range: 2023-05-28T23:00:00+00:00 to 2023-05-28T23:29:00+00:00';
+        $this->assertEquals($nativeQuery, $queryString);
     }
 
     public function testBuildQueryWithRegexCondition(): void
@@ -164,9 +164,9 @@ class PrometheusQueryBuilderTest extends TestCase
         // Get the raw query string
         $queryString = $rawQuery->getRawQuery();
 
-        // Assert that the query string contains expected parts
-        $nativeQuery = 'cpu_usage{host=~"server.*"}';
-        $this->assertStringContainsString($nativeQuery, $queryString);
+        // Assert the exact query string
+        $nativeQuery = 'cpu_usage{host=~"server.*"} # time range: 2023-05-28T23:00:00+00:00 to 2023-05-28T23:29:00+00:00';
+        $this->assertEquals($nativeQuery, $queryString);
     }
 
     public function testBuildQueryWithInCondition(): void
@@ -185,9 +185,9 @@ class PrometheusQueryBuilderTest extends TestCase
         // Get the raw query string
         $queryString = $rawQuery->getRawQuery();
 
-        // Assert that the query string contains expected parts
-        $nativeQuery = 'cpu_usage{host=~"^("server1"|"server2")$"}';
-        $this->assertStringContainsString($nativeQuery, $queryString);
+        // Assert the exact query string
+        $nativeQuery = 'cpu_usage{host=~"^("server1"|"server2")$"} # time range: 2023-05-28T23:00:00+00:00 to 2023-05-28T23:29:00+00:00';
+        $this->assertEquals($nativeQuery, $queryString);
     }
 
     public function testBuildQueryWithPercentile(): void
@@ -207,8 +207,8 @@ class PrometheusQueryBuilderTest extends TestCase
         // Get the raw query string
         $queryString = $rawQuery->getRawQuery();
 
-        // Assert that the query string contains expected parts
-        $nativeQuery = 'quantile(0.95, cpu_usage{host="server1"})';
-        $this->assertStringContainsString($nativeQuery, $queryString);
+        // Assert the exact query string
+        $nativeQuery = 'quantile(0.95, cpu_usage{host="server1"}) # time range: 2023-05-28T23:00:00+00:00 to 2023-05-28T23:29:00+00:00';
+        $this->assertEquals($nativeQuery, $queryString);
     }
 }
