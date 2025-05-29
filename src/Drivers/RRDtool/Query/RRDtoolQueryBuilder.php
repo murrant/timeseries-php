@@ -94,15 +94,8 @@ class RRDtoolQueryBuilder implements QueryBuilderInterface
             // Assuming tag conditions are identifiable by context
             // This might need adjustment based on your tag strategy
             $operator = $condition->getOperator();
-            if ($operator instanceof ComparisonOperator) {
-                if ($operator === ComparisonOperator::EQUALS || $operator === ComparisonOperator::IN) {
-                    $tagConditions[] = new TagCondition($condition->getField(), $operator->value, $condition->getValue());
-                }
-            } else {
-                // For backward compatibility with string operators
-                if ($operator === '=' || $operator === 'IN') {
-                    $tagConditions[] = new TagCondition($condition->getField(), $operator, $condition->getValue());
-                }
+            if ($operator === ComparisonOperator::EQUALS || $operator === ComparisonOperator::IN) {
+                $tagConditions[] = new TagCondition($condition->getField(), $operator->value, $condition->getValue());
             }
         }
 
@@ -160,44 +153,18 @@ class RRDtoolQueryBuilder implements QueryBuilderInterface
             $varName = "agg{$varCounter}";
 
             match ($function) {
-                'SUM' =>
-                    // Sum all matching data sources
-                    $this->buildSumAggregation($rawQuery, $varName, $field),
-
-                'AVG', 'AVERAGE' =>
-                    // Average all matching data sources
-                    $this->buildAvgAggregation($rawQuery, $varName, $field),
-
-                'MIN' =>
-                    // Minimum across all data sources
-                    $this->buildMinAggregation($rawQuery, $varName, $field),
-
-                'MAX' =>
-                    // Maximum across all data sources
-                    $this->buildMaxAggregation($rawQuery, $varName, $field),
-
-                'COUNT' =>
-                    // Count non-null values
-                    $this->buildCountAggregation($rawQuery, $varName, $field),
-
-                'FIRST' =>
-                    // Use VDEF to get first value
-                    $rawQuery->vdef($varName, 'v1,FIRST'),
-
-                'LAST' =>
-                    // Use VDEF to get last value
-                    $rawQuery->vdef($varName, 'v1,LAST'),
-
-                'STDDEV' =>
-                    // Standard deviation using RPN
-                    $this->buildStddevAggregation($rawQuery, $varName, $field),
-
-                default =>
-                    // Handle percentile or do nothing
-                    str_starts_with($function, 'PERCENTILE_') ? (function () use ($rawQuery, $varName, $function) {
-                        $percentile = floatval(substr($function, 11));
-                        $rawQuery->vdef($varName, "v1,{$percentile},PERCENT");
-                    })() : null,
+                'SUM' => $this->buildSumAggregation($rawQuery, $varName, $field),
+                'AVG', 'AVERAGE' => $this->buildAvgAggregation($rawQuery, $varName, $field),
+                'MIN' => $this->buildMinAggregation($rawQuery, $varName, $field),
+                'MAX' => $this->buildMaxAggregation($rawQuery, $varName, $field),
+                'COUNT' => $this->buildCountAggregation($rawQuery, $varName, $field),
+                'FIRST' => $rawQuery->vdef($varName, 'v1,FIRST'),
+                'LAST' => $rawQuery->vdef($varName, 'v1,LAST'),
+                'STDDEV' => $this->buildStddevAggregation($rawQuery, $varName, $field),
+                default => str_starts_with($function, 'PERCENTILE_') ? (function () use ($rawQuery, $varName, $function) {
+                    $percentile = floatval(substr($function, 11));
+                    $rawQuery->vdef($varName, "v1,{$percentile},PERCENT");
+                })() : null,
             };
 
             $varCounter++;

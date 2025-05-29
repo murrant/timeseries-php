@@ -43,7 +43,7 @@ class QueryTest extends TestCase
         $this->assertCount(1, $conditions);
         $this->assertInstanceOf(QueryCondition::class, $conditions[0]);
         $this->assertEquals('host', $conditions[0]->getField());
-        $this->assertEquals('=', $conditions[0]->getOperator());
+        $this->assertEquals('=', $conditions[0]->getOperator()->value);
         $this->assertEquals('server01', $conditions[0]->getValue());
         $this->assertEquals('AND', $conditions[0]->getType());
 
@@ -54,13 +54,13 @@ class QueryTest extends TestCase
 
         $this->assertInstanceOf(QueryCondition::class, $conditions[0]);
         $this->assertEquals('host', $conditions[0]->getField());
-        $this->assertEquals('=', $conditions[0]->getOperator());
+        $this->assertEquals('=', $conditions[0]->getOperator()->value);
         $this->assertEquals('server01', $conditions[0]->getValue());
         $this->assertEquals('AND', $conditions[0]->getType());
 
         $this->assertInstanceOf(QueryCondition::class, $conditions[1]);
         $this->assertEquals('region', $conditions[1]->getField());
-        $this->assertEquals('=', $conditions[1]->getOperator());
+        $this->assertEquals('=', $conditions[1]->getOperator()->value);
         $this->assertEquals('us-west', $conditions[1]->getValue());
         $this->assertEquals('AND', $conditions[1]->getType());
     }
@@ -174,13 +174,13 @@ class QueryTest extends TestCase
 
         $this->assertInstanceOf(QueryCondition::class, $conditions[0]);
         $this->assertEquals('host', $conditions[0]->getField());
-        $this->assertEquals('=', $conditions[0]->getOperator());
+        $this->assertEquals('=', $conditions[0]->getOperator()->value);
         $this->assertEquals('server01', $conditions[0]->getValue());
         $this->assertEquals('AND', $conditions[0]->getType());
 
         $this->assertInstanceOf(QueryCondition::class, $conditions[1]);
         $this->assertEquals('region', $conditions[1]->getField());
-        $this->assertEquals('=', $conditions[1]->getOperator());
+        $this->assertEquals('=', $conditions[1]->getOperator()->value);
         $this->assertEquals('us-west', $conditions[1]->getValue());
         $this->assertEquals('AND', $conditions[1]->getType());
         $this->assertSame($start, $query->getStartTime());

@@ -6,7 +6,7 @@ use TimeSeriesPhp\Support\Config\CacheConfig;
 
 class CacheConfigTest extends ConfigTestCase
 {
-    protected function createConfig(array $config): \TimeSeriesPhp\Contracts\Config\ConfigInterface
+    protected function createConfig(array $config): CacheConfig
     {
         return new CacheConfig($config);
     }

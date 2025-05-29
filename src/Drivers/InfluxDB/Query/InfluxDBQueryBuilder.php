@@ -105,10 +105,9 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
                 $fluxQuery .= "  |> filter(fn: (r) => r[\"$field\"] =~ /$pattern/)\n";
             } else {
                 // Standard operators
-                $fluxQuery .= "  |> filter(fn: (r) => r[\"$field\"] $operator->value $value)\n";
+                $fluxQuery .= "  |> filter(fn: (r) => r[\"$field\"] {$operator->toFluxOperator()} $value)\n";
             }
         }
-
 
         // Filter by fields if specified
         if (! empty($fields) && ! in_array('*', $fields)) {

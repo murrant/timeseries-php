@@ -14,6 +14,7 @@ enum ComparisonOperator: string
     case LESS_THAN_OR_EQUALS = '<=';
     case LIKE = 'LIKE';
     case REGEX = 'REGEX';
+    case NOT_REGEX = 'NOT REGEX';
     case IN = 'IN';
     case NOT_IN = 'NOT IN';
     case BETWEEN = 'BETWEEN';

@@ -186,7 +186,7 @@ class RRDtoolRawQuery implements RawQueryInterface
 
         foreach ($this->statements as $data) {
             if ($data[0] === 'XPORT') {
-                $fields[] = str_contains($data[1], ':') ? strstr($data[1], ':', true) : $data[1];
+                $fields[] = substr($data[1], 0, strpos($data[1], ':') ?: null);
             }
         }
 

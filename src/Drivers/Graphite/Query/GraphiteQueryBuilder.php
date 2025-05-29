@@ -151,22 +151,12 @@ class GraphiteQueryBuilder implements QueryBuilderInterface
             $scalarValue = $condition->getScalarValue();
 
             // We can only handle certain types of conditions in Graphite
-            if ($operator instanceof ComparisonOperator) {
-                $target = match ($operator) {
-                    ComparisonOperator::EQUALS, ComparisonOperator::SAME => str_replace('*', (string) $scalarValue, $target),
-                    ComparisonOperator::NOT_EQUALS, ComparisonOperator::NOT_EQUALS_ALT => "exclude($target, \"$scalarValue\")",
-                    ComparisonOperator::REGEX => "grep($target, \"$scalarValue\")",
-                    default => $target,
-                };
-            } else {
-                // For backward compatibility with string operators
-                $target = match (true) {
-                    $operator === '=' || $operator === '==' => str_replace('*', (string) $scalarValue, $target),
-                    $operator === '!=' || $operator === '<>' => "exclude($target, \"$scalarValue\")",
-                    $operator === 'REGEX' => "grep($target, \"$scalarValue\")",
-                    default => $target,
-                };
-            }
+            $target = match ($operator) {
+                ComparisonOperator::EQUALS, ComparisonOperator::SAME => str_replace('*', (string) $scalarValue, $target),
+                ComparisonOperator::NOT_EQUALS, ComparisonOperator::NOT_EQUALS_ALT => "exclude($target, \"$scalarValue\")",
+                ComparisonOperator::REGEX => "grep($target, \"$scalarValue\")",
+                default => $target,
+            };
         }
 
         // Handle limit
