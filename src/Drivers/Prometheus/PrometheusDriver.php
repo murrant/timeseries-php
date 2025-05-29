@@ -13,6 +13,7 @@ use TimeSeriesPhp\Exceptions\ConfigurationException;
 use TimeSeriesPhp\Exceptions\ConnectionException;
 use TimeSeriesPhp\Exceptions\RawQueryException;
 use TimeSeriesPhp\Exceptions\TSDBException;
+use TimeSeriesPhp\Utils\Logger;
 
 class PrometheusDriver extends AbstractTimeSeriesDB
 {
@@ -48,7 +49,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB
             $this->connected = $response['status'] === 'success';
 
             if ($this->connected) {
-                \TimeSeriesPhp\Utils\Logger::info('Connected to Prometheus successfully', [
+                Logger::info('Connected to Prometheus successfully', [
                     'url' => $this->apiUrl,
                     'timeout' => $this->timeout,
                     'verify_ssl' => $this->verifySSL,
@@ -58,7 +59,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB
 
             return $this->connected;
         } catch (Exception $e) {
-            \TimeSeriesPhp\Utils\Logger::error('Prometheus connection failed: '.$e->getMessage(), [
+            Logger::error('Prometheus connection failed: '.$e->getMessage(), [
                 'exception' => get_class($e),
                 'url' => $this->apiUrl,
             ]);
@@ -181,7 +182,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB
             if (! empty($params)) {
                 $fullUrl .= '?'.http_build_query($params);
             }
-            \TimeSeriesPhp\Utils\Logger::debug('Prometheus API request', [
+            Logger::debug('Prometheus API request', [
                 'url' => $fullUrl,
                 'params' => $params,
             ]);
@@ -194,7 +195,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB
             $responseBody = (string) $response->getBody();
 
             if ($this->debug) {
-                \TimeSeriesPhp\Utils\Logger::debug('Prometheus API response', [
+                Logger::debug('Prometheus API response', [
                     'http_code' => $httpCode,
                     'response' => $responseBody,
                 ]);
@@ -211,7 +212,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB
             return $data;
         } catch (GuzzleException $e) {
             if ($this->debug) {
-                \TimeSeriesPhp\Utils\Logger::error('Prometheus API request failed: '.$e->getMessage(), [
+                Logger::error('Prometheus API request failed: '.$e->getMessage(), [
                     'exception' => get_class($e),
                     'url' => $url,
                     'params' => $params,

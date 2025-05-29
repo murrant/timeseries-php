@@ -10,6 +10,7 @@ use TimeSeriesPhp\Exceptions\ConfigurationException;
 use TimeSeriesPhp\Exceptions\ConnectionException;
 use TimeSeriesPhp\Exceptions\RawQueryException;
 use TimeSeriesPhp\Exceptions\WriteException;
+use TimeSeriesPhp\Utils\Logger;
 
 class GraphiteDriver extends AbstractTimeSeriesDB
 {
@@ -59,7 +60,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
 
             $this->connected = true;
 
-            \TimeSeriesPhp\Utils\Logger::info('Connected to Graphite successfully', [
+            Logger::info('Connected to Graphite successfully', [
                 'host' => $this->host,
                 'port' => $this->port,
                 'protocol' => $this->protocol,
@@ -69,7 +70,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
 
             return true;
         } catch (\Exception $e) {
-            \TimeSeriesPhp\Utils\Logger::error('Graphite connection failed: '.$e->getMessage(), [
+            Logger::error('Graphite connection failed: '.$e->getMessage(), [
                 'exception' => get_class($e),
                 'host' => $this->host,
                 'port' => $this->port,
@@ -111,7 +112,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
 
             return (bool) $success;
         } catch (\Exception $e) {
-            \TimeSeriesPhp\Utils\Logger::error('Graphite write failed: '.$e->getMessage(), [
+            Logger::error('Graphite write failed: '.$e->getMessage(), [
                 'exception' => get_class($e),
                 'measurement' => $dataPoint->getMeasurement(),
                 'tags' => $dataPoint->getTags(),
@@ -164,7 +165,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
 
             return (bool) $success;
         } catch (\Exception $e) {
-            \TimeSeriesPhp\Utils\Logger::error('Graphite batch write failed: '.$e->getMessage(), [
+            Logger::error('Graphite batch write failed: '.$e->getMessage(), [
                 'exception' => get_class($e),
                 'datapoints_count' => count($dataPoints),
                 'batch_size' => $this->batchSize,

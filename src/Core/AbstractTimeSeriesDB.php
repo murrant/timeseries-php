@@ -5,6 +5,8 @@ namespace TimeSeriesPhp\Core;
 use DateTime;
 use TimeSeriesPhp\Config\ConfigInterface;
 use TimeSeriesPhp\Exceptions\DatabaseException;
+use TimeSeriesPhp\Exceptions\WriteException;
+use TimeSeriesPhp\Utils\Logger;
 
 abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
 {
@@ -23,7 +25,7 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
     {
         $this->config = $config;
 
-        \TimeSeriesPhp\Utils\Logger::info('Connecting to time series database', [
+        Logger::info('Connecting to time series database', [
             'driver' => basename(str_replace('\\', '/', get_class($this))),
         ]);
 
@@ -34,7 +36,7 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
 
     public function query(Query $query): QueryResult
     {
-        \TimeSeriesPhp\Utils\Logger::debug('Executing query', [
+        Logger::debug('Executing query', [
             'driver' => basename(str_replace('\\', '/', get_class($this))),
             'measurement' => $query->getMeasurement(),
             'fields' => $query->getFields(),
@@ -44,7 +46,7 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
         $rawQuery = $this->queryBuilder->build($query);
         $result = $this->rawQuery($rawQuery);
 
-        \TimeSeriesPhp\Utils\Logger::debug('Query executed', [
+        Logger::debug('Query executed', [
             'driver' => basename(str_replace('\\', '/', get_class($this))),
             'points_count' => $result->count(),
         ]);
@@ -67,14 +69,14 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
     public function writeBatch(array $dataPoints): bool
     {
         if (empty($dataPoints)) {
-            \TimeSeriesPhp\Utils\Logger::debug('Skipping empty batch write', [
+            Logger::debug('Skipping empty batch write', [
                 'driver' => basename(str_replace('\\', '/', get_class($this))),
             ]);
 
             return true;
         }
 
-        \TimeSeriesPhp\Utils\Logger::debug('Writing batch of data points', [
+        Logger::debug('Writing batch of data points', [
             'driver' => basename(str_replace('\\', '/', get_class($this))),
             'count' => count($dataPoints),
             'measurements' => array_unique(array_map(fn ($dp) => $dp->getMeasurement(), $dataPoints)),
@@ -88,7 +90,7 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
                 if (! $this->write($dataPoint)) {
                     $success = false;
                     $errors[$index] = "Write failed for data point at index {$index}";
-                    \TimeSeriesPhp\Utils\Logger::warning('Write failed for data point', [
+                    Logger::warning('Write failed for data point', [
                         'driver' => basename(str_replace('\\', '/', get_class($this))),
                         'index' => $index,
                         'measurement' => $dataPoint->getMeasurement(),
@@ -97,7 +99,7 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
             } catch (\Throwable $e) {
                 $success = false;
                 $errors[$index] = $e->getMessage();
-                \TimeSeriesPhp\Utils\Logger::error('Exception during write operation', [
+                Logger::error('Exception during write operation', [
                     'driver' => basename(str_replace('\\', '/', get_class($this))),
                     'exception' => get_class($e),
                     'message' => $e->getMessage(),
@@ -109,15 +111,15 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
 
         // If all writes failed with the same error, throw an exception
         if (count($errors) === count($dataPoints) && count(array_unique($errors)) === 1) {
-            \TimeSeriesPhp\Utils\Logger::error('All writes failed with the same error', [
+            Logger::error('All writes failed with the same error', [
                 'driver' => basename(str_replace('\\', '/', get_class($this))),
                 'error' => reset($errors),
                 'count' => count($dataPoints),
             ]);
-            throw new \TimeSeriesPhp\Exceptions\WriteException(reset($errors));
+            throw new WriteException(reset($errors));
         }
 
-        \TimeSeriesPhp\Utils\Logger::debug('Batch write completed', [
+        Logger::debug('Batch write completed', [
             'driver' => basename(str_replace('\\', '/', get_class($this))),
             'success' => $success,
             'total' => count($dataPoints),

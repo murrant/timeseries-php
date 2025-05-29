@@ -17,6 +17,7 @@ use TimeSeriesPhp\Exceptions\RRDtoolCommandTimeoutException;
 use TimeSeriesPhp\Exceptions\RRDtoolException;
 use TimeSeriesPhp\Exceptions\RRDtoolPrematureUpdateException;
 use TimeSeriesPhp\Exceptions\WriteException;
+use TimeSeriesPhp\Utils\Logger;
 
 class RRDtoolDriver extends AbstractTimeSeriesDB
 {
@@ -81,7 +82,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
 
         $this->connected = true;
 
-        \TimeSeriesPhp\Utils\Logger::info('Connected to RRDtool successfully', [
+        Logger::info('Connected to RRDtool successfully', [
             'rrd_dir' => $this->rrdDir,
             'rrdtool_path' => $this->rrdtoolPath,
             'use_rrdcached' => ! empty($this->rrdcachedAddress),
@@ -121,7 +122,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
         }
 
         if ($this->debug) {
-            \TimeSeriesPhp\Utils\Logger::debug('Running rrdtool command', [
+            Logger::debug('Running rrdtool command', [
                 'command' => $command,
                 'args' => $args,
                 'full_command' => implode(' ', $args),

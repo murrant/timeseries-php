@@ -83,7 +83,7 @@ class RetryableOperationTest extends TestCase
         $attempts = 0;
         $maxAttempts = 3;
 
-        $operation = function ($param) use (&$attempts, $maxAttempts) {
+        $operation = function (string $param) use (&$attempts, $maxAttempts) {
             $attempts++;
             if ($attempts < $maxAttempts) {
                 throw new \Exception("Attempt {$attempts} failed");
