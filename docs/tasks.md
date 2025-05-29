@@ -67,6 +67,7 @@
     - Implement more query types
 
 [ ] 13. Implement a retry mechanism
+    - job interface and possible trait
     - limit and backoff
     - persist to cache (requires serializable jobs) for playback when online again
 
