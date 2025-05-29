@@ -45,6 +45,16 @@ class QueryResult
     }
 
     /**
+     * @return array<int, int|string>
+     */
+    public function getTimestamps(): array
+    {
+        $first = array_key_first($this->series);
+
+        return array_column($this->series[$first], 'date');
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function getMetadata(): array
