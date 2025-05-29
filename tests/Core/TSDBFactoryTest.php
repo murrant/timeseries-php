@@ -12,16 +12,8 @@ class TSDBFactoryTest extends TestCase
 {
     protected function tearDown(): void
     {
-        // Reset the registered drivers after each test
-        $reflectionClass = new \ReflectionClass(TSDBFactory::class);
-        $driversProperty = $reflectionClass->getProperty('drivers');
-        $driversProperty->setAccessible(true);
-        $driversProperty->setValue(null, []);
-
-        // Reset the config classes as well
-        $configClassesProperty = $reflectionClass->getProperty('configClasses');
-        $configClassesProperty->setAccessible(true);
-        $configClassesProperty->setValue(null, []);
+        // Reset the factory instance after each test
+        TSDBFactory::reset();
     }
 
     public function test_register_driver(): void
@@ -187,27 +179,6 @@ class TSDBFactoryTest extends TestCase
         TSDBFactory::createConfig('invalid');
     }
 
-    public function test_infer_config_class_name(): void
-    {
-        // Use reflection to access the private method
-        $reflectionClass = new \ReflectionClass(TSDBFactory::class);
-        $method = $reflectionClass->getMethod('inferConfigClassName');
-        $method->setAccessible(true);
-
-        // Test with various driver class names
-        $this->assertEquals(
-            'TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig',
-            $method->invoke(null, 'TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver')
-        );
-
-        $this->assertEquals(
-            'TimeSeriesPhp\Drivers\Prometheus\PrometheusConfig',
-            $method->invoke(null, 'TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver')
-        );
-
-        $this->assertEquals(
-            'App\CustomConfig',
-            $method->invoke(null, 'App\CustomDriver')
-        );
-    }
+    // The inferConfigClassName method is now private in TSDBFactoryInstance
+    // and is tested indirectly through test_register_driver_with_inferred_config
 }

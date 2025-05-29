@@ -5,13 +5,43 @@ namespace TimeSeriesPhp\Core;
 use TimeSeriesPhp\Config\ConfigInterface;
 use TimeSeriesPhp\Exceptions\DriverException;
 
+/**
+ * Static facade for TSDBFactoryInstance.
+ * This class provides backward compatibility for code that uses the static methods.
+ */
 class TSDBFactory
 {
-    /** @var array<string, class-string> */
-    private static array $drivers = [];
+    private static ?TSDBFactoryInstance $instance = null;
 
-    /** @var array<string, class-string> */
-    private static array $configClasses = [];
+    /**
+     * Get the factory instance
+     */
+    private static function getInstance(): TSDBFactoryInstance
+    {
+        if (self::$instance === null) {
+            self::$instance = new TSDBFactoryInstance;
+        }
+
+        return self::$instance;
+    }
+
+    /**
+     * Reset the factory instance (useful for testing)
+     */
+    public static function reset(): void
+    {
+        self::$instance = null;
+    }
+
+    /**
+     * Register default drivers
+     *
+     * @throws DriverException If a driver class doesn't exist or doesn't implement TimeSeriesInterface
+     */
+    public static function registerDefaultDrivers(): void
+    {
+        self::getInstance()->registerDefaultDrivers();
+    }
 
     /**
      * Register a driver with the factory
@@ -24,57 +54,7 @@ class TSDBFactory
      */
     public static function registerDriver(string $name, string $className, ?string $configClassName = null): void
     {
-        if (! class_exists($className)) {
-            throw new DriverException("Driver class '{$className}' does not exist");
-        }
-
-        if (! is_subclass_of($className, TimeSeriesInterface::class)) {
-            throw new DriverException("Driver class '{$className}' must implement TimeSeriesInterface");
-        }
-
-        // If config class name is not provided, try to infer it from the driver class name
-        if ($configClassName === null) {
-            $configClassName = self::inferConfigClassName($className);
-        }
-
-        if (! class_exists($configClassName)) {
-            throw new DriverException("Config class '{$configClassName}' does not exist");
-        }
-
-        if (! is_subclass_of($configClassName, ConfigInterface::class)) {
-            throw new DriverException("Config class '{$configClassName}' must implement ConfigInterface");
-        }
-
-        self::$drivers[$name] = $className;
-        self::$configClasses[$name] = $configClassName;
-    }
-
-    /**
-     * Infer the config class name from the driver class name
-     *
-     * @param  class-string  $driverClassName  The fully qualified class name of the driver
-     * @return class-string The inferred fully qualified class name of the config class
-     */
-    private static function inferConfigClassName(string $driverClassName): string
-    {
-        // Get the namespace and class name
-        $lastBackslashPos = strrpos($driverClassName, '\\');
-        if ($lastBackslashPos === false) {
-            // No namespace, just replace "Driver" with "Config" in the class name
-            /** @var class-string */
-            return str_replace('Driver', 'Config', $driverClassName);
-        }
-
-        // Split the class name into namespace and class name
-        $namespace = substr($driverClassName, 0, $lastBackslashPos);
-        $className = substr($driverClassName, $lastBackslashPos + 1);
-
-        // Replace "Driver" with "Config" only in the class name
-        $configClassName = str_replace('Driver', 'Config', $className);
-
-        // Return the fully qualified config class name
-        /** @var class-string */
-        return $namespace.'\\'.$configClassName;
+        self::getInstance()->registerDriver($name, $className, $configClassName);
     }
 
     /**
@@ -85,14 +65,7 @@ class TSDBFactory
      */
     public static function unregisterDriver(string $name): bool
     {
-        if (isset(self::$drivers[$name])) {
-            unset(self::$drivers[$name]);
-            unset(self::$configClasses[$name]);
-
-            return true;
-        }
-
-        return false;
+        return self::getInstance()->unregisterDriver($name);
     }
 
     /**
@@ -107,27 +80,7 @@ class TSDBFactory
      */
     public static function create(string $driver, ?ConfigInterface $config = null, bool $autoConnect = true): TimeSeriesInterface
     {
-        if (! isset(self::$drivers[$driver])) {
-            throw new DriverException("Driver '{$driver}' not registered");
-        }
-
-        $className = self::$drivers[$driver];
-        $instance = new $className;
-
-        if (! $instance instanceof TimeSeriesInterface) {
-            throw new DriverException("Driver '{$driver}' must implement TimeSeriesInterface");
-        }
-
-        if ($autoConnect) {
-            // If no config is provided, create a default one
-            if ($config === null) {
-                $config = self::createConfig($driver);
-            }
-
-            $instance->connect($config);
-        }
-
-        return $instance;
+        return self::getInstance()->create($driver, $config, $autoConnect);
     }
 
     /**
@@ -137,7 +90,7 @@ class TSDBFactory
      */
     public static function getAvailableDrivers(): array
     {
-        return array_keys(self::$drivers);
+        return self::getInstance()->getAvailableDrivers();
     }
 
     /**
@@ -148,7 +101,7 @@ class TSDBFactory
      */
     public static function hasDriver(string $name): bool
     {
-        return isset(self::$drivers[$name]);
+        return self::getInstance()->hasDriver($name);
     }
 
     /**
@@ -159,7 +112,7 @@ class TSDBFactory
      */
     public static function getConfigClass(string $name): ?string
     {
-        return self::$configClasses[$name] ?? null;
+        return self::getInstance()->getConfigClass($name);
     }
 
     /**
@@ -173,13 +126,6 @@ class TSDBFactory
      */
     public static function createConfig(string $driver, array $config = []): ConfigInterface
     {
-        $configClass = self::getConfigClass($driver);
-
-        if ($configClass === null) {
-            throw new DriverException("No configuration class registered for driver: {$driver}");
-        }
-
-        /** @var ConfigInterface */
-        return new $configClass($config);
+        return self::getInstance()->createConfig($driver, $config);
     }
 }
