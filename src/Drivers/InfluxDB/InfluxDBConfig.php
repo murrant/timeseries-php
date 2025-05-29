@@ -3,11 +3,13 @@
 namespace TimeSeriesPhp\Drivers\InfluxDB;
 
 use InfluxDB2\Model\WritePrecision;
-use TimeSeriesPhp\Config\AbstractConfig;
+use TimeSeriesPhp\Config\AbstractDriverConfig;
 use TimeSeriesPhp\Exceptions\ConfigurationException;
 
-class InfluxDBConfig extends AbstractConfig
+class InfluxDBConfig extends AbstractDriverConfig
 {
+    protected string $driverName = 'influxdb';
+
     protected array $defaults = [
         'url' => 'http://localhost:8086',
         'token' => '',
