@@ -191,11 +191,16 @@ class RetryableOperationTest extends TestCase
         // Manually update the cached operation to use our success operation
         $cachedOperation = $this->cache->get('failed_operation_'.$operationId);
         $this->assertNotNull($cachedOperation);
-        $this->assertIsArray($cachedOperation, 'Cached operation should be an array');
-        $cachedOperation['operation'] = $successOperation;
+        $this->assertInstanceOf(RetryableOperation::class, $cachedOperation, 'Cached operation should be a RetryableOperation instance');
+
+        // Create a new RetryableOperation with the success operation
+        $newRetryable = RetryableOperation::make($successOperation, $this->cache)
+            ->retries(0)
+            ->delay(10)
+            ->persistOnFailure($operationId);
 
         if ($this->cache !== null) {
-            $this->assertTrue($this->cache->set('failed_operation_'.$operationId, $cachedOperation));
+            $this->assertTrue($this->cache->set('failed_operation_'.$operationId, $newRetryable));
         } else {
             $this->fail('Cache should not be null at this point');
         }

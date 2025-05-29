@@ -22,8 +22,7 @@ interface ConfigInterface
     public function getBool(string $key, ?bool $default = null): bool;
 
     /**
-     * @param string $key
-     * @param array<mixed, mixed>|null $default
+     * @param  array<mixed, mixed>|null  $default
      * @return array<mixed, mixed>
      */
     public function getArray(string $key, ?array $default = null): array;

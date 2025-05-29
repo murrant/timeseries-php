@@ -21,7 +21,7 @@ class FileCache extends AbstractCache
         parent::__construct($config);
 
         $this->path = $config->getString('file.path');
-        $this->permissions =  $config->getInt('file.permissions', 0755);
+        $this->permissions = $config->getInt('file.permissions', 0755);
     }
 
     /**

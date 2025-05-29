@@ -262,8 +262,7 @@ abstract class AbstractConfig implements ConfigInterface
     }
 
     /**
-     * @param string $key
-     * @param array<mixed, mixed>|null $default
+     * @param  array<mixed, mixed>|null  $default
      * @return array<mixed, mixed>
      *
      * @throws ConfigurationException
