@@ -28,21 +28,20 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
         $fluxQuery = "from(bucket: \"{$this->bucket}\")\n";
 
         // Add time range
-        $fluxQuery .= match (true) {
-            $query->getStartTime() && $query->getEndTime() => (function () use ($query) {
-                $start = $query->getStartTime()->format('c');
-                $stop = $query->getEndTime()->format('c');
-
-                return "  |> range(start: {$start}, stop: {$stop})\n";
-            })(),
-            $query->getStartTime() => (function () use ($query) {
-                $start = $query->getStartTime()->format('c');
-
-                return "  |> range(start: {$start})\n";
-            })(),
-            $query->getRelativeTime() !== null => '  |> range(start: -'.$this->formatDateInterval($query->getRelativeTime()).")\n",
-            default => "  |> range(start: -1h)\n", // Default to last hour if no time range specified
-        };
+        if ($query->getStartTime() && $query->getEndTime()) {
+            $start = $query->getStartTime()->format('c');
+            $stop = $query->getEndTime()->format('c');
+            $fluxQuery .= "  |> range(start: {$start}, stop: {$stop})\n";
+        } elseif ($query->getStartTime()) {
+            $start = $query->getStartTime()->format('c');
+            $fluxQuery .= "  |> range(start: {$start})\n";
+        } elseif ($query->getRelativeTime()) {
+            // Handle relative time (e.g., "last 1h")
+            $fluxQuery .= '  |> range(start: -'.$this->formatDateInterval($query->getRelativeTime()).")\n";
+        } else {
+            // Default to last hour if no time range specified
+            $fluxQuery .= "  |> range(start: -1h)\n";
+        }
 
         // Apply timezone if specified
         if ($query->getTimezone()) {
@@ -57,60 +56,59 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
         // Add conditions (where clauses)
         foreach ($query->getConditions() as $condition) {
             $field = $condition->getField();
-            $operator = $this->mapOperator($condition->getOperator());
+            $operator = $condition->getOperator();
             $type = $condition->getType();
 
             // Initialize $value to null
             $value = null;
 
             // Format value for operators that don't handle arrays differently
-            $comparisonOperator = ComparisonOperator::from($operator);
-            if ($comparisonOperator === null || ! $comparisonOperator->requiresArrayValue()) {
+            if (! $operator->requiresArrayValue()) {
                 $value = $this->formatValue($condition->getValue());
             }
 
             // For InfluxDB, we need to handle different types of conditions
-            $fluxQuery .= match (true) {
-                $field === 'time' => match ($operator) {
-                    '==' => "  |> filter(fn: (r) => r._time == {$value})\n",
-                    '>' => "  |> filter(fn: (r) => r._time > {$value})\n",
-                    '>=' => "  |> filter(fn: (r) => r._time >= {$value})\n",
-                    '<' => "  |> filter(fn: (r) => r._time < {$value})\n",
-                    '<=' => "  |> filter(fn: (r) => r._time <= {$value})\n",
-                    '!=' => "  |> filter(fn: (r) => r._time != {$value})\n",
+            if ($field === 'time') {
+                // Time-based conditions are handled differently
+                $fluxQuery .= match ($operator) {
+                    ComparisonOperator::SAME => "  |> filter(fn: (r) => r._time == {$value})\n",
+                    ComparisonOperator::GREATER_THAN => "  |> filter(fn: (r) => r._time > {$value})\n",
+                    ComparisonOperator::GREATER_THAN_OR_EQUALS => "  |> filter(fn: (r) => r._time >= {$value})\n",
+                    ComparisonOperator::LESS_THAN => "  |> filter(fn: (r) => r._time < {$value})\n",
+                    ComparisonOperator::LESS_THAN_OR_EQUALS => "  |> filter(fn: (r) => r._time <= {$value})\n",
+                    ComparisonOperator::NOT_EQUALS => "  |> filter(fn: (r) => r._time != {$value})\n",
                     default => '',
-                },
-                $operator === 'IN' => (function () use ($field, $condition) {
-                    $values = array_map(fn ($v) => $this->formatValue($v), $condition->getValues());
-                    $valuesList = implode(', ', $values);
-
-                    return "  |> filter(fn: (r) => contains(value: r[\"$field\"], set: [$valuesList]))\n";
-                })(),
-                $operator === 'NOT IN' => (function () use ($field, $condition) {
-                    $values = $condition->getValues();
-                    $conditions = [];
-                    foreach ($values as $value) {
-                        $formattedValue = $this->formatValue($value);
-                        $conditions[] = "r[\"$field\"] != $formattedValue";
-                    }
-                    $conditionString = implode(' and ', $conditions);
-
-                    return "  |> filter(fn: (r) => $conditionString)\n";
-                })(),
-                $operator === 'BETWEEN' && is_array($condition->getValue()) && count($condition->getValue()) === 2 => (function () use ($field, $condition) {
-                    $min = $this->formatValue($condition->getValue()[0]);
-                    $max = $this->formatValue($condition->getValue()[1]);
-
-                    return "  |> filter(fn: (r) => r[\"$field\"] >= $min and r[\"$field\"] <= $max)\n";
-                })(),
-                $operator === 'REGEX' => (function () use ($field, $condition) {
-                    $pattern = $condition->getScalarValue();
-
-                    return "  |> filter(fn: (r) => r[\"$field\"] =~ /$pattern/)\n";
-                })(),
-                default => "  |> filter(fn: (r) => r[\"$field\"] $operator $value)\n", // Standard operators
-            };
+                };
+            } elseif ($operator === ComparisonOperator::IN) {
+                // Handle IN operator
+                $values = array_map(fn ($v) => $this->formatValue($v), $condition->getValues());
+                $valuesList = implode(', ', $values);
+                $fluxQuery .= "  |> filter(fn: (r) => contains(value: r[\"$field\"], set: [$valuesList]))\n";
+            } elseif ($operator === ComparisonOperator::NOT_IN) {
+                // Handle NOT IN operator
+                $values = $condition->getValues();
+                $conditions = [];
+                foreach ($values as $value) {
+                    $formattedValue = $this->formatValue($value);
+                    $conditions[] = "r[\"$field\"] != $formattedValue";
+                }
+                $conditionString = implode(' and ', $conditions);
+                $fluxQuery .= "  |> filter(fn: (r) => $conditionString)\n";
+            } elseif ($operator === ComparisonOperator::BETWEEN && is_array($condition->getValue()) && count($condition->getValue()) === 2) {
+                // Handle BETWEEN operator
+                $min = $this->formatValue($condition->getValue()[0]);
+                $max = $this->formatValue($condition->getValue()[1]);
+                $fluxQuery .= "  |> filter(fn: (r) => r[\"$field\"] >= $min and r[\"$field\"] <= $max)\n";
+            } elseif ($operator === ComparisonOperator::REGEX) {
+                // Handle REGEX operator
+                $pattern = $condition->getScalarValue();
+                $fluxQuery .= "  |> filter(fn: (r) => r[\"$field\"] =~ /$pattern/)\n";
+            } else {
+                // Standard operators
+                $fluxQuery .= "  |> filter(fn: (r) => r[\"$field\"] $operator->value $value)\n";
+            }
         }
+
 
         // Filter by fields if specified
         if (! empty($fields) && ! in_array('*', $fields)) {
@@ -237,7 +235,7 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
         // Add having clauses (post-aggregation filtering)
         foreach ($query->getHaving() as $having) {
             $field = $having['field'];
-            $operator = $this->mapOperator($having['operator']);
+            $operator = $having['operator']->toFluxOperator();
             $value = $this->formatValue($having['value']);
 
             $fluxQuery .= "  |> filter(fn: (r) => r[\"$field\"] $operator $value)\n";
@@ -265,22 +263,6 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
         $fluxQuery = rtrim($fluxQuery);
 
         return new RawQuery($fluxQuery);
-    }
-
-    private function mapOperator(ComparisonOperator|string $operator): string
-    {
-        if ($operator instanceof ComparisonOperator) {
-            return $operator->toFluxOperator();
-        }
-
-        // Try to convert string to ComparisonOperator
-        $comparisonOperator = ComparisonOperator::tryFrom($operator);
-        if ($comparisonOperator !== null) {
-            return $comparisonOperator->toFluxOperator();
-        }
-
-        // Fallback to original operator if not found in enum
-        return $operator;
     }
 
     /**

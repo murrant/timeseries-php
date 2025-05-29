@@ -50,7 +50,7 @@ class Query
     private array $orderBy = [];
 
     /**
-     * @var array<array{'field': string, 'operator': ComparisonOperator|string, 'value': ?scalar}>
+     * @var array<array{'field': string, 'operator': ComparisonOperator, 'value': ?scalar}>
      */
     private array $having = [];
 
@@ -102,6 +102,8 @@ class Query
      */
     public function where(string $field, ComparisonOperator|string $operator, float|int|bool|string|null|array $value): self
     {
+        $operator = is_string($operator) ? ComparisonOperator::from($operator) : $operator;
+
         $this->conditions[] = QueryCondition::where($field, $operator, $value);
 
         return $this;
@@ -112,6 +114,8 @@ class Query
      */
     public function orWhere(string $field, ComparisonOperator|string $operator, float|int|bool|string|null|array $value): self
     {
+        $operator = is_string($operator) ? ComparisonOperator::from($operator) : $operator;
+
         $this->conditions[] = QueryCondition::orWhere($field, $operator, $value);
 
         return $this;
@@ -350,6 +354,8 @@ class Query
      */
     public function having(string $field, ComparisonOperator|string $operator, float|int|bool|string|null $value): self
     {
+        $operator = is_string($operator) ? ComparisonOperator::from($operator) : $operator;
+
         $this->having[] = [
             'field' => $field,
             'operator' => $operator,
@@ -471,7 +477,7 @@ class Query
     }
 
     /**
-     * @return array<array{'field': string, 'operator': ComparisonOperator|string, 'value': ?scalar}>
+     * @return array<array{'field': string, 'operator': ComparisonOperator, 'value': ?scalar}>
      */
     public function getHaving(): array
     {
@@ -548,7 +554,7 @@ class Query
      *
      * @return array<int, QueryCondition>
      */
-    public function getConditionsByOperator(ComparisonOperator|string $operator): array
+    public function getConditionsByOperator(ComparisonOperator $operator): array
     {
         return array_filter(
             $this->conditions,

@@ -3,8 +3,8 @@
 namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 
 use SplFileInfo;
+use TimeSeriesPhp\Exceptions\Driver\RRDtoolFilenameTooLongException;
 use TimeSeriesPhp\Exceptions\Driver\RRDtoolTagException;
-use TimeSeriesPhp\Exceptions\RRDtoolFilenameTooLongException;
 use TimeSeriesPhp\Utils\File;
 
 class FileNameStrategy implements RRDTagStrategyInterface

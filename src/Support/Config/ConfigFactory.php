@@ -14,7 +14,7 @@ class ConfigFactory
     /**
      * Map of configuration types to their classes
      *
-     * @var array<string, class-string<ConfigInterface>>
+     * @var array<string, class-string<\TimeSeriesPhp\Contracts\Config\ConfigInterface>>
      */
     private static array $configTypes = [
         'cache' => CacheConfig::class,
@@ -28,7 +28,7 @@ class ConfigFactory
      *
      * @throws ConfigurationException
      */
-    public static function create(string $type, array $config = []): ConfigInterface
+    public static function create(string $type, array $config = []): \TimeSeriesPhp\Contracts\Config\ConfigInterface
     {
         if (! isset(self::$configTypes[$type])) {
             throw new ConfigurationException("Unknown configuration type: {$type}");
@@ -46,7 +46,7 @@ class ConfigFactory
      */
     public static function registerConfigType(string $type, string $className): void
     {
-        if (! is_subclass_of($className, ConfigInterface::class)) {
+        if (! is_subclass_of($className, \TimeSeriesPhp\Contracts\Config\ConfigInterface::class)) {
             throw new ConfigurationException('Config class must implement ConfigInterface');
         }
 
@@ -67,7 +67,7 @@ class ConfigFactory
      * Create multiple configuration instances from an array
      *
      * @param  array<string, array<string, mixed>>  $configs
-     * @return array<string, ConfigInterface>
+     * @return array<string, \TimeSeriesPhp\Contracts\Config\ConfigInterface>
      *
      * @throws ConfigurationException
      */
