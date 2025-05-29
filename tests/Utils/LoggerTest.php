@@ -71,12 +71,20 @@ class LoggerTest extends TestCase
             'level' => 'debug',
             'log_to_file' => true,
             'log_file' => $logFile,
+            'log_to_stderr' => false,
+            'log_to_syslog' => false,
+            'log_to_error_log' => false,
         ]);
 
         Logger::configure($config);
+
+        // Capture output to prevent it from showing in test results
+        ob_start();
         Logger::info('Test message');
+        ob_end_clean();
 
         $logContent = file_get_contents($logFile);
+        $this->assertNotFalse($logContent, 'Failed to read log file');
         $this->assertStringContainsString('Test message', $logContent);
         $this->assertStringContainsString('[INFO]', $logContent);
 
@@ -92,12 +100,20 @@ class LoggerTest extends TestCase
             'level' => 'debug',
             'log_to_file' => true,
             'log_file' => $logFile,
+            'log_to_stderr' => false,
+            'log_to_syslog' => false,
+            'log_to_error_log' => false,
         ]);
 
         Logger::configure($config);
+
+        // Capture output to prevent it from showing in test results
+        ob_start();
         Logger::info('User {username} logged in', ['username' => 'john_doe']);
+        ob_end_clean();
 
         $logContent = file_get_contents($logFile);
+        $this->assertNotFalse($logContent, 'Failed to read log file');
         $this->assertStringContainsString('User john_doe logged in', $logContent);
 
         // Clean up
@@ -112,12 +128,20 @@ class LoggerTest extends TestCase
             'level' => 'debug',
             'log_to_file' => true,
             'log_file' => $logFile,
+            'log_to_stderr' => false,
+            'log_to_syslog' => false,
+            'log_to_error_log' => false,
         ]);
 
         Logger::configure($config);
+
+        // Capture output to prevent it from showing in test results
+        ob_start();
         Logger::info('Data: {data}', ['data' => ['key' => 'value']]);
+        ob_end_clean();
 
         $logContent = file_get_contents($logFile);
+        $this->assertNotFalse($logContent, 'Failed to read log file');
         $this->assertStringContainsString('Data: {"key":"value"}', $logContent);
 
         // Clean up
