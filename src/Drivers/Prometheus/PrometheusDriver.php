@@ -90,33 +90,41 @@ class PrometheusDriver extends AbstractTimeSeriesDB
 
             // Extract time range from comments if present
             $timeParams = [];
-            if (preg_match('/#\s*time range:\s*([^\s]+)\s+to\s+([^\s]+)/', $queryString, $matches)) {
-                $timeParams['start'] = $matches[1];
-                $timeParams['end'] = $matches[2];
-                // Remove the comment from the query
-                $queryString = preg_replace('/#\s*time range:[^\n]+/', '', $queryString) ?? $queryString;
-            } elseif (preg_match('/#\s*relative time:\s*([^\n]+)/', $queryString, $matches)) {
-                // Convert relative time to absolute time
-                $timeParams['time'] = $matches[1];
-                // Remove the comment from the query
-                $queryString = preg_replace('/#\s*relative time:[^\n]+/', '', $queryString) ?? $queryString;
-            }
+            $queryString = match (true) {
+                preg_match('/#\s*time range:\s*([^\s]+)\s+to\s+([^\s]+)/', $queryString, $matches) => (function () use (&$timeParams, $queryString, $matches) {
+                    $timeParams['start'] = $matches[1];
+                    $timeParams['end'] = $matches[2];
+                    // Remove the comment from the query
+                    return preg_replace('/#\s*time range:[^\n]+/', '', $queryString) ?? $queryString;
+                })(),
+                preg_match('/#\s*relative time:\s*([^\n]+)/', $queryString, $matches) => (function () use (&$timeParams, $queryString, $matches) {
+                    // Convert relative time to absolute time
+                    $timeParams['time'] = $matches[1];
+                    // Remove the comment from the query
+                    return preg_replace('/#\s*relative time:[^\n]+/', '', $queryString) ?? $queryString;
+                })(),
+                default => $queryString
+            };
 
             // Determine which API endpoint to use based on the query
-            $endpoint = '/api/v1/query';
             $params = ['query' => trim($queryString)];
 
-            // Add time parameters if present
-            if (! empty($timeParams)) {
-                if (isset($timeParams['start'])) {
-                    $endpoint = '/api/v1/query_range';
-                    $params['start'] = $timeParams['start'];
-                    $params['end'] = $timeParams['end'];
-                    $params['step'] = '15s'; // Default step
-                } elseif (isset($timeParams['time'])) {
-                    $params['time'] = $timeParams['time'];
-                }
-            }
+            // Add time parameters and determine endpoint
+            [$endpoint, $params] = match (true) {
+                isset($timeParams['start']) => [
+                    '/api/v1/query_range',
+                    array_merge($params, [
+                        'start' => $timeParams['start'],
+                        'end' => $timeParams['end'],
+                        'step' => '15s', // Default step
+                    ])
+                ],
+                isset($timeParams['time']) => [
+                    '/api/v1/query',
+                    array_merge($params, ['time' => $timeParams['time']])
+                ],
+                default => ['/api/v1/query', $params]
+            };
 
             // Execute the query
             $response = $this->makeApiRequest($endpoint, $params);

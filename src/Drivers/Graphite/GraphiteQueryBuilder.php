@@ -58,85 +58,90 @@ class GraphiteQueryBuilder implements QueryBuilderInterface
         // Handle aggregations
         $aggregations = $query->getAggregations();
 
-        if (count($aggregations) > 1) {
-            // For multiple aggregations, create separate targets and group them
-            $aggTargets = [];
-            $baseTarget = $target; // Save the original target
+        $target = match (true) {
+            count($aggregations) > 1 => (function () use ($target, $aggregations, $query) {
+                // For multiple aggregations, create separate targets and group them
+                $aggTargets = [];
+                $baseTarget = $target; // Save the original target
 
-            foreach ($aggregations as $agg) {
+                foreach ($aggregations as $agg) {
+                    $function = strtolower($agg['function']);
+                    $alias = $agg['alias'] ?? null;
+                    $aggTarget = $baseTarget;
+
+                    $aggTarget = match ($function) {
+                        'mean', 'avg' => "averageSeries($aggTarget)",
+                        'sum' => "sumSeries($aggTarget)",
+                        'count' => "countSeries($aggTarget)",
+                        'min' => "minSeries($aggTarget)",
+                        'max' => "maxSeries($aggTarget)",
+                        'stddev' => "stdev($aggTarget)",
+                        'percentile' => (function () use ($function, $aggTarget) {
+                            $percentile = substr($function, 11);
+
+                            return "percentileOfSeries($aggTarget, $percentile)";
+                        })(),
+                        default => $aggTarget,
+                    };
+
+                    // Handle time grouping for each aggregation
+                    if ($query->getInterval()) {
+                        $interval = $this->convertIntervalToGraphite($query->getInterval());
+                        $aggTarget = "summarize($aggTarget, \"$interval\", \"$function\")";
+                    }
+
+                    // Add alias if specified
+                    if ($alias) {
+                        $aggTarget = "alias($aggTarget, \"$alias\")";
+                    }
+
+                    $aggTargets[] = $aggTarget;
+                }
+
+                // Combine all aggregation targets using group()
+                return 'group('.implode(',', $aggTargets).')';
+            })(),
+            count($aggregations) === 1 => (function () use ($target, $aggregations, $query) {
+                // For a single aggregation, apply it directly
+                $agg = $aggregations[0];
                 $function = strtolower($agg['function']);
                 $alias = $agg['alias'] ?? null;
-                $aggTarget = $baseTarget;
 
-                $aggTarget = match ($function) {
-                    'mean', 'avg' => "averageSeries($aggTarget)",
-                    'sum' => "sumSeries($aggTarget)",
-                    'count' => "countSeries($aggTarget)",
-                    'min' => "minSeries($aggTarget)",
-                    'max' => "maxSeries($aggTarget)",
-                    'stddev' => "stdev($aggTarget)",
-                    'percentile' => (function () use ($function, $aggTarget) {
+                $result = match ($function) {
+                    'mean', 'avg' => "averageSeries($target)",
+                    'sum' => "sumSeries($target)",
+                    'count' => "countSeries($target)",
+                    'min' => "minSeries($target)",
+                    'max' => "maxSeries($target)",
+                    'stddev' => "stdev($target)",
+                    'percentile' => (function () use ($function, $target) {
                         $percentile = substr($function, 11);
 
-                        return "percentileOfSeries($aggTarget, $percentile)";
+                        return "percentileOfSeries($target, $percentile)";
                     })(),
-                    default => $aggTarget,
+                    default => $target,
                 };
-
-                // Handle time grouping for each aggregation
-                if ($query->getInterval()) {
-                    $interval = $this->convertIntervalToGraphite($query->getInterval());
-                    $aggTarget = "summarize($aggTarget, \"$interval\", \"$function\")";
-                }
 
                 // Add alias if specified
                 if ($alias) {
-                    $aggTarget = "alias($aggTarget, \"$alias\")";
+                    $result = "alias($result, \"$alias\")";
                 }
 
-                $aggTargets[] = $aggTarget;
-            }
+                // Handle time grouping (summarize function in Graphite)
+                if ($query->getInterval()) {
+                    $interval = $this->convertIntervalToGraphite($query->getInterval());
+                    $result = "summarize($result, \"$interval\", \"avg\")";
+                }
 
-            // Combine all aggregation targets using group()
-            $target = 'group('.implode(',', $aggTargets).')';
-        } elseif (count($aggregations) === 1) {
-            // For a single aggregation, apply it directly
-            $agg = $aggregations[0];
-            $function = strtolower($agg['function']);
-            $alias = $agg['alias'] ?? null;
-
-            $target = match ($function) {
-                'mean', 'avg' => "averageSeries($target)",
-                'sum' => "sumSeries($target)",
-                'count' => "countSeries($target)",
-                'min' => "minSeries($target)",
-                'max' => "maxSeries($target)",
-                'stddev' => "stdev($target)",
-                'percentile' => (function () use ($function, $target) {
-                    $percentile = substr($function, 11);
-
-                    return "percentileOfSeries($target, $percentile)";
-                })(),
-                default => $target,
-            };
-
-            // Add alias if specified
-            if ($alias) {
-                $target = "alias($target, \"$alias\")";
-            }
-
-            // Handle time grouping (summarize function in Graphite)
-            if ($query->getInterval()) {
+                return $result;
+            })(),
+            $query->getInterval() => (function () use ($target, $query) {
+                // No aggregations, just handle time grouping if needed
                 $interval = $this->convertIntervalToGraphite($query->getInterval());
-                $target = "summarize($target, \"$interval\", \"avg\")";
-            }
-        } else {
-            // No aggregations, just handle time grouping if needed
-            if ($query->getInterval()) {
-                $interval = $this->convertIntervalToGraphite($query->getInterval());
-                $target = "summarize($target, \"$interval\", \"avg\")";
-            }
-        }
+                return "summarize($target, \"$interval\", \"avg\")";
+            })(),
+            default => $target
+        };
 
         // Handle conditions (where clauses)
         // Graphite doesn't have direct equivalents for SQL-like where clauses
