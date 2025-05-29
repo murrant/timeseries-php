@@ -4,18 +4,18 @@ namespace TimeSeriesPhp\Tests\Drivers\Graphite;
 
 use DateTime;
 use PHPUnit\Framework\TestCase;
-use TimeSeriesPhp\Core\DataPoint;
-use TimeSeriesPhp\Core\Query;
-use TimeSeriesPhp\Core\QueryResult;
-use TimeSeriesPhp\Drivers\Graphite\GraphiteConfig;
-use TimeSeriesPhp\Drivers\Graphite\GraphiteDriver;
-use TimeSeriesPhp\Drivers\Graphite\GraphiteQueryBuilder;
-use TimeSeriesPhp\Exceptions\ConnectionException;
-use TimeSeriesPhp\Support\Query\RawQuery;
+use TimeSeriesPhp\Core\Data\DataPoint;
+use TimeSeriesPhp\Core\Data\QueryResult;
+use TimeSeriesPhp\Core\Query\Query;
+use TimeSeriesPhp\Core\Query\RawQuery;
+use TimeSeriesPhp\Drivers\Graphite\Config\GraphiteConfig;
+use TimeSeriesPhp\Drivers\Graphite\Driver;
+use TimeSeriesPhp\Drivers\Graphite\Query\GraphiteQueryBuilder;
+use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 
 class GraphiteDriverTest extends TestCase
 {
-    private GraphiteDriver $driver;
+    private Driver $driver;
 
     private GraphiteConfig $config;
 
@@ -42,7 +42,7 @@ class GraphiteDriverTest extends TestCase
             ->willReturn('http://localhost:8080/render');
 
         // Create a real instance of GraphiteDriver with mocked methods
-        $this->driver = new class extends GraphiteDriver
+        $this->driver = new class extends Driver
         {
             protected function doConnect(): bool
             {
@@ -76,11 +76,11 @@ class GraphiteDriverTest extends TestCase
                 }
             }
 
-            public function write(\TimeSeriesPhp\Core\DataPoint $dataPoint): bool
+            public function write(\TimeSeriesPhp\Core\Data\DataPoint $dataPoint): bool
             {
                 // Mock implementation that checks connection status
                 if (! $this->isConnected()) {
-                    throw new \TimeSeriesPhp\Exceptions\ConnectionException('Not connected to Graphite');
+                    throw new \TimeSeriesPhp\Exceptions\Driver\ConnectionException('Not connected to Graphite');
                 }
 
                 return true;
@@ -92,10 +92,10 @@ class GraphiteDriverTest extends TestCase
                 return true;
             }
 
-            public function rawQuery(\TimeSeriesPhp\Support\Query\RawQueryInterface $query): \TimeSeriesPhp\Core\QueryResult
+            public function rawQuery(\TimeSeriesPhp\Contracts\Query\RawQueryInterface $query): \TimeSeriesPhp\Core\Data\QueryResult
             {
                 // Mock implementation that returns a predefined result
-                return new \TimeSeriesPhp\Core\QueryResult([
+                return new \TimeSeriesPhp\Core\Data\QueryResult([
                     'cpu.usage' => [
                         ['date' => 1672531200, 'value' => 10],
                         ['date' => 1672534800, 'value' => 15],

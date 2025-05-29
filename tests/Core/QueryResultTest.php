@@ -3,7 +3,7 @@
 namespace TimeSeriesPhp\Tests\Core;
 
 use PHPUnit\Framework\TestCase;
-use TimeSeriesPhp\Core\QueryResult;
+use TimeSeriesPhp\Core\Data\QueryResult;
 
 class QueryResultTest extends TestCase
 {

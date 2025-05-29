@@ -3,10 +3,10 @@
 namespace TimeSeriesPhp\Tests\Core;
 
 use PHPUnit\Framework\TestCase;
-use TimeSeriesPhp\Core\TimeSeriesInterface;
-use TimeSeriesPhp\Core\TSDBFactory;
-use TimeSeriesPhp\Exceptions\DriverException;
-use TimeSeriesPhp\Support\Config\ConfigInterface;
+use TimeSeriesPhp\Contracts\Config\ConfigInterface;
+use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
+use TimeSeriesPhp\Core\Factory\TSDBFactory;
+use TimeSeriesPhp\Exceptions\Driver\DriverException;
 
 class TSDBFactoryTest extends TestCase
 {

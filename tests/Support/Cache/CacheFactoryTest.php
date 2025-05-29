@@ -4,7 +4,7 @@ namespace TimeSeriesPhp\Tests\Support\Cache;
 
 use PHPUnit\Framework\TestCase;
 use Psr\SimpleCache\CacheInterface;
-use TimeSeriesPhp\Exceptions\ConfigurationException;
+use TimeSeriesPhp\Exceptions\Config\ConfigurationException;
 use TimeSeriesPhp\Support\Cache\CacheFactory;
 use TimeSeriesPhp\Support\Cache\FileCache;
 use TimeSeriesPhp\Support\Cache\MemoryCache;

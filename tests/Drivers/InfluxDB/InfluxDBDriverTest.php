@@ -4,11 +4,12 @@ namespace TimeSeriesPhp\Tests\Drivers\InfluxDB;
 
 use DateTime;
 use PHPUnit\Framework\TestCase;
-use TimeSeriesPhp\Core\DataPoint;
-use TimeSeriesPhp\Core\Query;
-use TimeSeriesPhp\Core\QueryResult;
-use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig;
-use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
+use TimeSeriesPhp\Core\Data\DataPoint;
+use TimeSeriesPhp\Core\Data\QueryResult;
+use TimeSeriesPhp\Core\Query\Query;
+use TimeSeriesPhp\Drivers\InfluxDB\Config\InfluxDBConfig;
+use TimeSeriesPhp\Drivers\InfluxDB\Driver as InfluxDBDriver;
+use TimeSeriesPhp\Drivers\InfluxDB\Query\InfluxDBQueryBuilder;
 
 class InfluxDBDriverTest extends TestCase
 {
@@ -80,7 +81,7 @@ class InfluxDBDriverTest extends TestCase
                 $this->org = 'test-org';
                 $this->bucket = 'test-bucket';
                 $this->connected = true;
-                $this->queryBuilder = new \TimeSeriesPhp\Drivers\InfluxDB\InfluxDBQueryBuilder('test-bucket');
+                $this->queryBuilder = new InfluxDBQueryBuilder('test-bucket');
             }
 
             protected function doConnect(): bool
@@ -99,10 +100,10 @@ class InfluxDBDriverTest extends TestCase
                 ];
             }
 
-            public function rawQuery(\TimeSeriesPhp\Support\Query\RawQueryInterface $query): \TimeSeriesPhp\Core\QueryResult
+            public function rawQuery(\TimeSeriesPhp\Contracts\Query\RawQueryInterface $query): \TimeSeriesPhp\Core\Data\QueryResult
             {
                 // Mock implementation that doesn't use queryApi
-                return new \TimeSeriesPhp\Core\QueryResult([
+                return new \TimeSeriesPhp\Core\Data\QueryResult([
                     'cpu_usage' => [
                         ['date' => '2023-01-01T00:00:00Z', 'value' => 10],
                         ['date' => '2023-01-01T01:00:00Z', 'value' => 15],
@@ -110,7 +111,7 @@ class InfluxDBDriverTest extends TestCase
                 ]);
             }
 
-            public function write(\TimeSeriesPhp\Core\DataPoint $dataPoint): bool
+            public function write(\TimeSeriesPhp\Core\Data\DataPoint $dataPoint): bool
             {
                 // Mock implementation that doesn't use writeApi
                 return true;
@@ -163,7 +164,7 @@ class InfluxDBDriverTest extends TestCase
 
     public function test_raw_query(): void
     {
-        $rawQuery = new \TimeSeriesPhp\Support\Query\RawQuery('SELECT * FROM cpu_usage');
+        $rawQuery = new \TimeSeriesPhp\Core\Query\RawQuery('SELECT * FROM cpu_usage');
         $result = $this->driver->rawQuery($rawQuery);
 
         $this->assertInstanceOf(QueryResult::class, $result);

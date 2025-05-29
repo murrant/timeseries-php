@@ -2,8 +2,8 @@
 
 namespace TimeSeriesPhp\Tests\Core\data;
 
-use TimeSeriesPhp\Core\TimeSeriesInterface;
-use TimeSeriesPhp\Support\Config\ConfigInterface;
+use TimeSeriesPhp\Contracts\Config\ConfigInterface;
+use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
 
 class TestDriver implements TimeSeriesInterface
 {
@@ -17,17 +17,17 @@ class TestDriver implements TimeSeriesInterface
         return true;
     }
 
-    public function query(\TimeSeriesPhp\Core\Query $query): \TimeSeriesPhp\Core\QueryResult
+    public function query(\TimeSeriesPhp\Core\Query\Query $query): \TimeSeriesPhp\Core\Data\QueryResult
     {
-        return new \TimeSeriesPhp\Core\QueryResult([]);
+        return new \TimeSeriesPhp\Core\Data\QueryResult([]);
     }
 
-    public function rawQuery(\TimeSeriesPhp\Support\Query\RawQueryInterface $query): \TimeSeriesPhp\Core\QueryResult
+    public function rawQuery(\TimeSeriesPhp\Contracts\Query\RawQueryInterface $query): \TimeSeriesPhp\Core\Data\QueryResult
     {
-        return new \TimeSeriesPhp\Core\QueryResult([]);
+        return new \TimeSeriesPhp\Core\Data\QueryResult([]);
     }
 
-    public function write(\TimeSeriesPhp\Core\DataPoint $dataPoint): bool
+    public function write(\TimeSeriesPhp\Core\Data\DataPoint $dataPoint): bool
     {
         return true;
     }

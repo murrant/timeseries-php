@@ -2,11 +2,11 @@
 
 require_once __DIR__.'/../vendor/autoload.php';
 
-use TimeSeriesPhp\Core\DataPoint;
-use TimeSeriesPhp\Core\Query;
+use TimeSeriesPhp\Core\Data\DataPoint;
+use TimeSeriesPhp\Core\Query\Query;
 use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
-use TimeSeriesPhp\Exceptions\ConfigurationException;
-use TimeSeriesPhp\Exceptions\DriverException;
+use TimeSeriesPhp\Exceptions\Config\ConfigurationException;
+use TimeSeriesPhp\Exceptions\Driver\DriverException;
 
 // Example: Using InfluxDB with timeseries-php library
 

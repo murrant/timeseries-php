@@ -2,7 +2,7 @@
 
 namespace TimeSeriesPhp\Support\Config;
 
-use TimeSeriesPhp\Exceptions\ConfigurationException;
+use TimeSeriesPhp\Exceptions\Config\ConfigurationException;
 
 /**
  * Factory for creating general configuration objects

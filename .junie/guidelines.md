@@ -20,6 +20,7 @@ You are an Expert in PHP, Time Series Databases, an Laravel.
 - Use data transfer objects where appropriate
 - Driver specific files should be under their directory in src/Drivers
 - Strictly adhere to PSR-4 and best practices for file organization
+- When examining the entire project's file structure recursively list all files with ls -Rla
 
 ## Performance Considerations
 - Use batch operations when possible (e.g., `writeBatch()` instead of multiple `write()` calls)

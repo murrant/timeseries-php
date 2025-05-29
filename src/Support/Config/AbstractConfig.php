@@ -2,7 +2,8 @@
 
 namespace TimeSeriesPhp\Support\Config;
 
-use TimeSeriesPhp\Exceptions\ConfigurationException;
+use TimeSeriesPhp\Contracts\Config\ConfigInterface;
+use TimeSeriesPhp\Exceptions\Config\ConfigurationException;
 
 abstract class AbstractConfig implements ConfigInterface
 {

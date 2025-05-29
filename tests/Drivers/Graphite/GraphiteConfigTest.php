@@ -3,8 +3,8 @@
 namespace TimeSeriesPhp\Tests\Drivers\Graphite;
 
 use PHPUnit\Framework\TestCase;
-use TimeSeriesPhp\Drivers\Graphite\GraphiteConfig;
-use TimeSeriesPhp\Exceptions\ConfigurationException;
+use TimeSeriesPhp\Drivers\Graphite\Config\GraphiteConfig;
+use TimeSeriesPhp\Exceptions\Config\ConfigurationException;
 
 class GraphiteConfigTest extends TestCase
 {

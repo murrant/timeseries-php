@@ -2,7 +2,7 @@
 
 namespace TimeSeriesPhp\Tests\Core\data;
 
-use TimeSeriesPhp\Support\Config\ConfigInterface;
+use TimeSeriesPhp\Contracts\Config\ConfigInterface;
 
 class TestConfig implements ConfigInterface
 {

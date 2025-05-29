@@ -3,7 +3,7 @@
 namespace TimeSeriesPhp\Tests\Support\Config;
 
 use PHPUnit\Framework\TestCase;
-use TimeSeriesPhp\Support\Config\ConfigInterface;
+use TimeSeriesPhp\Contracts\Config\ConfigInterface;
 
 abstract class ConfigTestCase extends TestCase
 {

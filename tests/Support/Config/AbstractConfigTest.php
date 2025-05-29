@@ -2,8 +2,8 @@
 
 namespace TimeSeriesPhp\Tests\Support\Config;
 
+use TimeSeriesPhp\Contracts\Config\ConfigInterface;
 use TimeSeriesPhp\Support\Config\AbstractConfig;
-use TimeSeriesPhp\Support\Config\ConfigInterface;
 
 class AbstractConfigTest extends ConfigTestCase
 {

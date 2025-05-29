@@ -3,7 +3,7 @@
 namespace TimeSeriesPhp\Tests\Core;
 
 use PHPUnit\Framework\TestCase;
-use TimeSeriesPhp\Core\DataPoint;
+use TimeSeriesPhp\Core\Data\DataPoint;
 
 class SimpleTest extends TestCase
 {

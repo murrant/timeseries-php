@@ -6,16 +6,16 @@ use DateTime;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
-use TimeSeriesPhp\Core\DataPoint;
-use TimeSeriesPhp\Core\Query;
-use TimeSeriesPhp\Core\QueryResult;
-use TimeSeriesPhp\Drivers\Prometheus\PrometheusConfig;
-use TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver;
-use TimeSeriesPhp\Support\Query\RawQuery;
+use TimeSeriesPhp\Core\Data\DataPoint;
+use TimeSeriesPhp\Core\Data\QueryResult;
+use TimeSeriesPhp\Core\Query\Query;
+use TimeSeriesPhp\Core\Query\RawQuery;
+use TimeSeriesPhp\Drivers\Prometheus\Config\PrometheusConfig;
+use TimeSeriesPhp\Drivers\Prometheus\Driver;
 
 class PrometheusDriverTest extends TestCase
 {
-    private PrometheusDriver $driver;
+    private Driver $driver;
 
     private PrometheusConfig $config;
 
@@ -77,7 +77,7 @@ class PrometheusDriverTest extends TestCase
             });
 
         // Create the real driver (not a mock)
-        $this->driver = new PrometheusDriver;
+        $this->driver = new Driver;
 
         // Inject the mock client
         $this->driver->setClient($mockClient);

@@ -4,18 +4,18 @@ namespace TimeSeriesPhp\Tests\Drivers\RRDtool;
 
 use DateTime;
 use PHPUnit\Framework\TestCase;
-use TimeSeriesPhp\Core\DataPoint;
-use TimeSeriesPhp\Core\QueryResult;
-use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
-use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
-use TimeSeriesPhp\Drivers\RRDtool\RRDtoolRawQuery;
+use TimeSeriesPhp\Core\Data\DataPoint;
+use TimeSeriesPhp\Core\Data\QueryResult;
+use TimeSeriesPhp\Drivers\RRDtool\Config\RRDtoolConfig;
+use TimeSeriesPhp\Drivers\RRDtool\Driver;
+use TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolRawQuery;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
-use TimeSeriesPhp\Exceptions\RRDtoolTagException;
+use TimeSeriesPhp\Exceptions\Driver\RRDtoolTagException;
 
 class RRDtoolDriverTest extends TestCase
 {
-    private RRDtoolDriver $driver;
+    private Driver $driver;
 
     private RRDtoolConfig $config;
 
@@ -94,7 +94,7 @@ class RRDtoolDriverTest extends TestCase
                 });
 
         // Create a subclass of RRDtoolDriver that overrides methods that would execute commands
-        $this->driver = new class($this->tempDir, $tagStrategy) extends RRDtoolDriver
+        $this->driver = new class($this->tempDir, $tagStrategy) extends Driver
         {
             protected string $tempDir;
 
@@ -104,7 +104,7 @@ class RRDtoolDriverTest extends TestCase
                 $this->tagStrategy = $tagStrategy;
                 $this->rrdDir = $tempDir.'/';
                 $this->connected = true;
-                $this->queryBuilder = new \TimeSeriesPhp\Drivers\RRDtool\RRDtoolQueryBuilder($this->tagStrategy);
+                $this->queryBuilder = new \TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolQueryBuilder($this->tagStrategy);
             }
 
             protected function doConnect(): bool
@@ -112,7 +112,7 @@ class RRDtoolDriverTest extends TestCase
                 return true;
             }
 
-            public function write(\TimeSeriesPhp\Core\DataPoint $dataPoint): bool
+            public function write(\TimeSeriesPhp\Core\Data\DataPoint $dataPoint): bool
             {
                 // Mock implementation that simulates the real behavior
                 $rrdPath = $this->tagStrategy->getFilePath($dataPoint->getMeasurement(), $dataPoint->getTags());
@@ -154,11 +154,11 @@ class RRDtoolDriverTest extends TestCase
                 return true;
             }
 
-            public function rawQuery(\TimeSeriesPhp\Support\Query\RawQueryInterface $query): \TimeSeriesPhp\Core\QueryResult
+            public function rawQuery(\TimeSeriesPhp\Contracts\Query\RawQueryInterface $query): \TimeSeriesPhp\Core\Data\QueryResult
             {
                 // Mock implementation that doesn't execute commands
-                if ($query instanceof \TimeSeriesPhp\Drivers\RRDtool\RRDtoolRawQuery && $query->command === 'xport') {
-                    return new \TimeSeriesPhp\Core\QueryResult([
+                if ($query instanceof \TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolRawQuery && $query->command === 'xport') {
+                    return new \TimeSeriesPhp\Core\Data\QueryResult([
                         'cpu_usage' => [
                             ['date' => time(), 'value' => 23.5],
                             ['date' => time() + 300, 'value' => 24.0],
@@ -167,7 +167,7 @@ class RRDtoolDriverTest extends TestCase
                     ]);
                 }
 
-                return new \TimeSeriesPhp\Core\QueryResult([
+                return new \TimeSeriesPhp\Core\Data\QueryResult([
                     'output' => [
                         ['date' => time(), 'value' => 'Mocked output'],
                     ],

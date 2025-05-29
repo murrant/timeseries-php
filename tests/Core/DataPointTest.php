@@ -4,7 +4,7 @@ namespace TimeSeriesPhp\Tests\Core;
 
 use DateTime;
 use PHPUnit\Framework\TestCase;
-use TimeSeriesPhp\Core\DataPoint;
+use TimeSeriesPhp\Core\Data\DataPoint;
 
 class DataPointTest extends TestCase
 {
