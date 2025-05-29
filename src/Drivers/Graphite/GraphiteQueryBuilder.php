@@ -58,7 +58,63 @@ class GraphiteQueryBuilder implements QueryBuilderInterface
         }
 
         // Handle aggregations
-        foreach ($query->getAggregations() as $agg) {
+        $aggregations = $query->getAggregations();
+
+        if (count($aggregations) > 1) {
+            // For multiple aggregations, create separate targets and group them
+            $aggTargets = [];
+            $baseTarget = $target; // Save the original target
+
+            foreach ($aggregations as $agg) {
+                $function = strtolower($agg['function']);
+                $alias = $agg['alias'] ?? null;
+                $aggTarget = $baseTarget;
+
+                switch ($function) {
+                    case 'mean':
+                    case 'avg':
+                        $aggTarget = "averageSeries($aggTarget)";
+                        break;
+                    case 'sum':
+                        $aggTarget = "sumSeries($aggTarget)";
+                        break;
+                    case 'count':
+                        $aggTarget = "countSeries($aggTarget)";
+                        break;
+                    case 'min':
+                        $aggTarget = "minSeries($aggTarget)";
+                        break;
+                    case 'max':
+                        $aggTarget = "maxSeries($aggTarget)";
+                        break;
+                    case 'stddev':
+                        $aggTarget = "stdev($aggTarget)";
+                        break;
+                    case 'percentile':
+                        $percentile = substr($function, 11);
+                        $aggTarget = "percentileOfSeries($aggTarget, $percentile)";
+                        break;
+                }
+
+                // Handle time grouping for each aggregation
+                if ($query->getInterval()) {
+                    $interval = $this->convertIntervalToGraphite($query->getInterval());
+                    $aggTarget = "summarize($aggTarget, \"$interval\", \"$function\")";
+                }
+
+                // Add alias if specified
+                if ($alias) {
+                    $aggTarget = "alias($aggTarget, \"$alias\")";
+                }
+
+                $aggTargets[] = $aggTarget;
+            }
+
+            // Combine all aggregation targets using group()
+            $target = "group(" . implode(",", $aggTargets) . ")";
+        } else if (count($aggregations) === 1) {
+            // For a single aggregation, apply it directly
+            $agg = $aggregations[0];
             $function = strtolower($agg['function']);
             $alias = $agg['alias'] ?? null;
 
@@ -92,12 +148,18 @@ class GraphiteQueryBuilder implements QueryBuilderInterface
             if ($alias) {
                 $target = "alias($target, \"$alias\")";
             }
-        }
 
-        // Handle time grouping (summarize function in Graphite)
-        if ($query->getInterval()) {
-            $interval = $this->convertIntervalToGraphite($query->getInterval());
-            $target = "summarize($target, \"$interval\", \"avg\")";
+            // Handle time grouping (summarize function in Graphite)
+            if ($query->getInterval()) {
+                $interval = $this->convertIntervalToGraphite($query->getInterval());
+                $target = "summarize($target, \"$interval\", \"avg\")";
+            }
+        } else {
+            // No aggregations, just handle time grouping if needed
+            if ($query->getInterval()) {
+                $interval = $this->convertIntervalToGraphite($query->getInterval());
+                $target = "summarize($target, \"$interval\", \"avg\")";
+            }
         }
 
         // Handle conditions (where clauses)

@@ -107,10 +107,15 @@ class RRDtoolRawQuery implements RawQueryInterface
 
     public function getRawQuery(): string
     {
+        // FIXME: use escapeshellarg() but it keeps using double quotes for some reason
         $args = $this->getArgs();
-        array_unshift($args, escapeshellarg($this->command));
+        $queryString = "'$this->command'";
 
-        return implode(' ', array_map(fn ($arg) => escapeshellarg($arg), $args));
+        foreach ($args as $arg) {
+            $queryString .= " '{$arg}'";
+        }
+
+        return $queryString;
     }
 
     /**

@@ -132,52 +132,118 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
         }
 
         // Add aggregations
-        foreach ($query->getAggregations() as $agg) {
-            $function = strtolower($agg['function']);
-            $field = $agg['field'] ?? '_value';
-            $alias = $agg['alias'] ?? null;
+        $aggregations = $query->getAggregations();
 
-            // Apply aggregation
-            switch ($function) {
-                case 'mean':
-                case 'avg':
-                    $fluxQuery .= "  |> mean(column: \"{$field}\")\n";
-                    break;
-                case 'sum':
-                    $fluxQuery .= "  |> sum(column: \"{$field}\")\n";
-                    break;
-                case 'count':
-                    $fluxQuery .= "  |> count(column: \"{$field}\")\n";
-                    break;
-                case 'min':
-                    $fluxQuery .= "  |> min(column: \"{$field}\")\n";
-                    break;
-                case 'max':
-                    $fluxQuery .= "  |> max(column: \"{$field}\")\n";
-                    break;
-                case 'first':
-                    $fluxQuery .= "  |> first(column: \"{$field}\")\n";
-                    break;
-                case 'last':
-                    $fluxQuery .= "  |> last(column: \"{$field}\")\n";
-                    break;
-                case 'stddev':
-                    $fluxQuery .= "  |> stddev(column: \"{$field}\")\n";
-                    break;
-                default:
-                    // Handle percentile
-                    if (str_starts_with($function, 'percentile_')) {
-                        $percentile = substr($function, 11);
-                        $fluxQuery .= "  |> quantile(q: {$percentile}, column: \"{$field}\")\n";
-                    } else {
-                        // For custom or unsupported aggregations, try to use them directly
-                        $fluxQuery .= "  |> {$function}(column: \"{$field}\")\n";
-                    }
+        if (count($aggregations) > 1) {
+            // For multiple aggregations, we need to duplicate the data for each aggregation
+            $fieldCopies = [];
+            $originalField = $aggregations[0]['field'] ?? 'value';
+
+            // Create copies of the original field for each aggregation after the first one
+            for ($i = 1; $i < count($aggregations); $i++) {
+                $copyName = $originalField . "_copy" . $i;
+                $fieldCopies[] = $copyName;
+                $fluxQuery .= "  |> duplicate(column: \"{$originalField}\", as: \"{$copyName}\")\n";
             }
 
-            // Add alias if specified
-            if ($alias) {
-                $fluxQuery .= "  |> rename(columns: {_value: \"{$alias}\"})\n";
+            // Apply each aggregation to its respective field
+            foreach ($aggregations as $index => $agg) {
+                $function = strtolower($agg['function']);
+                $field = $index === 0 ? ($agg['field'] ?? 'value') : $fieldCopies[$index - 1];
+                $alias = $agg['alias'] ?? null;
+
+                // Apply aggregation
+                switch ($function) {
+                    case 'mean':
+                    case 'avg':
+                        $fluxQuery .= "  |> mean(column: \"{$field}\")\n";
+                        break;
+                    case 'sum':
+                        $fluxQuery .= "  |> sum(column: \"{$field}\")\n";
+                        break;
+                    case 'count':
+                        $fluxQuery .= "  |> count(column: \"{$field}\")\n";
+                        break;
+                    case 'min':
+                        $fluxQuery .= "  |> min(column: \"{$field}\")\n";
+                        break;
+                    case 'max':
+                        $fluxQuery .= "  |> max(column: \"{$field}\")\n";
+                        break;
+                    case 'first':
+                        $fluxQuery .= "  |> first(column: \"{$field}\")\n";
+                        break;
+                    case 'last':
+                        $fluxQuery .= "  |> last(column: \"{$field}\")\n";
+                        break;
+                    case 'stddev':
+                        $fluxQuery .= "  |> stddev(column: \"{$field}\")\n";
+                        break;
+                    default:
+                        // Handle percentile
+                        if (str_starts_with($function, 'percentile_')) {
+                            $percentile = substr($function, 11);
+                            $fluxQuery .= "  |> quantile(q: {$percentile}, column: \"{$field}\")\n";
+                        } else {
+                            // For custom or unsupported aggregations, try to use them directly
+                            $fluxQuery .= "  |> {$function}(column: \"{$field}\")\n";
+                        }
+                }
+
+                // Add alias if specified
+                if ($alias) {
+                    $fluxQuery .= "  |> rename(columns: {_value: \"{$alias}\"})\n";
+                }
+            }
+        } else {
+            // For a single aggregation, apply it directly
+            foreach ($aggregations as $agg) {
+                $function = strtolower($agg['function']);
+                $field = $agg['field'] ?? '_value';
+                $alias = $agg['alias'] ?? null;
+
+                // Apply aggregation
+                switch ($function) {
+                    case 'mean':
+                    case 'avg':
+                        $fluxQuery .= "  |> mean(column: \"{$field}\")\n";
+                        break;
+                    case 'sum':
+                        $fluxQuery .= "  |> sum(column: \"{$field}\")\n";
+                        break;
+                    case 'count':
+                        $fluxQuery .= "  |> count(column: \"{$field}\")\n";
+                        break;
+                    case 'min':
+                        $fluxQuery .= "  |> min(column: \"{$field}\")\n";
+                        break;
+                    case 'max':
+                        $fluxQuery .= "  |> max(column: \"{$field}\")\n";
+                        break;
+                    case 'first':
+                        $fluxQuery .= "  |> first(column: \"{$field}\")\n";
+                        break;
+                    case 'last':
+                        $fluxQuery .= "  |> last(column: \"{$field}\")\n";
+                        break;
+                    case 'stddev':
+                        $fluxQuery .= "  |> stddev(column: \"{$field}\")\n";
+                        break;
+                    default:
+                        // Handle percentile
+                        if (str_starts_with($function, 'percentile_')) {
+                            $percentile = substr($function, 11);
+                            $fluxQuery .= "  |> quantile(q: {$percentile}, column: \"{$field}\")\n";
+                        } else {
+                            // For custom or unsupported aggregations, try to use them directly
+                            $fluxQuery .= "  |> {$function}(column: \"{$field}\")\n";
+                        }
+                }
+
+                // Add alias if specified
+                if ($alias) {
+                    $fluxQuery .= "  |> rename(columns: {_value: \"{$alias}\"})\n";
+                }
             }
         }
 
@@ -242,6 +308,9 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
         if ($query->getLimit() !== null) {
             $fluxQuery .= "  |> limit(n: {$query->getLimit()})\n";
         }
+
+        // Remove trailing newline if present
+        $fluxQuery = rtrim($fluxQuery);
 
         return new RawQuery($fluxQuery);
     }

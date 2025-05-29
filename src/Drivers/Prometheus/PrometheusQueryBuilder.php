@@ -39,11 +39,11 @@ class PrometheusQueryBuilder implements QueryBuilderInterface
                     $labelSelectors[] = "{$field}!~\"{$value}\"";
                     break;
                 case 'IN':
-                    $values = array_map(fn ($v) => "\"$v\"", $condition->getValues());
+                    $values = $condition->getValues();
                     $labelSelectors[] = "{$field}=~\"^(".implode('|', $values).')$"';
                     break;
                 case 'NOT IN':
-                    $values = array_map(fn ($v) => "\"$v\"", $condition->getValues());
+                    $values = $condition->getValues();
                     $labelSelectors[] = "{$field}!~\"^(".implode('|', $values).')$"';
                     break;
                     // Other operators like >, <, >=, <= are not directly supported in label selectors
@@ -116,7 +116,13 @@ class PrometheusQueryBuilder implements QueryBuilderInterface
             // Handle group by (in Prometheus, this is done with 'by' clause)
             if (! empty($query->getGroupBy())) {
                 $groupBy = implode(',', $query->getGroupBy());
-                $promqlQuery = str_replace(')', " by ({$groupBy}))", $promqlQuery);
+                // Extract the function name and arguments
+                if (preg_match('/^(\w+)\((.*)\)$/', $promqlQuery, $matches)) {
+                    $function = $matches[1];
+                    $args = $matches[2];
+                    // Reconstruct with the correct syntax: function by (labels) (args)
+                    $promqlQuery = "{$function} by ({$groupBy}) ({$args})";
+                }
             }
         } else {
             // No aggregation, just use the metric selector

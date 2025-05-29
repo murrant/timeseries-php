@@ -83,10 +83,11 @@ When adding new features or fixing bugs, always add corresponding tests. Follow 
 
 1. Create test classes in the appropriate directory that mirrors the source code structure
 2. Name test classes with the suffix `Test` (e.g., `QueryTest`)
-3. Name test methods with the prefix `test` (e.g., `testSelect()`)
+3. Name test methods with the prefix `test` (e.g., `test_select()`)
 4. Use descriptive test method names that explain what is being tested
 5. Test both normal operation and edge cases/error conditions
 6. Use PHPUnit assertions to verify expected behavior
+7. Do not use assertStringContainsString in QueryBuilder tests.
 
 Example of a simple test:
 
