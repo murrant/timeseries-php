@@ -8,7 +8,7 @@ use TimeSeriesPhp\Exceptions\QueryException;
 
 class Query
 {
-    private string $measurement;
+    private readonly string $measurement;
 
     /**
      * @var string[]
@@ -370,14 +370,14 @@ class Query
             $amount = (int) $matches[1];
             $unit = $matches[2];
 
-            switch ($unit) {
-                case 's': return new DateInterval("PT{$amount}S");
-                case 'm': return new DateInterval("PT{$amount}M");
-                case 'h': return new DateInterval("PT{$amount}H");
-                case 'd': return new DateInterval("P{$amount}D");
-                case 'w': return new DateInterval('P'.($amount * 7).'D');
-                case 'y': return new DateInterval("P{$amount}Y");
-            }
+            return match ($unit) {
+                's' => new DateInterval("PT{$amount}S"),
+                'm' => new DateInterval("PT{$amount}M"),
+                'h' => new DateInterval("PT{$amount}H"),
+                'd' => new DateInterval("P{$amount}D"),
+                'w' => new DateInterval('P'.($amount * 7).'D'),
+                'y' => new DateInterval("P{$amount}Y"),
+            };
         }
         throw new QueryException("Invalid duration format: {$duration}");
     }

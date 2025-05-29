@@ -12,7 +12,7 @@ use TimeSeriesPhp\Exceptions\QueryException;
 
 class RRDtoolQueryBuilder implements QueryBuilderInterface
 {
-    private RRDTagStrategyInterface $tagStrategy;
+    private readonly RRDTagStrategyInterface $tagStrategy;
 
     public function __construct(RRDTagStrategyInterface $tagStrategy)
     {
@@ -153,55 +153,46 @@ class RRDtoolQueryBuilder implements QueryBuilderInterface
 
             $varName = "agg{$varCounter}";
 
-            switch ($function) {
-                case 'SUM':
+            match ($function) {
+                'SUM' =>
                     // Sum all matching data sources
-                    $this->buildSumAggregation($rawQuery, $varName, $field);
-                    break;
+                    $this->buildSumAggregation($rawQuery, $varName, $field),
 
-                case 'AVG':
-                case 'AVERAGE':
+                'AVG', 'AVERAGE' =>
                     // Average all matching data sources
-                    $this->buildAvgAggregation($rawQuery, $varName, $field);
-                    break;
+                    $this->buildAvgAggregation($rawQuery, $varName, $field),
 
-                case 'MIN':
+                'MIN' =>
                     // Minimum across all data sources
-                    $this->buildMinAggregation($rawQuery, $varName, $field);
-                    break;
+                    $this->buildMinAggregation($rawQuery, $varName, $field),
 
-                case 'MAX':
+                'MAX' =>
                     // Maximum across all data sources
-                    $this->buildMaxAggregation($rawQuery, $varName, $field);
-                    break;
+                    $this->buildMaxAggregation($rawQuery, $varName, $field),
 
-                case 'COUNT':
+                'COUNT' =>
                     // Count non-null values
-                    $this->buildCountAggregation($rawQuery, $varName, $field);
-                    break;
+                    $this->buildCountAggregation($rawQuery, $varName, $field),
 
-                case 'FIRST':
+                'FIRST' =>
                     // Use VDEF to get first value
-                    $rawQuery->vdef($varName, 'v1,FIRST');
-                    break;
+                    $rawQuery->vdef($varName, 'v1,FIRST'),
 
-                case 'LAST':
+                'LAST' =>
                     // Use VDEF to get last value
-                    $rawQuery->vdef($varName, 'v1,LAST');
-                    break;
+                    $rawQuery->vdef($varName, 'v1,LAST'),
 
-                case 'STDDEV':
+                'STDDEV' =>
                     // Standard deviation using RPN
-                    $this->buildStddevAggregation($rawQuery, $varName, $field);
-                    break;
+                    $this->buildStddevAggregation($rawQuery, $varName, $field),
 
-                default:
-                    if (str_starts_with($function, 'PERCENTILE_')) {
+                default =>
+                    // Handle percentile or do nothing
+                    str_starts_with($function, 'PERCENTILE_') ? (function () use ($rawQuery, $varName, $function) {
                         $percentile = floatval(substr($function, 11));
                         $rawQuery->vdef($varName, "v1,{$percentile},PERCENT");
-                    }
-                    break;
-            }
+                    })() : null,
+            };
 
             $varCounter++;
         }

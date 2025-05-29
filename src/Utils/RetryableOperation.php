@@ -292,7 +292,7 @@ class RetryableOperation
                 continue;
             }
 
-            $operationId = (string) str_replace('failed_operation_', '', $key);
+            $operationId = str_starts_with($key, 'failed_operation_') ? substr($key, strlen('failed_operation_')) : $key;
             $failedOperation = $cache->get($key);
 
             if ($failedOperation !== null && $failedOperation instanceof self) {

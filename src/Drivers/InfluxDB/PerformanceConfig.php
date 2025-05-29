@@ -51,11 +51,11 @@ class PerformanceConfig extends AbstractDriverConfig
         $unit = strtoupper(substr($limit, -1));
         $value = (int) substr($limit, 0, -1);
 
-        switch ($unit) {
-            case 'G': return $value * 1024 * 1024 * 1024;
-            case 'M': return $value * 1024 * 1024;
-            case 'K': return $value * 1024;
-            default: return (int) $limit;
-        }
+        return match ($unit) {
+            'G' => $value * 1024 * 1024 * 1024,
+            'M' => $value * 1024 * 1024,
+            'K' => $value * 1024,
+            default => (int) $limit,
+        };
     }
 }

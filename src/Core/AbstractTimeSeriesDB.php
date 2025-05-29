@@ -21,12 +21,20 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
         return $this->connected;
     }
 
+    /**
+     * Get the driver name from the class name
+     */
+    protected function getDriverName(): string
+    {
+        return basename(str_replace('\\', '/', get_class($this)));
+    }
+
     public function connect(ConfigInterface $config): bool
     {
         $this->config = $config;
 
         Logger::info('Connecting to time series database', [
-            'driver' => basename(str_replace('\\', '/', get_class($this))),
+            'driver' => $this->getDriverName(),
         ]);
 
         return $this->doConnect();
@@ -37,7 +45,7 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
     public function query(Query $query): QueryResult
     {
         Logger::debug('Executing query', [
-            'driver' => basename(str_replace('\\', '/', get_class($this))),
+            'driver' => $this->getDriverName(),
             'measurement' => $query->getMeasurement(),
             'fields' => $query->getFields(),
             'conditions' => $query->getConditions(),
@@ -47,7 +55,7 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
         $result = $this->rawQuery($rawQuery);
 
         Logger::debug('Query executed', [
-            'driver' => basename(str_replace('\\', '/', get_class($this))),
+            'driver' => $this->getDriverName(),
             'points_count' => $result->count(),
         ]);
 
@@ -70,14 +78,14 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
     {
         if (empty($dataPoints)) {
             Logger::debug('Skipping empty batch write', [
-                'driver' => basename(str_replace('\\', '/', get_class($this))),
+                'driver' => $this->getDriverName(),
             ]);
 
             return true;
         }
 
         Logger::debug('Writing batch of data points', [
-            'driver' => basename(str_replace('\\', '/', get_class($this))),
+            'driver' => $this->getDriverName(),
             'count' => count($dataPoints),
             'measurements' => array_unique(array_map(fn ($dp) => $dp->getMeasurement(), $dataPoints)),
         ]);
@@ -91,7 +99,7 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
                     $success = false;
                     $errors[$index] = "Write failed for data point at index {$index}";
                     Logger::warning('Write failed for data point', [
-                        'driver' => basename(str_replace('\\', '/', get_class($this))),
+                        'driver' => $this->getDriverName(),
                         'index' => $index,
                         'measurement' => $dataPoint->getMeasurement(),
                     ]);
@@ -100,7 +108,7 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
                 $success = false;
                 $errors[$index] = $e->getMessage();
                 Logger::error('Exception during write operation', [
-                    'driver' => basename(str_replace('\\', '/', get_class($this))),
+                    'driver' => $this->getDriverName(),
                     'exception' => get_class($e),
                     'message' => $e->getMessage(),
                     'index' => $index,
@@ -112,7 +120,7 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
         // If all writes failed with the same error, throw an exception
         if (count($errors) === count($dataPoints) && count(array_unique($errors)) === 1) {
             Logger::error('All writes failed with the same error', [
-                'driver' => basename(str_replace('\\', '/', get_class($this))),
+                'driver' => $this->getDriverName(),
                 'error' => reset($errors),
                 'count' => count($dataPoints),
             ]);
@@ -120,7 +128,7 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
         }
 
         Logger::debug('Batch write completed', [
-            'driver' => basename(str_replace('\\', '/', get_class($this))),
+            'driver' => $this->getDriverName(),
             'success' => $success,
             'total' => count($dataPoints),
             'errors' => count($errors),

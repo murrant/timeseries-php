@@ -23,31 +23,26 @@ class PrometheusQueryBuilder implements QueryBuilderInterface
             $value = $condition->getScalarValue();
 
             // Convert operators to Prometheus format
-            switch ($operator) {
-                case '=':
-                case '==':
-                    $labelSelectors[] = "{$field}=\"{$value}\"";
-                    break;
-                case '!=':
-                case '<>':
-                    $labelSelectors[] = "{$field}!=\"{$value}\"";
-                    break;
-                case 'REGEX':
-                    $labelSelectors[] = "{$field}=~\"{$value}\"";
-                    break;
-                case 'NOT REGEX':
-                    $labelSelectors[] = "{$field}!~\"{$value}\"";
-                    break;
-                case 'IN':
-                    $values = $condition->getValues();
-                    $labelSelectors[] = "{$field}=~\"^(".implode('|', $values).')$"';
-                    break;
-                case 'NOT IN':
-                    $values = $condition->getValues();
-                    $labelSelectors[] = "{$field}!~\"^(".implode('|', $values).')$"';
-                    break;
+            if ($operator !== 'BETWEEN') {
+                $labelSelectors[] = match ($operator) {
+                    '=', '==' => "{$field}=\"{$value}\"",
+                    '!=', '<>' => "{$field}!=\"{$value}\"",
+                    'REGEX' => "{$field}=~\"{$value}\"",
+                    'NOT REGEX' => "{$field}!~\"{$value}\"",
+                    'IN' => (function () use ($field, $condition) {
+                        $values = $condition->getValues();
+
+                        return "{$field}=~\"^(".implode('|', $values).')$"';
+                    })(),
+                    'NOT IN' => (function () use ($field, $condition) {
+                        $values = $condition->getValues();
+
+                        return "{$field}!~\"^(".implode('|', $values).')$"';
+                    })(),
                     // Other operators like >, <, >=, <= are not directly supported in label selectors
                     // They would need to be handled in post-processing or with specific functions
+                    default => "{$field}=\"{$value}\"", // Default to equality
+                };
             }
         }
 
@@ -56,14 +51,11 @@ class PrometheusQueryBuilder implements QueryBuilderInterface
         $metricSelector = $metric.$labelSelectorStr;
 
         // Handle time range
-        $timeRange = '';
-        if ($query->getStartTime() && $query->getEndTime()) {
-            // In PromQL, time ranges are typically handled by the HTTP API parameters, not in the query itself
-            // But we can add a comment to indicate the intended time range
-            $timeRange = " # time range: {$query->getStartTime()->format('c')} to {$query->getEndTime()->format('c')}";
-        } elseif ($query->getRelativeTime()) {
-            $timeRange = ' # relative time: '.$this->formatDateInterval($query->getRelativeTime());
-        }
+        $timeRange = match (true) {
+            $query->getStartTime() && $query->getEndTime() => " # time range: {$query->getStartTime()->format('c')} to {$query->getEndTime()->format('c')}",
+            $query->getRelativeTime() !== null => ' # relative time: '.$this->formatDateInterval($query->getRelativeTime()),
+            default => '',
+        };
 
         // Handle aggregations
         if (! empty($query->getAggregations())) {
@@ -72,46 +64,33 @@ class PrometheusQueryBuilder implements QueryBuilderInterface
             $function = strtolower($agg['function']);
 
             // Map common aggregation functions to Prometheus functions
-            switch (substr($function, 0, strpos($function, '_') ?: null)) {
-                case 'avg':
-                case 'mean':
-                    $promqlQuery = "avg({$metricSelector})";
-                    break;
-                case 'sum':
-                    $promqlQuery = "sum({$metricSelector})";
-                    break;
-                case 'min':
-                    $promqlQuery = "min({$metricSelector})";
-                    break;
-                case 'max':
-                    $promqlQuery = "max({$metricSelector})";
-                    break;
-                case 'count':
-                    $promqlQuery = "count({$metricSelector})";
-                    break;
-                case 'stddev':
-                    $promqlQuery = "stddev({$metricSelector})";
-                    break;
-                case 'percentile':
+            $functionPrefix = substr($function, 0, strpos($function, '_') ?: strlen($function));
+            $promqlQuery = match ($functionPrefix) {
+                'avg', 'mean' => "avg({$metricSelector})",
+                'sum' => "sum({$metricSelector})",
+                'min' => "min({$metricSelector})",
+                'max' => "max({$metricSelector})",
+                'count' => "count({$metricSelector})",
+                'stddev' => "stddev({$metricSelector})",
+                'percentile' => (function () use ($function, $metricSelector) {
                     // Extract percentile value from the function name (e.g., PERCENTILE_95 -> 0.95)
                     if (str_starts_with($function, 'percentile_')) {
                         $percentileValue = substr($function, 11);
                         if ($percentileValue !== '' && is_numeric($percentileValue)) {
                             $percentile = (float) $percentileValue / 100;
-                            $promqlQuery = "quantile({$percentile}, {$metricSelector})";
+
+                            return "quantile({$percentile}, {$metricSelector})";
                         } else {
                             // Default to 50th percentile if no valid value is provided
-                            $promqlQuery = "quantile(0.5, {$metricSelector})";
+                            return "quantile(0.5, {$metricSelector})";
                         }
                     } else {
                         // Default to the original function name
-                        $promqlQuery = "{$function}({$metricSelector})";
+                        return "{$function}({$metricSelector})";
                     }
-                    break;
-                default:
-                    // Use the function name as-is
-                    $promqlQuery = "{$function}({$metricSelector})";
-            }
+                })(),
+                default => "{$function}({$metricSelector})",
+            };
 
             // Handle group by (in Prometheus, this is done with 'by' clause)
             if (! empty($query->getGroupBy())) {
@@ -192,14 +171,14 @@ class PrometheusQueryBuilder implements QueryBuilderInterface
             $amount = $matches[1];
             $unit = $matches[2];
 
-            switch ($unit) {
-                case 's': return "{$amount}s";
-                case 'm': return "{$amount}m";
-                case 'h': return "{$amount}h";
-                case 'd': return "{$amount}d";
-                case 'w': return "{$amount}w";
-                case 'y': return "{$amount}y";
-            }
+            return match ($unit) {
+                's' => "{$amount}s",
+                'm' => "{$amount}m",
+                'h' => "{$amount}h",
+                'd' => "{$amount}d",
+                'w' => "{$amount}w",
+                'y' => "{$amount}y",
+            };
         }
 
         // Default fallback

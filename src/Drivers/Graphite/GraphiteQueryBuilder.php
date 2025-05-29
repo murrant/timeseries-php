@@ -9,7 +9,7 @@ use TimeSeriesPhp\Core\RawQueryInterface;
 
 class GraphiteQueryBuilder implements QueryBuilderInterface
 {
-    private string $prefix;
+    private readonly string $prefix;
 
     public function __construct(string $prefix = '')
     {
@@ -44,14 +44,12 @@ class GraphiteQueryBuilder implements QueryBuilderInterface
         }
 
         // Handle time range
-        $from = '-1h';
+        $from = match (true) {
+            $query->getStartTime() !== null => $query->getStartTime()->getTimestamp(),
+            $query->getRelativeTime() !== null => '-'.$this->formatDateInterval($query->getRelativeTime()),
+            default => '-1h',
+        };
         $until = 'now';
-
-        if ($query->getStartTime()) {
-            $from = $query->getStartTime()->getTimestamp();
-        } elseif ($query->getRelativeTime()) {
-            $from = '-'.$this->formatDateInterval($query->getRelativeTime());
-        }
 
         if ($query->getEndTime()) {
             $until = $query->getEndTime()->getTimestamp();
@@ -70,31 +68,20 @@ class GraphiteQueryBuilder implements QueryBuilderInterface
                 $alias = $agg['alias'] ?? null;
                 $aggTarget = $baseTarget;
 
-                switch ($function) {
-                    case 'mean':
-                    case 'avg':
-                        $aggTarget = "averageSeries($aggTarget)";
-                        break;
-                    case 'sum':
-                        $aggTarget = "sumSeries($aggTarget)";
-                        break;
-                    case 'count':
-                        $aggTarget = "countSeries($aggTarget)";
-                        break;
-                    case 'min':
-                        $aggTarget = "minSeries($aggTarget)";
-                        break;
-                    case 'max':
-                        $aggTarget = "maxSeries($aggTarget)";
-                        break;
-                    case 'stddev':
-                        $aggTarget = "stdev($aggTarget)";
-                        break;
-                    case 'percentile':
+                $aggTarget = match ($function) {
+                    'mean', 'avg' => "averageSeries($aggTarget)",
+                    'sum' => "sumSeries($aggTarget)",
+                    'count' => "countSeries($aggTarget)",
+                    'min' => "minSeries($aggTarget)",
+                    'max' => "maxSeries($aggTarget)",
+                    'stddev' => "stdev($aggTarget)",
+                    'percentile' => (function () use ($function, $aggTarget) {
                         $percentile = substr($function, 11);
-                        $aggTarget = "percentileOfSeries($aggTarget, $percentile)";
-                        break;
-                }
+
+                        return "percentileOfSeries($aggTarget, $percentile)";
+                    })(),
+                    default => $aggTarget,
+                };
 
                 // Handle time grouping for each aggregation
                 if ($query->getInterval()) {
@@ -118,31 +105,20 @@ class GraphiteQueryBuilder implements QueryBuilderInterface
             $function = strtolower($agg['function']);
             $alias = $agg['alias'] ?? null;
 
-            switch ($function) {
-                case 'mean':
-                case 'avg':
-                    $target = "averageSeries($target)";
-                    break;
-                case 'sum':
-                    $target = "sumSeries($target)";
-                    break;
-                case 'count':
-                    $target = "countSeries($target)";
-                    break;
-                case 'min':
-                    $target = "minSeries($target)";
-                    break;
-                case 'max':
-                    $target = "maxSeries($target)";
-                    break;
-                case 'stddev':
-                    $target = "stdev($target)";
-                    break;
-                case 'percentile':
+            $target = match ($function) {
+                'mean', 'avg' => "averageSeries($target)",
+                'sum' => "sumSeries($target)",
+                'count' => "countSeries($target)",
+                'min' => "minSeries($target)",
+                'max' => "maxSeries($target)",
+                'stddev' => "stdev($target)",
+                'percentile' => (function () use ($function, $target) {
                     $percentile = substr($function, 11);
-                    $target = "percentileOfSeries($target, $percentile)";
-                    break;
-            }
+
+                    return "percentileOfSeries($target, $percentile)";
+                })(),
+                default => $target,
+            };
 
             // Add alias if specified
             if ($alias) {
@@ -171,16 +147,12 @@ class GraphiteQueryBuilder implements QueryBuilderInterface
             $scalarValue = $condition->getScalarValue();
 
             // We can only handle certain types of conditions in Graphite
-            if (($operator === '=' || $operator === '==')) {
-                // For equality, we can use a more specific path
-                $target = str_replace('*', (string) $scalarValue, $target);
-            } elseif (($operator === '!=' || $operator === '<>')) {
-                // For inequality, we can use exclude()
-                $target = "exclude($target, \"$scalarValue\")";
-            } elseif ($operator === 'REGEX') {
-                // For regex, we can use grep()
-                $target = "grep($target, \"$scalarValue\")";
-            }
+            $target = match (true) {
+                $operator === '=' || $operator === '==' => str_replace('*', (string) $scalarValue, $target),
+                $operator === '!=' || $operator === '<>' => "exclude($target, \"$scalarValue\")",
+                $operator === 'REGEX' => "grep($target, \"$scalarValue\")",
+                default => $target,
+            };
         }
 
         // Handle limit
@@ -249,13 +221,13 @@ class GraphiteQueryBuilder implements QueryBuilderInterface
             $amount = $matches[1];
             $unit = $matches[2];
 
-            switch ($unit) {
-                case 's': return "{$amount}second";
-                case 'm': return "{$amount}minute";
-                case 'h': return "{$amount}hour";
-                case 'd': return "{$amount}day";
-                case 'w': return "{$amount}week";
-            }
+            return match ($unit) {
+                's' => "{$amount}second",
+                'm' => "{$amount}minute",
+                'h' => "{$amount}hour",
+                'd' => "{$amount}day",
+                'w' => "{$amount}week",
+            };
         }
 
         // Default fallback

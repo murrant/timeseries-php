@@ -11,7 +11,7 @@ use TimeSeriesPhp\Exceptions\RawQueryException;
 
 class InfluxDBQueryBuilder implements QueryBuilderInterface
 {
-    private string $bucket;
+    private readonly string $bucket;
 
     public function __construct(string $bucket)
     {
@@ -72,19 +72,15 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
             // For InfluxDB, we need to handle different types of conditions
             if ($field === 'time') {
                 // Time-based conditions are handled differently
-                if ($operator === '==') {
-                    $fluxQuery .= "  |> filter(fn: (r) => r._time == {$value})\n";
-                } elseif ($operator === '>') {
-                    $fluxQuery .= "  |> filter(fn: (r) => r._time > {$value})\n";
-                } elseif ($operator === '>=') {
-                    $fluxQuery .= "  |> filter(fn: (r) => r._time >= {$value})\n";
-                } elseif ($operator === '<') {
-                    $fluxQuery .= "  |> filter(fn: (r) => r._time < {$value})\n";
-                } elseif ($operator === '<=') {
-                    $fluxQuery .= "  |> filter(fn: (r) => r._time <= {$value})\n";
-                } elseif ($operator === '!=') {
-                    $fluxQuery .= "  |> filter(fn: (r) => r._time != {$value})\n";
-                }
+                $fluxQuery .= match ($operator) {
+                    '==' => "  |> filter(fn: (r) => r._time == {$value})\n",
+                    '>' => "  |> filter(fn: (r) => r._time > {$value})\n",
+                    '>=' => "  |> filter(fn: (r) => r._time >= {$value})\n",
+                    '<' => "  |> filter(fn: (r) => r._time < {$value})\n",
+                    '<=' => "  |> filter(fn: (r) => r._time <= {$value})\n",
+                    '!=' => "  |> filter(fn: (r) => r._time != {$value})\n",
+                    default => '',
+                };
             } elseif ($operator === 'IN') {
                 // Handle IN operator
                 $values = array_map(fn ($v) => $this->formatValue($v), $condition->getValues());
@@ -165,42 +161,19 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
                 $alias = $agg['alias'] ?? null;
 
                 // Apply aggregation
-                switch ($function) {
-                    case 'mean':
-                    case 'avg':
-                        $fluxQuery .= "  |> mean(column: \"{$field}\")\n";
-                        break;
-                    case 'sum':
-                        $fluxQuery .= "  |> sum(column: \"{$field}\")\n";
-                        break;
-                    case 'count':
-                        $fluxQuery .= "  |> count(column: \"{$field}\")\n";
-                        break;
-                    case 'min':
-                        $fluxQuery .= "  |> min(column: \"{$field}\")\n";
-                        break;
-                    case 'max':
-                        $fluxQuery .= "  |> max(column: \"{$field}\")\n";
-                        break;
-                    case 'first':
-                        $fluxQuery .= "  |> first(column: \"{$field}\")\n";
-                        break;
-                    case 'last':
-                        $fluxQuery .= "  |> last(column: \"{$field}\")\n";
-                        break;
-                    case 'stddev':
-                        $fluxQuery .= "  |> stddev(column: \"{$field}\")\n";
-                        break;
-                    default:
-                        // Handle percentile
-                        if (str_starts_with($function, 'percentile_')) {
-                            $percentile = substr($function, 11);
-                            $fluxQuery .= "  |> quantile(q: {$percentile}, column: \"{$field}\")\n";
-                        } else {
-                            // For custom or unsupported aggregations, try to use them directly
-                            $fluxQuery .= "  |> {$function}(column: \"{$field}\")\n";
-                        }
-                }
+                $fluxQuery .= match ($function) {
+                    'mean', 'avg' => "  |> mean(column: \"{$field}\")\n",
+                    'sum' => "  |> sum(column: \"{$field}\")\n",
+                    'count' => "  |> count(column: \"{$field}\")\n",
+                    'min' => "  |> min(column: \"{$field}\")\n",
+                    'max' => "  |> max(column: \"{$field}\")\n",
+                    'first' => "  |> first(column: \"{$field}\")\n",
+                    'last' => "  |> last(column: \"{$field}\")\n",
+                    'stddev' => "  |> stddev(column: \"{$field}\")\n",
+                    default => str_starts_with($function, 'percentile_')
+                        ? '  |> quantile(q: '.substr($function, 11).", column: \"{$field}\")\n"
+                        : "  |> {$function}(column: \"{$field}\")\n"
+                };
 
                 // Add alias if specified
                 if ($alias) {
@@ -215,42 +188,19 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
                 $alias = $agg['alias'] ?? null;
 
                 // Apply aggregation
-                switch ($function) {
-                    case 'mean':
-                    case 'avg':
-                        $fluxQuery .= "  |> mean(column: \"{$field}\")\n";
-                        break;
-                    case 'sum':
-                        $fluxQuery .= "  |> sum(column: \"{$field}\")\n";
-                        break;
-                    case 'count':
-                        $fluxQuery .= "  |> count(column: \"{$field}\")\n";
-                        break;
-                    case 'min':
-                        $fluxQuery .= "  |> min(column: \"{$field}\")\n";
-                        break;
-                    case 'max':
-                        $fluxQuery .= "  |> max(column: \"{$field}\")\n";
-                        break;
-                    case 'first':
-                        $fluxQuery .= "  |> first(column: \"{$field}\")\n";
-                        break;
-                    case 'last':
-                        $fluxQuery .= "  |> last(column: \"{$field}\")\n";
-                        break;
-                    case 'stddev':
-                        $fluxQuery .= "  |> stddev(column: \"{$field}\")\n";
-                        break;
-                    default:
-                        // Handle percentile
-                        if (str_starts_with($function, 'percentile_')) {
-                            $percentile = substr($function, 11);
-                            $fluxQuery .= "  |> quantile(q: {$percentile}, column: \"{$field}\")\n";
-                        } else {
-                            // For custom or unsupported aggregations, try to use them directly
-                            $fluxQuery .= "  |> {$function}(column: \"{$field}\")\n";
-                        }
-                }
+                $fluxQuery .= match ($function) {
+                    'mean', 'avg' => "  |> mean(column: \"{$field}\")\n",
+                    'sum' => "  |> sum(column: \"{$field}\")\n",
+                    'count' => "  |> count(column: \"{$field}\")\n",
+                    'min' => "  |> min(column: \"{$field}\")\n",
+                    'max' => "  |> max(column: \"{$field}\")\n",
+                    'first' => "  |> first(column: \"{$field}\")\n",
+                    'last' => "  |> last(column: \"{$field}\")\n",
+                    'stddev' => "  |> stddev(column: \"{$field}\")\n",
+                    default => str_starts_with($function, 'percentile_')
+                        ? '  |> quantile(q: '.substr($function, 11).", column: \"{$field}\")\n"
+                        : "  |> {$function}(column: \"{$field}\")\n"
+                };
 
                 // Add alias if specified
                 if ($alias) {
@@ -264,25 +214,14 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
             $policy = $query->getFillPolicy();
             $value = $query->getFillValue();
 
-            switch ($policy) {
-                case 'null':
-                    $fluxQuery .= "  |> fill(value: null)\n";
-                    break;
-                case 'none':
-                    // In Flux, not filling is the default behavior
-                    break;
-                case 'previous':
-                    $fluxQuery .= "  |> fill(usePrevious: true)\n";
-                    break;
-                case 'linear':
-                    $fluxQuery .= "  |> interpolate.linear()\n";
-                    break;
-                case 'value':
-                    if ($value !== null) {
-                        $fluxQuery .= "  |> fill(value: {$value})\n";
-                    }
-                    break;
-            }
+            $fluxQuery .= match ($policy) {
+                'null' => "  |> fill(value: null)\n",
+                'none' => '', // In Flux, not filling is the default behavior
+                'previous' => "  |> fill(usePrevious: true)\n",
+                'linear' => "  |> interpolate.linear()\n",
+                'value' => $value !== null ? "  |> fill(value: {$value})\n" : '',
+                default => '',
+            };
         }
 
         // Add mathematical expressions
@@ -349,19 +288,14 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
      */
     private function formatValue(mixed $value): string
     {
-        if (is_string($value)) {
-            return '"'.addslashes($value).'"';
-        } elseif (is_bool($value)) {
-            return $value ? 'true' : 'false';
-        } elseif (is_null($value)) {
-            return 'null';
-        } elseif ($value instanceof \DateTime) {
-            return 'time(v: "'.$value->format('c').'")';
-        } elseif (is_numeric($value)) {
-            return strval($value);
-        }
-
-        throw new QueryException('Unsupported value type: '.gettype($value).' ('.var_export($value, true).')');
+        return match (true) {
+            is_string($value) => '"'.addslashes($value).'"',
+            is_bool($value) => $value ? 'true' : 'false',
+            is_null($value) => 'null',
+            $value instanceof \DateTime => 'time(v: "'.$value->format('c').'")',
+            is_numeric($value) => strval($value),
+            default => throw new QueryException('Unsupported value type: '.gettype($value).' ('.var_export($value, true).')')
+        };
     }
 
     private function formatDateInterval(\DateInterval $interval): string
@@ -399,13 +333,13 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
             $amount = $matches[1];
             $unit = $matches[2];
 
-            switch ($unit) {
-                case 's': return "{$amount}s";
-                case 'm': return "{$amount}m";
-                case 'h': return "{$amount}h";
-                case 'd': return "{$amount}d";
-                case 'w': return "{$amount}w";
-            }
+            return match ($unit) {
+                's' => "{$amount}s",
+                'm' => "{$amount}m",
+                'h' => "{$amount}h",
+                'd' => "{$amount}d",
+                'w' => "{$amount}w",
+            };
         }
 
         // Default fallback
