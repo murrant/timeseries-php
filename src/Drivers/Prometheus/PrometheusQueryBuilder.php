@@ -64,7 +64,7 @@ class PrometheusQueryBuilder implements QueryBuilderInterface
             $function = strtolower($agg['function']);
 
             // Map common aggregation functions to Prometheus functions
-            $functionPrefix = substr($function, 0, strpos($function, '_') ?: strlen($function));
+            $functionPrefix = str_contains($function, '_') ? explode('_', $function)[0] : $function;
             $promqlQuery = match ($functionPrefix) {
                 'avg', 'mean' => "avg({$metricSelector})",
                 'sum' => "sum({$metricSelector})",

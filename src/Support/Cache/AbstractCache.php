@@ -11,9 +11,9 @@ use TimeSeriesPhp\Exceptions\TSDBException;
  */
 abstract class AbstractCache implements CacheInterface
 {
-    protected string $prefix;
+    protected readonly string $prefix;
 
-    protected bool $enabled;
+    protected readonly bool $enabled;
 
     /**
      * Create a new Cache instance with the given configuration

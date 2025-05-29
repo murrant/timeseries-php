@@ -9,9 +9,9 @@ use TimeSeriesPhp\Config\CacheConfig;
  */
 class FileCache extends AbstractCache
 {
-    protected string $path;
+    protected readonly string $path;
 
-    protected int $permissions;
+    protected readonly int $permissions;
 
     /**
      * Create a new FileCache instance with the given configuration

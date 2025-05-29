@@ -17,7 +17,7 @@ class FolderStrategy implements RRDTagStrategyInterface
      */
     public function __construct(
         public readonly string $baseDir,
-        protected array $folderTags = [],
+        protected readonly array $folderTags = [],
     ) {
         if (! str_ends_with($this->baseDir, File::DIRECTORY_SEPARATOR)) {
             throw new RRDtoolTagException('Base directory must end with a slash');

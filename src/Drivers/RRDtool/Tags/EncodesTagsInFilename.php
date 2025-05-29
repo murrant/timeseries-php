@@ -57,9 +57,9 @@ trait EncodesTagsInFilename
     {
         return array_unique(array_map(function ($filename) {
             $basename = basename($filename, '.rrd');
-            $part = substr($basename, 0, strpos($basename, File::TAG_VALUE_SEPARATOR) ?: null);
+            $part = substr($basename, 0, strpos($basename, File::TAG_VALUE_SEPARATOR) ?: strlen($basename));
 
-            return substr($part, 0, strrpos($part, File::TAG_SEPARATOR) ?: null);
+            return substr($part, 0, strrpos($part, File::TAG_SEPARATOR) ?: strlen($part));
         }, $filenames));
     }
 }
