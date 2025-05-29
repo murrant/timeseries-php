@@ -105,6 +105,37 @@ composer install
 ./vendor/bin/phpunit --coverage-html coverage
 ```
 
+### Integration and Benchmark Tests
+
+For running integration and benchmark tests, you need to set up the time series databases first. See [TSDB_SETUP.md](TSDB_SETUP.md) for detailed instructions on how to set up each database for testing.
+
+#### Running Integration Tests with Docker Compose
+
+The easiest way to run integration tests is to use the provided script that automatically starts Docker Compose, runs the tests, and then stops Docker Compose:
+
+```bash
+# Run all integration tests with Docker Compose
+./docker/run-integration-tests.sh
+```
+
+This script will:
+1. Start the Docker Compose services (InfluxDB, Prometheus, Graphite)
+2. Wait for the services to be ready
+3. Run the integration tests
+4. Stop the Docker Compose services
+
+#### Running Tests Manually
+
+If you prefer to run the tests manually:
+
+```bash
+# Run all integration tests
+./vendor/bin/phpunit --group integration
+
+# Run all benchmark tests
+./vendor/bin/phpunit --group benchmark
+```
+
 ## Test Approach
 
 The tests use the following approaches:

@@ -172,6 +172,35 @@ The test suite includes:
 - Tests for configuration classes
 - Tests for the factory class
 - Tests for database drivers using mocks
+- Integration tests for each database driver
+- Benchmark tests for performance evaluation
+
+### Integration and Benchmark Tests
+
+To run integration and benchmark tests, you need to set up the time series databases first. See [docs/TSDB_SETUP.md](docs/TSDB_SETUP.md) for detailed instructions on how to set up each database for testing.
+
+#### Running Integration Tests with Docker Compose
+
+The easiest way to run integration tests is to use the provided script that automatically starts Docker Compose, runs the tests, and then stops Docker Compose:
+
+```bash
+# Run all integration tests with Docker Compose
+./docker/run-integration-tests.sh
+```
+
+#### Running Tests Manually
+
+If you prefer to run the tests manually:
+
+```bash
+# Run all integration tests
+./vendor/bin/phpunit --group integration
+
+# Run all benchmark tests
+./vendor/bin/phpunit --group benchmark
+```
+
+For more information about testing, see [docs/TESTING.md](docs/TESTING.md).
 
 ## Contributing
 Open PRs ;)
