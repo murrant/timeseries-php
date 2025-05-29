@@ -7,8 +7,8 @@ use PHPUnit\Framework\TestCase;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Query\Query;
 use TimeSeriesPhp\Drivers\RRDtool\Config\RRDtoolConfig;
-use TimeSeriesPhp\Drivers\RRDtool\Driver;
 use TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolRawQuery;
+use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
 
 /**
@@ -18,7 +18,7 @@ use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
  */
 class RRDtoolXmlIntegrationTest extends TestCase
 {
-    private Driver $driver;
+    private RRDtoolDriver $driver;
 
     private RRDtoolConfig $config;
 
@@ -73,7 +73,7 @@ class RRDtoolXmlIntegrationTest extends TestCase
         ]);
 
         // Create a real RRDtoolDriver
-        $this->driver = new Driver;
+        $this->driver = new RRDtoolDriver;
         $this->driver->connect($this->config);
 
         // Restore RRD files from XML

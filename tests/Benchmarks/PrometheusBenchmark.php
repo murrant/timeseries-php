@@ -3,7 +3,7 @@
 namespace TimeSeriesPhp\Tests\Benchmarks;
 
 use TimeSeriesPhp\Drivers\Prometheus\Config\PrometheusConfig;
-use TimeSeriesPhp\Drivers\Prometheus\Driver;
+use TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver;
 
 /**
  * Benchmark tests for Prometheus driver.
@@ -34,7 +34,7 @@ class PrometheusBenchmark extends AbstractDriverBenchmark
         ]);
 
         // Create a real Prometheus Driver
-        $this->driver = new Driver;
+        $this->driver = new PrometheusDriver;
 
         try {
             $connected = $this->driver->connect($this->config);

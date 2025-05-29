@@ -8,7 +8,7 @@ use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Query\RawQuery;
 use TimeSeriesPhp\Drivers\Graphite\Config\GraphiteConfig;
-use TimeSeriesPhp\Drivers\Graphite\Driver;
+use TimeSeriesPhp\Drivers\Graphite\GraphiteDriver;
 
 /**
  * Integration test for Graphite driver that assumes Graphite is available
@@ -18,7 +18,7 @@ use TimeSeriesPhp\Drivers\Graphite\Driver;
  */
 class GraphiteIntegrationTest extends TestCase
 {
-    private Driver $driver;
+    private GraphiteDriver $driver;
 
     private GraphiteConfig $config;
 
@@ -46,7 +46,7 @@ class GraphiteIntegrationTest extends TestCase
         ]);
 
         // Create a real Graphite Driver
-        $this->driver = new Driver;
+        $this->driver = new GraphiteDriver;
 
         try {
             $connected = $this->driver->connect($this->config);
@@ -146,6 +146,6 @@ class GraphiteIntegrationTest extends TestCase
     {
         // Graphite doesn't have the concept of databases, but the method should return an empty array
         $databases = $this->driver->getDatabases();
-        $this->assertIsArray($databases);
+        $this->assertEmpty($databases, 'Graphite should return an empty array of databases');
     }
 }

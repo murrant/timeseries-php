@@ -3,7 +3,7 @@
 namespace TimeSeriesPhp\Tests\Benchmarks;
 
 use TimeSeriesPhp\Drivers\RRDtool\Config\RRDtoolConfig;
-use TimeSeriesPhp\Drivers\RRDtool\Driver;
+use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
 
 /**
@@ -63,7 +63,7 @@ class RRDtoolBenchmark extends AbstractDriverBenchmark
         ]);
 
         // Create a real RRDtoolDriver
-        $this->driver = new Driver;
+        $this->driver = new RRDtoolDriver;
 
         try {
             $connected = $this->driver->connect($this->config);

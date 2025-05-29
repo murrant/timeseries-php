@@ -9,13 +9,13 @@ use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Query\Query;
 use TimeSeriesPhp\Core\Query\RawQuery;
 use TimeSeriesPhp\Drivers\Graphite\Config\GraphiteConfig;
-use TimeSeriesPhp\Drivers\Graphite\Driver;
+use TimeSeriesPhp\Drivers\Graphite\GraphiteDriver;
 use TimeSeriesPhp\Drivers\Graphite\Query\GraphiteQueryBuilder;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 
 class GraphiteDriverTest extends TestCase
 {
-    private Driver $driver;
+    private GraphiteDriver $driver;
 
     private GraphiteConfig $config;
 
@@ -42,7 +42,7 @@ class GraphiteDriverTest extends TestCase
             ->willReturn('http://localhost:8080/render');
 
         // Create a real instance of GraphiteDriver with mocked methods
-        $this->driver = new class extends Driver
+        $this->driver = new class extends GraphiteDriver
         {
             protected function doConnect(): bool
             {

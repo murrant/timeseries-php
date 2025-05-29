@@ -14,7 +14,7 @@ use TimeSeriesPhp\Exceptions\Driver\WriteException;
 use TimeSeriesPhp\Exceptions\Query\RawQueryException;
 use TimeSeriesPhp\Support\Logs\Logger;
 
-class Driver extends AbstractTimeSeriesDB
+class GraphiteDriver extends AbstractTimeSeriesDB
 {
     /**
      * @var resource|null

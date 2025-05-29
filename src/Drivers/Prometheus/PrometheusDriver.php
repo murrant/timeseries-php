@@ -22,7 +22,7 @@ use TimeSeriesPhp\Exceptions\Query\RawQueryException;
 use TimeSeriesPhp\Exceptions\TSDBException;
 use TimeSeriesPhp\Support\Logs\Logger;
 
-class Driver extends AbstractTimeSeriesDB
+class PrometheusDriver extends AbstractTimeSeriesDB
 {
     private string $apiUrl;
 

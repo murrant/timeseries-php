@@ -3,7 +3,7 @@
 namespace TimeSeriesPhp\Tests\Benchmarks;
 
 use TimeSeriesPhp\Drivers\Graphite\Config\GraphiteConfig;
-use TimeSeriesPhp\Drivers\Graphite\Driver;
+use TimeSeriesPhp\Drivers\Graphite\GraphiteDriver;
 
 /**
  * Benchmark tests for Graphite driver.
@@ -38,7 +38,7 @@ class GraphiteBenchmark extends AbstractDriverBenchmark
         ]);
 
         // Create a real Graphite Driver
-        $this->driver = new Driver;
+        $this->driver = new GraphiteDriver;
 
         try {
             $connected = $this->driver->connect($this->config);

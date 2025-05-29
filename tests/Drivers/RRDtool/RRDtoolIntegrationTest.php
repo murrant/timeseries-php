@@ -7,8 +7,8 @@ use PHPUnit\Framework\TestCase;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Drivers\RRDtool\Config\RRDtoolConfig;
-use TimeSeriesPhp\Drivers\RRDtool\Driver;
 use TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolRawQuery;
+use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
 
 /**
@@ -19,7 +19,7 @@ use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
  */
 class RRDtoolIntegrationTest extends TestCase
 {
-    private Driver $driver;
+    private RRDtoolDriver $driver;
 
     private RRDtoolConfig $config;
 
@@ -71,7 +71,7 @@ class RRDtoolIntegrationTest extends TestCase
         ]);
 
         // Create a real RRDtoolDriver
-        $this->driver = new Driver;
+        $this->driver = new RRDtoolDriver;
         $this->driver->connect($this->config);
     }
 

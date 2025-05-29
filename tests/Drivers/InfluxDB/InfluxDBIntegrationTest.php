@@ -175,8 +175,9 @@ class InfluxDBIntegrationTest extends TestCase
         // Wait a moment for data to be available
         sleep(1);
 
-        // Use Flux query language
-        $fluxQuery = 'from(bucket:"'.$this->config->get('bucket').'") '.
+        // Use Flux query language with a hardcoded bucket name for the test
+        // This avoids phpstan issues with mixed types
+        $fluxQuery = 'from(bucket:"'.$this->testBucket.'") '.
                     '|> range(start: -1h) '.
                     '|> filter(fn: (r) => r._measurement == "cpu_usage" and r.host == "raw-query-test-server")';
 
@@ -196,14 +197,12 @@ class InfluxDBIntegrationTest extends TestCase
     public function test_list_databases(): void
     {
         $databases = $this->driver->getDatabases();
-        $this->assertIsArray($databases);
-        $this->assertNotEmpty($databases);
+        $this->assertNotEmpty($databases, 'InfluxDB should return a non-empty list of databases');
     }
 
     public function test_health(): void
     {
         $health = $this->driver->getHealth();
-        $this->assertIsArray($health);
-        $this->assertArrayHasKey('status', $health);
+        $this->assertArrayHasKey('status', $health, 'Health check should return an array with a status key');
     }
 }

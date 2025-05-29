@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Query\RawQuery;
 use TimeSeriesPhp\Drivers\Prometheus\Config\PrometheusConfig;
-use TimeSeriesPhp\Drivers\Prometheus\Driver;
+use TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver;
 
 /**
  * Integration test for Prometheus driver that assumes Prometheus is available
@@ -16,7 +16,7 @@ use TimeSeriesPhp\Drivers\Prometheus\Driver;
  */
 class PrometheusIntegrationTest extends TestCase
 {
-    private Driver $driver;
+    private PrometheusDriver $driver;
 
     private PrometheusConfig $config;
 
@@ -40,7 +40,7 @@ class PrometheusIntegrationTest extends TestCase
         ]);
 
         // Create a real Prometheus Driver
-        $this->driver = new Driver;
+        $this->driver = new PrometheusDriver;
 
         try {
             $connected = $this->driver->connect($this->config);
@@ -108,7 +108,7 @@ class PrometheusIntegrationTest extends TestCase
     {
         // Prometheus doesn't have the concept of databases, but the method should return an empty array
         $databases = $this->driver->getDatabases();
-        $this->assertIsArray($databases);
+        $this->assertEmpty($databases, 'Prometheus should return an empty array of databases');
     }
 
     public function test_create_database(): void

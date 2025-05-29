@@ -17,11 +17,11 @@ use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Query\Query;
 use TimeSeriesPhp\Core\Query\RawQuery;
 use TimeSeriesPhp\Drivers\Prometheus\Config\PrometheusConfig;
-use TimeSeriesPhp\Drivers\Prometheus\Driver;
+use TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver;
 
 class PrometheusDriverTest extends TestCase
 {
-    private Driver $driver;
+    private PrometheusDriver $driver;
 
     private PrometheusConfig $config;
 
@@ -118,7 +118,7 @@ class PrometheusDriverTest extends TestCase
             ->willReturn($mockResponse);
 
         // Create the real driver (not a mock)
-        $this->driver = new Driver;
+        $this->driver = new PrometheusDriver;
 
         // Inject the mocks
         $this->driver->setClient($mockClient);

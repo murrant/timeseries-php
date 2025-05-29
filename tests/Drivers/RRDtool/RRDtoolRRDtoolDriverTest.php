@@ -7,15 +7,15 @@ use PHPUnit\Framework\TestCase;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Drivers\RRDtool\Config\RRDtoolConfig;
-use TimeSeriesPhp\Drivers\RRDtool\Driver;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolTagException;
 use TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolRawQuery;
+use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
 
 class RRDtoolDriverTest extends TestCase
 {
-    private Driver $driver;
+    private RRDtoolDriver $driver;
 
     private RRDtoolConfig $config;
 
@@ -94,7 +94,7 @@ class RRDtoolDriverTest extends TestCase
                 });
 
         // Create a subclass of RRDtoolDriver that overrides methods that would execute commands
-        $this->driver = new class($this->tempDir, $tagStrategy) extends Driver
+        $this->driver = new class($this->tempDir, $tagStrategy) extends RRDtoolDriver
         {
             protected string $tempDir;
 

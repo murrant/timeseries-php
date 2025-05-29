@@ -67,13 +67,13 @@ class TSDBFactoryInstance
         }
 
         // Register Prometheus driver if available
-        if (class_exists('TimeSeriesPhp\Drivers\Prometheus\Driver')) {
-            $this->registerDriver('prometheus', 'TimeSeriesPhp\Drivers\Prometheus\Driver');
+        if (class_exists('TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver')) {
+            $this->registerDriver('prometheus', 'TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver');
         }
 
         // Register RRDtool driver if available
-        if (class_exists('TimeSeriesPhp\Drivers\RRDtool\Driver')) {
-            $this->registerDriver('rrdtool', 'TimeSeriesPhp\Drivers\RRDtool\Driver');
+        if (class_exists('TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver')) {
+            $this->registerDriver('rrdtool', 'TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver');
         }
     }
 

@@ -60,7 +60,7 @@ abstract class AbstractDriverBenchmark extends TestCase
             $dataPoint = new DataPoint(
                 $this->measurement,
                 ['value' => rand(1, 100) / 10],
-                ['host' => 'benchmark-host', 'iteration' => (string)$i],
+                ['host' => 'benchmark-host', 'iteration' => (string) $i],
                 new DateTime
             );
 
@@ -95,7 +95,7 @@ abstract class AbstractDriverBenchmark extends TestCase
             $dataPoints[] = new DataPoint(
                 $this->measurement,
                 ['value' => rand(1, 100) / 10],
-                ['host' => 'benchmark-host', 'iteration' => (string)$i],
+                ['host' => 'benchmark-host', 'iteration' => (string) $i],
                 new DateTime
             );
         }

@@ -7,13 +7,13 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use TimeSeriesPhp\Core\Factory\TSDBFactory;
 use TimeSeriesPhp\Drivers\Graphite\Config\GraphiteConfig;
-use TimeSeriesPhp\Drivers\Graphite\Driver as GraphiteDriver;
+use TimeSeriesPhp\Drivers\Graphite\GraphiteDriver;
 use TimeSeriesPhp\Drivers\InfluxDB\Config\InfluxDBConfig;
 use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
 use TimeSeriesPhp\Drivers\Prometheus\Config\PrometheusConfig;
-use TimeSeriesPhp\Drivers\Prometheus\Driver as PrometheusDriver;
+use TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver;
 use TimeSeriesPhp\Drivers\RRDtool\Config\RRDtoolConfig;
-use TimeSeriesPhp\Drivers\RRDtool\Driver as RRDtoolDriver;
+use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
 use TimeSeriesPhp\Exceptions\Driver\DriverException;
 
 /**
