@@ -8,6 +8,7 @@ use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Core\QueryResult;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
+use TimeSeriesPhp\Drivers\RRDtool\RRDtoolRawQuery;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
 
 /**
@@ -209,5 +210,97 @@ class RRDtoolXmlIntegrationTest extends TestCase
                 new DateTime('@1685316540')  // 2023-05-28 23:29:00 UTC
             )
             ->math('value*2', 'double_value');
+    }
+
+    /**
+     * Test generating an SVG graph from RRD data
+     * 
+     * This test verifies that the RRDtool driver can generate an SVG graph
+     * from RRD data and that the SVG has the expected structure.
+     */
+    public function test_generate_svg_graph(): void
+    {
+        // Skip test if simplexml extension is not available
+        if (!extension_loaded('simplexml')) {
+            $this->markTestSkipped('simplexml extension is not available');
+        }
+
+        // Get the RRD file path
+        $rrdFile = $this->dataDir . 'cpu_usage_host-server1.rrd';
+        $this->assertFileExists($rrdFile, "RRD file does not exist: $rrdFile");
+
+        // Create a RRDtoolRawQuery for graph generation
+        $graphQuery = new RRDtoolRawQuery('graph');
+
+        // Set SVG format
+        $graphQuery->param('--imgformat', 'SVG');
+
+        // Set graph dimensions and title
+        $graphQuery->param('--width', '400');
+        $graphQuery->param('--height', '200');
+        $graphQuery->param('--title', 'CPU Usage Test');
+
+        // Set time range
+        $startTime = '1685314800'; // 2023-05-28 23:00:00 UTC
+        $endTime = '1685316540';   // 2023-05-28 23:29:00 UTC
+        $graphQuery->param('--start', $startTime);
+        $graphQuery->param('--end', $endTime);
+
+        // Define data source
+        $graphQuery->def('cpu', $rrdFile, 'value', 'AVERAGE');
+
+        // Add a simple line
+        $graphQuery->statement('LINE1', 'cpu#FF0000', 'CPU Usage');
+
+        try {
+            // Generate the graph
+            $graphFile = $this->driver->getRRDGraph($graphQuery);
+
+            // Verify the graph file exists
+            $this->assertFileExists($graphFile, "Graph file was not created");
+            $this->assertStringEndsWith('.svg', $graphFile, "Graph file does not have .svg extension");
+
+            // Read the SVG content
+            $svgContent = file_get_contents($graphFile);
+            $this->assertNotEmpty($svgContent, "SVG content is empty");
+
+            // Validate SVG structure
+            $this->assertStringContainsString('<?xml version', $svgContent, "SVG does not contain XML declaration");
+            $this->assertStringContainsString('<svg', $svgContent, "SVG does not contain SVG tag");
+
+            // Parse the SVG XML
+            $svg = simplexml_load_string($svgContent);
+            $this->assertNotFalse($svg, "Failed to parse SVG XML");
+
+            // Get the SVG element
+            $svgElements = $svg->xpath('//*[local-name()="svg"]');
+            $this->assertNotEmpty($svgElements, "SVG does not contain an SVG element");
+            $svgElement = $svgElements[0];
+
+            // Validate SVG attributes
+            $this->assertTrue(isset($svgElement['width']), "SVG does not have width attribute");
+            $this->assertTrue(isset($svgElement['height']), "SVG does not have height attribute");
+            $this->assertTrue(isset($svgElement['viewBox']), "SVG does not have viewBox attribute");
+
+            // Validate SVG content - use namespace-aware XPath
+            $svg->registerXPathNamespace('svg', 'http://www.w3.org/2000/svg');
+            $paths = $svg->xpath('//svg:path');
+
+            // If no paths found with namespace, try without namespace
+            if (empty($paths)) {
+                $paths = $svg->xpath('//*[local-name()="path"]');
+            }
+
+            $this->assertNotEmpty($paths, "SVG does not contain any path elements");
+
+            // Clean up the graph file
+            unlink($graphFile);
+        } catch (\Exception $e) {
+            echo "Error generating graph: " . $e->getMessage() . PHP_EOL;
+            if (method_exists($e, 'getDebugMessage')) {
+                echo "Debug: " . (string)$e->getDebugMessage(true) . PHP_EOL;
+            }
+            throw $e;
+        }
     }
 }
