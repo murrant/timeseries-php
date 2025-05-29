@@ -144,7 +144,7 @@ class PrometheusQueryBuilderTest extends TestCase
         $queryString = $rawQuery->getRawQuery();
 
         // Assert the exact query string
-        $nativeQuery = 'avg(cpu_usage{host="server1"} by (host,cpu)) # time range: 2023-05-28T23:00:00+00:00 to 2023-05-28T23:29:00+00:00';
+        $nativeQuery = 'avg by (host,cpu) (cpu_usage{host="server1"}) # time range: 2023-05-28T23:00:00+00:00 to 2023-05-28T23:29:00+00:00';
         $this->assertEquals($nativeQuery, $queryString);
     }
 
@@ -186,7 +186,7 @@ class PrometheusQueryBuilderTest extends TestCase
         $queryString = $rawQuery->getRawQuery();
 
         // Assert the exact query string
-        $nativeQuery = 'cpu_usage{host=~"^("server1"|"server2")$"} # time range: 2023-05-28T23:00:00+00:00 to 2023-05-28T23:29:00+00:00';
+        $nativeQuery = 'cpu_usage{host=~"^(server1|server2)$"} # time range: 2023-05-28T23:00:00+00:00 to 2023-05-28T23:29:00+00:00';
         $this->assertEquals($nativeQuery, $queryString);
     }
 

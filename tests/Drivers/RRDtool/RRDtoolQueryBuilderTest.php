@@ -41,7 +41,7 @@ class RRDtoolQueryBuilderTest extends TestCase
         $queryString = $rawQuery->getRawQuery();
 
         // Assert the exact query string
-        $nativeQuery = '"xport" "--json" "--start" "1685314800" "--end" "1685316540" "DEF:v1=/path/to/rrd/cpu_usage_host-server1.rrd:value:AVERAGE" "XPORT:v1:value"';
+        $nativeQuery = "'xport' '--json' '--start' '1685314800' '--end' '1685316540' 'DEF:v1=/path/to/rrd/cpu_usage_host-server1.rrd:value:AVERAGE' 'XPORT:v1:value'";
         $this->assertEquals($nativeQuery, $queryString);
     }
 
@@ -64,7 +64,7 @@ class RRDtoolQueryBuilderTest extends TestCase
         $queryString = $rawQuery->getRawQuery();
 
         // Assert the exact query string
-        $nativeQuery = '"xport" "--json" "--start" "1685314800" "--end" "1685316540" "--step" "300" "DEF:v1=/path/to/rrd/cpu_usage_host-server1.rrd:value:AVERAGE" "CDEF:agg1000=v1,v2,+,2,/" "XPORT:agg1000:avg_value"';
+        $nativeQuery = "'xport' '--json' '--start' '1685314800' '--end' '1685316540' '--step' '300' 'DEF:v1=/path/to/rrd/cpu_usage_host-server1.rrd:value:AVERAGE' 'CDEF:agg1000=v1,v2,+,2,/' 'XPORT:agg1000:avg_value'";
         $this->assertEquals($nativeQuery, $queryString);
     }
 
@@ -89,7 +89,7 @@ class RRDtoolQueryBuilderTest extends TestCase
         $queryString = $rawQuery->getRawQuery();
 
         // Assert the exact query string
-        $nativeQuery = '"xport" "--json" "--start" "1685314800" "--end" "1685316540" "--step" "600" "DEF:v1=/path/to/rrd/cpu_usage_host-server1.rrd:value:AVERAGE" "CDEF:agg1000=v1,v2,+,2,/" "CDEF:agg1001=v1,v2,MAX" "CDEF:agg1002=v1,v2,MIN" "XPORT:agg1000:avg_value" "XPORT:agg1001:max_value" "XPORT:agg1002:min_value"';
+        $nativeQuery = "'xport' '--json' '--start' '1685314800' '--end' '1685316540' '--step' '600' 'DEF:v1=/path/to/rrd/cpu_usage_host-server1.rrd:value:AVERAGE' 'CDEF:agg1000=v1,v2,+,2,/' 'CDEF:agg1001=v1,v2,MAX' 'CDEF:agg1002=v1,v2,MIN' 'XPORT:agg1000:avg_value' 'XPORT:agg1001:max_value' 'XPORT:agg1002:min_value'";
         $this->assertEquals($nativeQuery, $queryString);
     }
 
@@ -111,7 +111,7 @@ class RRDtoolQueryBuilderTest extends TestCase
         $queryString = $rawQuery->getRawQuery();
 
         // Assert the exact query string
-        $nativeQuery = '"xport" "--json" "--start" "1685314800" "--end" "1685316540" "DEF:v1=/path/to/rrd/cpu_usage_host-server1.rrd:value:AVERAGE" "CDEF:math2000=value,*,100" "XPORT:math2000:cpu_percentage"';
+        $nativeQuery = "'xport' '--json' '--start' '1685314800' '--end' '1685316540' 'DEF:v1=/path/to/rrd/cpu_usage_host-server1.rrd:value:AVERAGE' 'CDEF:math2000=value,*,100' 'XPORT:math2000:cpu_percentage'";
         $this->assertEquals($nativeQuery, $queryString);
     }
 
@@ -129,7 +129,7 @@ class RRDtoolQueryBuilderTest extends TestCase
         $queryString = $rawQuery->getRawQuery();
 
         // Assert the exact query string
-        $nativeQuery = '"xport" "--json" "--start" "end-3600s" "DEF:v1=/path/to/rrd/cpu_usage_host-server1.rrd:value:AVERAGE" "XPORT:v1:value"';
+        $nativeQuery = "'xport' '--json' '--start' 'end-3600s' 'DEF:v1=/path/to/rrd/cpu_usage_host-server1.rrd:value:AVERAGE' 'XPORT:v1:value'";
         $this->assertEquals($nativeQuery, $queryString);
     }
 }

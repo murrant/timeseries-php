@@ -95,11 +95,13 @@ class InfluxDBQueryBuilderTest extends TestCase
   |> filter(fn: (r) => r._measurement == "cpu_usage")
   |> filter(fn: (r) => r["host"] == "server1")
   |> window(every: 10m)
+  |> duplicate(column: "value", as: "value_copy1")
+  |> duplicate(column: "value", as: "value_copy2")
   |> mean(column: "value")
   |> rename(columns: {_value: "avg_value"})
-  |> max(column: "value")
+  |> max(column: "value_copy1")
   |> rename(columns: {_value: "max_value"})
-  |> min(column: "value")
+  |> min(column: "value_copy2")
   |> rename(columns: {_value: "min_value"})';
         $this->assertEquals($nativeQuery, $queryString);
     }

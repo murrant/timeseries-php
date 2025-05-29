@@ -113,7 +113,7 @@ class GraphiteQueryBuilderTest extends TestCase
 
         // Assert the exact query string
         // Note: Graphite typically processes one aggregation at a time in the query builder
-        $nativeQuery = 'target=summarize(alias(minSeries(alias(maxSeries(alias(averageSeries(cpu_usage.server1), "avg_value")), "max_value")), "min_value"), "10minute", "avg")&from=1685314800&until=1685316540&format=json';
+        $nativeQuery = 'target=group(alias(summarize(averageSeries(cpu_usage.server1), "10minute", "avg"), "avg_value"),alias(summarize(maxSeries(cpu_usage.server1), "10minute", "max"), "max_value"),alias(summarize(minSeries(cpu_usage.server1), "10minute", "min"), "min_value"))&from=1685314800&until=1685316540&format=json';
         $this->assertEquals($nativeQuery, $queryString);
     }
 
