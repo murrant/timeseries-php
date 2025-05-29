@@ -220,7 +220,9 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
 
         foreach ($dataSourceOrder as $dsName) {
             $fields = $dataPoint->getFields();
-            $values[] = $fields[$dsName] ?? 'U'; // U = unknown/undefined
+
+            // Use 'U' for any non-numeric value including null
+            $values[] = isset($fields[$dsName]) && is_numeric($fields[$dsName]) ? $fields[$dsName] : 'U';
         }
 
         $updateString = $timestamp.':'.implode(':', $values);
