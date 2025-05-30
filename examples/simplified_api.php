@@ -160,7 +160,7 @@ $result = $ts->queryAvg(
     'cpu_usage',                  // measurement
     'value',                      // field
     new DateTime('-1 hour'),      // start time
-    new DateTime(),               // end time
+    new DateTime,               // end time
     ['host' => 'server1']         // tags
 );
 echo "QueryAvg executed successfully.\n";
@@ -171,7 +171,7 @@ $result = $ts->querySum(
     'cpu_usage',                  // measurement
     'value',                      // field
     new DateTime('-1 hour'),      // start time
-    new DateTime(),               // end time
+    new DateTime,               // end time
     ['host' => 'server1']         // tags
 );
 echo "QuerySum executed successfully.\n";
@@ -182,7 +182,7 @@ $result = $ts->queryCount(
     'cpu_usage',                  // measurement
     'value',                      // field
     new DateTime('-1 hour'),      // start time
-    new DateTime(),               // end time
+    new DateTime,               // end time
     ['host' => 'server1']         // tags
 );
 echo "QueryCount executed successfully.\n";
@@ -193,7 +193,7 @@ $result = $ts->queryMin(
     'cpu_usage',                  // measurement
     'value',                      // field
     new DateTime('-1 hour'),      // start time
-    new DateTime(),               // end time
+    new DateTime,               // end time
     ['host' => 'server1']         // tags
 );
 echo "QueryMin executed successfully.\n";
@@ -204,7 +204,7 @@ $result = $ts->queryMax(
     'cpu_usage',                  // measurement
     'value',                      // field
     new DateTime('-1 hour'),      // start time
-    new DateTime(),               // end time
+    new DateTime,               // end time
     ['host' => 'server1']         // tags
 );
 echo "QueryMax executed successfully.\n\n";
@@ -216,7 +216,7 @@ echo "Step 6: Using the traditional Query builder with the TSDB class...\n";
 $query = new Query('cpu_usage');
 $query->select(['value'])
     ->where('host', '=', 'server1')
-    ->timeRange(new DateTime('-1 hour'), new DateTime())
+    ->timeRange(new DateTime('-1 hour'), new DateTime)
     ->groupByTime('5m')
     ->avg('value', 'avg_value');
 
@@ -231,7 +231,7 @@ echo "Step 7: Deleting data...\n";
 $result = $ts->deleteMeasurement(
     'cpu_usage',                  // measurement
     new DateTime('-1 day'),       // start time
-    new DateTime()                // end time
+    new DateTime                // end time
 );
 echo 'DeleteMeasurement result: '.($result ? 'Success' : 'Failed')."\n\n";
 
