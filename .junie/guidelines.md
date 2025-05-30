@@ -180,16 +180,29 @@ The library follows a layered architecture:
 ### Adding a New Driver
 To add a new database driver:
 
-1. Create a new directory under `src/Drivers` for your driver
+1. Create a new directory under `src/Drivers` for your driver (e.g., `src/Drivers/NewDriver`)
 2. Create a configuration class that implements `ConfigInterface`
-3. Create a driver class that extends `AbstractTimeSeriesDB`
-4. Implement all abstract methods from `AbstractTimeSeriesDB`
-5. Register your driver in `TSDBFactory`
-6. Add tests for your driver in `tests/Drivers`
+3. Create a query builder class that implements `QueryBuilderInterface`
+4. Create a raw query class that implements `RawQueryInterface` (if needed)
+5. Create a driver class that extends `AbstractTimeSeriesDB`
+6. Register your driver in `TSDBFactory`
+7. Add tests for your driver
+   - Create a directory under `tests/Drivers` for your driver tests (e.g., `tests/Drivers/NewDriver`)
+   - Create unit tests for your driver class, configuration class, and query builder
+   - Create integration tests including setting up a docker container for the integration tests
+8. Add documentation for your driver
+   - Document the configuration parameters
+   - Provide examples of how to use your driver
+   - Document any driver-specific features or limitations
 
 Example of registering a new driver:
 
 ```php
 // In TSDBFactory.php
 TSDBFactory::registerDriver('newdriver', NewDriverConfig::class, NewDriver::class);
+
+// Or in TSDBFactoryInstance.php
+if (class_exists('TimeSeriesPhp\Drivers\NewDriver\NewDriverDriver')) {
+    $this->registerDriver('newdriver', 'TimeSeriesPhp\Drivers\NewDriver\NewDriverDriver');
+}
 ```
