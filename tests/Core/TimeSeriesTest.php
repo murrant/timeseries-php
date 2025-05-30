@@ -137,6 +137,7 @@ class TimeSeriesTest extends TestCase
         $measurement = 'cpu_usage';
         $field = 'value';
         $tags = ['host' => 'server1'];
+        /** @var QueryResult&\PHPUnit\Framework\MockObject\MockObject */
         $queryResult = $this->createMock(QueryResult::class);
 
         $this->mockDriver->expects($this->once())
@@ -161,6 +162,7 @@ class TimeSeriesTest extends TestCase
         $start = new DateTime('-1 hour');
         $end = new DateTime;
         $tags = ['host' => 'server1'];
+        /** @var QueryResult&\PHPUnit\Framework\MockObject\MockObject */
         $queryResult = $this->createMock(QueryResult::class);
 
         $this->mockDriver->expects($this->once())

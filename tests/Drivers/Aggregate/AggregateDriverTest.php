@@ -52,10 +52,15 @@ class AggregateDriverTest extends TestCase
              */
             private $mockReadDb;
 
+            /**
+             * @param TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject $mockWriteDb1
+             * @param TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject $mockWriteDb2
+             * @param TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject $mockReadDb
+             */
             public function __construct(
-                TimeSeriesInterface $mockWriteDb1,
-                TimeSeriesInterface $mockWriteDb2,
-                TimeSeriesInterface $mockReadDb
+                $mockWriteDb1,
+                $mockWriteDb2,
+                $mockReadDb
             ) {
                 $this->mockWriteDb1 = $mockWriteDb1;
                 $this->mockWriteDb2 = $mockWriteDb2;
@@ -385,9 +390,13 @@ class AggregateDriverTest extends TestCase
              */
             private $mockWriteDb2;
 
+            /**
+             * @param TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject $mockWriteDb1
+             * @param TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject $mockWriteDb2
+             */
             public function __construct(
-                TimeSeriesInterface $mockWriteDb1,
-                TimeSeriesInterface $mockWriteDb2
+                $mockWriteDb1,
+                $mockWriteDb2
             ) {
                 $this->mockWriteDb1 = $mockWriteDb1;
                 $this->mockWriteDb2 = $mockWriteDb2;
