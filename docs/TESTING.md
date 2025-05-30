@@ -14,10 +14,11 @@ tests/
 │   │   ├── MockDriver.php
 │   │   └── TestDriver.php
 │   ├── DataPointTest.php
+│   ├── DriverManagerTest.php
 │   ├── QueryResultTest.php
 │   ├── QueryTest.php
 │   ├── SimpleTest.php
-│   └── TSDBFactoryTest.php
+│   └── TSDBFactoryInstanceTest.php
 ├── Drivers/
 │   ├── Graphite/
 │   │   ├── GraphiteConfigTest.php
@@ -52,8 +53,7 @@ tests/
 │   │   └── ConfigTestCase.php
 │   ├── Logs/
 │   │   └── LoggerTest.php
-│   ├── Query/
-│   └── TSDBFactoryInstanceTest.php
+│   └── Query/
 └── Utils/
     ├── ConvertTests.php
     └── RetryableOperationTest.php
@@ -67,7 +67,7 @@ The test suite covers the following components:
 - **Query**: Tests for query building, including all query methods (select, where, timeRange, etc.)
 - **DataPoint**: Tests for creating and manipulating data points
 - **QueryResult**: Tests for handling query results
-- **TSDBFactory**: Tests for driver registration and creation
+- **DriverManager**: Tests for driver registration and creation
 - **SimpleTest**: Basic tests for the library
 
 ### Drivers
@@ -81,7 +81,7 @@ The test suite covers the following components:
 - **Config**: Tests for the configuration system
 - **Logs**: Tests for the logging system
 - **Query**: Directory for query-related tests
-- **TSDBFactoryInstance**: Tests for the TSDBFactory instance
+- **TSDBFactoryInstance**: Tests for the DriverManager instance
 
 ### Utils
 - **Convert**: Tests for the Convert utility class

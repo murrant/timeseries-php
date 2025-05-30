@@ -8,7 +8,7 @@ use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
-use TimeSeriesPhp\Core\Factory\TSDBFactory;
+use TimeSeriesPhp\Core\Factory\DriverManager;
 use TimeSeriesPhp\Drivers\Aggregate\Config\AggregateConfig;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 use TimeSeriesPhp\Exceptions\Driver\DatabaseException;
@@ -42,7 +42,7 @@ class AggregateDriver extends AbstractTimeSeriesDB
                 $driver = (string) $dbConfig['driver'];
                 unset($dbConfig['driver']);
 
-                $db = TSDBFactory::create($driver, TSDBFactory::createConfig($driver, $dbConfig));
+                $db = DriverManager::create($driver, DriverManager::createConfig($driver, $dbConfig));
                 $this->writeDatabases[] = $db;
 
                 Logger::info('Connected to write database', [
@@ -69,7 +69,7 @@ class AggregateDriver extends AbstractTimeSeriesDB
                 $driver = (string) $readDatabaseConfig['driver'];
                 unset($readDatabaseConfig['driver']);
 
-                $this->readDatabase = TSDBFactory::create($driver, TSDBFactory::createConfig($driver, $readDatabaseConfig));
+                $this->readDatabase = DriverManager::create($driver, DriverManager::createConfig($driver, $readDatabaseConfig));
 
                 Logger::info('Connected to read database', [
                     'driver' => $this->getDriverName(),

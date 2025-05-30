@@ -57,7 +57,7 @@ $config = new InfluxDBConfig([
 ## Creating a Driver Instance
 
 ```php
-use TimeSeriesPhp\Core\TSDBFactory;
+use TimeSeriesPhp\Core\DriverManager;
 use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig;
 
 // Create configuration
@@ -69,7 +69,7 @@ $config = new InfluxDBConfig([
 ]);
 
 // Create driver instance
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 ```
 
 ## Writing Data
@@ -249,7 +249,7 @@ use TimeSeriesPhp\Exceptions\DatabaseException;
 use TimeSeriesPhp\Exceptions\TSDBException;
 
 try {
-    $db = TSDBFactory::create('influxdb', $config);
+    $db = DriverManager::create('influxdb', $config);
     $dataPoint = new DataPoint('cpu_usage', ['value' => 85.5], ['host' => 'server1']);
     $db->write($dataPoint);
     $result = $db->query($query);
@@ -327,7 +327,7 @@ $query->select(['value'])
 Always close the connection when you're done.
 
 ```php
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 try {
     // Use the database
     $db->write($dataPoint);

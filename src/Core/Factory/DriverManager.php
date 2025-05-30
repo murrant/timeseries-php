@@ -7,26 +7,41 @@ use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
 use TimeSeriesPhp\Exceptions\Driver\DriverException;
 
 /**
- * Driver Manager for TimeSeriesPhp
- *
- * This class provides a more intuitive API for managing drivers.
- * It is a wrapper around TSDBFactory that provides a more object-oriented approach.
+ * Static facade for TSDBFactory.
+ * This class provides backward compatibility for code that uses the static methods.
  */
 class DriverManager
 {
+    private static ?TSDBFactory $instance = null;
+
     /**
-     * Create a new instance of a time series database driver
-     *
-     * @param  string  $driver  The name of the driver to create
-     * @param  ConfigInterface|null  $config  The configuration for the driver (optional)
-     * @param  bool  $autoConnect  Whether to automatically connect to the database
-     * @return TimeSeriesInterface A new instance of the driver
-     *
-     * @throws DriverException If the driver is not registered or doesn't implement TimeSeriesInterface
+     * Get the factory instance
      */
-    public function create(string $driver, ?ConfigInterface $config = null, bool $autoConnect = true): TimeSeriesInterface
+    private static function getInstance(): TSDBFactory
     {
-        return TSDBFactory::create($driver, $config, $autoConnect);
+        if (self::$instance === null) {
+            self::$instance = new TSDBFactory;
+        }
+
+        return self::$instance;
+    }
+
+    /**
+     * Reset the factory instance (useful for testing)
+     */
+    public static function reset(): void
+    {
+        self::$instance = null;
+    }
+
+    /**
+     * Register default drivers
+     *
+     * @throws DriverException If a driver class doesn't exist or doesn't implement TimeSeriesInterface
+     */
+    public static function registerDefaultDrivers(): void
+    {
+        self::getInstance()->registerDefaultDrivers();
     }
 
     /**
@@ -38,9 +53,9 @@ class DriverManager
      *
      * @throws DriverException If the class doesn't exist or doesn't implement TimeSeriesInterface
      */
-    public function registerDriver(string $name, string $className, ?string $configClassName = null): void
+    public static function register(string $name, string $className, ?string $configClassName = null): void
     {
-        TSDBFactory::registerDriver($name, $className, $configClassName);
+        self::getInstance()->registerDriver($name, $className, $configClassName);
     }
 
     /**
@@ -49,9 +64,24 @@ class DriverManager
      * @param  string  $name  The name of the driver to unregister
      * @return bool True if the driver was unregistered, false if it wasn't registered
      */
-    public function unregisterDriver(string $name): bool
+    public static function unregister(string $name): bool
     {
-        return TSDBFactory::unregisterDriver($name);
+        return self::getInstance()->unregisterDriver($name);
+    }
+
+    /**
+     * Create a new instance of a time series database driver
+     *
+     * @param  string  $driver  The name of the driver to create
+     * @param  ConfigInterface|null  $config  The configuration for the driver (optional)
+     * @param  bool  $autoConnect  Whether to automatically connect to the database
+     * @return TimeSeriesInterface A new instance of the driver
+     *
+     * @throws DriverException If the driver is not registered or doesn't implement TimeSeriesInterface
+     */
+    public static function create(string $driver, ?ConfigInterface $config = null, bool $autoConnect = true): TimeSeriesInterface
+    {
+        return self::getInstance()->create($driver, $config, $autoConnect);
     }
 
     /**
@@ -59,9 +89,9 @@ class DriverManager
      *
      * @return string[] Array of driver names
      */
-    public function getAvailableDrivers(): array
+    public static function getAvailableDrivers(): array
     {
-        return TSDBFactory::getAvailableDrivers();
+        return self::getInstance()->getAvailableDrivers();
     }
 
     /**
@@ -70,9 +100,9 @@ class DriverManager
      * @param  string  $name  The name of the driver to check
      * @return bool True if the driver is registered, false otherwise
      */
-    public function hasDriver(string $name): bool
+    public static function hasDriver(string $name): bool
     {
-        return TSDBFactory::hasDriver($name);
+        return self::getInstance()->hasDriver($name);
     }
 
     /**
@@ -81,9 +111,9 @@ class DriverManager
      * @param  string  $name  The name of the driver
      * @return class-string|null The fully qualified class name of the config class, or null if the driver is not registered
      */
-    public function getConfigClass(string $name): ?string
+    public static function getConfigClass(string $name): ?string
     {
-        return TSDBFactory::getConfigClass($name);
+        return self::getInstance()->getConfigClass($name);
     }
 
     /**
@@ -95,8 +125,8 @@ class DriverManager
      *
      * @throws DriverException If the driver is not registered or the config class is invalid
      */
-    public function createConfig(string $driver, array $config = []): ConfigInterface
+    public static function createConfig(string $driver, array $config = []): ConfigInterface
     {
-        return TSDBFactory::createConfig($driver, $config);
+        return self::getInstance()->createConfig($driver, $config);
     }
 }

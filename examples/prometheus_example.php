@@ -28,11 +28,11 @@ try {
 }
 
 // Initialize the driver
-\TimeSeriesPhp\Core\TSDBFactory::registerDriver('prometheus', PrometheusDriver::class);
+\TimeSeriesPhp\Core\DriverManager::register('prometheus', PrometheusDriver::class);
 
 // Connect to the database
 try {
-    $prometheus = \TimeSeriesPhp\Core\TSDBFactory::create('prometheus', $prometheusConfig);
+    $prometheus = \TimeSeriesPhp\Core\DriverManager::create('prometheus', $prometheusConfig);
     echo "Successfully connected to Prometheus!\n";
 } catch (DriverException|ConfigurationException $e) {
     echo "Failed to connect to Prometheus: {$e->getMessage()}\n";

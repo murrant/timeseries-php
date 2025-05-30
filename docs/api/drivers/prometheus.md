@@ -36,7 +36,7 @@ $config = new PrometheusConfig([
 ## Creating a Driver Instance
 
 ```php
-use TimeSeriesPhp\Core\TSDBFactory;
+use TimeSeriesPhp\Core\DriverManager;
 use TimeSeriesPhp\Drivers\Prometheus\PrometheusConfig;
 
 // Create configuration
@@ -47,7 +47,7 @@ $config = new PrometheusConfig([
 ]);
 
 // Create driver instance
-$db = TSDBFactory::create('prometheus', $config);
+$db = DriverManager::create('prometheus', $config);
 ```
 
 ## Writing Data
@@ -169,7 +169,7 @@ use TimeSeriesPhp\Exceptions\UnsupportedOperationException;
 use TimeSeriesPhp\Exceptions\TSDBException;
 
 try {
-    $db = TSDBFactory::create('prometheus', $config);
+    $db = DriverManager::create('prometheus', $config);
     $dataPoint = new DataPoint('cpu_usage', ['value' => 85.5], ['host' => 'server1', 'job' => 'node']);
     $db->write($dataPoint);
     $result = $db->query($query);
@@ -260,7 +260,7 @@ $query->select(['value'])
 Always close the connection when you're done.
 
 ```php
-$db = TSDBFactory::create('prometheus', $config);
+$db = DriverManager::create('prometheus', $config);
 try {
     // Use the database
     $result = $db->query($query);

@@ -32,7 +32,7 @@ composer require librenms/timeseries-php
 ```php
 <?php
 
-use TimeSeriesPhp\Core\TSDBFactory;
+use TimeSeriesPhp\Core\DriverManager;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig;
@@ -46,7 +46,7 @@ $config = new InfluxDBConfig([
 ]);
 
 // Create a database instance with explicit config
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 
 // Write a data point
 $dataPoint = new DataPoint(
@@ -72,13 +72,13 @@ $db->close();
 ```php
 <?php
 
-use TimeSeriesPhp\Core\TSDBFactory;
+use TimeSeriesPhp\Core\DriverManager;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\Query;
 
 // Create a database instance with default config
 // Note: Default config may not have all required settings for your environment
-$db = TSDBFactory::create('influxdb');
+$db = DriverManager::create('influxdb');
 
 // The rest of the usage is the same
 // ...
@@ -86,7 +86,7 @@ $db = TSDBFactory::create('influxdb');
 
 ## Factory
 
-The `TSDBFactory` class is the main entry point for creating database instances.
+The `DriverManager` class is the main entry point for creating database instances.
 
 ### Methods
 
@@ -96,10 +96,10 @@ Registers a driver with the factory. If `$configClassName` is not provided, it w
 
 ```php
 // With explicit config class
-TSDBFactory::registerDriver('custom', CustomDriver::class, CustomConfig::class);
+DriverManager::register('custom', CustomDriver::class, CustomConfig::class);
 
 // With inferred config class (CustomConfig will be inferred from CustomDriver)
-TSDBFactory::registerDriver('custom', CustomDriver::class);
+DriverManager::register('custom', CustomDriver::class);
 ```
 
 #### `unregisterDriver(string $name): bool`
@@ -107,7 +107,7 @@ TSDBFactory::registerDriver('custom', CustomDriver::class);
 Unregisters a driver from the factory.
 
 ```php
-TSDBFactory::unregisterDriver('custom');
+DriverManager::unregister('custom');
 ```
 
 #### `create(string $driver, ?ConfigInterface $config = null, bool $autoConnect = true): TimeSeriesInterface`
@@ -116,10 +116,10 @@ Creates a new instance of a time series database driver. If `$config` is not pro
 
 ```php
 // With explicit config
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 
 // With default config
-$db = TSDBFactory::create('influxdb');
+$db = DriverManager::create('influxdb');
 ```
 
 #### `getAvailableDrivers(): array`
@@ -127,7 +127,7 @@ $db = TSDBFactory::create('influxdb');
 Gets a list of all registered drivers.
 
 ```php
-$drivers = TSDBFactory::getAvailableDrivers();
+$drivers = DriverManager::getAvailableDrivers();
 ```
 
 #### `hasDriver(string $name): bool`
@@ -135,7 +135,7 @@ $drivers = TSDBFactory::getAvailableDrivers();
 Checks if a driver is registered.
 
 ```php
-if (TSDBFactory::hasDriver('influxdb')) {
+if (DriverManager::hasDriver('influxdb')) {
     // Use InfluxDB driver
 }
 ```
@@ -145,7 +145,7 @@ if (TSDBFactory::hasDriver('influxdb')) {
 Gets the config class for a driver.
 
 ```php
-$configClass = TSDBFactory::getConfigClass('influxdb');
+$configClass = DriverManager::getConfigClass('influxdb');
 if ($configClass) {
     $config = new $configClass([/* config options */]);
 }
@@ -313,7 +313,7 @@ use TimeSeriesPhp\Exceptions\WriteException;
 use TimeSeriesPhp\Exceptions\DatabaseException;
 
 try {
-    $db = TSDBFactory::create('influxdb', $config);
+    $db = DriverManager::create('influxdb', $config);
     $db->write($dataPoint);
     $result = $db->query($query);
 } catch (ConnectionException $e) {

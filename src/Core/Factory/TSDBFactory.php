@@ -7,42 +7,16 @@ use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
 use TimeSeriesPhp\Exceptions\Driver\DriverException;
 
 /**
- * Static facade for TSDBFactoryInstance.
- * This class provides backward compatibility for code that uses the static methods.
+ * Non-static version of DriverManager that can be injected as a dependency.
+ * This addresses the issue of testability and dependency injection.
  */
 class TSDBFactory
 {
-    private static ?TSDBFactoryInstance $instance = null;
+    /** @var array<string, class-string> */
+    private array $drivers = [];
 
-    /**
-     * Get the factory instance
-     */
-    private static function getInstance(): TSDBFactoryInstance
-    {
-        if (self::$instance === null) {
-            self::$instance = new TSDBFactoryInstance;
-        }
-
-        return self::$instance;
-    }
-
-    /**
-     * Reset the factory instance (useful for testing)
-     */
-    public static function reset(): void
-    {
-        self::$instance = null;
-    }
-
-    /**
-     * Register default drivers
-     *
-     * @throws DriverException If a driver class doesn't exist or doesn't implement TimeSeriesInterface
-     */
-    public static function registerDefaultDrivers(): void
-    {
-        self::getInstance()->registerDefaultDrivers();
-    }
+    /** @var array<string, class-string> */
+    private array $configClasses = [];
 
     /**
      * Register a driver with the factory
@@ -53,9 +27,108 @@ class TSDBFactory
      *
      * @throws DriverException If the class doesn't exist or doesn't implement TimeSeriesInterface
      */
-    public static function registerDriver(string $name, string $className, ?string $configClassName = null): void
+    public function registerDriver(string $name, string $className, ?string $configClassName = null): void
     {
-        self::getInstance()->registerDriver($name, $className, $configClassName);
+        if (! class_exists($className)) {
+            throw new DriverException("Driver class '{$className}' does not exist");
+        }
+
+        if (! is_subclass_of($className, TimeSeriesInterface::class)) {
+            throw new DriverException("Driver class '{$className}' must implement TimeSeriesInterface");
+        }
+
+        // If config class name is not provided, try to infer it from the driver class name
+        if ($configClassName === null) {
+            $configClassName = $this->inferConfigClassName($className);
+        }
+
+        if (! class_exists($configClassName)) {
+            throw new DriverException("Config class '{$configClassName}' does not exist");
+        }
+
+        if (! is_subclass_of($configClassName, ConfigInterface::class)) {
+            throw new DriverException("Config class '{$configClassName}' must implement ConfigInterface");
+        }
+
+        $this->drivers[$name] = $className;
+        $this->configClasses[$name] = $configClassName;
+    }
+
+    /**
+     * Register default drivers
+     *
+     * @throws DriverException If a driver class doesn't exist or doesn't implement TimeSeriesInterface
+     */
+    public function registerDefaultDrivers(): void
+    {
+        // Register InfluxDB driver if available
+        if (class_exists('TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver')) {
+            $this->registerDriver('influxdb', 'TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver');
+        }
+
+        // Register Prometheus driver if available
+        if (class_exists('TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver')) {
+            $this->registerDriver('prometheus', 'TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver');
+        }
+
+        // Register RRDtool driver if available
+        if (class_exists('TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver')) {
+            $this->registerDriver('rrdtool', 'TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver');
+        }
+
+        // Register Aggregate driver if available
+        if (class_exists('TimeSeriesPhp\Drivers\Aggregate\AggregateDriver')) {
+            $this->registerDriver('aggregate', 'TimeSeriesPhp\Drivers\Aggregate\AggregateDriver', 'TimeSeriesPhp\Drivers\Aggregate\Config\AggregateConfig');
+        }
+    }
+
+    /**
+     * Infer the config class name from the driver class name
+     *
+     * @param  class-string  $driverClassName  The fully qualified class name of the driver
+     * @return class-string The inferred fully qualified class name of the config class
+     */
+    private function inferConfigClassName(string $driverClassName): string
+    {
+        // Get the namespace and class name
+        $lastBackslashPos = strrpos($driverClassName, '\\');
+        if ($lastBackslashPos === false) {
+            // No namespace, just replace "Driver" with "Config" in the class name
+            /** @var class-string */
+            return str_replace('Driver', 'Config', $driverClassName);
+        }
+
+        // Split the class name into namespace and class name
+        $namespace = substr($driverClassName, 0, $lastBackslashPos);
+        $className = substr($driverClassName, $lastBackslashPos + 1);
+
+        // Get the driver name from the namespace
+        $driverNamePos = strrpos($namespace, '\\');
+        $driverName = $driverNamePos !== false ? substr($namespace, $driverNamePos + 1) : $namespace;
+
+        // Try different config class naming patterns
+        $possibleConfigClasses = [
+            // Pattern 1: DriverNameConfig in Config subdirectory (e.g., InfluxDB\Config\InfluxDBConfig)
+            $namespace.'\\Config\\'.$driverName.'Config',
+
+            // Pattern 2: Config in Config subdirectory (e.g., InfluxDB\Config\Config)
+            $namespace.'\\Config\\Config',
+
+            // Pattern 3: Replace Driver with Config in class name (e.g., InfluxDB\InfluxDBConfig)
+            $namespace.'\\'.str_replace('Driver', 'Config', $className),
+        ];
+
+        // Return the first config class that exists
+        foreach ($possibleConfigClasses as $configClass) {
+            if (class_exists($configClass)) {
+                /** @var class-string */
+                return $configClass;
+            }
+        }
+
+        // Default to the first pattern if none exist
+        /** @var class-string */
+        return $possibleConfigClasses[0];
     }
 
     /**
@@ -64,9 +137,16 @@ class TSDBFactory
      * @param  string  $name  The name of the driver to unregister
      * @return bool True if the driver was unregistered, false if it wasn't registered
      */
-    public static function unregisterDriver(string $name): bool
+    public function unregisterDriver(string $name): bool
     {
-        return self::getInstance()->unregisterDriver($name);
+        if (isset($this->drivers[$name])) {
+            unset($this->drivers[$name]);
+            unset($this->configClasses[$name]);
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -79,9 +159,29 @@ class TSDBFactory
      *
      * @throws DriverException If the driver is not registered or doesn't implement TimeSeriesInterface
      */
-    public static function create(string $driver, ?ConfigInterface $config = null, bool $autoConnect = true): TimeSeriesInterface
+    public function create(string $driver, ?ConfigInterface $config = null, bool $autoConnect = true): TimeSeriesInterface
     {
-        return self::getInstance()->create($driver, $config, $autoConnect);
+        if (! isset($this->drivers[$driver])) {
+            throw new DriverException("Driver '{$driver}' not registered");
+        }
+
+        $className = $this->drivers[$driver];
+        $instance = new $className;
+
+        if (! $instance instanceof TimeSeriesInterface) {
+            throw new DriverException("Driver '{$driver}' must implement TimeSeriesInterface");
+        }
+
+        if ($autoConnect) {
+            // If no config is provided, create a default one
+            if ($config === null) {
+                $config = $this->createConfig($driver);
+            }
+
+            $instance->connect($config);
+        }
+
+        return $instance;
     }
 
     /**
@@ -89,9 +189,9 @@ class TSDBFactory
      *
      * @return string[] Array of driver names
      */
-    public static function getAvailableDrivers(): array
+    public function getAvailableDrivers(): array
     {
-        return self::getInstance()->getAvailableDrivers();
+        return array_keys($this->drivers);
     }
 
     /**
@@ -100,9 +200,9 @@ class TSDBFactory
      * @param  string  $name  The name of the driver to check
      * @return bool True if the driver is registered, false otherwise
      */
-    public static function hasDriver(string $name): bool
+    public function hasDriver(string $name): bool
     {
-        return self::getInstance()->hasDriver($name);
+        return isset($this->drivers[$name]);
     }
 
     /**
@@ -111,9 +211,9 @@ class TSDBFactory
      * @param  string  $name  The name of the driver
      * @return class-string|null The fully qualified class name of the config class, or null if the driver is not registered
      */
-    public static function getConfigClass(string $name): ?string
+    public function getConfigClass(string $name): ?string
     {
-        return self::getInstance()->getConfigClass($name);
+        return $this->configClasses[$name] ?? null;
     }
 
     /**
@@ -125,8 +225,15 @@ class TSDBFactory
      *
      * @throws DriverException If the driver is not registered or the config class is invalid
      */
-    public static function createConfig(string $driver, array $config = []): ConfigInterface
+    public function createConfig(string $driver, array $config = []): ConfigInterface
     {
-        return self::getInstance()->createConfig($driver, $config);
+        $configClass = $this->getConfigClass($driver);
+
+        if ($configClass === null) {
+            throw new DriverException("No configuration class registered for driver: {$driver}");
+        }
+
+        /** @var ConfigInterface */
+        return new $configClass($config);
     }
 }

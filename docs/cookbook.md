@@ -91,7 +91,7 @@ Some time series databases support continuous queries, which automatically compu
 
 ```php
 // Example for InfluxDB
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 
 // Create a continuous query that computes hourly averages
 $query = 'SELECT mean("value") AS "hourly_avg" INTO "hourly_cpu_usage" FROM "cpu_usage" GROUP BY time(1h), "host"';
@@ -157,7 +157,7 @@ class CachedTimeSeriesDB
 }
 
 // Usage
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 $cache = new SomeCache(); // PSR-16 compatible cache
 $cachedDb = new CachedTimeSeriesDB($db, $cache, 300); // 5-minute TTL
 
@@ -364,7 +364,7 @@ class BufferedTimeSeriesDB
 }
 
 // Usage
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 $bufferedDb = new BufferedTimeSeriesDB($db, 1000, 60); // 1000 points or 60 seconds
 
 // These writes will be buffered
@@ -456,16 +456,16 @@ TimeSeriesPhp makes it easy to migrate between different time series database ba
 ### Basic Migration
 
 ```php
-use TimeSeriesPhp\Core\TSDBFactory;
+use TimeSeriesPhp\Core\DriverManager;
 use TimeSeriesPhp\Core\Query;
 
 // Source database
 $sourceConfig = new InfluxDBConfig([/* ... */]);
-$sourceDb = TSDBFactory::create('influxdb', $sourceConfig);
+$sourceDb = DriverManager::create('influxdb', $sourceConfig);
 
 // Target database
 $targetConfig = new PrometheusConfig([/* ... */]);
-$targetDb = TSDBFactory::create('prometheus', $targetConfig);
+$targetDb = DriverManager::create('prometheus', $targetConfig);
 
 // Query data from the source database
 $query = new Query('cpu_usage');
@@ -734,7 +734,7 @@ class CircuitBreaker
 }
 
 // Usage
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 $circuitBreaker = new CircuitBreaker($db, 3, 30);
 
 try {

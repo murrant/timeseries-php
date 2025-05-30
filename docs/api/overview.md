@@ -73,7 +73,7 @@ TimeSeriesPhp follows a layered architecture:
 
 The typical workflow for using TimeSeriesPhp is:
 
-1. **Create a database instance** using the `TSDBFactory`
+1. **Create a database instance** using the `DriverManager`
 2. **Write data** using the `write()` or `writeBatch()` methods
 3. **Query data** using the `query()` method with a `Query` object
 4. **Process results** from the query

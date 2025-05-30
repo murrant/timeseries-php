@@ -14,9 +14,18 @@ use TimeSeriesPhp\Drivers\Aggregate\Config\AggregateConfig;
 class AggregateDriverTest extends TestCase
 {
     private AggregateDriver $driver;
-    private TimeSeriesInterface $mockWriteDb1;
-    private TimeSeriesInterface $mockWriteDb2;
-    private TimeSeriesInterface $mockReadDb;
+    /**
+     * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
+     */
+    private $mockWriteDb1;
+    /**
+     * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
+     */
+    private $mockWriteDb2;
+    /**
+     * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
+     */
+    private $mockReadDb;
     private AggregateConfig $config;
 
     protected function setUp(): void
@@ -30,9 +39,18 @@ class AggregateDriverTest extends TestCase
 
         // Create a test subclass of AggregateDriver that doesn't actually connect to real databases
         $this->driver = new class($this->mockWriteDb1, $this->mockWriteDb2, $this->mockReadDb) extends AggregateDriver {
-            private TimeSeriesInterface $mockWriteDb1;
-            private TimeSeriesInterface $mockWriteDb2;
-            private TimeSeriesInterface $mockReadDb;
+            /**
+             * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
+             */
+            private $mockWriteDb1;
+            /**
+             * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
+             */
+            private $mockWriteDb2;
+            /**
+             * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
+             */
+            private $mockReadDb;
 
             public function __construct(
                 TimeSeriesInterface $mockWriteDb1,
@@ -358,8 +376,14 @@ class AggregateDriverTest extends TestCase
     {
         // Create a driver with write databases only
         $driver = new class($this->mockWriteDb1, $this->mockWriteDb2) extends AggregateDriver {
-            private TimeSeriesInterface $mockWriteDb1;
-            private TimeSeriesInterface $mockWriteDb2;
+            /**
+             * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
+             */
+            private $mockWriteDb1;
+            /**
+             * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
+             */
+            private $mockWriteDb2;
 
             public function __construct(
                 TimeSeriesInterface $mockWriteDb1,

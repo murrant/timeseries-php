@@ -3,7 +3,7 @@
 require_once __DIR__.'/../vendor/autoload.php';
 
 use TimeSeriesPhp\Core\Data\DataPoint;
-use TimeSeriesPhp\Core\Factory\TSDBFactory;
+use TimeSeriesPhp\Core\Factory\DriverManager;
 use TimeSeriesPhp\Drivers\Graphite\Config\GraphiteConfig;
 use TimeSeriesPhp\Drivers\Graphite\GraphiteDriver;
 use TimeSeriesPhp\Drivers\InfluxDB\Config\InfluxDBConfig;
@@ -38,21 +38,21 @@ try {
     // Register the driver
     switch ($driver) {
         case 'influxdb':
-            TSDBFactory::registerDriver('influxdb', InfluxDBDriver::class);
+            DriverManager::register('influxdb', InfluxDBDriver::class);
             break;
         case 'prometheus':
-            TSDBFactory::registerDriver('prometheus', PrometheusDriver::class);
+            DriverManager::register('prometheus', PrometheusDriver::class);
             break;
         case 'graphite':
-            TSDBFactory::registerDriver('graphite', GraphiteDriver::class);
+            DriverManager::register('graphite', GraphiteDriver::class);
             break;
         case 'rrdtool':
-            TSDBFactory::registerDriver('rrdtool', RRDtoolDriver::class);
+            DriverManager::register('rrdtool', RRDtoolDriver::class);
             break;
     }
 
     // Create database instance
-    $db = TSDBFactory::create($driver, $config);
+    $db = DriverManager::create($driver, $config);
     echo "Successfully connected to {$driver}!\n";
 
     // Create the database/bucket if it doesn't exist

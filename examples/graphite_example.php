@@ -28,11 +28,11 @@ try {
 }
 
 // Initialize the driver
-\TimeSeriesPhp\Core\TSDBFactory::registerDriver('graphite', GraphiteDriver::class);
+\TimeSeriesPhp\Core\DriverManager::register('graphite', GraphiteDriver::class);
 
 // Connect to the database
 try {
-    $graphite = \TimeSeriesPhp\Core\TSDBFactory::create('graphite', $graphiteConfig);
+    $graphite = \TimeSeriesPhp\Core\DriverManager::create('graphite', $graphiteConfig);
     echo "Successfully connected to Graphite!\n";
 } catch (DriverException|ConfigurationException $e) {
     echo "Failed to connect to Graphite: {$e->getMessage()}\n";
@@ -186,7 +186,7 @@ try {
         'prefix' => 'example.',
     ]);
 
-    $udpGraphite = \TimeSeriesPhp\Core\TSDBFactory::create('graphite', $udpConfig);
+    $udpGraphite = \TimeSeriesPhp\Core\DriverManager::create('graphite', $udpConfig);
 
     echo "Using UDP protocol (faster but less reliable):\n";
     $udpDataPoint = new DataPoint('servers.server1.protocol.udp', ['value' => 1]);

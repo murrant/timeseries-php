@@ -83,14 +83,14 @@ $result = TimeSeries::query($query);
 ```php
 try {
     // InfluxDB example
-    $influxdb = TSDBFactory::create('influxdb', [
+    $influxdb = DriverManager::create('influxdb', [
         'host' => 'localhost',
         'port' => 8086,
         'database' => 'mydb'
     ]);
 
     // RRDtool example
-    $rrdtool = TSDBFactory::create('rrdtool', [
+    $rrdtool = DriverManager::create('rrdtool', [
         'rrd_dir' => '/var/lib/rrd'
     ]);
 

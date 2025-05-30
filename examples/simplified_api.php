@@ -3,7 +3,7 @@
 require_once __DIR__.'/../vendor/autoload.php';
 
 use TimeSeriesPhp\Core\Data\DataPoint;
-use TimeSeriesPhp\Core\Factory\TSDBFactory;
+use TimeSeriesPhp\Core\Factory\DriverManager;
 use TimeSeriesPhp\Core\Query\Query;
 use TimeSeriesPhp\Drivers\InfluxDB\Config\InfluxDBConfig;
 use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
@@ -19,7 +19,7 @@ echo "TimeSeriesPhp Simplified API Example\n";
 echo "===================================\n\n";
 
 // Register the InfluxDB driver
-TSDBFactory::registerDriver('influxdb', InfluxDBDriver::class);
+DriverManager::register('influxdb', InfluxDBDriver::class);
 
 // Step 1: Create a configuration
 echo "Step 1: Creating configuration...\n";

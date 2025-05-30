@@ -102,12 +102,12 @@ Thrown when there is an error validating input data, such as invalid data types,
 The most basic way to handle exceptions is to catch the base `TSDBException` class, which will catch all TimeSeriesPhp exceptions:
 
 ```php
-use TimeSeriesPhp\Core\TSDBFactory;
+use TimeSeriesPhp\Core\DriverManager;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Exceptions\TSDBException;
 
 try {
-    $db = TSDBFactory::create('influxdb', $config);
+    $db = DriverManager::create('influxdb', $config);
     $dataPoint = new DataPoint('cpu_usage', ['value' => 85.5], ['host' => 'server1']);
     $db->write($dataPoint);
 } catch (TSDBException $e) {
@@ -120,7 +120,7 @@ try {
 For more granular error handling, you can catch specific exception types:
 
 ```php
-use TimeSeriesPhp\Core\TSDBFactory;
+use TimeSeriesPhp\Core\DriverManager;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Exceptions\ConnectionException;
@@ -131,7 +131,7 @@ use TimeSeriesPhp\Exceptions\TSDBException;
 
 try {
     // Create a database instance
-    $db = TSDBFactory::create('influxdb', $config);
+    $db = DriverManager::create('influxdb', $config);
     
     // Write a data point
     $dataPoint = new DataPoint('cpu_usage', ['value' => 85.5], ['host' => 'server1']);
@@ -180,7 +180,7 @@ use TimeSeriesPhp\Drivers\InfluxDB\Exceptions\InfluxDBAuthException;
 use TimeSeriesPhp\Exceptions\TSDBException;
 
 try {
-    $db = TSDBFactory::create('influxdb', $config);
+    $db = DriverManager::create('influxdb', $config);
     // ...
 } catch (InfluxDBAuthException $e) {
     // Handle InfluxDB authentication errors
@@ -245,7 +245,7 @@ try {
 Make sure to clean up resources, such as database connections, even when exceptions occur. Use `finally` blocks for this purpose.
 
 ```php
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 try {
     // Use the database
     $dataPoint = new DataPoint('cpu_usage', ['value' => 85.5], ['host' => 'server1']);
@@ -272,7 +272,7 @@ $retryDelay = 1; // seconds
 
 for ($retry = 0; $retry <= $maxRetries; $retry++) {
     try {
-        $db = TSDBFactory::create('influxdb', $config);
+        $db = DriverManager::create('influxdb', $config);
         $dataPoint = new DataPoint('cpu_usage', ['value' => 85.5], ['host' => 'server1']);
         $db->write($dataPoint);
         

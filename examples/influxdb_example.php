@@ -29,11 +29,11 @@ try {
 }
 
 // Initialize the driver
-\TimeSeriesPhp\Core\TSDBFactory::registerDriver('influxdb', InfluxDBDriver::class);
+\TimeSeriesPhp\Core\DriverManager::register('influxdb', InfluxDBDriver::class);
 
 // Connect to the database
 try {
-    $influxdb = \TimeSeriesPhp\Core\TSDBFactory::create('influxdb', $influxdbConfig);
+    $influxdb = \TimeSeriesPhp\Core\DriverManager::create('influxdb', $influxdbConfig);
     echo "Successfully connected to InfluxDB!\n";
 } catch (DriverException|ConfigurationException $e) {
     echo "Failed to connect to InfluxDB: {$e->getMessage()}\n";

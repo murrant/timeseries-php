@@ -351,7 +351,7 @@ $query->select(['value'])
 Once you have built a query, you can execute it using the `query()` method of a database driver instance.
 
 ```php
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 $query = new Query('cpu_usage');
 $query->select(['value'])
       ->where('host', '=', 'server1')
@@ -383,7 +383,7 @@ foreach ($rows as $row) {
 If you need to execute a database-specific query that cannot be expressed using the query builder, you can use the `rawQuery()` method:
 
 ```php
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 $result = $db->rawQuery('SELECT mean("value") FROM "cpu_usage" WHERE time > now() - 1h GROUP BY time(5m)');
 ```
 

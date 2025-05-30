@@ -34,7 +34,7 @@ $config = new RRDtoolConfig([
 ## Creating a Driver Instance
 
 ```php
-use TimeSeriesPhp\Core\TSDBFactory;
+use TimeSeriesPhp\Core\DriverManager;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
 
 // Create configuration
@@ -44,7 +44,7 @@ $config = new RRDtoolConfig([
 ]);
 
 // Create driver instance
-$db = TSDBFactory::create('rrdtool', $config);
+$db = DriverManager::create('rrdtool', $config);
 ```
 
 ## RRD File Structure
@@ -224,7 +224,7 @@ use TimeSeriesPhp\Exceptions\UnsupportedOperationException;
 use TimeSeriesPhp\Exceptions\TSDBException;
 
 try {
-    $db = TSDBFactory::create('rrdtool', $config);
+    $db = DriverManager::create('rrdtool', $config);
     $dataPoint = new DataPoint('server1_cpu', ['usage' => 85.5]);
     $db->write($dataPoint);
     $result = $db->query($query);

@@ -18,15 +18,15 @@ composer require librenms/timeseries-php
 
 ### Creating a Database Connection
 
-The main entry point for TimeSeriesPhp is the `TSDBFactory` class, which creates database driver instances:
+The main entry point for TimeSeriesPhp is the `DriverManager` class, which creates database driver instances:
 
 ```php
 <?php
 
-use TimeSeriesPhp\Core\TSDBFactory;
+use TimeSeriesPhp\Core\DriverManager;
 
 // Create a database instance with default configuration
-$db = TSDBFactory::create('influxdb');
+$db = DriverManager::create('influxdb');
 
 // Or with explicit configuration
 use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig;
@@ -38,7 +38,7 @@ $config = new InfluxDBConfig([
     'bucket' => 'your-bucket',
 ]);
 
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 ```
 
 ### Writing Data
@@ -101,7 +101,7 @@ foreach ($result as $row) {
 ```php
 <?php
 
-use TimeSeriesPhp\Core\TSDBFactory;
+use TimeSeriesPhp\Core\DriverManager;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig;
@@ -115,7 +115,7 @@ $config = new InfluxDBConfig([
 ]);
 
 // Create database instance
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 
 // Write data
 $dataPoint = new DataPoint('cpu_usage', ['value' => 85.5], ['host' => 'server1']);
@@ -134,7 +134,7 @@ $result = $db->query($query);
 ```php
 <?php
 
-use TimeSeriesPhp\Core\TSDBFactory;
+use TimeSeriesPhp\Core\DriverManager;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Drivers\Prometheus\PrometheusConfig;
@@ -147,7 +147,7 @@ $config = new PrometheusConfig([
 ]);
 
 // Create database instance
-$db = TSDBFactory::create('prometheus', $config);
+$db = DriverManager::create('prometheus', $config);
 
 // Write data (Note: Prometheus is primarily a pull-based system)
 $dataPoint = new DataPoint('cpu_usage', ['value' => 85.5], ['host' => 'server1']);
@@ -166,7 +166,7 @@ $result = $db->query($query);
 ```php
 <?php
 
-use TimeSeriesPhp\Core\TSDBFactory;
+use TimeSeriesPhp\Core\DriverManager;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Drivers\Graphite\GraphiteConfig;
@@ -179,7 +179,7 @@ $config = new GraphiteConfig([
 ]);
 
 // Create database instance
-$db = TSDBFactory::create('graphite', $config);
+$db = DriverManager::create('graphite', $config);
 
 // Write data
 $dataPoint = new DataPoint('servers.server1.cpu_usage', ['value' => 85.5]);
@@ -197,7 +197,7 @@ $result = $db->query($query);
 ```php
 <?php
 
-use TimeSeriesPhp\Core\TSDBFactory;
+use TimeSeriesPhp\Core\DriverManager;
 use TimeSeriesPhp\Core\DataPoint;
 use TimeSeriesPhp\Core\Query;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
@@ -209,7 +209,7 @@ $config = new RRDtoolConfig([
 ]);
 
 // Create database instance
-$db = TSDBFactory::create('rrdtool', $config);
+$db = DriverManager::create('rrdtool', $config);
 
 // Write data
 $dataPoint = new DataPoint('cpu_usage', ['value' => 85.5], ['host' => 'server1']);
@@ -238,7 +238,7 @@ use TimeSeriesPhp\Exceptions\QueryException;
 use TimeSeriesPhp\Exceptions\WriteException;
 
 try {
-    $db = TSDBFactory::create('influxdb', $config);
+    $db = DriverManager::create('influxdb', $config);
     $db->write($dataPoint);
     $result = $db->query($query);
 } catch (ConnectionException $e) {
@@ -283,7 +283,7 @@ Always close the database connection when you're done:
 ```php
 <?php
 
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 try {
     // Use the database
     $db->write($dataPoint);

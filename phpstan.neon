@@ -9,4 +9,11 @@ parameters:
 	reportUnmatchedIgnoredErrors: false
 	treatPhpDocTypesAsCertain: true
 	ignoreErrors:
-		- '#PHPDoc tag @var with type array<.+> is not subtype of native type array.#'
+		- '#Call to method PHPUnit\\Framework\\Assert::assert(.*) with (.*) will always evaluate to true.#'
+		- '#Call to an undefined method TimeSeriesPhp\\Contracts\\Driver\\TimeSeriesInterface::expects\(\).#'
+		- '#Cannot call method method\(\) on mixed.#'
+		- '#Cannot call method willReturn\(\) on mixed.#'
+		- '#Cannot call method with\(\) on mixed.#'
+
+includes:
+	- vendor/phpstan/phpstan-phpunit/extension.neon

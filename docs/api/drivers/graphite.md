@@ -36,7 +36,7 @@ $config = new GraphiteConfig([
 ## Creating a Driver Instance
 
 ```php
-use TimeSeriesPhp\Core\TSDBFactory;
+use TimeSeriesPhp\Core\DriverManager;
 use TimeSeriesPhp\Drivers\Graphite\GraphiteConfig;
 
 // Create configuration
@@ -47,7 +47,7 @@ $config = new GraphiteConfig([
 ]);
 
 // Create driver instance
-$db = TSDBFactory::create('graphite', $config);
+$db = DriverManager::create('graphite', $config);
 ```
 
 ## Writing Data
@@ -177,7 +177,7 @@ use TimeSeriesPhp\Exceptions\UnsupportedOperationException;
 use TimeSeriesPhp\Exceptions\TSDBException;
 
 try {
-    $db = TSDBFactory::create('graphite', $config);
+    $db = DriverManager::create('graphite', $config);
     $dataPoint = new DataPoint('servers.server1.cpu_usage', ['value' => 85.5]);
     $db->write($dataPoint);
     $result = $db->query($query);
@@ -281,7 +281,7 @@ $query->select(['value'])
 Always close the connection when you're done:
 
 ```php
-$db = TSDBFactory::create('graphite', $config);
+$db = DriverManager::create('graphite', $config);
 try {
     // Use the database
     $db->write($dataPoint);

@@ -34,11 +34,11 @@ try {
 }
 
 // Initialize the driver
-\TimeSeriesPhp\Core\Factory\TSDBFactory::registerDriver('rrdtool', RRDtoolDriver::class);
+\TimeSeriesPhp\Core\Factory\DriverManager::register('rrdtool', RRDtoolDriver::class);
 
 // Connect to the database
 try {
-    $rrdtool = \TimeSeriesPhp\Core\Factory\TSDBFactory::create('rrdtool', $rrdtoolConfig);
+    $rrdtool = \TimeSeriesPhp\Core\Factory\DriverManager::create('rrdtool', $rrdtoolConfig);
     echo "Successfully connected to RRDtool!\n";
 } catch (DriverException|ConfigurationException $e) {
     echo "Failed to connect to RRDtool: {$e->getMessage()}\n";

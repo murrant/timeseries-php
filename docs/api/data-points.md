@@ -136,7 +136,7 @@ Once you have created a data point, you can write it to a time series database u
 ### Writing a Single Data Point
 
 ```php
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 $dataPoint = new DataPoint('cpu_usage', ['value' => 85.5], ['host' => 'server1']);
 $success = $db->write($dataPoint);
 ```
@@ -146,7 +146,7 @@ $success = $db->write($dataPoint);
 For better performance when writing multiple data points, use the `writeBatch()` method:
 
 ```php
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 
 $dataPoints = [
     new DataPoint('cpu_usage', ['value' => 85.5], ['host' => 'server1']),

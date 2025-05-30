@@ -31,7 +31,7 @@ Creates a new database.
 #### Examples
 
 ```php
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 try {
     $success = $db->createDatabase('new_database');
     if ($success) {
@@ -67,7 +67,7 @@ Deletes a database.
 #### Examples
 
 ```php
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 try {
     $success = $db->deleteDatabase('old_database');
     if ($success) {
@@ -99,7 +99,7 @@ Gets a list of all databases.
 #### Examples
 
 ```php
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 try {
     $databases = $db->getDatabases();
     echo "Available databases:\n";
@@ -138,7 +138,7 @@ Deletes a measurement or data within a specific time range.
 #### Examples
 
 ```php
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 
 // Delete an entire measurement
 try {
@@ -186,7 +186,7 @@ Gets a list of all measurements in the database.
 #### Examples
 
 ```php
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 try {
     $measurements = $db->getMeasurements();
     echo "Available measurements:\n";
@@ -229,7 +229,7 @@ Creates a new retention policy.
 #### Examples
 
 ```php
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 try {
     // Create a retention policy that keeps data for 30 days
     $success = $db->createRetentionPolicy('month', '30d', 1, true);
@@ -269,7 +269,7 @@ Deletes a retention policy.
 #### Examples
 
 ```php
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 try {
     $success = $db->deleteRetentionPolicy('old_policy');
     if ($success) {
@@ -304,7 +304,7 @@ Gets a list of all retention policies in the database.
 #### Examples
 
 ```php
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 try {
     $policies = $db->getRetentionPolicies();
     echo "Available retention policies:\n";
@@ -348,7 +348,7 @@ Creates a new continuous query.
 #### Examples
 
 ```php
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 try {
     // Create a continuous query that calculates hourly averages
     $query = 'SELECT mean("value") AS "mean_value" INTO "hourly_cpu_usage" FROM "cpu_usage" GROUP BY time(1h), "host"';
@@ -389,7 +389,7 @@ Deletes a continuous query.
 #### Examples
 
 ```php
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 try {
     $success = $db->deleteContinuousQuery('old_query');
     if ($success) {
@@ -424,7 +424,7 @@ Gets a list of all continuous queries in the database.
 #### Examples
 
 ```php
-$db = TSDBFactory::create('influxdb', $config);
+$db = DriverManager::create('influxdb', $config);
 try {
     $queries = $db->getContinuousQueries();
     echo "Available continuous queries:\n";

@@ -3,7 +3,7 @@
 require_once __DIR__.'/../vendor/autoload.php';
 
 use TimeSeriesPhp\Core\Data\DataPoint;
-use TimeSeriesPhp\Core\Factory\TSDBFactory;
+use TimeSeriesPhp\Core\Factory\DriverManager;
 use TimeSeriesPhp\Core\Query\Query;
 use TimeSeriesPhp\Core\Query\RawQuery;
 use TimeSeriesPhp\Drivers\Graphite\Config\GraphiteConfig;
@@ -37,16 +37,16 @@ $driver = 'influxdb';
 // Register the driver
 switch ($driver) {
     case 'influxdb':
-        TSDBFactory::registerDriver('influxdb', InfluxDBDriver::class);
+        DriverManager::register('influxdb', InfluxDBDriver::class);
         break;
     case 'prometheus':
-        TSDBFactory::registerDriver('prometheus', PrometheusDriver::class);
+        DriverManager::register('prometheus', PrometheusDriver::class);
         break;
     case 'graphite':
-        TSDBFactory::registerDriver('graphite', GraphiteDriver::class);
+        DriverManager::register('graphite', GraphiteDriver::class);
         break;
     case 'rrdtool':
-        TSDBFactory::registerDriver('rrdtool', RRDtoolDriver::class);
+        DriverManager::register('rrdtool', RRDtoolDriver::class);
         break;
 }
 
@@ -58,7 +58,7 @@ try {
     $invalidConfig = createInvalidConfig($driver);
 
     // This should throw a ConfigurationException
-    $db = TSDBFactory::create($driver, $invalidConfig);
+    $db = DriverManager::create($driver, $invalidConfig);
 
     echo "This line should not be reached.\n";
 } catch (ConfigurationException $e) {
@@ -78,7 +78,7 @@ try {
     $config = createConfig($driver);
 
     // Create database instance
-    $db = TSDBFactory::create($driver, $config);
+    $db = DriverManager::create($driver, $config);
     echo "Successfully connected to {$driver}.\n";
 
     // Try to write a data point with an invalid measurement name
@@ -113,7 +113,7 @@ try {
     // Create a valid configuration and connect
     if (! isset($db) || ! $db) {
         $config = createConfig($driver);
-        $db = TSDBFactory::create($driver, $config);
+        $db = DriverManager::create($driver, $config);
     }
 
     // Create an invalid query (e.g., with a syntax error in the raw query)
@@ -183,7 +183,7 @@ try {
     // Create a valid configuration and connect if not already connected
     if (! isset($db) || ! $db) {
         $config = createConfig($driver);
-        $db = TSDBFactory::create($driver, $config);
+        $db = DriverManager::create($driver, $config);
     }
 
     // Define which exceptions are retryable
@@ -320,7 +320,7 @@ $circuitBreaker = new CircuitBreaker(3, 5); // 3 failures, 5 second timeout
 // Create a valid configuration and connect if not already connected
 if (! isset($db) || ! $db) {
     $config = createConfig($driver);
-    $db = TSDBFactory::create($driver, $config);
+    $db = DriverManager::create($driver, $config);
 }
 
 // Run a series of operations with the circuit breaker
@@ -444,7 +444,7 @@ try {
     // Create a valid configuration and connect if not already connected
     if (! isset($db) || ! $db) {
         $config = createConfig($driver);
-        $db = TSDBFactory::create($driver, $config);
+        $db = DriverManager::create($driver, $config);
     }
 
     // Define which exceptions should trigger the fallback

@@ -7,7 +7,7 @@ use TimeSeriesPhp\Contracts\Config\ConfigInterface;
 use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
-use TimeSeriesPhp\Core\Factory\TSDBFactory;
+use TimeSeriesPhp\Core\Factory\DriverManager;
 use TimeSeriesPhp\Core\Query\Query;
 use TimeSeriesPhp\Exceptions\Driver\DriverException;
 use TimeSeriesPhp\Exceptions\Driver\WriteException;
@@ -17,7 +17,7 @@ use TimeSeriesPhp\Exceptions\Query\QueryException;
  * Simplified entry point for TimeSeriesPhp
  *
  * This class provides a simpler API for common operations with time series databases.
- * It's a wrapper around the TSDBFactory and TimeSeriesInterface that reduces boilerplate
+ * It's a wrapper around the DriverManager and TimeSeriesInterface that reduces boilerplate
  * for common operations.
  */
 class TSDB
@@ -35,7 +35,7 @@ class TSDB
      */
     public function __construct(string $driver, ?ConfigInterface $config = null, bool $autoConnect = true)
     {
-        $this->driver = TSDBFactory::create($driver, $config, $autoConnect);
+        $this->driver = DriverManager::create($driver, $config, $autoConnect);
     }
 
     public static function start(string $driver, ?ConfigInterface $config = null, bool $autoConnect = true): self

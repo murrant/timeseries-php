@@ -2,7 +2,7 @@
 
 require_once __DIR__.'/../vendor/autoload.php';
 
-use TimeSeriesPhp\Core\TSDBFactory;
+use TimeSeriesPhp\Core\DriverManager;
 
 /**
  * Laravel Integration Example
@@ -232,7 +232,7 @@ class TimeSeriesManager
         $driverConfig = new $configClass($config);
 
         // Create the driver instance
-        return TSDBFactory::create($driver, $driverConfig);
+        return DriverManager::create($driver, $driverConfig);
     }
 
     protected function createInfluxdbDriver(array $config)
