@@ -257,22 +257,67 @@ Download the Windows binary from the [official website](https://www.rrdtool.org/
 choco install rrdtool
 ```
 
+### RRDcached
+
+RRDcached is a daemon that receives updates to existing RRD files, accumulates them, and, if enough have been received or a defined time has passed, writes the updates to the RRD file. This can significantly improve performance when dealing with a large number of RRD files or when updates are frequent.
+
+#### Using Docker (Recommended)
+
+The easiest way to use rrdcached is with the provided Docker container:
+
+```bash
+docker-compose -f docker/docker-compose.yml up -d rrdcached
+```
+
+This will start rrdcached on port 42217.
+
+#### Manual Installation
+
+##### Linux (Debian/Ubuntu)
+
+```bash
+sudo apt-get update
+sudo apt-get install rrdcached
+```
+
+##### macOS (Homebrew)
+
+```bash
+brew install rrdtool --with-rrdcached
+```
+
+##### Starting rrdcached manually
+
+```bash
+rrdcached -g -F -B -R -j /var/lib/rrdcached/journal -l unix:/var/run/rrdcached.sock -p /var/run/rrdcached.pid -b /var/lib/rrdcached/db -L -s www-data -m 0660 -l 0.0.0.0:42217
+```
+
 ### Configuration for Tests
 
-The RRDtool tests don't use environment variables. Instead, they:
+The RRDtool tests don't use environment variables by default. Instead, they:
 
 1. Check if the `rrdtool` command is available in the PATH
 2. Use a local directory (`tests/Drivers/RRDtool/data/`) for integration tests
 3. Use a temporary directory (`sys_get_temp_dir() + '/rrdtool_benchmark/'`) for benchmark tests
 
+For rrdcached tests, you can set the following environment variables:
+
+- `RRDCACHED_HOST`: The hostname of the rrdcached instance (default: `localhost`)
+- `RRDCACHED_PORT`: The port of the rrdcached instance (default: `42217`)
+
 Ensure that:
 - The `rrdtool` command is available in your PATH
 - The test directories are writable by the user running the tests
+- For rrdcached tests, the rrdcached daemon is running and accessible
 
 ### Running Integration Tests
 
 ```bash
+# Run standard RRDtool tests
 ./vendor/bin/phpunit tests/Drivers/RRDtool/RRDtoolIntegrationTest.php
+
+# Run RRDtool with rrdcached tests
+./vendor/bin/phpunit tests/Drivers/RRDtool/RRDtoolCachedIntegrationTest.php
 ```
 
 ### Running Benchmark Tests

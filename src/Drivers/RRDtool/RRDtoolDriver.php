@@ -33,6 +33,14 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
 
     protected RRDTagStrategyInterface $tagStrategy;
 
+    /**
+     * Get the rrdcached address if configured
+     */
+    public function getRrdcachedAddress(): string
+    {
+        return $this->rrdcachedAddress;
+    }
+
     private ?Process $persistentProcess = null;
 
     private ?InputStream $persistentInput = null;

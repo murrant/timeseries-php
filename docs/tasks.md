@@ -57,7 +57,7 @@
 
 [ ] 11. Enhance RRDtool driver
     [ ] Improve tag handling mechanism
-    [ ] Add rrdcached support
+    [x] Add rrdcached support
     [ ] Add support for RRDtool's advanced features
 
 [ ] 12. Optimize InfluxDB driver

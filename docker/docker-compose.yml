@@ -54,10 +54,36 @@ services:
       timeout: 10s
       retries: 3
 
+  rrdcached:
+    image: crazymax/rrdcached:latest
+    container_name: timeseries-php-rrdcached
+    ports:
+      - "42217:42217"
+    volumes:
+      - ../tests/Drivers/RRDtool/data/cached:/data/db/data/cached
+      - rrdcached-journal:/data/journal
+    environment:
+      - TZ=UTC
+      - PUID=1000
+      - PGID=1000
+      - RRDCACHED_BASE_DIR=/data/db
+      - RRDCACHED_WRITE_TIMEOUT=1800
+      - RRDCACHED_WRITE_JITTER=1800
+      - RRDCACHED_WRITE_THREADS=4
+      - RRDCACHED_FLUSH_DEAD_DATA_INTERVAL=3600
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "42217"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 volumes:
   influxdb-data:
   prometheus-data:
   graphite-data:
+  rrdcached-data:
+  rrdcached-journal:
 
 # Note: RRDtool is a command-line tool and not a server, so it's not included in this Docker Compose file.
 # Please install RRDtool locally as described in the TSDB_SETUP.md documentation.
+# However, rrdcached is a daemon that can be run as a server, so it's included in this Docker Compose file.
