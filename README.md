@@ -4,7 +4,7 @@
 
 A library to abstract storing data in and retrieving data from timeseries databases.
 
-![check-code-coverage](https://img.shields.io/badge/code--coverage-80%-brightgreen)
+![check-code-coverage](https://img.shields.io/badge/code--coverage-80%25-brightgreen)
 
 ## 📥 Installation
 `composer require librenms/timeseries-php`
