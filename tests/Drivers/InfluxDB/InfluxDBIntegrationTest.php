@@ -72,7 +72,7 @@ class InfluxDBIntegrationTest extends TestCase
     protected function tearDown(): void
     {
         // Close the driver connection
-        if (isset($this->driver) && $this->driver->isConnected()) {
+        if ($this->driver->isConnected()) {
             // Clean up test data
             try {
                 $now = new DateTime;

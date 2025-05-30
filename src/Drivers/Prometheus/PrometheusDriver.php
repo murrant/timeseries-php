@@ -150,21 +150,19 @@ class PrometheusDriver extends AbstractTimeSeriesDB
 
             // Process the result
             $result = new QueryResult;
-            if (isset($response['data']['result'])) {
-                foreach ($response['data']['result'] as $item) {
-                    /** @var array{'metric': array{'__name__'?: string}, 'value'?: array{int, ?scalar}, 'values'?: array<array{int, ?scalar}>} $item */
-                    // Get the metric name or use a default
-                    $metricName = $item['metric']['__name__'] ?? 'value';
+            foreach ($response['data']['result'] ?? [] as $item) {
+                /** @var array{'metric': array{'__name__'?: string}, 'value'?: array{int, ?scalar}, 'values'?: array<array{int, ?scalar}>} $item */
+                // Get the metric name or use a default
+                $metricName = $item['metric']['__name__'] ?? 'value';
 
-                    // Handle single value result (instant query)
-                    if (isset($item['value'])) {
-                        [$timestamp, $value] = $item['value'];
+                // Handle single value result (instant query)
+                if (isset($item['value'])) {
+                    [$timestamp, $value] = $item['value'];
+                    $result->appendPoint($timestamp, $metricName, $value);
+                } elseif (isset($item['values'])) {
+                    foreach ($item['values'] as $valueItem) {
+                        [$timestamp, $value] = $valueItem;
                         $result->appendPoint($timestamp, $metricName, $value);
-                    } elseif (isset($item['values'])) {
-                        foreach ($item['values'] as $valueItem) {
-                            [$timestamp, $value] = $valueItem;
-                            $result->appendPoint($timestamp, $metricName, $value);
-                        }
                     }
                 }
             }

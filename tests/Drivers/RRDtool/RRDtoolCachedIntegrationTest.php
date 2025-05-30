@@ -49,8 +49,8 @@ class RRDtoolCachedIntegrationTest extends TestCase
         $this->rrdcachedAddress = "$rrdcachedHost:$rrdcachedPort";
 
         // Try to connect to rrdcached
-        $fp = @fsockopen($rrdcachedHost, (int)$rrdcachedPort, $errno, $errstr, 5);
-        if (!$fp) {
+        $fp = @fsockopen($rrdcachedHost, (int) $rrdcachedPort, $errno, $errstr, 5);
+        if (! $fp) {
             $this->markTestSkipped("Cannot connect to rrdcached at {$this->rrdcachedAddress}: $errstr ($errno)");
         }
         fclose($fp);
@@ -244,7 +244,7 @@ class RRDtoolCachedIntegrationTest extends TestCase
                 'perf_test_cached',
                 ['value' => $i],
                 ['host' => 'server1'],
-                new DateTime("@" . (time() + $i))
+                new DateTime('@'.(time() + $i))
             );
             $this->driver->write($dataPoint);
         }
@@ -273,7 +273,7 @@ class RRDtoolCachedIntegrationTest extends TestCase
                 'perf_test_nocache',
                 ['value' => $i],
                 ['host' => 'server1'],
-                new DateTime("@" . (time() + $i))
+                new DateTime('@'.(time() + $i))
             );
             $noCacheDriver->write($dataPoint);
         }
@@ -285,9 +285,9 @@ class RRDtoolCachedIntegrationTest extends TestCase
 
         // Output the results
         echo sprintf(
-            "Performance comparison:\n" .
-            "  With rrdcached: %.4f seconds\n" .
-            "  Without rrdcached: %.4f seconds\n" .
+            "Performance comparison:\n".
+            "  With rrdcached: %.4f seconds\n".
+            "  Without rrdcached: %.4f seconds\n".
             "  Difference: %.2f%%\n",
             $cachedTime,
             $noCacheTime,

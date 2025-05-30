@@ -29,7 +29,7 @@
    [x] Implement constructor property promotion
    [x] Use union types and intersection types make sure types are ordered consistently to ease searchability
    [x] Implement enumerations (enum) for type[ ]safe constants
-   [ ] Use the null coalescing operator (??) and nullsafe operator (?[ ]>)
+   [x] Use the null coalescing operator (??) and nullsafe operator (?[ ]>)
    [ ] Implement first[ ]class callable syntax
    [ ] Use readonly classes where appropriate
    [ ] Implement the new in array initialization syntax
@@ -92,7 +92,7 @@
 
 [ ] 18. Enhance Laravel integration
     [ ] Improve the Laravel service provider
-    [ ] Add more Laravel[ ]specific convenience methods
+    [ ] Add more Laravel-specific convenience methods
 
 ## Documentation and Examples
 [x] 19. Create comprehensive documentation

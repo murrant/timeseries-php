@@ -61,7 +61,7 @@ class GraphiteIntegrationTest extends TestCase
     protected function tearDown(): void
     {
         // Close the driver connection
-        if (isset($this->driver) && $this->driver->isConnected()) {
+        if ($this->driver->isConnected()) {
             $this->driver->close();
         }
     }

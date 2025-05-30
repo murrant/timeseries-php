@@ -61,7 +61,7 @@ class InfluxDBBenchmark extends AbstractDriverBenchmark
     protected function tearDownDriver(): void
     {
         // Clean up test data
-        if (isset($this->driver) && $this->driver->isConnected()) {
+        if ($this->driver->isConnected()) {
             try {
                 $now = new \DateTime;
                 $pastDay = (new \DateTime)->modify('-1 day');

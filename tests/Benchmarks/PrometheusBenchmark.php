@@ -49,7 +49,7 @@ class PrometheusBenchmark extends AbstractDriverBenchmark
     protected function tearDownDriver(): void
     {
         // Close the driver connection
-        if (isset($this->driver) && $this->driver->isConnected()) {
+        if ($this->driver->isConnected()) {
             $this->driver->close();
         }
     }

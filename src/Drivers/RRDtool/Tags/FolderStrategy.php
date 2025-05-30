@@ -37,9 +37,7 @@ class FolderStrategy implements RRDTagStrategyInterface
         // Process folder tags
         if (! empty($this->folderTags) && ! empty($tags)) {
             foreach ($this->folderTags as $folderTag) {
-                $tagValue = isset($tags[$folderTag])
-                    ? File::sanitize($tags[$folderTag])
-                    : '_unset';
+                $tagValue = File::sanitize($tags[$folderTag] ?? '_unset');
                 $path .= $tagValue.File::DIRECTORY_SEPARATOR;
             }
         }
