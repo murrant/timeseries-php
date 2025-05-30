@@ -30,7 +30,7 @@ class TSDBFactoryInstanceTest extends TestCase
         $mockConfigClass = get_class($mockConfig);
 
         // Register the driver
-        $this->factory->registerDriver('mock', $mockDriverClass, $mockConfigClass);
+        $this->factory->registerDriver($mockDriverClass, 'mock', $mockConfigClass);
 
         // Check that the driver is registered
         $this->assertTrue($this->factory->hasDriver('mock'));
@@ -67,7 +67,7 @@ class TSDBFactoryInstanceTest extends TestCase
         $mockConfigClass = get_class($mockConfig);
 
         // Register the driver
-        $this->factory->registerDriver('mock', $mockDriverClass, $mockConfigClass);
+        $this->factory->registerDriver($mockDriverClass, 'mock', $mockConfigClass);
 
         // Check that the driver is registered
         $this->assertTrue($this->factory->hasDriver('mock'));
@@ -104,7 +104,7 @@ class TSDBFactoryInstanceTest extends TestCase
         $mockDriverClass = get_class($mockDriver);
 
         // Register the driver
-        $this->factory->registerDriver('mock', $mockDriverClass, $mockConfigClass);
+        $this->factory->registerDriver($mockDriverClass, 'mock', $mockConfigClass);
 
         // Create a config instance
         $config = $this->factory->createConfig('mock', ['option' => 'value']);
@@ -120,5 +120,22 @@ class TSDBFactoryInstanceTest extends TestCase
 
         // Try to create a config for an unregistered driver
         $this->factory->createConfig('invalid');
+    }
+
+    public function test_register_driver_with_inferred_name_and_config(): void
+    {
+        // Use the test driver class from the data directory
+        $mockDriverClass = 'TimeSeriesPhp\Tests\Core\data\TestDriver';
+        $mockConfigClass = 'TimeSeriesPhp\Tests\Core\data\TestConfig';
+
+        // Register the driver without specifying the name or config class
+        /** @var class-string<\TimeSeriesPhp\Tests\Core\data\TestDriver> $mockDriverClass */
+        $this->factory->registerDriver($mockDriverClass);
+
+        // Check if the driver is available with the name from the Driver attribute
+        $this->assertTrue($this->factory->hasDriver('test'));
+
+        // Check if the config class was correctly inferred from the Driver attribute
+        $this->assertEquals($mockConfigClass, $this->factory->getConfigClass('test'));
     }
 }

@@ -12,9 +12,9 @@ class AggregateConfigTest extends TestCase
     {
         $this->expectException(ConfigurationException::class);
         $this->expectExceptionMessage('At least one write database must be configured');
-        
+
         // Should throw exception because write_databases is required and empty by default
-        new AggregateConfig();
+        new AggregateConfig;
     }
 
     public function test_custom_values(): void

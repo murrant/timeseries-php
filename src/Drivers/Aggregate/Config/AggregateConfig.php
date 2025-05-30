@@ -34,13 +34,13 @@ class AggregateConfig extends AbstractDriverConfig
         }
 
         foreach ($writeDatabases as $index => $config) {
-            if (!is_array($config) || !isset($config['driver'])) {
+            if (! is_array($config) || ! isset($config['driver'])) {
                 throw new ConfigurationException("Driver not specified for write database at index {$index}");
             }
         }
 
         $readDatabase = $this->get('read_database');
-        if ($readDatabase !== null && (!is_array($readDatabase) || !isset($readDatabase['driver']))) {
+        if ($readDatabase !== null && (! is_array($readDatabase) || ! isset($readDatabase['driver']))) {
             throw new ConfigurationException('Driver not specified for read database');
         }
     }
@@ -49,6 +49,7 @@ class AggregateConfig extends AbstractDriverConfig
      * Get all write database configurations
      *
      * @return array<int, array<string, mixed>>
+     *
      * @throws ConfigurationException
      */
     public function getWriteDatabases(): array
@@ -63,6 +64,7 @@ class AggregateConfig extends AbstractDriverConfig
      * Get the read database configuration
      *
      * @return array<string, mixed>|null
+     *
      * @throws ConfigurationException
      */
     public function getReadDatabase(): ?array
@@ -72,13 +74,14 @@ class AggregateConfig extends AbstractDriverConfig
         if ($readDatabase === null) {
             // If no read database is configured, use the first write database
             $writeDatabases = $this->getWriteDatabases();
-            if (!empty($writeDatabases)) {
+            if (! empty($writeDatabases)) {
                 return $writeDatabases[0];
             }
+
             return null;
         }
 
-        if (!is_array($readDatabase)) {
+        if (! is_array($readDatabase)) {
             throw new ConfigurationException('Read database configuration must be an array');
         }
 
@@ -89,13 +92,14 @@ class AggregateConfig extends AbstractDriverConfig
     /**
      * Add a write database configuration
      *
-     * @param array<string, mixed> $config
+     * @param  array<string, mixed>  $config
      * @return $this
+     *
      * @throws ConfigurationException
      */
     public function addWriteDatabase(array $config): self
     {
-        if (!isset($config['driver'])) {
+        if (! isset($config['driver'])) {
             throw new ConfigurationException('Driver not specified for write database');
         }
 
@@ -109,13 +113,14 @@ class AggregateConfig extends AbstractDriverConfig
     /**
      * Set the read database configuration
      *
-     * @param array<string, mixed>|null $config
+     * @param  array<string, mixed>|null  $config
      * @return $this
+     *
      * @throws ConfigurationException
      */
     public function setReadDatabase(?array $config): self
     {
-        if ($config !== null && !isset($config['driver'])) {
+        if ($config !== null && ! isset($config['driver'])) {
             throw new ConfigurationException('Driver not specified for read database');
         }
 

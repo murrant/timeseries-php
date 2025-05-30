@@ -11,6 +11,7 @@ use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\UriFactoryInterface;
 use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
+use TimeSeriesPhp\Core\Attributes\Driver;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
@@ -22,6 +23,7 @@ use TimeSeriesPhp\Exceptions\Query\RawQueryException;
 use TimeSeriesPhp\Exceptions\TSDBException;
 use TimeSeriesPhp\Support\Logs\Logger;
 
+#[Driver(name: 'prometheus', configClass: PrometheusConfig::class)]
 class PrometheusDriver extends AbstractTimeSeriesDB
 {
     private string $apiUrl;

@@ -16,6 +16,7 @@ use InfluxDB2\Service\DeleteService;
 use InfluxDB2\Service\OrganizationsService;
 use InfluxDB2\WriteApi;
 use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
+use TimeSeriesPhp\Core\Attributes\Driver;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
@@ -29,6 +30,7 @@ use TimeSeriesPhp\Exceptions\Query\RawQueryException;
 use TimeSeriesPhp\Support\Logs\Logger;
 use TimeSeriesPhp\Utils\Convert;
 
+#[Driver(name: 'influxdb', configClass: InfluxDBConfig::class)]
 class InfluxDBDriver extends AbstractTimeSeriesDB
 {
     protected ?Client $client = null;

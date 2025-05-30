@@ -4,7 +4,9 @@ namespace TimeSeriesPhp\Tests\Core\data;
 
 use TimeSeriesPhp\Contracts\Config\ConfigInterface;
 use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
+use TimeSeriesPhp\Core\Attributes\Driver;
 
+#[Driver(name: 'mock', configClass: MockConfig::class)]
 class MockDriver implements TimeSeriesInterface
 {
     public static bool $connectCalled = false;

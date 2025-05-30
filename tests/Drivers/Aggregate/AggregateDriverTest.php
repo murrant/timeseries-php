@@ -14,18 +14,22 @@ use TimeSeriesPhp\Drivers\Aggregate\Config\AggregateConfig;
 class AggregateDriverTest extends TestCase
 {
     private AggregateDriver $driver;
+
     /**
      * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
      */
     private $mockWriteDb1;
+
     /**
      * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
      */
     private $mockWriteDb2;
+
     /**
      * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
      */
     private $mockReadDb;
+
     private AggregateConfig $config;
 
     protected function setUp(): void
@@ -38,24 +42,27 @@ class AggregateDriverTest extends TestCase
         $this->mockReadDb = $this->createMock(TimeSeriesInterface::class);
 
         // Create a test subclass of AggregateDriver that doesn't actually connect to real databases
-        $this->driver = new class($this->mockWriteDb1, $this->mockWriteDb2, $this->mockReadDb) extends AggregateDriver {
+        $this->driver = new class($this->mockWriteDb1, $this->mockWriteDb2, $this->mockReadDb) extends AggregateDriver
+        {
             /**
              * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
              */
             private $mockWriteDb1;
+
             /**
              * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
              */
             private $mockWriteDb2;
+
             /**
              * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
              */
             private $mockReadDb;
 
             /**
-             * @param TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject $mockWriteDb1
-             * @param TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject $mockWriteDb2
-             * @param TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject $mockReadDb
+             * @param  TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject  $mockWriteDb1
+             * @param  TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject  $mockWriteDb2
+             * @param  TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject  $mockReadDb
              */
             public function __construct(
                 $mockWriteDb1,
@@ -72,6 +79,7 @@ class AggregateDriverTest extends TestCase
                 $this->writeDatabases = [$this->mockWriteDb1, $this->mockWriteDb2];
                 $this->readDatabase = $this->mockReadDb;
                 $this->connected = true;
+
                 return true;
             }
         };
@@ -380,19 +388,21 @@ class AggregateDriverTest extends TestCase
     public function test_read_database_fallback(): void
     {
         // Create a driver with write databases only
-        $driver = new class($this->mockWriteDb1, $this->mockWriteDb2) extends AggregateDriver {
+        $driver = new class($this->mockWriteDb1, $this->mockWriteDb2) extends AggregateDriver
+        {
             /**
              * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
              */
             private $mockWriteDb1;
+
             /**
              * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
              */
             private $mockWriteDb2;
 
             /**
-             * @param TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject $mockWriteDb1
-             * @param TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject $mockWriteDb2
+             * @param  TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject  $mockWriteDb1
+             * @param  TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject  $mockWriteDb2
              */
             public function __construct(
                 $mockWriteDb1,
@@ -407,6 +417,7 @@ class AggregateDriverTest extends TestCase
                 $this->writeDatabases = [$this->mockWriteDb1, $this->mockWriteDb2];
                 $this->readDatabase = $this->mockWriteDb1; // Use first write database for reading
                 $this->connected = true;
+
                 return true;
             }
         };

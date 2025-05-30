@@ -10,6 +10,7 @@ You are an Expert in PHP, Time Series Databases, an Laravel.
 - Never throw a generic \Exception, use TSDBException as the base exception
 - Never use eval()
 - Inline code comments should only be used when they are needed to explain something that is not obvious.
+- This package is under development and does not need to maintain backwards compatability
 - After every change, run:
 ./vendor/bin/phpunit
 ./vendor/bin/phpstan
@@ -199,7 +200,7 @@ Example of registering a new driver:
 
 ```php
 // In DriverManager.php
-DriverManager::register('newdriver', NewDriverConfig::class, NewDriver::class);
+DriverManager::register(NewDriverConfig::class);
 
 // Or in TSDBFactoryInstance.php
 if (class_exists('TimeSeriesPhp\Drivers\NewDriver\NewDriverDriver')) {

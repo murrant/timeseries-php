@@ -5,6 +5,7 @@ namespace TimeSeriesPhp\Drivers\Aggregate;
 use DateTime;
 use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
 use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
+use TimeSeriesPhp\Core\Attributes\Driver;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
@@ -16,6 +17,7 @@ use TimeSeriesPhp\Exceptions\Driver\WriteException;
 use TimeSeriesPhp\Exceptions\Query\RawQueryException;
 use TimeSeriesPhp\Support\Logs\Logger;
 
+#[Driver(name: 'aggregate', configClass: AggregateConfig::class)]
 class AggregateDriver extends AbstractTimeSeriesDB
 {
     /** @var TimeSeriesInterface[] */
@@ -28,7 +30,7 @@ class AggregateDriver extends AbstractTimeSeriesDB
      */
     protected function doConnect(): bool
     {
-        if (!$this->config instanceof AggregateConfig) {
+        if (! $this->config instanceof AggregateConfig) {
             throw new ConnectionException('Invalid configuration type. Expected AggregateConfig.');
         }
 
@@ -36,7 +38,7 @@ class AggregateDriver extends AbstractTimeSeriesDB
         $writeDatabaseConfigs = $this->config->getWriteDatabases();
         foreach ($writeDatabaseConfigs as $dbConfig) {
             try {
-                if (!isset($dbConfig['driver']) || !is_string($dbConfig['driver']) && !is_numeric($dbConfig['driver'])) {
+                if (! isset($dbConfig['driver']) || ! is_string($dbConfig['driver']) && ! is_numeric($dbConfig['driver'])) {
                     throw new ConnectionException('Driver must be a string');
                 }
                 $driver = (string) $dbConfig['driver'];
@@ -55,7 +57,7 @@ class AggregateDriver extends AbstractTimeSeriesDB
                     'write_driver' => $dbConfig['driver'] ?? 'unknown',
                     'error' => $e->getMessage(),
                 ]);
-                throw new ConnectionException('Failed to connect to write database: ' . $e->getMessage(), 0, $e);
+                throw new ConnectionException('Failed to connect to write database: '.$e->getMessage(), 0, $e);
             }
         }
 
@@ -63,7 +65,7 @@ class AggregateDriver extends AbstractTimeSeriesDB
         $readDatabaseConfig = $this->config->getReadDatabase();
         if ($readDatabaseConfig !== null) {
             try {
-                if (!isset($readDatabaseConfig['driver']) || !is_string($readDatabaseConfig['driver']) && !is_numeric($readDatabaseConfig['driver'])) {
+                if (! isset($readDatabaseConfig['driver']) || ! is_string($readDatabaseConfig['driver']) && ! is_numeric($readDatabaseConfig['driver'])) {
                     throw new ConnectionException('Driver must be a string');
                 }
                 $driver = (string) $readDatabaseConfig['driver'];
@@ -81,9 +83,9 @@ class AggregateDriver extends AbstractTimeSeriesDB
                     'read_driver' => $readDatabaseConfig['driver'] ?? 'unknown',
                     'error' => $e->getMessage(),
                 ]);
-                throw new ConnectionException('Failed to connect to read database: ' . $e->getMessage(), 0, $e);
+                throw new ConnectionException('Failed to connect to read database: '.$e->getMessage(), 0, $e);
             }
-        } else if (!empty($this->writeDatabases)) {
+        } elseif (! empty($this->writeDatabases)) {
             // Use the first write database for reading if no read database is configured
             $this->readDatabase = $this->writeDatabases[0];
 
@@ -95,6 +97,7 @@ class AggregateDriver extends AbstractTimeSeriesDB
         }
 
         $this->connected = true;
+
         return true;
     }
 
@@ -112,7 +115,7 @@ class AggregateDriver extends AbstractTimeSeriesDB
 
         foreach ($this->writeDatabases as $index => $db) {
             try {
-                if (!$db->write($dataPoint)) {
+                if (! $db->write($dataPoint)) {
                     $success = false;
                     $errors[$index] = "Write failed for database at index {$index}";
                 }
@@ -144,7 +147,7 @@ class AggregateDriver extends AbstractTimeSeriesDB
 
         foreach ($this->writeDatabases as $index => $db) {
             try {
-                if (!$db->writeBatch($dataPoints)) {
+                if (! $db->writeBatch($dataPoints)) {
                     $success = false;
                     $errors[$index] = "Batch write failed for database at index {$index}";
                 }
@@ -188,7 +191,7 @@ class AggregateDriver extends AbstractTimeSeriesDB
 
         foreach ($this->writeDatabases as $index => $db) {
             try {
-                if (!$db->createDatabase($database)) {
+                if (! $db->createDatabase($database)) {
                     $success = false;
                     $errors[$index] = "Create database failed for database at index {$index}";
                 }
@@ -232,7 +235,7 @@ class AggregateDriver extends AbstractTimeSeriesDB
 
         foreach ($this->writeDatabases as $index => $db) {
             try {
-                if (!$db->deleteDatabase($database)) {
+                if (! $db->deleteDatabase($database)) {
                     $success = false;
                     $errors[$index] = "Delete database failed for database at index {$index}";
                 }
@@ -264,7 +267,7 @@ class AggregateDriver extends AbstractTimeSeriesDB
 
         foreach ($this->writeDatabases as $index => $db) {
             try {
-                if (!$db->deleteMeasurement($measurement, $start, $stop)) {
+                if (! $db->deleteMeasurement($measurement, $start, $stop)) {
                     $success = false;
                     $errors[$index] = "Delete measurement failed for database at index {$index}";
                 }
@@ -288,7 +291,7 @@ class AggregateDriver extends AbstractTimeSeriesDB
             $db->close();
         }
 
-        if ($this->readDatabase !== null && !in_array($this->readDatabase, $this->writeDatabases, true)) {
+        if ($this->readDatabase !== null && ! in_array($this->readDatabase, $this->writeDatabases, true)) {
             $this->readDatabase->close();
         }
 

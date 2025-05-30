@@ -90,16 +90,31 @@ The `DriverManager` class is the main entry point for creating database instance
 
 ### Methods
 
-#### `registerDriver(string $name, string $className, ?string $configClassName = null): void`
+#### `registerClass(string $className, ?string $name = null, ?string $configClassName = null): void`
 
-Registers a driver with the factory. If `$configClassName` is not provided, it will be inferred from the driver class name by replacing "Driver" with "Config".
+Registers a driver with the factory. If `$name` or `$configClassName` are not provided, they will be inferred from the `Driver` attribute on the class. If the class doesn't have a `Driver` attribute, the name must be provided.
 
 ```php
-// With explicit config class
-DriverManager::register('custom', CustomDriver::class, CustomConfig::class);
+// With explicit name and config class
+DriverManager::registerClass(CustomDriver::class, 'custom', CustomConfig::class);
 
-// With inferred config class (CustomConfig will be inferred from CustomDriver)
-DriverManager::register('custom', CustomDriver::class);
+// With inferred name and config class from Driver attribute
+DriverManager::registerClass(CustomDriver::class);
+
+// With explicit name but inferred config class
+DriverManager::registerClass(CustomDriver::class, 'custom');
+```
+
+Example of a driver class with the `Driver` attribute:
+
+```php
+use TimeSeriesPhp\Core\Attributes\Driver;
+
+#[Driver(name: 'custom', configClass: CustomConfig::class)]
+class CustomDriver implements TimeSeriesInterface
+{
+    // ...
+}
 ```
 
 #### `unregisterDriver(string $name): bool`

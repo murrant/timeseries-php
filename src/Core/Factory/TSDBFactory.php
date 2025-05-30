@@ -2,8 +2,10 @@
 
 namespace TimeSeriesPhp\Core\Factory;
 
+use ReflectionClass;
 use TimeSeriesPhp\Contracts\Config\ConfigInterface;
 use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
+use TimeSeriesPhp\Core\Attributes\Driver;
 use TimeSeriesPhp\Exceptions\Driver\DriverException;
 
 /**
@@ -21,13 +23,13 @@ class TSDBFactory
     /**
      * Register a driver with the factory
      *
-     * @param  string  $name  The name of the driver
      * @param  class-string  $className  The fully qualified class name of the driver
-     * @param  class-string|null  $configClassName  The fully qualified class name of the config class (optional)
+     * @param  string|null  $name  The name of the driver (optional, will be inferred from Driver attribute if not provided)
+     * @param  class-string|null  $configClassName  The fully qualified class name of the config class (optional, will be inferred from Driver attribute if not provided)
      *
      * @throws DriverException If the class doesn't exist or doesn't implement TimeSeriesInterface
      */
-    public function registerDriver(string $name, string $className, ?string $configClassName = null): void
+    public function registerDriver(string $className, ?string $name = null, ?string $configClassName = null): void
     {
         if (! class_exists($className)) {
             throw new DriverException("Driver class '{$className}' does not exist");
@@ -37,9 +39,25 @@ class TSDBFactory
             throw new DriverException("Driver class '{$className}' must implement TimeSeriesInterface");
         }
 
-        // If config class name is not provided, try to infer it from the driver class name
+        // If name or config class name is not provided, try to get them from the Driver attribute
+        if ($name === null || $configClassName === null) {
+            $attributeInfo = $this->getDriverAttributeInfo($className);
+
+            if ($name === null) {
+                if ($attributeInfo === null) {
+                    throw new DriverException("Driver name must be provided if the class doesn't have a Driver attribute");
+                }
+                $name = $attributeInfo['name'];
+            }
+
+            if ($configClassName === null && $attributeInfo !== null && $attributeInfo['configClass'] !== null) {
+                $configClassName = $attributeInfo['configClass'];
+            }
+        }
+
+        // If config class name is still not provided, throw an exception
         if ($configClassName === null) {
-            $configClassName = $this->inferConfigClassName($className);
+            throw new DriverException('Config class name must be provided or specified in the Driver attribute');
         }
 
         if (! class_exists($configClassName)) {
@@ -61,74 +79,131 @@ class TSDBFactory
      */
     public function registerDefaultDrivers(): void
     {
-        // Register InfluxDB driver if available
-        if (class_exists('TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver')) {
-            $this->registerDriver('influxdb', 'TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver');
-        }
+        // Register drivers using attributes
+        $this->registerDriversFromAttributes();
+    }
 
-        // Register Prometheus driver if available
-        if (class_exists('TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver')) {
-            $this->registerDriver('prometheus', 'TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver');
-        }
+    /**
+     * Register drivers using the Driver attribute
+     *
+     * @throws DriverException If a driver class doesn't exist or doesn't implement TimeSeriesInterface
+     */
+    public function registerDriversFromAttributes(): void
+    {
+        // Get all driver classes in the Drivers namespace
+        $driverClasses = $this->getDriverClasses();
 
-        // Register RRDtool driver if available
-        if (class_exists('TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver')) {
-            $this->registerDriver('rrdtool', 'TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver');
-        }
+        foreach ($driverClasses as $driverClass) {
+            // Skip if the class doesn't exist
+            if (! class_exists($driverClass)) {
+                continue;
+            }
 
-        // Register Aggregate driver if available
-        if (class_exists('TimeSeriesPhp\Drivers\Aggregate\AggregateDriver')) {
-            $this->registerDriver('aggregate', 'TimeSeriesPhp\Drivers\Aggregate\AggregateDriver', 'TimeSeriesPhp\Drivers\Aggregate\Config\AggregateConfig');
+            // Skip if the class doesn't implement TimeSeriesInterface
+            if (! is_subclass_of($driverClass, TimeSeriesInterface::class)) {
+                continue;
+            }
+
+            // Check if the class has the Driver attribute
+            $reflectionClass = new ReflectionClass($driverClass);
+            $attributes = $reflectionClass->getAttributes(Driver::class);
+
+            if (empty($attributes)) {
+                continue;
+            }
+
+            // Get the attribute instance
+            $attribute = $attributes[0]->newInstance();
+
+            // Register the driver
+            $this->registerDriver($driverClass);
         }
     }
 
     /**
-     * Infer the config class name from the driver class name
+     * Get all driver classes in the Drivers namespace
      *
-     * @param  class-string  $driverClassName  The fully qualified class name of the driver
-     * @return class-string The inferred fully qualified class name of the config class
+     * @return array<int, class-string> Array of driver class names
      */
-    private function inferConfigClassName(string $driverClassName): string
+    private function getDriverClasses(): array
     {
-        // Get the namespace and class name
-        $lastBackslashPos = strrpos($driverClassName, '\\');
-        if ($lastBackslashPos === false) {
-            // No namespace, just replace "Driver" with "Config" in the class name
-            /** @var class-string */
-            return str_replace('Driver', 'Config', $driverClassName);
+        $driverClasses = [];
+
+        // Define the driver namespace and directory
+        $namespace = 'TimeSeriesPhp\\Drivers';
+        $directory = __DIR__.'/../../Drivers';
+
+        // Scan the directory for driver classes
+        $this->scanDirectory($directory, $namespace, $driverClasses);
+
+        return $driverClasses;
+    }
+
+    /**
+     * Recursively scan a directory for PHP classes
+     *
+     * @param  string  $directory  The directory to scan
+     * @param  string  $namespace  The namespace prefix for classes in this directory
+     * @param  array<int, class-string>  &$classes  Array to store found class names
+     */
+    private function scanDirectory(string $directory, string $namespace, array &$classes): void
+    {
+        if (! is_dir($directory)) {
+            return;
         }
 
-        // Split the class name into namespace and class name
-        $namespace = substr($driverClassName, 0, $lastBackslashPos);
-        $className = substr($driverClassName, $lastBackslashPos + 1);
+        $files = scandir($directory);
+        if ($files === false) {
+            return;
+        }
 
-        // Get the driver name from the namespace
-        $driverNamePos = strrpos($namespace, '\\');
-        $driverName = $driverNamePos !== false ? substr($namespace, $driverNamePos + 1) : $namespace;
+        foreach ($files as $file) {
+            if ($file === '.' || $file === '..') {
+                continue;
+            }
 
-        // Try different config class naming patterns
-        $possibleConfigClasses = [
-            // Pattern 1: DriverNameConfig in Config subdirectory (e.g., InfluxDB\Config\InfluxDBConfig)
-            $namespace.'\\Config\\'.$driverName.'Config',
+            $path = $directory.'/'.$file;
 
-            // Pattern 2: Config in Config subdirectory (e.g., InfluxDB\Config\Config)
-            $namespace.'\\Config\\Config',
+            if (is_dir($path)) {
+                // Recursively scan subdirectories
+                $this->scanDirectory($path, $namespace.'\\'.$file, $classes);
+            } elseif (pathinfo($file, PATHINFO_EXTENSION) === 'php') {
+                // Get the class name from the file name
+                $className = $namespace.'\\'.pathinfo($file, PATHINFO_FILENAME);
 
-            // Pattern 3: Replace Driver with Config in class name (e.g., InfluxDB\InfluxDBConfig)
-            $namespace.'\\'.str_replace('Driver', 'Config', $className),
-        ];
-
-        // Return the first config class that exists
-        foreach ($possibleConfigClasses as $configClass) {
-            if (class_exists($configClass)) {
-                /** @var class-string */
-                return $configClass;
+                // Add the class to the list if it exists
+                if (class_exists($className)) {
+                    /** @var class-string $className */
+                    $classes[] = $className;
+                }
             }
         }
+    }
 
-        // Default to the first pattern if none exist
-        /** @var class-string */
-        return $possibleConfigClasses[0];
+    /**
+     * Get driver information from the Driver attribute
+     *
+     * @param  class-string  $className  The fully qualified class name of the driver
+     * @return array{name: string, configClass: ?class-string}|null The driver name and config class, or null if the class doesn't have a Driver attribute
+     */
+    private function getDriverAttributeInfo(string $className): ?array
+    {
+        $reflectionClass = new ReflectionClass($className);
+        $attributes = $reflectionClass->getAttributes(Driver::class);
+
+        if (empty($attributes)) {
+            return null;
+        }
+
+        $attribute = $attributes[0]->newInstance();
+
+        /** @var class-string|null $configClass */
+        $configClass = $attribute->configClass;
+
+        return [
+            'name' => $attribute->name,
+            'configClass' => $configClass,
+        ];
     }
 
     /**

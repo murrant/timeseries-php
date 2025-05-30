@@ -72,21 +72,6 @@ readonly class QueryCondition
     }
 
     /**
-     * Convert to array format for backward compatibility
-     *
-     * @return array{field: string, operator: string, value: scalar|null|array<?scalar>, type: 'AND'|'OR'}
-     */
-    public function toArray(): array
-    {
-        return [
-            'field' => $this->field,
-            'operator' => $this->operator->value,
-            'value' => $this->value,
-            'type' => $this->type,
-        ];
-    }
-
-    /**
      * Create a new condition with AND type
      *
      * @param  string  $field  The field name

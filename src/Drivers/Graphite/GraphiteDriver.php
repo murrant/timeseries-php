@@ -3,6 +3,7 @@
 namespace TimeSeriesPhp\Drivers\Graphite;
 
 use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
+use TimeSeriesPhp\Core\Attributes\Driver;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
@@ -14,6 +15,7 @@ use TimeSeriesPhp\Exceptions\Driver\WriteException;
 use TimeSeriesPhp\Exceptions\Query\RawQueryException;
 use TimeSeriesPhp\Support\Logs\Logger;
 
+#[Driver(name: 'graphite', configClass: GraphiteConfig::class)]
 class GraphiteDriver extends AbstractTimeSeriesDB
 {
     /**

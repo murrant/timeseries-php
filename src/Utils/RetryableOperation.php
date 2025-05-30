@@ -296,11 +296,10 @@ class RetryableOperation
             $failedOperation = $cache->get($key);
 
             if ($failedOperation !== null && $failedOperation instanceof self) {
-                // Convert the RetryableOperation object to an array for backward compatibility with tests
                 $failedOperations[$operationId] = [
                     'operation' => $failedOperation->getOperation(),
                     'exception' => $failedOperation->getLastException(),
-                    'timestamp' => time(), // We don't store timestamp anymore, so use current time
+                    'timestamp' => time(),
                 ];
             }
         }

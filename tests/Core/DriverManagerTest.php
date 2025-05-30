@@ -25,7 +25,7 @@ class DriverManagerTest extends TestCase
         $mockConfigClass = get_class($this->createMock(ConfigInterface::class));
 
         // Register the driver with explicit config class
-        DriverManager::register('mock', $mockDriverClass, $mockConfigClass);
+        DriverManager::registerClass($mockDriverClass, 'mock', $mockConfigClass);
 
         // Check if the driver is available
         $this->assertContains('mock', DriverManager::getAvailableDrivers());
@@ -42,12 +42,29 @@ class DriverManagerTest extends TestCase
 
         // Register the driver without specifying the config class
         /** @var class-string<\TimeSeriesPhp\Tests\Core\data\TestDriver> $mockDriverClass */
-        DriverManager::register('test', $mockDriverClass);
+        DriverManager::registerClass($mockDriverClass, 'test');
 
         // Check if the driver is available
         $this->assertContains('test', DriverManager::getAvailableDrivers());
 
         // Check if the config class was correctly inferred
+        $this->assertEquals($mockConfigClass, DriverManager::getConfigClass('test'));
+    }
+
+    public function test_register_class_with_inferred_name_and_config(): void
+    {
+        // Use the test driver class from the data directory
+        $mockDriverClass = 'TimeSeriesPhp\Tests\Core\data\TestDriver';
+        $mockConfigClass = 'TimeSeriesPhp\Tests\Core\data\TestConfig';
+
+        // Register the driver without specifying the name or config class
+        /** @var class-string<\TimeSeriesPhp\Tests\Core\data\TestDriver> $mockDriverClass */
+        DriverManager::registerClass($mockDriverClass);
+
+        // Check if the driver is available with the name from the Driver attribute
+        $this->assertContains('test', DriverManager::getAvailableDrivers());
+
+        // Check if the config class was correctly inferred from the Driver attribute
         $this->assertEquals($mockConfigClass, DriverManager::getConfigClass('test'));
     }
 
@@ -59,8 +76,8 @@ class DriverManagerTest extends TestCase
         // Register some drivers
         $mockDriverClass = get_class($this->createMock(TimeSeriesInterface::class));
         $mockConfigClass = get_class($this->createMock(ConfigInterface::class));
-        DriverManager::register('mock1', $mockDriverClass, $mockConfigClass);
-        DriverManager::register('mock2', $mockDriverClass, $mockConfigClass);
+        DriverManager::registerClass($mockDriverClass, 'mock1', $mockConfigClass);
+        DriverManager::registerClass($mockDriverClass, 'mock2', $mockConfigClass);
 
         // Check available drivers
         $this->assertEquals(['mock1', 'mock2'], DriverManager::getAvailableDrivers());
@@ -83,7 +100,7 @@ class DriverManagerTest extends TestCase
         // Register the driver
         /** @var class-string<\TimeSeriesPhp\Tests\Core\data\MockDriver> $mockDriverClass */
         /** @var class-string<\TimeSeriesPhp\Tests\Core\data\MockConfig> $mockConfigClass */
-        DriverManager::register('mock', $mockDriverClass, $mockConfigClass);
+        DriverManager::registerClass($mockDriverClass, 'mock', $mockConfigClass);
 
         // Create an instance using the factory with explicit config
         $instance = DriverManager::create('mock', $mockConfig);
@@ -113,7 +130,7 @@ class DriverManagerTest extends TestCase
         $mockDriverClass::$lastConfig = null;
 
         // Register the driver
-        DriverManager::register('mock', $mockDriverClass, $mockConfigClass);
+        DriverManager::registerClass($mockDriverClass, 'mock', $mockConfigClass);
 
         // Create an instance using the factory without providing a config
         $instance = DriverManager::create('mock');
@@ -151,7 +168,7 @@ class DriverManagerTest extends TestCase
         $this->expectExceptionMessageMatches('/must implement TimeSeriesInterface/');
 
         // Register the invalid driver - this should throw the exception
-        DriverManager::register('invalid', $mockClass, get_class($mockConfig));
+        DriverManager::registerClass($mockClass, 'invalid', get_class($mockConfig));
 
         // This line should not be reached
         DriverManager::create('invalid', $mockConfig);
@@ -164,7 +181,7 @@ class DriverManagerTest extends TestCase
         $mockDriverClass = get_class($this->createMock(TimeSeriesInterface::class));
 
         // Register the driver
-        DriverManager::register('mock', $mockDriverClass, $mockConfigClass);
+        DriverManager::registerClass($mockDriverClass, 'mock', $mockConfigClass);
 
         // Create a config instance
         $config = DriverManager::createConfig('mock', ['option' => 'value']);

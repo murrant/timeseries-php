@@ -4,7 +4,9 @@ namespace TimeSeriesPhp\Tests\Core\data;
 
 use TimeSeriesPhp\Contracts\Config\ConfigInterface;
 use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
+use TimeSeriesPhp\Core\Attributes\Driver;
 
+#[Driver(name: 'test', configClass: TestConfig::class)]
 class TestDriver implements TimeSeriesInterface
 {
     public function connect(ConfigInterface $config): bool

@@ -9,15 +9,6 @@ use TimeSeriesPhp\Support\Config\LoggingConfig;
  */
 class Logger
 {
-    // Constants kept for backward compatibility
-    public const LEVEL_DEBUG = 'debug';
-
-    public const LEVEL_INFO = 'info';
-
-    public const LEVEL_WARNING = 'warning';
-
-    public const LEVEL_ERROR = 'error';
-
     private static ?LoggingConfig $config = null;
 
     /**

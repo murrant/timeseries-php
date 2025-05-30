@@ -419,7 +419,14 @@ class Query
      */
     public function getConditionsAsArray(): array
     {
-        return array_map(fn (QueryCondition $condition) => $condition->toArray(), $this->conditions);
+        return array_map(function (QueryCondition $condition) {
+            return [
+                'field' => $condition->getField(),
+                'operator' => $condition->getOperator()->value,
+                'value' => $condition->getValue(),
+                'type' => $condition->getType(),
+            ];
+        }, $this->conditions);
     }
 
     public function getStartTime(): ?DateTime

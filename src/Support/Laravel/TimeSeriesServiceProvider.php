@@ -68,19 +68,19 @@ class TimeSeriesServiceProvider extends ServiceProvider
         );
 
         // Register driver classes
-        DriverManager::register('influxdb', InfluxDBDriver::class, InfluxDBConfig::class);
+        DriverManager::register(InfluxDBDriver::class, 'influxdb', InfluxDBConfig::class);
         $this->app->bind(InfluxDBDriver::class);
         $this->app->alias(InfluxDBDriver::class, 'time-series.influxdb');
 
-        DriverManager::register('rrdtool', RRDtoolDriver::class, RRDtoolConfig::class);
+        DriverManager::register(RRDtoolDriver::class, 'rrdtool', RRDtoolConfig::class);
         $this->app->bind(RRDtoolDriver::class);
         $this->app->alias(RRDtoolDriver::class, 'time-series.rrdtool');
 
-        DriverManager::register('prometheus', PrometheusDriver::class, PrometheusConfig::class);
+        DriverManager::register(PrometheusDriver::class, 'prometheus', PrometheusConfig::class);
         $this->app->bind(PrometheusDriver::class);
         $this->app->alias(PrometheusDriver::class, 'time-series.prometheus');
 
-        DriverManager::register('graphite', GraphiteDriver::class, GraphiteConfig::class);
+        DriverManager::register(GraphiteDriver::class, 'graphite', GraphiteConfig::class);
         $this->app->bind(GraphiteDriver::class);
         $this->app->alias(GraphiteDriver::class, 'time-series.graphite');
 

@@ -6,9 +6,11 @@ use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\InputStream;
 use Symfony\Component\Process\Process;
 use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
+use TimeSeriesPhp\Core\Attributes\Driver;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
+use TimeSeriesPhp\Drivers\RRDtool\Config\RRDtoolConfig;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolCommandTimeoutException;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolException;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolPrematureUpdateException;
@@ -21,6 +23,7 @@ use TimeSeriesPhp\Exceptions\Driver\WriteException;
 use TimeSeriesPhp\Exceptions\Query\RawQueryException;
 use TimeSeriesPhp\Support\Logs\Logger;
 
+#[Driver(name: 'rrdtool', configClass: RRDtoolConfig::class)]
 class RRDtoolDriver extends AbstractTimeSeriesDB
 {
     protected bool $debug = false;
