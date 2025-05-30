@@ -52,25 +52,9 @@ class DriverManager
      *
      * @throws DriverException If the class doesn't exist or doesn't implement TimeSeriesInterface
      */
-    public static function registerClass(string $className, ?string $name = null, ?string $configClassName = null): void
-    {
-        self::getInstance()->registerDriver($className, $name, $configClassName);
-    }
-
-    /**
-     * Register a driver with the factory
-     *
-     * @param  class-string  $className  The fully qualified class name of the driver
-     * @param  string|null  $name  The name of the driver (optional, will be inferred from Driver attribute if not provided)
-     * @param  class-string|null  $configClassName  The fully qualified class name of the config class (optional)
-     *
-     * @throws DriverException If the class doesn't exist or doesn't implement TimeSeriesInterface
-     *
-     * @deprecated Use registerClass() instead
-     */
     public static function register(string $className, ?string $name = null, ?string $configClassName = null): void
     {
-        self::registerClass($className, $name, $configClassName);
+        self::getInstance()->registerDriver($className, $name, $configClassName);
     }
 
     /**

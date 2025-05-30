@@ -2,6 +2,7 @@
 
 namespace TimeSeriesPhp\Core\Factory;
 
+use Composer\InstalledVersions;
 use ReflectionClass;
 use TimeSeriesPhp\Contracts\Config\ConfigInterface;
 use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
@@ -81,6 +82,104 @@ class TSDBFactory
     {
         // Register drivers using attributes
         $this->registerDriversFromAttributes();
+
+        // Register drivers from Composer packages
+        $this->registerDriversFromComposer();
+    }
+
+    /**
+     * Register drivers from Composer packages' extra section
+     *
+     * @throws DriverException If a driver class doesn't exist or doesn't implement TimeSeriesInterface
+     */
+    public function registerDriversFromComposer(): void
+    {
+        // Check if InstalledVersions class exists (it might not in some environments)
+        if (! class_exists(InstalledVersions::class)) {
+            return;
+        }
+
+        try {
+            // Get all installed packages
+            $packages = $this->getInstalledPackages();
+
+            foreach ($packages as $packageName) {
+                // Skip the root package
+                if ($packageName === 'root') {
+                    continue;
+                }
+
+                // Get the package's extra section
+                $extra = $this->getPackageExtra($packageName);
+
+                // Check if the package has a timeseries-php section in its extra section
+                if (isset($extra['timeseries-php']) && is_array($extra['timeseries-php']) &&
+                    isset($extra['timeseries-php']['drivers']) && is_array($extra['timeseries-php']['drivers'])) {
+                    $drivers = $extra['timeseries-php']['drivers'];
+
+                    // Register each driver
+                    foreach ($drivers as $driver) {
+                        if (is_string($driver)) {
+                            // Simple format: just a class name
+                            /** @var class-string $driver */
+                            $this->registerDriver($driver);
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // If anything goes wrong, just log it and continue
+            // We don't want to break the application if we can't register drivers from Composer packages
+        }
+    }
+
+    /**
+     * Get a package's extra section
+     *
+     * @param  string  $packageName  The name of the package
+     * @return array<string, mixed> The package's extra section
+     */
+    protected function getPackageExtra(string $packageName): array
+    {
+        try {
+            // Get all raw data
+            $rawData = InstalledVersions::getAllRawData();
+
+            if (! is_array($rawData) || empty($rawData)) {
+                return [];
+            }
+
+            // The first entry in the array is the root package data
+            $rootPackage = reset($rawData);
+
+            if (! is_array($rootPackage) ||
+                ! isset($rootPackage['versions']) ||
+                ! is_array($rootPackage['versions']) ||
+                ! isset($rootPackage['versions'][$packageName]) ||
+                ! is_array($rootPackage['versions'][$packageName])) {
+                return [];
+            }
+
+            $packageData = $rootPackage['versions'][$packageName];
+
+            if (! isset($packageData['extra']) || ! is_array($packageData['extra'])) {
+                return [];
+            }
+
+            return $packageData['extra'];
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Get all installed packages
+     *
+     * @return string[] The list of installed packages
+     */
+    protected function getInstalledPackages(): array
+    {
+        return InstalledVersions::getInstalledPackages();
     }
 
     /**
@@ -289,6 +388,17 @@ class TSDBFactory
     public function getConfigClass(string $name): ?string
     {
         return $this->configClasses[$name] ?? null;
+    }
+
+    /**
+     * Get the driver class for a driver
+     *
+     * @param  string  $name  The name of the driver
+     * @return class-string|null The fully qualified class name of the driver, or null if the driver is not registered
+     */
+    public function getDriverClass(string $name): ?string
+    {
+        return $this->drivers[$name] ?? null;
     }
 
     /**

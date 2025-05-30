@@ -7,6 +7,7 @@ use TimeSeriesPhp\Contracts\Config\ConfigInterface;
 use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
 use TimeSeriesPhp\Core\Factory\TSDBFactory;
 use TimeSeriesPhp\Exceptions\Driver\DriverException;
+use TimeSeriesPhp\Tests\Core\data\TestTSDBFactory;
 
 class TSDBFactoryInstanceTest extends TestCase
 {
@@ -137,5 +138,34 @@ class TSDBFactoryInstanceTest extends TestCase
 
         // Check if the config class was correctly inferred from the Driver attribute
         $this->assertEquals($mockConfigClass, $this->factory->getConfigClass('test'));
+    }
+
+    public function test_register_drivers_from_composer(): void
+    {
+        // Create a test factory
+        $factory = new TestTSDBFactory;
+
+        // Use the test driver class from the data directory
+        $mockDriverClass = 'TimeSeriesPhp\Tests\Core\data\TestDriver';
+        $mockConfigClass = 'TimeSeriesPhp\Tests\Core\data\TestConfig';
+
+        // Set up test data for a package with a driver in its "extra" section
+        $factory->setPackageExtra('test/package', [
+            'timeseries-php' => [
+                'drivers' => [
+                    $mockDriverClass,
+                ],
+            ],
+        ]);
+
+        // Register drivers from Composer packages
+        $factory->registerDriversFromComposer();
+
+        // Check that the driver is registered with the name from the Driver attribute
+        $this->assertTrue($factory->hasDriver('test'));
+
+        // Check that the driver class and config class are correct
+        $this->assertEquals($mockDriverClass, $factory->getDriverClass('test'));
+        $this->assertEquals($mockConfigClass, $factory->getConfigClass('test'));
     }
 }
