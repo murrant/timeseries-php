@@ -75,6 +75,11 @@ class TSDBFactoryInstance
         if (class_exists('TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver')) {
             $this->registerDriver('rrdtool', 'TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver');
         }
+
+        // Register Aggregate driver if available
+        if (class_exists('TimeSeriesPhp\Drivers\Aggregate\AggregateDriver')) {
+            $this->registerDriver('aggregate', 'TimeSeriesPhp\Drivers\Aggregate\AggregateDriver', 'TimeSeriesPhp\Drivers\Aggregate\Config\AggregateConfig');
+        }
     }
 
     /**
