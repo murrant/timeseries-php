@@ -159,7 +159,7 @@ This project uses PHPUnit for testing. To run the tests:
 # Install dependencies
 composer install
 
-# Run all tests
+# Run all tests (excluding integration tests by default)
 ./vendor/bin/phpunit
 
 # Run specific test file
@@ -167,6 +167,12 @@ composer install
 
 # Run tests with coverage report
 ./vendor/bin/phpunit --coverage-html coverage
+
+# Run all tests including integration tests
+./vendor/bin/phpunit --group=integration
+
+# Start docker containers and run integration tests
+./docker/run_integration_tests.sh
 ```
 
 The test suite includes:

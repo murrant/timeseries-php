@@ -1,6 +1,6 @@
 <?php
 
-namespace TimeSeriesPhp\Core;
+namespace TimeSeriesPhp;
 
 use DateTime;
 use TimeSeriesPhp\Contracts\Config\ConfigInterface;
@@ -20,7 +20,7 @@ use TimeSeriesPhp\Exceptions\Query\QueryException;
  * It's a wrapper around the TSDBFactory and TimeSeriesInterface that reduces boilerplate
  * for common operations.
  */
-class TimeSeries
+class TSDB
 {
     protected TimeSeriesInterface $driver;
 
@@ -36,6 +36,11 @@ class TimeSeries
     public function __construct(string $driver, ?ConfigInterface $config = null, bool $autoConnect = true)
     {
         $this->driver = TSDBFactory::create($driver, $config, $autoConnect);
+    }
+
+    public static function start(string $driver, ?ConfigInterface $config = null, bool $autoConnect = true): self
+    {
+        return new self($driver, $config, $autoConnect);
     }
 
     /**

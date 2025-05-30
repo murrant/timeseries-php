@@ -3,8 +3,17 @@
 require_once __DIR__.'/../vendor/autoload.php';
 
 use TimeSeriesPhp\Core\Data\DataPoint;
+use TimeSeriesPhp\Core\Factory\TSDBFactory;
 use TimeSeriesPhp\Core\Query\Query;
-use TimeSeriesPhp\Core\TSDBFactory;
+use TimeSeriesPhp\Core\Query\RawQuery;
+use TimeSeriesPhp\Drivers\Graphite\Config\GraphiteConfig;
+use TimeSeriesPhp\Drivers\Graphite\GraphiteDriver;
+use TimeSeriesPhp\Drivers\InfluxDB\Config\InfluxDBConfig;
+use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
+use TimeSeriesPhp\Drivers\Prometheus\Config\PrometheusConfig;
+use TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver;
+use TimeSeriesPhp\Drivers\RRDtool\Config\RRDtoolConfig;
+use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
 use TimeSeriesPhp\Exceptions\Config\ConfigurationException;
 use TimeSeriesPhp\Exceptions\Connection\ConnectionException;
 use TimeSeriesPhp\Exceptions\Query\QueryException;
@@ -24,6 +33,22 @@ echo "===================================\n\n";
 // Choose a driver to use for this example
 // Options: 'influxdb', 'prometheus', 'graphite', 'rrdtool'
 $driver = 'influxdb';
+
+// Register the driver
+switch ($driver) {
+    case 'influxdb':
+        TSDBFactory::registerDriver('influxdb', InfluxDBDriver::class);
+        break;
+    case 'prometheus':
+        TSDBFactory::registerDriver('prometheus', PrometheusDriver::class);
+        break;
+    case 'graphite':
+        TSDBFactory::registerDriver('graphite', GraphiteDriver::class);
+        break;
+    case 'rrdtool':
+        TSDBFactory::registerDriver('rrdtool', RRDtoolDriver::class);
+        break;
+}
 
 // Step 1: Basic exception handling
 echo "Step 1: Basic exception handling...\n";
@@ -95,7 +120,7 @@ try {
     $invalidQuery = 'This is not a valid query';
 
     // This should throw a QueryException
-    $result = $db->rawQuery($invalidQuery);
+    $result = $db->rawQuery(new RawQuery($invalidQuery));
 
     echo "This line should not be reached.\n";
 } catch (QueryException $e) {
@@ -345,7 +370,7 @@ switch ($driver) {
     case 'influxdb':
         try {
             // Example: Try to query a non-existent bucket/database
-            $result = $db->rawQuery('from(bucket: "non_existent_bucket") |> range(start: -1h)');
+            $result = $db->rawQuery(new RawQuery('from(bucket: "non_existent_bucket") |> range(start: -1h)'));
         } catch (QueryException $e) {
             echo 'InfluxDB-specific error: '.$e->getMessage()."\n";
         }
@@ -354,7 +379,7 @@ switch ($driver) {
     case 'prometheus':
         try {
             // Example: Try to query with invalid PromQL syntax
-            $result = $db->rawQuery('invalid_metric{');
+            $result = $db->rawQuery(new RawQuery('invalid_metric{'));
         } catch (QueryException $e) {
             echo 'Prometheus-specific error: '.$e->getMessage()."\n";
         }
@@ -363,7 +388,7 @@ switch ($driver) {
     case 'graphite':
         try {
             // Example: Try to query with invalid function
-            $result = $db->rawQuery('nonexistentFunction(servers.*.cpu)');
+            $result = $db->rawQuery(new RawQuery('nonexistentFunction(servers.*.cpu)'));
         } catch (QueryException $e) {
             echo 'Graphite-specific error: '.$e->getMessage()."\n";
         }
@@ -372,7 +397,7 @@ switch ($driver) {
     case 'rrdtool':
         try {
             // Example: Try to query a non-existent RRD file
-            $result = $db->rawQuery('fetch nonexistent.rrd AVERAGE');
+            $result = $db->rawQuery(new RawQuery('fetch nonexistent.rrd AVERAGE'));
         } catch (QueryException $e) {
             echo 'RRDtool-specific error: '.$e->getMessage()."\n";
         }
@@ -597,7 +622,7 @@ function createInvalidConfig($driver)
 {
     switch ($driver) {
         case 'influxdb':
-            return new \TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig([
+            return new InfluxDBConfig([
                 'url' => 'http://non-existent-host:8086',
                 'token' => 'invalid-token',
                 'org' => '',  // Invalid empty org
@@ -605,19 +630,19 @@ function createInvalidConfig($driver)
             ]);
 
         case 'prometheus':
-            return new \TimeSeriesPhp\Drivers\Prometheus\PrometheusConfig([
+            return new PrometheusConfig([
                 'url' => 'http://non-existent-host:9090',
             ]);
 
         case 'graphite':
-            return new \TimeSeriesPhp\Drivers\Graphite\GraphiteConfig([
+            return new GraphiteConfig([
                 'host' => 'non-existent-host',
                 'port' => 2003,
                 'protocol' => 'invalid-protocol', // Invalid protocol
             ]);
 
         case 'rrdtool':
-            return new \TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig([
+            return new RRDtoolConfig([
                 'path' => '/non/existent/path',
                 'rrdtool_bin' => '/non/existent/rrdtool',
             ]);
@@ -635,7 +660,7 @@ function createConfig($driver)
     switch ($driver) {
         case 'influxdb':
             // Use the token from docker-compose.yml
-            return new \TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig([
+            return new InfluxDBConfig([
                 'url' => 'http://localhost:8086',
                 'token' => 'my-token',
                 'org' => 'my-org',
@@ -643,12 +668,12 @@ function createConfig($driver)
             ]);
 
         case 'prometheus':
-            return new \TimeSeriesPhp\Drivers\Prometheus\PrometheusConfig([
+            return new PrometheusConfig([
                 'url' => 'http://localhost:9090',
             ]);
 
         case 'graphite':
-            return new \TimeSeriesPhp\Drivers\Graphite\GraphiteConfig([
+            return new GraphiteConfig([
                 'host' => 'localhost',
                 'port' => 2003,
                 'protocol' => 'tcp',
@@ -660,7 +685,7 @@ function createConfig($driver)
                 mkdir($rrdPath, 0755, true);
             }
 
-            return new \TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig([
+            return new RRDtoolConfig([
                 'path' => $rrdPath,
                 'rrdtool_bin' => '/usr/bin/rrdtool',
             ]);

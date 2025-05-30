@@ -8,12 +8,12 @@ use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Query\Query;
-use TimeSeriesPhp\Core\TimeSeries;
+use TimeSeriesPhp\TSDB;
 
 /**
  * Test-specific subclass of TimeSeries that allows injecting a mock driver
  */
-class TestableTimeSeries extends TimeSeries
+class TestableTSDB extends TSDB
 {
     public function __construct(TimeSeriesInterface $driver)
     {
@@ -28,12 +28,12 @@ class TimeSeriesTest extends TestCase
      */
     private TimeSeriesInterface $mockDriver;
 
-    private TestableTimeSeries $timeSeries;
+    private TestableTSDB $timeSeries;
 
     protected function setUp(): void
     {
         $this->mockDriver = $this->createMock(TimeSeriesInterface::class);
-        $this->timeSeries = new TestableTimeSeries($this->mockDriver);
+        $this->timeSeries = new TestableTSDB($this->mockDriver);
     }
 
     public function test_write(): void

@@ -3,7 +3,15 @@
 require_once __DIR__.'/../vendor/autoload.php';
 
 use TimeSeriesPhp\Core\Data\DataPoint;
-use TimeSeriesPhp\Core\TSDBFactory;
+use TimeSeriesPhp\Core\Factory\TSDBFactory;
+use TimeSeriesPhp\Drivers\Graphite\Config\GraphiteConfig;
+use TimeSeriesPhp\Drivers\Graphite\GraphiteDriver;
+use TimeSeriesPhp\Drivers\InfluxDB\Config\InfluxDBConfig;
+use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
+use TimeSeriesPhp\Drivers\Prometheus\Config\PrometheusConfig;
+use TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver;
+use TimeSeriesPhp\Drivers\RRDtool\Config\RRDtoolConfig;
+use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
 use TimeSeriesPhp\Exceptions\Config\ConfigurationException;
 use TimeSeriesPhp\Exceptions\Driver\DriverException;
 
@@ -27,9 +35,35 @@ try {
     // Create configuration based on the selected driver
     $config = createConfig($driver);
 
+    // Register the driver
+    switch ($driver) {
+        case 'influxdb':
+            TSDBFactory::registerDriver('influxdb', InfluxDBDriver::class);
+            break;
+        case 'prometheus':
+            TSDBFactory::registerDriver('prometheus', PrometheusDriver::class);
+            break;
+        case 'graphite':
+            TSDBFactory::registerDriver('graphite', GraphiteDriver::class);
+            break;
+        case 'rrdtool':
+            TSDBFactory::registerDriver('rrdtool', RRDtoolDriver::class);
+            break;
+    }
+
     // Create database instance
     $db = TSDBFactory::create($driver, $config);
     echo "Successfully connected to {$driver}!\n";
+
+    // Create the database/bucket if it doesn't exist
+    if ($driver === 'influxdb') {
+        try {
+            $db->createDatabase('example_bucket');
+            echo "Created or verified InfluxDB bucket 'example_bucket'\n";
+        } catch (\Exception $e) {
+            echo "Note: {$e->getMessage()}\n";
+        }
+    }
 } catch (ConfigurationException|DriverException $e) {
     echo "Error: {$e->getMessage()}\n";
     exit(1);
@@ -338,7 +372,7 @@ function createConfig($driver)
     switch ($driver) {
         case 'influxdb':
             // Use the token from docker-compose.yml
-            return new \TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig([
+            return new InfluxDBConfig([
                 'url' => 'http://localhost:8086',
                 'token' => 'my-token',
                 'org' => 'my-org',
@@ -346,7 +380,7 @@ function createConfig($driver)
             ]);
 
         case 'prometheus':
-            return new \TimeSeriesPhp\Drivers\Prometheus\PrometheusConfig([
+            return new PrometheusConfig([
                 'url' => 'http://localhost:9090',
                 // Add authentication if needed
                 // 'username' => 'your-username',
@@ -354,7 +388,7 @@ function createConfig($driver)
             ]);
 
         case 'graphite':
-            return new \TimeSeriesPhp\Drivers\Graphite\GraphiteConfig([
+            return new GraphiteConfig([
                 'host' => 'localhost',
                 'port' => 2003,
                 'protocol' => 'tcp',
@@ -367,7 +401,7 @@ function createConfig($driver)
                 mkdir($rrdPath, 0755, true);
             }
 
-            return new \TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig([
+            return new RRDtoolConfig([
                 'path' => $rrdPath,
                 'rrdtool_bin' => '/usr/bin/rrdtool',
                 'default_step' => 60, // 1 minute for this example

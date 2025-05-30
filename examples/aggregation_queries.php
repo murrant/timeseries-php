@@ -3,8 +3,17 @@
 require_once __DIR__.'/../vendor/autoload.php';
 
 use TimeSeriesPhp\Core\Data\DataPoint;
+use TimeSeriesPhp\Core\Factory\TSDBFactory;
 use TimeSeriesPhp\Core\Query\Query;
-use TimeSeriesPhp\Core\TSDBFactory;
+use TimeSeriesPhp\Core\Query\RawQuery;
+use TimeSeriesPhp\Drivers\Graphite\Config\GraphiteConfig;
+use TimeSeriesPhp\Drivers\Graphite\GraphiteDriver;
+use TimeSeriesPhp\Drivers\InfluxDB\Config\InfluxDBConfig;
+use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
+use TimeSeriesPhp\Drivers\Prometheus\Config\PrometheusConfig;
+use TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver;
+use TimeSeriesPhp\Drivers\RRDtool\Config\RRDtoolConfig;
+use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
 use TimeSeriesPhp\Exceptions\Config\ConfigurationException;
 use TimeSeriesPhp\Exceptions\Driver\DriverException;
 
@@ -28,9 +37,35 @@ try {
     // Create configuration based on the selected driver
     $config = createConfig($driver);
 
+    // Register the driver
+    switch ($driver) {
+        case 'influxdb':
+            TSDBFactory::registerDriver('influxdb', InfluxDBDriver::class);
+            break;
+        case 'prometheus':
+            TSDBFactory::registerDriver('prometheus', PrometheusDriver::class);
+            break;
+        case 'graphite':
+            TSDBFactory::registerDriver('graphite', GraphiteDriver::class);
+            break;
+        case 'rrdtool':
+            TSDBFactory::registerDriver('rrdtool', RRDtoolDriver::class);
+            break;
+    }
+
     // Create database instance
     $db = TSDBFactory::create($driver, $config);
     echo "Successfully connected to {$driver}!\n";
+
+    // Create the database/bucket if it doesn't exist
+    if ($driver === 'influxdb') {
+        try {
+            $db->createDatabase('example_bucket');
+            echo "Created or verified InfluxDB bucket 'example_bucket'\n";
+        } catch (\Exception $e) {
+            echo "Note: {$e->getMessage()}\n";
+        }
+    }
 } catch (ConfigurationException|DriverException $e) {
     echo "Error: {$e->getMessage()}\n";
     exit(1);
@@ -303,10 +338,12 @@ echo "\n7.3: Moving average\n";
 // This example uses a raw query for InfluxDB
 if ($driver === 'influxdb') {
     try {
-        $movingAvgResult = $db->rawQuery('from(bucket: "example_bucket")
+        $fluxQuery = 'from(bucket: "example_bucket")
           |> range(start: -24h)
           |> filter(fn: (r) => r._measurement == "server_metrics" and r._field == "cpu_usage")
-          |> timedMovingAverage(every: 1h, period: 3h)');
+          |> timedMovingAverage(every: 1h, period: 3h)';
+        $rawQuery = new RawQuery($fluxQuery);
+        $movingAvgResult = $db->rawQuery($rawQuery);
 
         echo "3-hour moving average of CPU usage (InfluxDB raw query):\n";
         printQueryResult($movingAvgResult, 5);
@@ -344,11 +381,13 @@ echo "\nStep 9: Raw aggregation queries (driver-specific)...\n";
 switch ($driver) {
     case 'influxdb':
         try {
-            $rawResult = $db->rawQuery('from(bucket: "example_bucket")
+            $fluxQuery = 'from(bucket: "example_bucket")
               |> range(start: -24h)
               |> filter(fn: (r) => r._measurement == "server_metrics" and r._field == "cpu_usage")
               |> aggregateWindow(every: 1h, fn: mean)
-              |> yield(name: "mean")');
+              |> yield(name: "mean")';
+            $rawQuery = new RawQuery($fluxQuery);
+            $rawResult = $db->rawQuery($rawQuery);
 
             echo "InfluxDB Flux query for hourly averages:\n";
             printQueryResult($rawResult, 5);
@@ -359,7 +398,9 @@ switch ($driver) {
 
     case 'prometheus':
         try {
-            $rawResult = $db->rawQuery('avg_over_time(server_metrics{job="aggregation_example"}[1h])');
+            $promqlQuery = 'avg_over_time(server_metrics{job="aggregation_example"}[1h])';
+            $rawQuery = new RawQuery($promqlQuery);
+            $rawResult = $db->rawQuery($rawQuery);
 
             echo "Prometheus PromQL query for hourly averages:\n";
             printQueryResult($rawResult, 5);
@@ -370,7 +411,9 @@ switch ($driver) {
 
     case 'graphite':
         try {
-            $rawResult = $db->rawQuery('summarize(servers.*.cpu_usage, "1hour", "avg")');
+            $graphiteQuery = 'summarize(servers.*.cpu_usage, "1hour", "avg")';
+            $rawQuery = new RawQuery($graphiteQuery);
+            $rawResult = $db->rawQuery($rawQuery);
 
             echo "Graphite query for hourly averages:\n";
             printQueryResult($rawResult, 5);
@@ -381,7 +424,9 @@ switch ($driver) {
 
     case 'rrdtool':
         try {
-            $rawResult = $db->rawQuery('fetch server_metrics.rrd AVERAGE --start -24h --end now');
+            $rrdQuery = 'fetch server_metrics.rrd AVERAGE --start -24h --end now';
+            $rawQuery = new RawQuery($rrdQuery);
+            $rawResult = $db->rawQuery($rawQuery);
 
             echo "RRDtool query for averages:\n";
             printQueryResult($rawResult, 5);
@@ -405,7 +450,7 @@ function createConfig($driver)
     switch ($driver) {
         case 'influxdb':
             // Use the token from docker-compose.yml
-            return new \TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig([
+            return new InfluxDBConfig([
                 'url' => 'http://localhost:8086',
                 'token' => 'my-token',
                 'org' => 'my-org',
@@ -413,7 +458,7 @@ function createConfig($driver)
             ]);
 
         case 'prometheus':
-            return new \TimeSeriesPhp\Drivers\Prometheus\PrometheusConfig([
+            return new PrometheusConfig([
                 'url' => 'http://localhost:9090',
                 // Add authentication if needed
                 // 'username' => 'your-username',
@@ -421,7 +466,7 @@ function createConfig($driver)
             ]);
 
         case 'graphite':
-            return new \TimeSeriesPhp\Drivers\Graphite\GraphiteConfig([
+            return new GraphiteConfig([
                 'host' => 'localhost',
                 'port' => 2003,
                 'protocol' => 'tcp',
@@ -448,7 +493,7 @@ function createConfig($driver)
                 }
             }
 
-            return new \TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig([
+            return new RRDtoolConfig([
                 'path' => $rrdPath,
                 'rrdtool_bin' => '/usr/bin/rrdtool',
                 'default_step' => 300, // 5 minutes
@@ -472,7 +517,8 @@ function generateSampleData($driver, $hours = 24, $intervalMinutes = 5)
 
     for ($i = 0; $i < $intervals; $i++) {
         $timestamp = clone $startTime;
-        $timestamp->modify("+{$i} minutes * {$intervalMinutes}");
+        $minutes = $i * $intervalMinutes;
+        $timestamp->modify("+{$minutes} minutes");
 
         // Generate some realistic-looking data with patterns
         // Base value with daily pattern (higher during day, lower at night)
@@ -592,7 +638,8 @@ function generateSparseData($driver, $hours = 24, $intervalMinutes = 5)
         }
 
         $timestamp = clone $startTime;
-        $timestamp->modify("+{$i} minutes * {$intervalMinutes}");
+        $minutes = $i * $intervalMinutes;
+        $timestamp->modify("+{$minutes} minutes");
 
         // Generate a value with some pattern
         $value = 50 + 25 * sin($i / 20) + mt_rand(-10, 10);
