@@ -21,6 +21,38 @@ class Logger
     private static ?LoggingConfig $config = null;
 
     /**
+     * Determine if we're running in a test environment
+     *
+     * @return bool True if running in a test environment
+     */
+    private static function isTestEnvironment(): bool
+    {
+        return defined('PHPUNIT_COMPOSER_INSTALL') || defined('__PHPUNIT_PHAR__');
+    }
+
+    /**
+     * Determine if we're running a benchmark test
+     *
+     * @return bool True if running a benchmark test
+     */
+    private static function isBenchmarkTest(): bool
+    {
+        if (! self::isTestEnvironment()) {
+            return false;
+        }
+
+        // Check if the current test has the @group benchmark annotation
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+        foreach ($backtrace as $frame) {
+            if (strpos($frame['function'], 'test_benchmark') === 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Configure the logger
      *
      * @param  LoggingConfig  $config  The logging configuration
@@ -101,6 +133,17 @@ class Logger
 
         // Check if this level is enabled
         if (! $config->isLevelEnabled($level)) {
+            return;
+        }
+
+        // Suppress output during tests unless it's a benchmark test
+        if (self::isTestEnvironment() && ! self::isBenchmarkTest()) {
+            // For tests, we only log to file if explicitly configured
+            if ($config->getBool('log_to_file')) {
+                $formattedMessage = self::formatMessage($level, $message, $context);
+                self::logToFile($formattedMessage, $config->getString('log_file'));
+            }
+
             return;
         }
 

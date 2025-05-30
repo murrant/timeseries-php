@@ -46,9 +46,10 @@
     [ ] Compare performance between different drivers
 
 ## Driver Improvements
-[ ] 9. Standardize driver implementations
+[ ] 9. Standardize and optimize driver implementations
     [ ] Ensure consistent method signatures across drivers
     [ ] Implement all interface methods in each driver
+    [ ] Minimize data copies for query reults
 
 [ ] 10. Add support for additional time series databases
     [ ] Implement a driver for TimescaleDB
@@ -56,6 +57,7 @@
 
 [ ] 11. Enhance RRDtool driver
     [ ] Improve tag handling mechanism
+    [ ] Add rrdcached support
     [ ] Add support for RRDtool's advanced features
 
 [ ] 12. Optimize InfluxDB driver

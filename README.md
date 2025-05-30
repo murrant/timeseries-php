@@ -1,17 +1,19 @@
-# timeseries-php
+<img src="docs/images/timeseries-php-logo.svg" alt="timeseries-php logo" width="160"/>
+
+# 📊 timeseries-php
 
 A library to abstract storing data in and retrieving data from timeseries databases.
 
 ![check-code-coverage](https://img.shields.io/badge/code--coverage-80%-brightgreen)
 
-## Installation
+## 📥 Installation
 `composer require librenms/timeseries-php`
 
-## Laravel Integration
+## ⚙️ Laravel Integration
 
 This library includes Laravel integration. After installing the package, Laravel will automatically discover the service provider and register the facade.
 
-### Publishing the Configuration
+### 📤 Publishing the Configuration
 
 To publish the configuration file, run:
 
@@ -21,7 +23,7 @@ php artisan vendor:publish --tag=time-series-config
 
 This will create a `config/time-series.php` file in your Laravel application.
 
-### Configuration
+### ⚙️ Configuration
 
 The configuration file includes options for all supported drivers:
 
@@ -52,7 +54,7 @@ return [
 ];
 ```
 
-### Usage with Laravel
+### 🚀 Usage with Laravel
 
 You can use the `TimeSeries` facade to access the time series functionality:
 
@@ -77,7 +79,7 @@ $query = (new Query('cpu_usage'))
 $result = TimeSeries::query($query);
 ```
 
-## Direct Usage
+## 💻 Direct Usage
 ```php
 try {
     // InfluxDB example
@@ -150,7 +152,7 @@ try {
 }
 ```
 
-## Testing
+## 🧪 Testing
 This project uses PHPUnit for testing. To run the tests:
 
 ```bash
@@ -168,18 +170,18 @@ composer install
 ```
 
 The test suite includes:
-- Unit tests for core components (Query, DataPoint, QueryResult)
-- Tests for configuration classes
-- Tests for the factory class
-- Tests for database drivers using mocks
-- Integration tests for each database driver
-- Benchmark tests for performance evaluation
+- ✅ Unit tests for core components (Query, DataPoint, QueryResult)
+- ✅ Tests for configuration classes
+- ✅ Tests for the factory class
+- ✅ Tests for database drivers using mocks
+- ✅ Integration tests for each database driver
+- ⚡ Benchmark tests for performance evaluation
 
-### Integration and Benchmark Tests
+### 🔄 Integration and Benchmark Tests
 
 To run integration and benchmark tests, you need to set up the time series databases first. See [docs/TSDB_SETUP.md](docs/TSDB_SETUP.md) for detailed instructions on how to set up each database for testing.
 
-#### Running Integration Tests with Docker Compose
+#### 🐳 Running Integration Tests with Docker Compose
 
 The easiest way to run integration tests is to use the provided script that automatically starts Docker Compose, runs the tests, and then stops Docker Compose:
 
@@ -188,7 +190,7 @@ The easiest way to run integration tests is to use the provided script that auto
 ./docker/run-integration-tests.sh
 ```
 
-#### Running Tests Manually
+#### 🖥️ Running Tests Manually
 
 If you prefer to run the tests manually:
 
@@ -202,11 +204,11 @@ If you prefer to run the tests manually:
 
 For more information about testing, see [docs/TESTING.md](docs/TESTING.md).
 
-## Contributing
+## 🤝 Contributing
 Open PRs ;)
 
-## Authors and acknowledgment
-Tony Murray & LibreNMS Contributors
+## 👏 Authors and acknowledgment
+Tony Murray & Contributors
 
-## License
+## 📜 License
 MIT

@@ -233,11 +233,28 @@ class GraphiteDriver extends AbstractTimeSeriesDB
                 throw new ConnectionException('Failed to get response from Graphite');
             }
 
+            // Check if the response is empty or not valid JSON
+            if (empty($response) || $response[0] !== '[') {
+                // Return an empty result if the response is not valid
+                Logger::warning('Graphite returned an invalid or empty response', [
+                    'url' => $url,
+                    'response_length' => strlen($response),
+                    'response_start' => substr($response, 0, 20),
+                ]);
+
+                return new QueryResult;
+            }
+
             /** @var array<array{'target': string, 'datapoints': array<array{string, int}>}> $data */
             $data = json_decode($response, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new RawQueryException($query, 'Failed to parse JSON response: '.json_last_error_msg());
+                Logger::warning('Failed to parse Graphite JSON response', [
+                    'error' => json_last_error_msg(),
+                    'response_length' => strlen($response),
+                ]);
+
+                return new QueryResult;
             }
 
             // Transform Graphite response to a standard format
@@ -274,7 +291,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
         // Graphite doesn't have a concept of databases
         // We could potentially return a list of top-level metrics, but that's not
         // directly equivalent to databases in other systems
-        return ['default'];
+        return [];
     }
 
     public function close(): void
