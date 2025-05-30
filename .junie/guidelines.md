@@ -95,6 +95,9 @@ Use ./vendor/bin/phpunit directly to run tests
 # a specific test method
 ./vendor/bin/phpunit --filter testMethodName tests/Core/QueryTest.php
 
+# Run Integration Tests
+./docker/run-integration-tests.sh
+
 # Generate code coverage report
 ./vendor/bin/phpunit --coverage-html coverage
 ```

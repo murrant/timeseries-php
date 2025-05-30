@@ -119,7 +119,7 @@ The easiest way to run integration tests is to use the provided script that auto
 ```
 
 This script will:
-1. Start the Docker Compose services (InfluxDB, Prometheus, Graphite)
+1. Start the Docker Compose services (InfluxDB, Prometheus, Graphite, rrdcached)
 2. Wait for the services to be ready
 3. Run the integration tests
 4. Stop the Docker Compose services

@@ -40,6 +40,14 @@ check_service "InfluxDB" "http://localhost:8086/health" 12
 check_service "Prometheus" "http://localhost:9090/-/healthy" 12
 check_service "Graphite" "http://localhost:8080" 12
 
+# Check if rrdcached is ready
+echo "Checking if rrdcached is ready..."
+if nc -z localhost 42217; then
+    echo "rrdcached is ready!"
+else
+    echo "Warning: rrdcached is not ready, some tests might be skipped"
+fi
+
 # Run integration tests
 echo "Running integration tests..."
 ./vendor/bin/phpunit --group integration
