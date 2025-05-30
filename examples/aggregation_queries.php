@@ -303,7 +303,7 @@ echo "\n7.3: Moving average\n";
 // This example uses a raw query for InfluxDB
 if ($driver === 'influxdb') {
     try {
-        $movingAvgResult = $db->rawQuery('from(bucket: "example-bucket")
+        $movingAvgResult = $db->rawQuery('from(bucket: "example_bucket")
           |> range(start: -24h)
           |> filter(fn: (r) => r._measurement == "server_metrics" and r._field == "cpu_usage")
           |> timedMovingAverage(every: 1h, period: 3h)');
@@ -344,7 +344,7 @@ echo "\nStep 9: Raw aggregation queries (driver-specific)...\n";
 switch ($driver) {
     case 'influxdb':
         try {
-            $rawResult = $db->rawQuery('from(bucket: "example-bucket")
+            $rawResult = $db->rawQuery('from(bucket: "example_bucket")
               |> range(start: -24h)
               |> filter(fn: (r) => r._measurement == "server_metrics" and r._field == "cpu_usage")
               |> aggregateWindow(every: 1h, fn: mean)
@@ -404,16 +404,12 @@ function createConfig($driver)
 {
     switch ($driver) {
         case 'influxdb':
-            // For InfluxDB, try to read token from file or use a default
-            $token = file_exists(__DIR__.'/.influx_db_token')
-                ? trim(file_get_contents(__DIR__.'/.influx_db_token'))
-                : 'your-token';
-
+            // Use the token from docker-compose.yml
             return new \TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig([
                 'url' => 'http://localhost:8086',
-                'token' => $token,
-                'org' => 'example-org',
-                'bucket' => 'example-bucket',
+                'token' => 'my-token',
+                'org' => 'my-org',
+                'bucket' => 'example_bucket',
             ]);
 
         case 'prometheus':

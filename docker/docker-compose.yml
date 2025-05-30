@@ -11,7 +11,7 @@ services:
       - DOCKER_INFLUXDB_INIT_USERNAME=admin
       - DOCKER_INFLUXDB_INIT_PASSWORD=password
       - DOCKER_INFLUXDB_INIT_ORG=my-org
-      - DOCKER_INFLUXDB_INIT_BUCKET=test_integration
+      - DOCKER_INFLUXDB_INIT_BUCKET=example_bucket
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-token
     volumes:
       - influxdb-data:/var/lib/influxdb2

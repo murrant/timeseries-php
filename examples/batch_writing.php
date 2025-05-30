@@ -337,16 +337,12 @@ function createConfig($driver)
 {
     switch ($driver) {
         case 'influxdb':
-            // For InfluxDB, try to read token from file or use a default
-            $token = file_exists(__DIR__.'/.influx_db_token')
-                ? trim(file_get_contents(__DIR__.'/.influx_db_token'))
-                : 'your-token';
-
+            // Use the token from docker-compose.yml
             return new \TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig([
                 'url' => 'http://localhost:8086',
-                'token' => $token,
-                'org' => 'example-org',
-                'bucket' => 'example-bucket',
+                'token' => 'my-token',
+                'org' => 'my-org',
+                'bucket' => 'example_bucket',
             ]);
 
         case 'prometheus':

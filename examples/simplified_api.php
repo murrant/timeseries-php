@@ -3,38 +3,41 @@
 require_once __DIR__.'/../vendor/autoload.php';
 
 use TimeSeriesPhp\Core\Data\DataPoint;
+use TimeSeriesPhp\Core\Factory\TSDBFactory;
 use TimeSeriesPhp\Core\Query\Query;
-use TimeSeriesPhp\Core\TimeSeries;
 use TimeSeriesPhp\Drivers\InfluxDB\Config\InfluxDBConfig;
+use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
+use TimeSeriesPhp\TSDB;
 
 /**
  * Simplified API Example
  *
- * This example demonstrates how to use the simplified API provided by the TimeSeries class.
- * The TimeSeries class provides a more intuitive API for common operations with time series databases.
+ * This example demonstrates how to use the simplified API provided by the TSDB class.
+ * The TSDB class provides a more intuitive API for common operations with time series databases.
  */
 echo "TimeSeriesPhp Simplified API Example\n";
 echo "===================================\n\n";
+
+// Register the InfluxDB driver
+TSDBFactory::registerDriver('influxdb', InfluxDBDriver::class);
 
 // Step 1: Create a configuration
 echo "Step 1: Creating configuration...\n";
 $config = new InfluxDBConfig([
     'url' => 'http://localhost:8086',
-    'token' => file_exists(__DIR__.'/.influx_db_token')
-        ? trim(file_get_contents(__DIR__.'/.influx_db_token'))
-        : 'your-token',
-    'org' => 'example-org',
-    'bucket' => 'example-bucket',
+    'token' => 'my-token',
+    'org' => 'my-org',
+    'bucket' => 'example_bucket',
 ]);
 echo "Configuration created.\n\n";
 
-// Step 2: Create a TimeSeries instance
-echo "Step 2: Creating TimeSeries instance...\n";
+// Step 2: Create a TSDB instance
+echo "Step 2: Creating TSDB instance...\n";
 try {
-    $ts = new TimeSeries('influxdb', $config);
-    echo "TimeSeries instance created successfully.\n\n";
+    $ts = new TSDB('influxdb', $config);
+    echo "TSDB instance created successfully.\n\n";
 } catch (\Exception $e) {
-    echo 'Error creating TimeSeries instance: '.$e->getMessage()."\n";
+    echo 'Error creating TSDB instance: '.$e->getMessage()."\n";
     echo "This example will continue with simulated responses.\n\n";
 
     // Create a mock driver for demonstration purposes
@@ -82,7 +85,7 @@ try {
 
         public function getDatabases(): array
         {
-            return ['example-bucket'];
+            return ['example_bucket'];
         }
 
         public function deleteMeasurement(string $measurement, ?\DateTime $start = null, ?\DateTime $stop = null): bool
@@ -94,13 +97,13 @@ try {
     };
 
     // Use reflection to set the private driver property
-    $ts = new TimeSeries('influxdb', $config, false);
+    $ts = new TSDB('influxdb', $config, false);
     $reflection = new \ReflectionClass($ts);
     $property = $reflection->getProperty('driver');
     $property->setAccessible(true);
     $property->setValue($ts, $mockDriver);
 
-    echo "Mock TimeSeries instance created for demonstration.\n\n";
+    echo "Mock TSDB instance created for demonstration.\n\n";
 }
 
 // Step 3: Writing data using the simplified API
@@ -157,7 +160,7 @@ $result = $ts->queryAvg(
     'cpu_usage',                  // measurement
     'value',                      // field
     new DateTime('-1 hour'),      // start time
-    new DateTime,               // end time
+    new DateTime(),               // end time
     ['host' => 'server1']         // tags
 );
 echo "QueryAvg executed successfully.\n";
@@ -168,7 +171,7 @@ $result = $ts->querySum(
     'cpu_usage',                  // measurement
     'value',                      // field
     new DateTime('-1 hour'),      // start time
-    new DateTime,               // end time
+    new DateTime(),               // end time
     ['host' => 'server1']         // tags
 );
 echo "QuerySum executed successfully.\n";
@@ -179,7 +182,7 @@ $result = $ts->queryCount(
     'cpu_usage',                  // measurement
     'value',                      // field
     new DateTime('-1 hour'),      // start time
-    new DateTime,               // end time
+    new DateTime(),               // end time
     ['host' => 'server1']         // tags
 );
 echo "QueryCount executed successfully.\n";
@@ -190,7 +193,7 @@ $result = $ts->queryMin(
     'cpu_usage',                  // measurement
     'value',                      // field
     new DateTime('-1 hour'),      // start time
-    new DateTime,               // end time
+    new DateTime(),               // end time
     ['host' => 'server1']         // tags
 );
 echo "QueryMin executed successfully.\n";
@@ -201,23 +204,23 @@ $result = $ts->queryMax(
     'cpu_usage',                  // measurement
     'value',                      // field
     new DateTime('-1 hour'),      // start time
-    new DateTime,               // end time
+    new DateTime(),               // end time
     ['host' => 'server1']         // tags
 );
 echo "QueryMax executed successfully.\n\n";
 
-// Step 6: Using the traditional Query builder with the TimeSeries class
-echo "Step 6: Using the traditional Query builder with the TimeSeries class...\n";
+// Step 6: Using the traditional Query builder with the TSDB class
+echo "Step 6: Using the traditional Query builder with the TSDB class...\n";
 
 // Create a query using the Query builder
 $query = new Query('cpu_usage');
 $query->select(['value'])
     ->where('host', '=', 'server1')
-    ->timeRange(new DateTime('-1 hour'), new DateTime)
+    ->timeRange(new DateTime('-1 hour'), new DateTime())
     ->groupByTime('5m')
     ->avg('value', 'avg_value');
 
-// Execute the query using the TimeSeries class
+// Execute the query using the TSDB class
 $result = $ts->query($query);
 echo "Query executed successfully.\n\n";
 
@@ -228,7 +231,7 @@ echo "Step 7: Deleting data...\n";
 $result = $ts->deleteMeasurement(
     'cpu_usage',                  // measurement
     new DateTime('-1 day'),       // start time
-    new DateTime                // end time
+    new DateTime()                // end time
 );
 echo 'DeleteMeasurement result: '.($result ? 'Success' : 'Failed')."\n\n";
 
@@ -238,5 +241,5 @@ $ts->close();
 echo "Connection closed.\n\n";
 
 echo "Example completed successfully!\n";
-echo "The TimeSeries class provides a simplified API for common operations with time series databases.\n";
+echo "The TSDB class provides a simplified API for common operations with time series databases.\n";
 echo "It reduces boilerplate code and makes the API more intuitive and easier to use.\n";

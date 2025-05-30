@@ -10,30 +10,8 @@ use TimeSeriesPhp\Exceptions\Driver\DriverException;
 
 // Example: Using InfluxDB with timeseries-php library
 
-// set up influxdb
-if (file_exists('.influx_db_token')) {
-    $token = trim(file_get_contents('.influx_db_token'));
-} else {
-    echo "Set up influxdb database and save access token in .influx_db_token...\n";
-    exec("influx setup \
-  --username admin \
-  --password admin1234 \
-  --org example-org \
-  --bucket example-bucket \
-  --retention 0 \
-  --force");
-
-    exec('influx auth create \
-  --org example-org \
-  --all-access \
-  --description "Example all-access token"', $output);
-
-    $token = trim($output[0]);
-    if ($token) {
-        echo "Successfully created token: {$token}\n";
-        file_put_contents('.influx_db_token', $token);
-    }
-}
+// Use the token from docker-compose.yml
+$token = 'my-token';
 
 // Step 1: Initialize the InfluxDB driver with configuration
 echo "Initializing InfluxDB driver...\n";
@@ -42,8 +20,8 @@ echo "Initializing InfluxDB driver...\n";
 try {
     $influxdbConfig = new \TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig([
         'token' => $token,
-        'org' => 'example-org',
-        'bucket' => 'example-bucket',
+        'org' => 'my-org',
+        'bucket' => 'example_bucket',
     ]);
 } catch (ConfigurationException $e) {
     echo "Failed to configure InfluxDB: {$e->getMessage()}\n";
@@ -160,7 +138,7 @@ print_r($complexResult->getSeries());
 // print_r($rawResult->getSeries());
 
 echo "\nRaw query v2 example:\n";
-$rawResult = $influxdb->rawQuery('from(bucket: "example-bucket")
+$rawResult = $influxdb->rawQuery('from(bucket: "example_bucket")
   |> range(start: -1h)
   |> filter(fn: (r) => r._measurement == "server_metrics" and r._field == "cpu_usage")
   |> group(columns: ["host"])

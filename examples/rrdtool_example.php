@@ -14,7 +14,7 @@ use TimeSeriesPhp\Exceptions\Driver\DriverException;
 echo "Initializing RRDtool driver...\n";
 
 // Create a directory for RRD files if it doesn't exist
-$rrdPath = __DIR__.'/rrd_files';
+$rrdPath = __DIR__.'/rrd_files/';
 if (! is_dir($rrdPath)) {
     mkdir($rrdPath, 0755, true);
     echo "Created directory for RRD files: {$rrdPath}\n";
@@ -22,9 +22,9 @@ if (! is_dir($rrdPath)) {
 
 // Create database configuration
 try {
-    $rrdtoolConfig = new \TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig([
-        'path' => $rrdPath,                  // Directory where RRD files are stored
-        'rrdtool_bin' => '/usr/bin/rrdtool', // Path to the rrdtool binary (adjust as needed)
+    $rrdtoolConfig = new \TimeSeriesPhp\Drivers\RRDtool\Config\RRDtoolConfig([
+        'rrd_dir' => $rrdPath,               // Directory where RRD files are stored
+        'rrdtool_path' => '/usr/bin/rrdtool', // Path to the rrdtool binary (adjust as needed)
         'temp_dir' => '/tmp',                // Directory for temporary files
         'default_step' => 300,               // Default step size in seconds (5 minutes)
     ]);
@@ -34,11 +34,11 @@ try {
 }
 
 // Initialize the driver
-\TimeSeriesPhp\Core\TSDBFactory::registerDriver('rrdtool', RRDtoolDriver::class);
+\TimeSeriesPhp\Core\Factory\TSDBFactory::registerDriver('rrdtool', RRDtoolDriver::class);
 
 // Connect to the database
 try {
-    $rrdtool = \TimeSeriesPhp\Core\TSDBFactory::create('rrdtool', $rrdtoolConfig);
+    $rrdtool = \TimeSeriesPhp\Core\Factory\TSDBFactory::create('rrdtool', $rrdtoolConfig);
     echo "Successfully connected to RRDtool!\n";
 } catch (DriverException|ConfigurationException $e) {
     echo "Failed to connect to RRDtool: {$e->getMessage()}\n";

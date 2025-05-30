@@ -30,11 +30,9 @@ $laravelConfig = [
     'drivers' => [
         'influxdb' => [
             'url' => 'http://localhost:8086',
-            'token' => file_exists(__DIR__.'/.influx_db_token')
-                ? trim(file_get_contents(__DIR__.'/.influx_db_token'))
-                : 'your-token',
-            'org' => 'example-org',
-            'bucket' => 'example-bucket',
+            'token' => 'my-token',
+            'org' => 'my-org',
+            'bucket' => 'example_bucket',
             'timeout' => 30,
             'verify_ssl' => true,
             'debug' => false,
