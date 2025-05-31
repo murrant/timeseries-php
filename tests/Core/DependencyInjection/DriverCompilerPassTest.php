@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace TimeSeriesPhp\Tests\Core\DependencyInjection;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use TimeSeriesPhp\Core\DependencyInjection\DriverCompilerPass;
 use TimeSeriesPhp\Drivers\Null\NullConfig;
 use TimeSeriesPhp\Drivers\Null\NullDriver;
+use TimeSeriesPhp\Drivers\Null\NullQueryBuilder;
 
 
 class DriverCompilerPassTest extends TestCase
@@ -26,6 +29,16 @@ class DriverCompilerPassTest extends TestCase
 
         // Register the null driver configuration
         $this->container->register(NullConfig::class, NullConfig::class)
+            ->setAutoconfigured(true)
+            ->setAutowired(true);
+
+        // Register the null query builder
+        $this->container->register(NullQueryBuilder::class, NullQueryBuilder::class)
+            ->setAutoconfigured(true)
+            ->setAutowired(true);
+
+        // Register a logger service
+        $this->container->register(LoggerInterface::class, NullLogger::class)
             ->setAutoconfigured(true)
             ->setAutowired(true);
     }
@@ -76,6 +89,27 @@ class DriverCompilerPassTest extends TestCase
 
         // Get the config class definition
         $definition = $this->container->getDefinition(NullConfig::class);
+
+        // Assert that the definition is autoconfigured
+        $this->assertTrue($definition->isAutoconfigured());
+
+        // Assert that the definition is autowired
+        $this->assertTrue($definition->isAutowired());
+    }
+
+    public function test_process_registers_query_builder_class(): void
+    {
+        // Add the driver compiler pass
+        $this->container->addCompilerPass(new DriverCompilerPass);
+
+        // Compile the container
+        $this->container->compile();
+
+        // Assert that the container has the query builder class
+        $this->assertTrue($this->container->has(NullQueryBuilder::class));
+
+        // Get the query builder class definition
+        $definition = $this->container->getDefinition(NullQueryBuilder::class);
 
         // Assert that the definition is autoconfigured
         $this->assertTrue($definition->isAutoconfigured());

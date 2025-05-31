@@ -68,6 +68,30 @@ class DriverCompilerPass implements CompilerPassInterface
                             ->setPublic(true);
                     }
                 }
+
+                // If the driver has a query builder class, register it as a service
+                if ($driver->queryBuilderClass && class_exists($driver->queryBuilderClass)) {
+                    // Register the query builder class as a service if it's not already registered
+                    if (! $container->has($driver->queryBuilderClass)) {
+                        $container->register($driver->queryBuilderClass, $driver->queryBuilderClass)
+                            ->setAutoconfigured(true)
+                            ->setAutowired(true)
+                            ->setPublic(true);
+                    } else {
+                        // Make sure the existing query builder class is public
+                        $container->getDefinition($driver->queryBuilderClass)
+                            ->setPublic(true);
+                    }
+
+                    // Create an alias from QueryBuilderInterface to the query builder class for this driver
+                    // This allows Symfony to inject the query builder into the driver's constructor
+                    $aliasId = sprintf('%s.%s.query_builder', 'timeseries', $driver->name);
+                    $container->setAlias($aliasId, $driver->queryBuilderClass)
+                        ->setPublic(true);
+
+                    // Set the query builder as a constructor argument for the driver
+                    $definition->setArgument('$queryBuilder', $container->getDefinition($driver->queryBuilderClass));
+                }
             }
         }
 
