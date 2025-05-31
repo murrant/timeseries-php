@@ -13,7 +13,6 @@ use TimeSeriesPhp\Drivers\Null\NullConfig;
 use TimeSeriesPhp\Drivers\Null\NullDriver;
 use TimeSeriesPhp\Drivers\Null\NullQueryBuilder;
 
-
 class DriverCompilerPassTest extends TestCase
 {
     private ContainerBuilder $container;

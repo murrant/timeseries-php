@@ -31,14 +31,16 @@ class CacheDriverFactory
     /**
      * Create a cache driver instance based on the configuration
      *
-     * @param  array  $config  The cache configuration
+     * @param  array<string, mixed>  $config  The cache configuration
      * @return CacheDriverInterface The cache driver instance
      *
      * @throws TSDBException If the specified driver is not supported
      */
     public function createDriver(array $config): CacheDriverInterface
     {
+        /** @var string $driver */
         $driver = $config['driver'] ?? 'file';
+        /** @var array<string, mixed> $driverConfig */
         $driverConfig = $config[$driver] ?? [];
 
         return match ($driver) {
@@ -52,7 +54,7 @@ class CacheDriverFactory
      * Resolve a custom cache driver from the container
      *
      * @param  string  $driver  The driver name
-     * @param  array  $config  The driver configuration
+     * @param  array<string, mixed>  $config  The driver configuration
      * @return CacheDriverInterface The cache driver instance
      *
      * @throws TSDBException If the driver is not found in the container

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace TimeSeriesPhp\Drivers\Null;
 
 use DateTime;
+use Psr\Log\LoggerInterface;
 use TimeSeriesPhp\Contracts\Driver\ConfigurableInterface;
+use TimeSeriesPhp\Contracts\Query\QueryBuilderInterface;
 use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
 use TimeSeriesPhp\Core\Attributes\Driver;
 use TimeSeriesPhp\Core\Data\DataPoint;
@@ -17,12 +19,16 @@ use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
  * Useful for testing or when you need a placeholder driver
  */
 #[Driver(name: 'null', queryBuilderClass: NullQueryBuilder::class, configClass: NullConfig::class)]
-class NullDriver extends AbstractTimeSeriesDB implements ConfigurableInterface
+class NullDriver extends AbstractTimeSeriesDB
 {
-    /**
-     * @var array{debug: bool} The driver configuration
-     */
-    private array $config = ['debug' => false];
+    public function __construct(
+        QueryBuilderInterface $queryBuilder,
+        LoggerInterface $logger,
+        protected NullConfig $config,
+    ) {
+        parent::__construct($queryBuilder, $logger);
+    }
+
 
     /**
      * @var bool Whether the driver is connected
@@ -32,16 +38,11 @@ class NullDriver extends AbstractTimeSeriesDB implements ConfigurableInterface
     /**
      * Configure the driver with the given configuration
      *
-     * @param  array<string, mixed>  $config  Configuration for the driver
+     * @param  array<string, mixed>  $config
      */
     public function configure(array $config): void
     {
-        // Process the configuration using the driver's configuration class
-
-        /** @var array{debug: bool} $processedConfig */
-        $processedConfig = (new NullConfig)->processConfiguration($config);
-
-        $this->config = $processedConfig;
+        $this->config = NullConfig::processConfiguration($config);
     }
 
     /**

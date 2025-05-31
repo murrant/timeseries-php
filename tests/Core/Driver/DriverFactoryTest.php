@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace TimeSeriesPhp\Tests\Core\Driver;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use TimeSeriesPhp\Contracts\Driver\ConfigurableInterface;
 use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
@@ -32,6 +34,11 @@ class DriverFactoryTest extends TestCase
 
         // Register the example driver configuration
         $this->container->register(ExampleDriverConfiguration::class, ExampleDriverConfiguration::class)
+            ->setAutoconfigured(true)
+            ->setAutowired(true);
+
+        // Register a logger
+        $this->container->register(LoggerInterface::class, NullLogger::class)
             ->setAutoconfigured(true)
             ->setAutowired(true);
 

@@ -17,6 +17,7 @@ class Config
      * @param  string  $driverClass  The fully qualified class name of the driver class
      */
     public function __construct(
+        public readonly string $name,
         public readonly string $driverClass,
     ) {}
 }
