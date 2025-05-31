@@ -1,0 +1,30 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ directory configure your dependencies.
+
+parameters:
+    # Add your parameters here
+
+services:
+    # Default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        public: false       # Allows optimizing the container by removing unused services
+
+    # Makes classes in src/ available to be used as services
+    # This creates a service per class whose id is the fully-qualified class name
+    TimeSeriesPhp\:
+        resource: '../src/'
+        exclude:
+            - '../src/Contracts/'
+            - '../src/Core/Attributes/'
+            - '../src/Exceptions/TSDBException.php'
+
+    # Controllers are imported separately to make sure services can be injected
+    # as action arguments even if you don't extend any base controller class
+    # TimeSeriesPhp\Controller\:
+    #     resource: '../src/Controller/'
+    #     tags: ['controller.service_arguments']
+
+    # Add more service definitions when explicit configuration is needed
+    # Please note that last definitions always *replace* previous ones

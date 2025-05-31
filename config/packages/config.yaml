@@ -1,0 +1,23 @@
+# This file contains general configuration parameters for the application
+
+# Default driver to use when none is specified
+default_driver: 'influxdb'
+
+# Configuration for different drivers
+drivers:
+    influxdb:
+        url: 'http://localhost:8086'
+        token: ''
+        org: ''
+        bucket: 'default'
+        precision: 'ns'
+
+    prometheus:
+        url: 'http://localhost:9090'
+
+    # Add more driver configurations as needed
+
+# Cache configuration
+cache:
+    enabled: true
+    ttl: 3600  # Time to live in seconds
