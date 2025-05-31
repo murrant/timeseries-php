@@ -1,0 +1,26 @@
+{
+  "name": "librenms/timeseries-php-driver-rrdtool",
+  "description": "RRDtool driver for TimeSeriesPhp",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Tony Murray",
+      "email": "murraytony@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=8.2",
+    "librenms/timeseries-php": "self.version",
+    "symfony/process": "^7.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "TimeSeriesPhp\\Drivers\\RRDtool\\": ""
+    }
+  },
+  "config": {
+    "sort-packages": true
+  },
+  "minimum-stability": "stable"
+}
