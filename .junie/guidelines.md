@@ -101,32 +101,7 @@ When adding new features or fixing bugs, always add corresponding tests. Follow 
 5. Test both normal operation and edge cases/error conditions
 6. Use PHPUnit assertions to verify expected behavior
 7. Do not use assertStringContainsString in QueryBuilder tests. Tests should test `assertEquals($nativeQuery, $queryString)`. $nativeQuery should be a valid working query for the intended query language. 
-
-Example of a simple test:
-
-```php
-<?php
-
-namespace TimeSeriesPhp\Tests\Core;
-
-use PHPUnit\Framework\TestCase;
-use TimeSeriesPhp\Core\DataPoint;
-
-class data_point_test extends TestCase
-{
-    public function testAddTag()
-    {
-        $dataPoint = new DataPoint('cpu_usage', ['value' => 85.5]);
-        $result = $dataPoint->addTag('host', 'server1');
-
-        // Verify method returns $this for chaining
-        $this->assertSame($dataPoint, $result);
-
-        // Verify tag was added
-        $this->assertEquals(['host' => 'server1'], $dataPoint->getTags());
-    }
-}
-```
+8. Feature tests are preferable to unit tests because they focus on system behavior rather than internal implementation, reducing the risk of brittle, tightly-coupled tests.
 
 ## Static Analysis
 
@@ -174,7 +149,7 @@ To add a new database driver:
 3. Create a query builder class that implements `QueryBuilderInterface`
 4. Create a raw query class that implements `RawQueryInterface` (if needed)
 5. Create a driver class that extends `AbstractTimeSeriesDB`
-6. Add driver to $defaultDrivers in `DefaultDriverLocator`
+6. Set up the driver to be resolved by the container
 7. Add tests for your driver
    - Create a directory under `tests/Drivers` for your driver tests (e.g., `tests/Drivers/NewDriver`)
    - Create unit tests for your driver class, configuration class, and query builder
@@ -189,9 +164,4 @@ Example of registering a new driver:
 ```php
 // In DriverManager.php
 DriverManager::register(NewDriverConfig::class);
-
-// Or in TSDBFactory.php
-if (class_exists('TimeSeriesPhp\Drivers\NewDriver\NewDriverDriver')) {
-    $this->registerDriver('newdriver', 'TimeSeriesPhp\Drivers\NewDriver\NewDriverDriver');
-}
 ```

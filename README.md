@@ -80,6 +80,50 @@ $result = TimeSeries::query($query);
 ```
 
 ## 💻 Direct Usage
+
+### 🔧 Symfony Container and Configuration
+
+This library uses Symfony's DependencyInjection and Config components for service management and configuration. The configuration is defined in YAML files in the `config` directory.
+
+#### Basic Configuration Structure
+
+```yaml
+# config/packages/config.yaml
+# Default driver to use when none is specified
+default_driver: 'influxdb'
+
+# Configuration for different drivers
+drivers:
+    influxdb:
+        url: 'http://localhost:8086'
+        token: ''
+        org: ''
+        bucket: 'default'
+        precision: 'ns'
+
+    prometheus:
+        url: 'http://localhost:9090'
+```
+
+#### Using the Container
+
+```php
+use TimeSeriesPhp\Core\ContainerFactory;
+use TimeSeriesPhp\Services\ConfigurationManager;
+
+// Create the container
+$container = ContainerFactory::create();
+
+// Get the configuration manager
+$configManager = $container->get(ConfigurationManager::class);
+
+// Get configuration values
+$defaultDriver = $configManager->get('default_driver');
+$influxdbConfig = $configManager->getDriverConfig('influxdb');
+```
+
+### 🚀 Using Drivers Directly
+
 ```php
 try {
     // InfluxDB example
