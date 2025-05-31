@@ -6,10 +6,10 @@ namespace TimeSeriesPhp\Tests\Core\DependencyInjection;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use TimeSeriesPhp\Core\Attributes\Driver;
 use TimeSeriesPhp\Core\DependencyInjection\DriverCompilerPass;
-use TimeSeriesPhp\Drivers\Example\ExampleDriver;
-use TimeSeriesPhp\Drivers\Example\ExampleDriverConfiguration;
+use TimeSeriesPhp\Drivers\Null\NullConfig;
+use TimeSeriesPhp\Drivers\Null\NullDriver;
+
 
 class DriverCompilerPassTest extends TestCase
 {
@@ -19,13 +19,13 @@ class DriverCompilerPassTest extends TestCase
     {
         $this->container = new ContainerBuilder;
 
-        // Register the example driver
-        $this->container->register(ExampleDriver::class, ExampleDriver::class)
+        // Register the null driver
+        $this->container->register(NullDriver::class, NullDriver::class)
             ->setAutoconfigured(true)
             ->setAutowired(true);
 
-        // Register the example driver configuration
-        $this->container->register(ExampleDriverConfiguration::class, ExampleDriverConfiguration::class)
+        // Register the null driver configuration
+        $this->container->register(NullConfig::class, NullConfig::class)
             ->setAutoconfigured(true)
             ->setAutowired(true);
     }
@@ -44,14 +44,14 @@ class DriverCompilerPassTest extends TestCase
         // Assert that the drivers parameter is an array
         $this->assertIsArray($drivers);
 
-        // Assert that the example driver is registered
-        $this->assertArrayHasKey('example', $drivers);
+        // Assert that the null driver is registered
+        $this->assertArrayHasKey('null', $drivers);
 
-        // Assert that the example driver service ID is correct
-        $this->assertEquals(ExampleDriver::class, $drivers['example']);
+        // Assert that the null driver service ID is correct
+        $this->assertEquals(NullDriver::class, $drivers['null']);
 
-        // Get the example driver definition
-        $definition = $this->container->getDefinition(ExampleDriver::class);
+        // Get the null driver definition
+        $definition = $this->container->getDefinition(NullDriver::class);
 
         // Assert that the definition has the driver tag
         $this->assertTrue($definition->hasTag('timeseries.driver'));
@@ -60,7 +60,7 @@ class DriverCompilerPassTest extends TestCase
         $tags = $definition->getTag('timeseries.driver');
 
         // Assert that the tag has the correct name
-        $this->assertEquals('example', $tags[0]['name']);
+        $this->assertEquals('null', $tags[0]['name']);
     }
 
     public function test_process_registers_config_class(): void
@@ -72,10 +72,10 @@ class DriverCompilerPassTest extends TestCase
         $this->container->compile();
 
         // Assert that the container has the config class
-        $this->assertTrue($this->container->has(ExampleDriverConfiguration::class));
+        $this->assertTrue($this->container->has(NullConfig::class));
 
         // Get the config class definition
-        $definition = $this->container->getDefinition(ExampleDriverConfiguration::class);
+        $definition = $this->container->getDefinition(NullConfig::class);
 
         // Assert that the definition is autoconfigured
         $this->assertTrue($definition->isAutoconfigured());

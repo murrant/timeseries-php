@@ -26,8 +26,7 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
     public function __construct(
         protected QueryBuilderInterface $queryBuilder,
         protected LoggerInterface $logger
-    ) {
-    }
+    ) {}
 
     /**
      * Get the driver name as stored or from the attribute
@@ -38,7 +37,7 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
             $reflection = new ReflectionClass(static::class);
             $attributes = $reflection->getAttributes(Driver::class);
 
-            if (!empty($attributes)) {
+            if (! empty($attributes)) {
                 /** @var Driver $driver */
                 $driver = $attributes[0]->newInstance();
                 $this->driverName = $driver->name;

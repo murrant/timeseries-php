@@ -16,10 +16,12 @@ class Driver
 {
     /**
      * @param  string  $name  The name of the driver
+     * @param  string|null  $queryBuilderClass  The fully qualified class name of the query builder class (optional)
      * @param  string|null  $configClass  The fully qualified class name of the config class (optional)
      */
     public function __construct(
         public readonly string $name,
+        public readonly ?string $queryBuilderClass = null,
         public readonly ?string $configClass = null,
     ) {}
 }

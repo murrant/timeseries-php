@@ -15,7 +15,7 @@ use TimeSeriesPhp\Exceptions\TSDBException;
 class ConfigurationManager
 {
     /**
-     * @var array The processed configuration
+     * @var array<string, mixed> The processed configuration
      */
     private array $config;
 

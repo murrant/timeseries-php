@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-namespace TimeSeriesPhp\Tests\Drivers\Example;
+namespace TimeSeriesPhp\Tests\Drivers\Null;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
-use TimeSeriesPhp\Drivers\Example\ExampleDriverConfiguration;
+use TimeSeriesPhp\Drivers\Null\NullConfig;
 
-class ExampleDriverConfigurationTest extends TestCase
+class NullDriverConfigurationTest extends TestCase
 {
-    private ExampleDriverConfiguration $configuration;
+    private NullConfig $configuration;
 
     private Processor $processor;
 
     protected function setUp(): void
     {
-        $this->configuration = new ExampleDriverConfiguration;
+        $this->configuration = new NullConfig;
         $this->processor = new Processor;
     }
 
@@ -31,14 +31,14 @@ class ExampleDriverConfigurationTest extends TestCase
     public function test_get_config_name(): void
     {
         // Use reflection to access the protected method
-        $reflectionMethod = new \ReflectionMethod(ExampleDriverConfiguration::class, 'getConfigName');
+        $reflectionMethod = new \ReflectionMethod(NullConfig::class, 'getConfigName');
         $reflectionMethod->setAccessible(true);
 
         // Get the config name
         $configName = $reflectionMethod->invoke($this->configuration);
 
         // Assert that the config name is correct
-        $this->assertEquals('example', $configName);
+        $this->assertEquals('null', $configName);
     }
 
     public function test_process_configuration(): void
@@ -50,9 +50,7 @@ class ExampleDriverConfigurationTest extends TestCase
             'port' => 8086,
             'username' => 'user',
             'password' => 'pass',
-            'use_ssl' => true,
-            'timeout' => 60,
-            'mode' => 'advanced',
+            'debug' => true,
         ]);
 
         // Assert that the processed configuration has the expected values
@@ -61,9 +59,7 @@ class ExampleDriverConfigurationTest extends TestCase
         $this->assertEquals(8086, $config['port']);
         $this->assertEquals('user', $config['username']);
         $this->assertEquals('pass', $config['password']);
-        $this->assertTrue($config['use_ssl']);
-        $this->assertEquals(60, $config['timeout']);
-        $this->assertEquals('advanced', $config['mode']);
+        $this->assertTrue($config['debug']);
     }
 
     public function test_process_configuration_with_defaults(): void
@@ -79,20 +75,7 @@ class ExampleDriverConfigurationTest extends TestCase
         $this->assertNull($config['port']);
         $this->assertNull($config['username']);
         $this->assertNull($config['password']);
-        $this->assertFalse($config['use_ssl']);
-        $this->assertEquals(30, $config['timeout']);
-        $this->assertEquals('standard', $config['mode']);
-    }
-
-    public function test_process_configuration_with_invalid_mode(): void
-    {
-        // Expect an exception when processing a configuration with an invalid mode
-        $this->expectException(InvalidConfigurationException::class);
-
-        $this->configuration->processConfiguration([
-            'database' => 'test_db',
-            'mode' => 'invalid',
-        ]);
+        $this->assertFalse($config['debug']);
     }
 
     public function test_process_configuration_without_database(): void
@@ -103,5 +86,22 @@ class ExampleDriverConfigurationTest extends TestCase
         $this->configuration->processConfiguration([
             'host' => 'example.com',
         ]);
+    }
+
+    public function test_debug_configuration(): void
+    {
+        // Test with debug explicitly set to true
+        $config = $this->configuration->processConfiguration([
+            'database' => 'test_db',
+            'debug' => true,
+        ]);
+        $this->assertTrue($config['debug']);
+
+        // Test with debug explicitly set to false
+        $config = $this->configuration->processConfiguration([
+            'database' => 'test_db',
+            'debug' => false,
+        ]);
+        $this->assertFalse($config['debug']);
     }
 }

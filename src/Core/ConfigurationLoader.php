@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TimeSeriesPhp\Core;
 
+use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Yaml\Yaml;
 use TimeSeriesPhp\Exceptions\TSDBException;
@@ -17,7 +18,7 @@ class ConfigurationLoader
      * Load configuration from a YAML file
      *
      * @param  string  $configFile  The path to the configuration file
-     * @param  string  $configDir  The directory containing configuration files
+     * @param  ?string  $configDir  The directory containing configuration files
      * @return array<string, mixed> The loaded configuration
      *
      * @throws TSDBException If the configuration file cannot be loaded
@@ -32,9 +33,10 @@ class ConfigurationLoader
         }
 
         try {
+            /** @var array<string, mixed> $config */
             $config = Yaml::parseFile($fullPath);
 
-            return is_array($config) ? $config : [];
+            return $config;
         } catch (\Exception $e) {
             throw new TSDBException('Failed to parse configuration file: '.$e->getMessage(), 0, $e);
         }
@@ -43,7 +45,7 @@ class ConfigurationLoader
     /**
      * Load configuration from all YAML files in a directory
      *
-     * @param  string  $configDir  The directory containing configuration files
+     * @param  ?string  $configDir  The directory containing configuration files
      * @return array<string, mixed> The loaded configuration
      *
      * @throws TSDBException If the configuration files cannot be loaded
@@ -67,20 +69,24 @@ class ConfigurationLoader
             }
         }
 
+        /** @var array<string, mixed> $config */
         return $config;
     }
 
     /**
      * Process configuration with a configuration definition
      *
-     * @param  array<string, mixed>  $configs  The configuration array
-     * @param  \Symfony\Component\Config\Definition\ConfigurationInterface  $definition  The configuration definition
+     * @param  array<int, array<string, mixed>>  $configs  The configuration array
+     * @param  ConfigurationInterface  $definition  The configuration definition
      * @return array<string, mixed> The processed configuration
      */
-    public static function processConfiguration(array $configs, \Symfony\Component\Config\Definition\ConfigurationInterface $definition): array
+    public static function processConfiguration(array $configs, ConfigurationInterface $definition): array
     {
         $processor = new Processor;
 
-        return $processor->processConfiguration($definition, $configs);
+        /** @var array<string, mixed> $processConfiguration */
+        $processConfiguration = $processor->processConfiguration($definition, $configs);
+
+        return $processConfiguration;
     }
 }
