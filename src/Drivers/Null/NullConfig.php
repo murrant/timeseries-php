@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace TimeSeriesPhp\Drivers\Example;
+namespace TimeSeriesPhp\Drivers\Null;
 
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use TimeSeriesPhp\Core\Driver\AbstractDriverConfiguration;
 
 /**
- * Configuration for the Example driver
+ * Configuration for the Null driver
  */
-class ExampleDriverConfiguration extends AbstractDriverConfiguration
+class NullConfig extends AbstractDriverConfiguration
 {
     /**
      * Get the configuration name
@@ -19,7 +19,7 @@ class ExampleDriverConfiguration extends AbstractDriverConfiguration
      */
     protected function getConfigName(): string
     {
-        return 'example';
+        return 'null';
     }
 
     /**
@@ -31,18 +31,9 @@ class ExampleDriverConfiguration extends AbstractDriverConfiguration
     {
         $rootNode
             ->children()
-            ->booleanNode('use_ssl')
-            ->info('Whether to use SSL for connections')
+            ->booleanNode('debug')
+            ->info('Whether to enable debug mode')
             ->defaultFalse()
-            ->end()
-            ->integerNode('timeout')
-            ->info('Connection timeout in seconds')
-            ->defaultValue(30)
-            ->end()
-            ->enumNode('mode')
-            ->info('The operation mode')
-            ->values(['standard', 'advanced', 'compatibility'])
-            ->defaultValue('standard')
             ->end()
             ->end();
     }

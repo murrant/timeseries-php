@@ -81,9 +81,10 @@ abstract class AbstractDriverConfiguration implements ConfigurationInterface
     public function processConfiguration(array $config): array
     {
         $processor = new \Symfony\Component\Config\Definition\Processor;
-        $processedConfig = $processor->processConfiguration($this, [$config]);
 
         /** @var array<string, mixed> $processedConfig */
+        $processedConfig = $processor->processConfiguration($this, [$config]);
+
         return $processedConfig;
     }
 }
