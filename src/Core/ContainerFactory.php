@@ -36,7 +36,7 @@ class ContainerFactory
             $container->setParameter('kernel.cache_dir', $projectDir.'/var/cache');
 
             // Add compiler passes
-            $container->addCompilerPass(new DriverCompilerPass());
+            $container->addCompilerPass(new DriverCompilerPass);
 
             $loader = new YamlFileLoader($container, new FileLocator($configDir));
             $loader->load('services.yaml');

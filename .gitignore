@@ -2,4 +2,4 @@
 /composer.lock
 /vendor/
 /.phpunit.result.cache
-/.influx_db_token
+/.output.txt

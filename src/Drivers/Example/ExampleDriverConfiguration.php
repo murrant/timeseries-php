@@ -21,12 +21,11 @@ class ExampleDriverConfiguration extends AbstractDriverConfiguration
     {
         return 'example';
     }
-    
+
     /**
      * Configure the schema for this driver
      *
-     * @param ArrayNodeDefinition $rootNode The root node
-     * @return void
+     * @param  ArrayNodeDefinition  $rootNode  The root node
      */
     protected function configureSchema(ArrayNodeDefinition $rootNode): void
     {

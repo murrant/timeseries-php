@@ -12,8 +12,7 @@ interface ConfigurableInterface
     /**
      * Configure the driver with the given configuration
      *
-     * @param array<string, mixed> $config Configuration for the driver
-     * @return void
+     * @param  array<string, mixed>  $config  Configuration for the driver
      */
     public function configure(array $config): void;
 }

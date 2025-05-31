@@ -20,40 +20,41 @@ class AbstractDriverConfigurationTest extends TestCase
     protected function setUp(): void
     {
         // Create a test implementation of AbstractDriverConfiguration
-        $this->configuration = new class extends AbstractDriverConfiguration {
+        $this->configuration = new class extends AbstractDriverConfiguration
+        {
             protected function getConfigName(): string
             {
                 return 'test';
             }
-            
+
             protected function configureSchema(ArrayNodeDefinition $rootNode): void
             {
                 $rootNode
                     ->children()
-                        ->booleanNode('test_option')
-                            ->defaultTrue()
-                        ->end()
+                    ->booleanNode('test_option')
+                    ->defaultTrue()
+                    ->end()
                     ->end();
             }
         };
     }
-    
-    public function testImplementsConfigurationInterface(): void
+
+    public function test_implements_configuration_interface(): void
     {
         // Assert that the configuration implements ConfigurationInterface
         $this->assertInstanceOf(ConfigurationInterface::class, $this->configuration);
     }
-    
-    public function testGetConfigTreeBuilder(): void
+
+    public function test_get_config_tree_builder(): void
     {
         // Get the tree builder
         $treeBuilder = $this->configuration->getConfigTreeBuilder();
-        
+
         // Assert that the tree builder is an instance of TreeBuilder
         $this->assertInstanceOf(TreeBuilder::class, $treeBuilder);
     }
-    
-    public function testProcessConfiguration(): void
+
+    public function test_process_configuration(): void
     {
         // Process a valid configuration
         $config = $this->configuration->processConfiguration([
@@ -64,7 +65,7 @@ class AbstractDriverConfigurationTest extends TestCase
             'password' => 'pass',
             'test_option' => false,
         ]);
-        
+
         // Assert that the processed configuration has the expected values
         $this->assertEquals('test_db', $config['database']);
         $this->assertEquals('example.com', $config['host']);
@@ -73,14 +74,14 @@ class AbstractDriverConfigurationTest extends TestCase
         $this->assertEquals('pass', $config['password']);
         $this->assertFalse($config['test_option']);
     }
-    
-    public function testProcessConfigurationWithDefaults(): void
+
+    public function test_process_configuration_with_defaults(): void
     {
         // Process a minimal configuration
         $config = $this->configuration->processConfiguration([
             'database' => 'test_db',
         ]);
-        
+
         // Assert that the processed configuration has the expected default values
         $this->assertEquals('test_db', $config['database']);
         $this->assertEquals('localhost', $config['host']);

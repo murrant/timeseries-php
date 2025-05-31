@@ -17,69 +17,69 @@ class DriverCompilerPassTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->container = new ContainerBuilder();
-        
+        $this->container = new ContainerBuilder;
+
         // Register the example driver
         $this->container->register(ExampleDriver::class, ExampleDriver::class)
             ->setAutoconfigured(true)
             ->setAutowired(true);
-            
+
         // Register the example driver configuration
         $this->container->register(ExampleDriverConfiguration::class, ExampleDriverConfiguration::class)
             ->setAutoconfigured(true)
             ->setAutowired(true);
     }
-    
-    public function testProcessTagsDrivers(): void
+
+    public function test_process_tags_drivers(): void
     {
         // Add the driver compiler pass
-        $this->container->addCompilerPass(new DriverCompilerPass());
-        
+        $this->container->addCompilerPass(new DriverCompilerPass);
+
         // Compile the container
         $this->container->compile();
-        
+
         // Get the drivers parameter
         $drivers = $this->container->getParameter('timeseries.drivers');
-        
+
         // Assert that the drivers parameter is an array
         $this->assertIsArray($drivers);
-        
+
         // Assert that the example driver is registered
         $this->assertArrayHasKey('example', $drivers);
-        
+
         // Assert that the example driver service ID is correct
         $this->assertEquals(ExampleDriver::class, $drivers['example']);
-        
+
         // Get the example driver definition
         $definition = $this->container->getDefinition(ExampleDriver::class);
-        
+
         // Assert that the definition has the driver tag
         $this->assertTrue($definition->hasTag('timeseries.driver'));
-        
+
         // Get the driver tag
         $tags = $definition->getTag('timeseries.driver');
-        
+
         // Assert that the tag has the correct name
         $this->assertEquals('example', $tags[0]['name']);
     }
-    
-    public function testProcessRegistersConfigClass(): void
+
+    public function test_process_registers_config_class(): void
     {
         // Add the driver compiler pass
-        $this->container->addCompilerPass(new DriverCompilerPass());
-        
+        $this->container->addCompilerPass(new DriverCompilerPass);
+
         // Compile the container
         $this->container->compile();
-        
+
         // Assert that the container has the config class
         $this->assertTrue($this->container->has(ExampleDriverConfiguration::class));
-        
+
         // Get the config class definition
         $definition = $this->container->getDefinition(ExampleDriverConfiguration::class);
-        
+
         // Assert that the definition is autoconfigured
         $this->assertTrue($definition->isAutoconfigured());
-        
+
         // Assert that the definition is autowired
         $this->assertTrue($definition->isAutowired());
     }

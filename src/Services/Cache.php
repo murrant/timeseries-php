@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TimeSeriesPhp\Services;
 
 use Psr\SimpleCache\CacheInterface;
-use SebastianBergmann\Diff\ConfigurationException;
 use TimeSeriesPhp\Exceptions\TSDBException;
 
 /**
@@ -34,12 +33,12 @@ class Cache implements CacheInterface
     private string $prefix;
 
     /**
-     * @var array Driver-specific configuration
+     * @var array<string, mixed> Driver-specific configuration
      */
     private array $driverConfig;
 
     /**
-     * @var array In-memory cache for the array driver
+     * @var array<string, array{value: mixed, expires: int|null}> In-memory cache for the array driver
      */
     private array $memoryCache = [];
 
@@ -81,7 +80,7 @@ class Cache implements CacheInterface
                 case 'file':
                     return $this->getFromFile($key, $default);
                 default:
-                    throw new ConfigurationException("Unsupported cache driver: {$this->driver}");
+                    throw new TSDBException("Unsupported cache driver: {$this->driver}");
             }
         } catch (\Exception $e) {
             if ($e instanceof TSDBException) {
@@ -117,7 +116,7 @@ class Cache implements CacheInterface
                 case 'file':
                     return $this->setInFile($key, $value, $ttl);
                 default:
-                    throw new ConfigurationException("Unsupported cache driver: {$this->driver}");
+                    throw new TSDBException("Unsupported cache driver: {$this->driver}");
             }
         } catch (\Exception $e) {
             if ($e instanceof TSDBException) {
@@ -150,7 +149,7 @@ class Cache implements CacheInterface
                 case 'file':
                     return $this->deleteFromFile($key);
                 default:
-                    throw new ConfigurationException("Unsupported cache driver: {$this->driver}");
+                    throw new TSDBException("Unsupported cache driver: {$this->driver}");
             }
         } catch (\Exception $e) {
             if ($e instanceof TSDBException) {
@@ -180,7 +179,7 @@ class Cache implements CacheInterface
                 case 'file':
                     return $this->clearFile();
                 default:
-                    throw new ConfigurationException("Unsupported cache driver: {$this->driver}");
+                    throw new TSDBException("Unsupported cache driver: {$this->driver}");
             }
         } catch (\Exception $e) {
             if ($e instanceof TSDBException) {
@@ -193,9 +192,9 @@ class Cache implements CacheInterface
     /**
      * Obtains multiple cache items by their unique keys.
      *
-     * @param  iterable  $keys  A list of keys that can be obtained in a single operation.
+     * @param  iterable<string>  $keys  A list of keys that can be obtained in a single operation.
      * @param  mixed  $default  Default value to return for keys that do not exist.
-     * @return iterable A list of key => value pairs.
+     * @return iterable<string, mixed> A list of key => value pairs.
      *
      * @throws TSDBException If the cache is not available.
      */
@@ -212,7 +211,7 @@ class Cache implements CacheInterface
     /**
      * Persists a set of key => value pairs in the cache.
      *
-     * @param  iterable  $values  A list of key => value pairs for a multiple-set operation.
+     * @param  iterable<string, mixed>  $values  A list of key => value pairs for a multiple-set operation.
      * @param  null|int|\DateInterval  $ttl  Optional. TTL value.
      * @return bool True on success and false on failure.
      *
@@ -231,7 +230,7 @@ class Cache implements CacheInterface
     /**
      * Deletes multiple cache items in a single operation.
      *
-     * @param  iterable  $keys  A list of string-based keys to be deleted.
+     * @param  iterable<string>  $keys  A list of string-based keys to be deleted.
      * @return bool True if the items were successfully removed. False if there was an error.
      *
      * @throws TSDBException If the cache is not available.
@@ -268,7 +267,7 @@ class Cache implements CacheInterface
                 case 'file':
                     return $this->hasInFile($key);
                 default:
-                    throw new ConfigurationException("Unsupported cache driver: {$this->driver}");
+                    throw new TSDBException("Unsupported cache driver: {$this->driver}");
             }
         } catch (\Exception $e) {
             if ($e instanceof TSDBException) {
@@ -478,6 +477,12 @@ class Cache implements CacheInterface
         return $path.'/'.$hash;
     }
 
+    /**
+     * Read a cache file and return its contents
+     *
+     * @param  string  $path  The path to the cache file
+     * @return array<string, mixed>|null The cache data or null if the file could not be read
+     */
     private function readCacheFile(string $path): ?array
     {
         $content = @file_get_contents($path);

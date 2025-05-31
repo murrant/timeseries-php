@@ -16,18 +16,17 @@ use TimeSeriesPhp\Exceptions\TSDBException;
 class DriverFactory
 {
     /**
-     * @param ContainerInterface $container The service container
+     * @param  ContainerInterface  $container  The service container
      */
     public function __construct(
         private readonly ContainerInterface $container
-    ) {
-    }
+    ) {}
 
     /**
      * Create a driver instance by name
      *
-     * @param string $name The name of the driver
-     * @param array<string, mixed> $config Configuration for the driver
+     * @param  string  $name  The name of the driver
+     * @param  array<string, mixed>  $config  Configuration for the driver
      * @return TimeSeriesInterface The driver instance
      *
      * @throws DriverNotFoundException If the driver is not found
@@ -38,13 +37,17 @@ class DriverFactory
         // Get all tagged driver services
         $drivers = $this->container->getParameter('timeseries.drivers');
 
-        if (!is_array($drivers) || !isset($drivers[$name])) {
+        if (! is_array($drivers) || ! isset($drivers[$name])) {
             throw new DriverNotFoundException(sprintf('Driver "%s" not found', $name));
         }
 
         $serviceId = $drivers[$name];
 
-        if (!$this->container->has($serviceId)) {
+        if (! is_string($serviceId)) {
+            throw new DriverNotFoundException(sprintf('Invalid driver service ID for "%s"', $name));
+        }
+
+        if (! $this->container->has($serviceId)) {
             throw new DriverNotFoundException(sprintf('Driver service "%s" not found', $serviceId));
         }
 
@@ -52,7 +55,7 @@ class DriverFactory
             // Get the driver instance from the container
             $driver = $this->container->get($serviceId);
 
-            if (!$driver instanceof TimeSeriesInterface) {
+            if (! $driver instanceof TimeSeriesInterface) {
                 throw new TSDBException(sprintf('Driver "%s" does not implement TimeSeriesInterface', $name));
             }
 

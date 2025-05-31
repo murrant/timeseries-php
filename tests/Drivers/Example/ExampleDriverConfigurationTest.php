@@ -13,34 +13,35 @@ use TimeSeriesPhp\Drivers\Example\ExampleDriverConfiguration;
 class ExampleDriverConfigurationTest extends TestCase
 {
     private ExampleDriverConfiguration $configuration;
+
     private Processor $processor;
 
     protected function setUp(): void
     {
-        $this->configuration = new ExampleDriverConfiguration();
-        $this->processor = new Processor();
+        $this->configuration = new ExampleDriverConfiguration;
+        $this->processor = new Processor;
     }
-    
-    public function testImplementsConfigurationInterface(): void
+
+    public function test_implements_configuration_interface(): void
     {
         // Assert that the configuration implements ConfigurationInterface
         $this->assertInstanceOf(ConfigurationInterface::class, $this->configuration);
     }
-    
-    public function testGetConfigName(): void
+
+    public function test_get_config_name(): void
     {
         // Use reflection to access the protected method
         $reflectionMethod = new \ReflectionMethod(ExampleDriverConfiguration::class, 'getConfigName');
         $reflectionMethod->setAccessible(true);
-        
+
         // Get the config name
         $configName = $reflectionMethod->invoke($this->configuration);
-        
+
         // Assert that the config name is correct
         $this->assertEquals('example', $configName);
     }
-    
-    public function testProcessConfiguration(): void
+
+    public function test_process_configuration(): void
     {
         // Process a valid configuration
         $config = $this->configuration->processConfiguration([
@@ -53,7 +54,7 @@ class ExampleDriverConfigurationTest extends TestCase
             'timeout' => 60,
             'mode' => 'advanced',
         ]);
-        
+
         // Assert that the processed configuration has the expected values
         $this->assertEquals('test_db', $config['database']);
         $this->assertEquals('example.com', $config['host']);
@@ -64,14 +65,14 @@ class ExampleDriverConfigurationTest extends TestCase
         $this->assertEquals(60, $config['timeout']);
         $this->assertEquals('advanced', $config['mode']);
     }
-    
-    public function testProcessConfigurationWithDefaults(): void
+
+    public function test_process_configuration_with_defaults(): void
     {
         // Process a minimal configuration
         $config = $this->configuration->processConfiguration([
             'database' => 'test_db',
         ]);
-        
+
         // Assert that the processed configuration has the expected default values
         $this->assertEquals('test_db', $config['database']);
         $this->assertEquals('localhost', $config['host']);
@@ -82,23 +83,23 @@ class ExampleDriverConfigurationTest extends TestCase
         $this->assertEquals(30, $config['timeout']);
         $this->assertEquals('standard', $config['mode']);
     }
-    
-    public function testProcessConfigurationWithInvalidMode(): void
+
+    public function test_process_configuration_with_invalid_mode(): void
     {
         // Expect an exception when processing a configuration with an invalid mode
         $this->expectException(InvalidConfigurationException::class);
-        
+
         $this->configuration->processConfiguration([
             'database' => 'test_db',
             'mode' => 'invalid',
         ]);
     }
-    
-    public function testProcessConfigurationWithoutDatabase(): void
+
+    public function test_process_configuration_without_database(): void
     {
         // Expect an exception when processing a configuration without a database
         $this->expectException(InvalidConfigurationException::class);
-        
+
         $this->configuration->processConfiguration([
             'host' => 'example.com',
         ]);

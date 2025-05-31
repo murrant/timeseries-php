@@ -18,7 +18,7 @@ class ConfigurationLoader
      *
      * @param  string  $configFile  The path to the configuration file
      * @param  string  $configDir  The directory containing configuration files
-     * @return array The loaded configuration
+     * @return array<string, mixed> The loaded configuration
      *
      * @throws TSDBException If the configuration file cannot be loaded
      */
@@ -32,7 +32,9 @@ class ConfigurationLoader
         }
 
         try {
-            return Yaml::parseFile($fullPath);
+            $config = Yaml::parseFile($fullPath);
+
+            return is_array($config) ? $config : [];
         } catch (\Exception $e) {
             throw new TSDBException('Failed to parse configuration file: '.$e->getMessage(), 0, $e);
         }
@@ -42,7 +44,7 @@ class ConfigurationLoader
      * Load configuration from all YAML files in a directory
      *
      * @param  string  $configDir  The directory containing configuration files
-     * @return array The loaded configuration
+     * @return array<string, mixed> The loaded configuration
      *
      * @throws TSDBException If the configuration files cannot be loaded
      */
@@ -71,11 +73,11 @@ class ConfigurationLoader
     /**
      * Process configuration with a configuration definition
      *
-     * @param  array  $configs  The configuration array
-     * @param  object  $definition  The configuration definition
-     * @return array The processed configuration
+     * @param  array<string, mixed>  $configs  The configuration array
+     * @param  \Symfony\Component\Config\Definition\ConfigurationInterface  $definition  The configuration definition
+     * @return array<string, mixed> The processed configuration
      */
-    public static function processConfiguration(array $configs, object $definition): array
+    public static function processConfiguration(array $configs, \Symfony\Component\Config\Definition\ConfigurationInterface $definition): array
     {
         $processor = new Processor;
 

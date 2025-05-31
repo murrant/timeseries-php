@@ -16,8 +16,7 @@ class DriverCompilerPass implements CompilerPassInterface
     /**
      * Process the container to find and register drivers
      *
-     * @param ContainerBuilder $container The container builder
-     * @return void
+     * @param  ContainerBuilder  $container  The container builder
      */
     public function process(ContainerBuilder $container): void
     {
@@ -26,7 +25,7 @@ class DriverCompilerPass implements CompilerPassInterface
 
         foreach ($container->getDefinitions() as $id => $definition) {
             // Skip if the definition doesn't have a class
-            if (!$definition->getClass()) {
+            if (! $definition->getClass()) {
                 continue;
             }
 
@@ -34,7 +33,7 @@ class DriverCompilerPass implements CompilerPassInterface
             $className = $definition->getClass();
 
             // Skip if the class doesn't exist
-            if (!class_exists($className)) {
+            if (! class_exists($className)) {
                 continue;
             }
 
@@ -58,7 +57,7 @@ class DriverCompilerPass implements CompilerPassInterface
                 // If the driver has a config class, register it as a service
                 if ($driver->configClass && class_exists($driver->configClass)) {
                     // Register the config class as a service if it's not already registered
-                    if (!$container->has($driver->configClass)) {
+                    if (! $container->has($driver->configClass)) {
                         $container->register($driver->configClass, $driver->configClass)
                             ->setAutoconfigured(true)
                             ->setAutowired(true)
