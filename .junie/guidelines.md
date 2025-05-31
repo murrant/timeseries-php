@@ -10,9 +10,9 @@ I’m using Symfony 7 with autowiring, autoconfiguration, and PSR-12 style. Code
    Static Analysis: phpstan
 - Never throw a generic \Exception, use TSDBException as the base exception
 - Never use eval()
-- Inline code comments should only be used when they are needed to explain something that is not obvious.
+- Inline code comments should only be used when they are needed to explain something that is not obvious
 - Use constructor property promotion when appropriate
-- This package is under development and does not need to maintain backwards compatability
+- This package is under development and does not need to maintain backwards compatibility
 - After every change, run:
 ./vendor/bin/phpunit
 ./vendor/bin/phpstan
@@ -23,7 +23,6 @@ I’m using Symfony 7 with autowiring, autoconfiguration, and PSR-12 style. Code
 - Use data transfer objects where appropriate
 - Driver specific files should be under their directory in src/Drivers
 - Strictly adhere to PSR-4 and best practices for file organization
-- When examining the entire project's file structure recursively list all files with ls -Rla
 
 The project is organized as follows:
 ```
@@ -32,10 +31,10 @@ src/
 ├── Core/         # Core components and functionality
 ├── Drivers/      # Database driver implementations
 ├── Exceptions/   # Exception classes
-└── Services/     # System level services
+├── Services/     # System level services
+└── Utils/        # Utility functions and classes
 
-
-tests/            # Tests mirror the src structure
+tests/            # Tests for core components
 config/           # Configuration files
 docs/             # Documentation
 examples/         # Example code
@@ -50,7 +49,6 @@ examples/         # Example code
 - Use exceptions for error handling
 - Create specific exception classes for different error types
 - Document exceptions in PHPDoc comments
-
 
 ## Build/Configuration Instructions
 
@@ -93,16 +91,13 @@ Use ./vendor/bin/phpunit directly to run tests
 ```
 
 ### Writing Tests
-When adding new features or fixing bugs, always add corresponding tests. Follow these guidelines:
+When adding new features or fixing bugs, always add corresponding tests:
 
-1. Create test classes in the appropriate directory that mirrors the source code structure
-2. Name test classes with the suffix `Test` (e.g., `QueryTest`)
-3. Name test methods with the prefix `test` (e.g., `test_select()`)
-4. Use descriptive test method names that explain what is being tested
-5. Test both normal operation and edge cases/error conditions
-6. Use PHPUnit assertions to verify expected behavior
-7. Do not use assertStringContainsString in QueryBuilder tests. Tests should test `assertEquals($nativeQuery, $queryString)`. $nativeQuery should be a valid working query for the intended query language. 
-8. Feature tests are preferable to unit tests because they focus on system behavior rather than internal implementation, reducing the risk of brittle, tightly-coupled tests.
+1. Create test classes in directories that mirror the source code structure
+2. Name test classes with suffix `Test` and methods with prefix `test`
+3. Test both normal operation and edge cases/error conditions
+4. For QueryBuilder tests, use `assertEquals($nativeQuery, $queryString)` where $nativeQuery is a valid query
+5. Prefer feature tests over unit tests to focus on system behavior rather than implementation details
 
 ## Static Analysis
 
@@ -116,31 +111,12 @@ The project uses PHPStan for static analysis:
 ### Architecture Overview
 The library follows a layered architecture:
 
-1. **Contracts Layer**: Contains interfaces and contracts
-   - Defines the contracts that other components must implement
-   - Provides a clear separation of concerns
-
-2. **Core Layer**: Contains the main components and functionality
-   - `TimeSeriesInterface`: Main interface for all database drivers
-   - `AbstractTimeSeriesDB`: Abstract implementation with common functionality
-   - `Query`, `DataPoint`, `QueryResult`: Core data structures
-
-3. **Drivers Layer**: Contains specific database driver implementations
-   - `InfluxDBDriver`: Driver for InfluxDB
-   - `RRDtoolDriver`: Driver for RRDtool
-   - `PrometheusDriver`: Driver for Prometheus
-
-4. **Exceptions Layer**: Contains exception classes
-   - `TSDBException`: Base exception class for the library
-   - Specific exception classes for different error types
-
-5. **Support Layer**: Contains support and helper classes
-   - Provides utility functions and classes to support the core functionality
-   - Includes helper methods for common operations
-
-6. **Utils Layer**: Contains utility functions and classes
-   - General-purpose utility functions
-   - Helper classes for common tasks
+1. **Contracts Layer**: Interfaces and contracts that define component requirements
+2. **Core Layer**: Main components including `TimeSeriesInterface`, `AbstractTimeSeriesDB`, and core data structures
+3. **Drivers Layer**: Database driver implementations (InfluxDB, RRDtool, Prometheus, etc.)
+4. **Exceptions Layer**: Exception classes with `TSDBException` as the base
+5. **Services Layer**: System-level services and functionality
+6. **Utils Layer**: General-purpose utility functions and helper classes
 
 ### Adding a New Driver
 To add a new database driver:
@@ -151,13 +127,7 @@ To add a new database driver:
 4. Create a driver class that extends `AbstractTimeSeriesDB`
 5. Set up the driver to be resolved by the container
 6. Add tests for your driver
-   - Create a directory under `tests/Drivers` for your driver tests (e.g., `tests/Drivers/NewDriver`)
-   - Create unit tests for your driver class, configuration class, and query builder
-   - Create integration tests including setting up a docker container for the integration tests
 7. Add documentation for your driver
-   - Document the configuration parameters
-   - Provide examples of how to use your driver
-   - Document any driver-specific features or limitations
 
 Example of registering a new driver:
 
