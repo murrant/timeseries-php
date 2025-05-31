@@ -6,7 +6,6 @@ namespace TimeSeriesPhp\Tests\Services;
 
 use PHPUnit\Framework\TestCase;
 use TimeSeriesPhp\Core\Configuration;
-use TimeSeriesPhp\Core\ConfigurationLoader;
 use TimeSeriesPhp\Exceptions\TSDBException;
 use TimeSeriesPhp\Services\ConfigurationManager;
 
@@ -19,12 +18,12 @@ class ConfigurationManagerTest extends TestCase
         parent::setUp();
 
         // Create a temporary config directory for testing
-        $this->configDir = sys_get_temp_dir() . '/timeseries-php-test-' . uniqid();
+        $this->configDir = sys_get_temp_dir().'/timeseries-php-test-'.uniqid();
         mkdir($this->configDir);
-        mkdir($this->configDir . '/packages');
+        mkdir($this->configDir.'/packages');
 
         // Create a test configuration file
-        $configContent = <<<YAML
+        $configContent = <<<'YAML'
 default_driver: 'test_driver'
 drivers:
     test_driver:
@@ -40,17 +39,17 @@ cache:
     ttl: 1800
 YAML;
 
-        file_put_contents($this->configDir . '/packages/config.yaml', $configContent);
+        file_put_contents($this->configDir.'/packages/config.yaml', $configContent);
     }
 
     protected function tearDown(): void
     {
         // Clean up the temporary config directory
-        if (file_exists($this->configDir . '/packages/config.yaml')) {
-            unlink($this->configDir . '/packages/config.yaml');
+        if (file_exists($this->configDir.'/packages/config.yaml')) {
+            unlink($this->configDir.'/packages/config.yaml');
         }
-        if (is_dir($this->configDir . '/packages')) {
-            rmdir($this->configDir . '/packages');
+        if (is_dir($this->configDir.'/packages')) {
+            rmdir($this->configDir.'/packages');
         }
         if (is_dir($this->configDir)) {
             rmdir($this->configDir);
@@ -59,7 +58,7 @@ YAML;
         parent::tearDown();
     }
 
-    public function testGetConfig(): void
+    public function test_get_config(): void
     {
         $configManager = new ConfigurationManager($this->configDir);
         $config = $configManager->getConfig();
@@ -73,7 +72,7 @@ YAML;
         $this->assertEquals('http://localhost:9999', $config['drivers']['test_driver']['url']);
     }
 
-    public function testGet(): void
+    public function test_get(): void
     {
         $configManager = new ConfigurationManager($this->configDir);
 
@@ -88,7 +87,7 @@ YAML;
         $this->assertEquals('default_value', $configManager->get('non_existent_key', 'default_value'));
     }
 
-    public function testGetDefaultDriverConfig(): void
+    public function test_get_default_driver_config(): void
     {
         $configManager = new ConfigurationManager($this->configDir);
         $driverConfig = $configManager->getDefaultDriverConfig();
@@ -102,7 +101,7 @@ YAML;
         $this->assertEquals('ms', $driverConfig['precision']);
     }
 
-    public function testGetDriverConfig(): void
+    public function test_get_driver_config(): void
     {
         $configManager = new ConfigurationManager($this->configDir);
 

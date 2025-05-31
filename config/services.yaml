@@ -20,11 +20,25 @@ services:
             - '../src/Core/Attributes/'
             - '../src/Exceptions/TSDBException.php'
 
-    # Controllers are imported separately to make sure services can be injected
-    # as action arguments even if you don't extend any base controller class
-    # TimeSeriesPhp\Controller\:
-    #     resource: '../src/Controller/'
-    #     tags: ['controller.service_arguments']
+    # Register the configuration manager as a service
+    TimeSeriesPhp\Services\ConfigurationManager:
+        arguments:
+            $configDir: '%kernel.project_dir%/config'
+        public: true
+
+    # Register the logger service
+    Psr\Log\LoggerInterface:
+        class: TimeSeriesPhp\Services\Logger
+        arguments:
+            $config: '%logging%'
+        public: true
+
+    # Register the cache service
+    Psr\SimpleCache\CacheInterface:
+        class: TimeSeriesPhp\Services\Cache
+        arguments:
+            $config: '%cache%'
+        public: true
 
     # Add more service definitions when explicit configuration is needed
     # Please note that last definitions always *replace* previous ones

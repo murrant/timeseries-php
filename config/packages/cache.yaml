@@ -1,0 +1,32 @@
+# This file contains configuration for the cache service
+
+parameters:
+    # Cache configuration
+    cache:
+        # Whether caching is enabled
+        enabled: true
+
+        # Default time to live in seconds
+        ttl: 3600
+
+        # Cache driver (file, array, redis, memcached)
+        driver: 'file'
+
+        # Cache prefix for keys
+        prefix: 'tsdb_'
+
+        # File cache specific settings
+        file:
+            # Directory to store cache files
+            directory: '%kernel.cache_dir%/cache'
+
+        # Redis cache specific settings
+        redis:
+            host: 'localhost'
+            port: 6379
+            database: 0
+
+        # Memcached cache specific settings
+        memcached:
+            servers:
+                - { host: 'localhost', port: 11211 }

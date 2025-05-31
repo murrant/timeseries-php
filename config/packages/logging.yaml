@@ -1,0 +1,22 @@
+# This file contains configuration for the logging service
+
+parameters:
+    # Logging configuration
+    logging:
+        # Log level (debug, info, notice, warning, error, critical, alert, emergency)
+        level: 'info'
+
+        # Log file path (null for stderr)
+        file: null
+
+        # Maximum log file size in bytes before rotation (default: 10MB)
+        max_size: 10485760
+
+        # Maximum number of log files to keep
+        max_files: 5
+
+        # Whether to include timestamps in log messages
+        timestamps: true
+
+        # Log format (simple, detailed, json)
+        format: 'simple'
