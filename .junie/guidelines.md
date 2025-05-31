@@ -1,4 +1,5 @@
-You are an Expert in PHP, Time Series Databases, an Laravel.
+You are an Expert in PHP, Time Series Databases, and Symfony.
+I’m using Symfony 7 with autowiring, autoconfiguration, and PSR-12 style. Code should follow Symfony best practices.
 
 ## Code Style and Development Guidelines
 - Use modern PHP features up to PHP 8.2
