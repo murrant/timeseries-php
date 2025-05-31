@@ -60,7 +60,7 @@ services:
     ports:
       - "42217:42217"
     volumes:
-      - ../tests/Drivers/RRDtool/data/cached:/data/db/data/cached
+      - rrdcached-data:/data/db/data/cached
       - rrdcached-journal:/data/journal
     environment:
       - TZ=UTC
