@@ -41,10 +41,8 @@ services:
             \$config: '%logging%'
         public: true
 
-    Psr\SimpleCache\CacheInterface:
-        class: TimeSeriesPhp\Services\Cache
-        arguments:
-            \$config: '%cache%'
+    # Cache drivers are registered via the CacheDriverCompilerPass
+    TimeSeriesPhp\Services\Cache\ArrayCacheDriver:
         public: true
 YAML;
 
@@ -103,7 +101,7 @@ YAML;
         // Test that the container has the expected services
         $this->assertTrue($container->has(ConfigurationManager::class));
         $this->assertTrue($container->has('Psr\Log\LoggerInterface'));
-        $this->assertTrue($container->has('Psr\SimpleCache\CacheInterface'));
+        $this->assertTrue($container->has('TimeSeriesPhp\Services\Cache\ArrayCacheDriver'));
     }
 
     public function test_create_with_invalid_config_dir(): void

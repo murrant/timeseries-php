@@ -33,12 +33,7 @@ services:
             $config: '%logging%'
         public: true
 
-    # Register the cache service
-    Psr\SimpleCache\CacheInterface:
-        class: TimeSeriesPhp\Services\Cache
-        arguments:
-            $config: '%cache%'
-        public: true
+    # Cache services are now registered via the CacheDriverCompilerPass
 
     # Add more service definitions when explicit configuration is needed
     # Please note that last definitions always *replace* previous ones

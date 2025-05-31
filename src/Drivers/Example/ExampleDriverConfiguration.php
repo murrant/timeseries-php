@@ -31,19 +31,19 @@ class ExampleDriverConfiguration extends AbstractDriverConfiguration
     {
         $rootNode
             ->children()
-                ->booleanNode('use_ssl')
-                    ->info('Whether to use SSL for connections')
-                    ->defaultFalse()
-                ->end()
-                ->integerNode('timeout')
-                    ->info('Connection timeout in seconds')
-                    ->defaultValue(30)
-                ->end()
-                ->enumNode('mode')
-                    ->info('The operation mode')
-                    ->values(['standard', 'advanced', 'compatibility'])
-                    ->defaultValue('standard')
-                ->end()
+            ->booleanNode('use_ssl')
+            ->info('Whether to use SSL for connections')
+            ->defaultFalse()
+            ->end()
+            ->integerNode('timeout')
+            ->info('Connection timeout in seconds')
+            ->defaultValue(30)
+            ->end()
+            ->enumNode('mode')
+            ->info('The operation mode')
+            ->values(['standard', 'advanced', 'compatibility'])
+            ->defaultValue('standard')
+            ->end()
             ->end();
     }
 }
