@@ -23,7 +23,7 @@ class NullDriverTest extends TestCase
     protected function setUp(): void
     {
         $this->queryBuilder = $this->createMock(QueryBuilderInterface::class);
-        $this->driver = new NullDriver($this->queryBuilder, new NullLogger);
+        $this->driver = new NullDriver($this->queryBuilder, new NullLogger, new \TimeSeriesPhp\Drivers\Null\NullConfig());
     }
 
     public function test_implements_interfaces(): void

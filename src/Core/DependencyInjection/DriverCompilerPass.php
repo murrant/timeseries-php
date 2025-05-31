@@ -67,6 +67,24 @@ class DriverCompilerPass implements CompilerPassInterface
                         $container->getDefinition($driver->configClass)
                             ->setPublic(true);
                     }
+
+                    // Set the config as a constructor argument for the driver if the driver has a $config parameter
+                    $driverReflection = new \ReflectionClass($className);
+                    $constructor = $driverReflection->getConstructor();
+
+                    if ($constructor) {
+                        $hasConfigParam = false;
+                        foreach ($constructor->getParameters() as $parameter) {
+                            if ($parameter->getName() === 'config') {
+                                $hasConfigParam = true;
+                                break;
+                            }
+                        }
+
+                        if ($hasConfigParam) {
+                            $definition->setArgument('$config', $container->getDefinition($driver->configClass));
+                        }
+                    }
                 }
 
                 // If the driver has a query builder class, register it as a service

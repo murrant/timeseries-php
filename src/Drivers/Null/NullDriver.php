@@ -19,7 +19,7 @@ use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
  * Useful for testing or when you need a placeholder driver
  */
 #[Driver(name: 'null', queryBuilderClass: NullQueryBuilder::class, configClass: NullConfig::class)]
-class NullDriver extends AbstractTimeSeriesDB
+class NullDriver extends AbstractTimeSeriesDB implements ConfigurableInterface
 {
     public function __construct(
         QueryBuilderInterface $queryBuilder,
@@ -42,7 +42,7 @@ class NullDriver extends AbstractTimeSeriesDB
      */
     public function configure(array $config): void
     {
-        $this->config = NullConfig::processConfiguration($config);
+        $this->config = $this->config->createFromArray($config);
     }
 
     /**
@@ -155,6 +155,8 @@ class NullDriver extends AbstractTimeSeriesDB
      */
     public function getConfig(): array
     {
-        return $this->config;
+        return [
+            'debug' => $this->config->debug,
+        ];
     }
 }

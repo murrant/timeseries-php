@@ -10,11 +10,10 @@ use Psr\Log\NullLogger;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use TimeSeriesPhp\Contracts\Driver\ConfigurableInterface;
 use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
-use TimeSeriesPhp\Core\Attributes\Driver;
 use TimeSeriesPhp\Core\DependencyInjection\DriverCompilerPass;
 use TimeSeriesPhp\Core\Driver\DriverFactory;
-use TimeSeriesPhp\Drivers\Example\ExampleDriver;
-use TimeSeriesPhp\Drivers\Example\ExampleDriverConfiguration;
+use TimeSeriesPhp\Drivers\Null\NullConfig;
+use TimeSeriesPhp\Drivers\Null\NullDriver;
 use TimeSeriesPhp\Exceptions\Driver\DriverNotFoundException;
 
 class DriverFactoryTest extends TestCase
@@ -28,12 +27,12 @@ class DriverFactoryTest extends TestCase
         $this->container = new ContainerBuilder;
 
         // Register the example driver
-        $this->container->register(ExampleDriver::class, ExampleDriver::class)
+        $this->container->register(NullDriver::class, NullDriver::class)
             ->setAutoconfigured(true)
             ->setAutowired(true);
 
         // Register the example driver configuration
-        $this->container->register(ExampleDriverConfiguration::class, ExampleDriverConfiguration::class)
+        $this->container->register(NullConfig::class, NullConfig::class)
             ->setAutoconfigured(true)
             ->setAutowired(true);
 
@@ -60,8 +59,8 @@ class DriverFactoryTest extends TestCase
         // Assert that the driver is an instance of TimeSeriesInterface
         $this->assertInstanceOf(TimeSeriesInterface::class, $driver);
 
-        // Assert that the driver is an instance of ExampleDriver
-        $this->assertInstanceOf(ExampleDriver::class, $driver);
+        // Assert that the driver is an instance of NullDriver
+        $this->assertInstanceOf(NullDriver::class, $driver);
 
         // Assert that the driver is an instance of ConfigurableInterface
         $this->assertInstanceOf(ConfigurableInterface::class, $driver);
@@ -81,8 +80,8 @@ class DriverFactoryTest extends TestCase
             'mode' => 'advanced',
         ]);
 
-        // Assert that the driver is an instance of ExampleDriver
-        $this->assertInstanceOf(ExampleDriver::class, $driver);
+        // Assert that the driver is an instance of NullDriver
+        $this->assertInstanceOf(NullDriver::class, $driver);
     }
 
     public function test_create_driver_with_invalid_name(): void

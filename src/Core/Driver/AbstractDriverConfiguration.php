@@ -6,6 +6,7 @@ namespace TimeSeriesPhp\Core\Driver;
 
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
+use TimeSeriesPhp\Core\Attributes\Config;
 
 /**
  * Abstract base class for driver configuration
@@ -59,11 +60,23 @@ abstract class AbstractDriverConfiguration implements ConfigurationInterface
     }
 
     /**
-     * Get the configuration name
+     * Get the configuration name from the Config attribute
      *
      * @return string The configuration name
      */
-    abstract protected function getConfigName(): string;
+    protected function getConfigName(): string
+    {
+        $reflection = new \ReflectionClass(static::class);
+        $attributes = $reflection->getAttributes(Config::class);
+
+        if (empty($attributes)) {
+            throw new \RuntimeException(sprintf('Configuration class %s must have a Config attribute', static::class));
+        }
+
+        /** @var Config $config */
+        $config = $attributes[0]->newInstance();
+        return $config->name;
+    }
 
     /**
      * Configure the schema for this driver
@@ -86,5 +99,34 @@ abstract class AbstractDriverConfiguration implements ConfigurationInterface
         $processedConfig = $processor->processConfiguration($this, [$config]);
 
         return $processedConfig;
+    }
+
+    /**
+     * Create a new instance of this configuration class with the given configuration
+     *
+     * @param  array<string, mixed>  $config  The configuration to use
+     * @return static A new instance of this configuration class
+     */
+    public function createFromArray(array $config): static
+    {
+        $processedConfig = $this->processConfiguration($config);
+
+        // Use reflection to create a new instance with the processed configuration
+        $reflection = new \ReflectionClass(static::class);
+        $constructor = $reflection->getConstructor();
+
+        if (!$constructor) {
+            return $reflection->newInstance();
+        }
+
+        $parameters = $constructor->getParameters();
+        $args = [];
+
+        foreach ($parameters as $parameter) {
+            $name = $parameter->getName();
+            $args[$name] = $processedConfig[$name] ?? ($parameter->isDefaultValueAvailable() ? $parameter->getDefaultValue() : null);
+        }
+
+        return $reflection->newInstanceArgs($args);
     }
 }
