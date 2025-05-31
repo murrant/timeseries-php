@@ -3,7 +3,6 @@
 namespace TimeSeriesPhp\Contracts\Driver;
 
 use DateTime;
-use TimeSeriesPhp\Contracts\Config\ConfigInterface;
 use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
@@ -19,12 +18,11 @@ interface TimeSeriesInterface
     /**
      * Connect to the time series database
      *
-     * @param  ConfigInterface  $config  Configuration for the connection
      * @return bool True if connection was successful
      *
      * @throws ConnectionException If connection fails
      */
-    public function connect(ConfigInterface $config): bool;
+    public function connect(): bool;
 
     /**
      * Check if connected to the database

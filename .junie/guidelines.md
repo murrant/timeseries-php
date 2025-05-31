@@ -146,16 +146,15 @@ The library follows a layered architecture:
 To add a new database driver:
 
 1. Create a new directory under `src/Drivers` for your driver (e.g., `src/Drivers/NewDriver`)
-2. Create a configuration class that implements `ConfigInterface`
-3. Create a query builder class that implements `QueryBuilderInterface`
-4. Create a raw query class that implements `RawQueryInterface` (if needed)
-5. Create a driver class that extends `AbstractTimeSeriesDB`
-6. Set up the driver to be resolved by the container
-7. Add tests for your driver
+2. Create a query builder class that implements `QueryBuilderInterface`
+3. Create a raw query class that implements `RawQueryInterface` (if needed)
+4. Create a driver class that extends `AbstractTimeSeriesDB`
+5. Set up the driver to be resolved by the container
+6. Add tests for your driver
    - Create a directory under `tests/Drivers` for your driver tests (e.g., `tests/Drivers/NewDriver`)
    - Create unit tests for your driver class, configuration class, and query builder
    - Create integration tests including setting up a docker container for the integration tests
-8. Add documentation for your driver
+7. Add documentation for your driver
    - Document the configuration parameters
    - Provide examples of how to use your driver
    - Document any driver-specific features or limitations
