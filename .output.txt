@@ -1,0 +1,615 @@
+Note: Using configuration file /home/murrant/projects/timeseries-php/phpstan.neon.
+ 42/42 [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] 100%
+ ------ -------------------------------------------------------------------------
+  Line   src/Core/Configuration.php
+ ------ -------------------------------------------------------------------------
+  23     Call to an undefined method
+         Symfony\Component\Config\Definition\Builder\NodeDefinition::children().
+         🪪 method.notFound
+  23     Cannot call method addDefaultsIfNotSet() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method arrayNode() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method arrayNode() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method arrayNode() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method arrayPrototype() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method booleanNode() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method children() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method children() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method defaultTrue() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method defaultValue() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method defaultValue() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method defaultValue() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method defaultValue() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method defaultValue() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method defaultValue() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method info() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method info() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method info() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method info() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method info() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method info() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method info() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method info() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method info() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method integerNode() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method isRequired() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method prototype() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method scalarNode() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method scalarNode() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method scalarNode() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method scalarNode() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method scalarNode() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method scalarNode() on mixed.
+         🪪 method.nonObject
+  23     Cannot call method useAttributeAsKey() on mixed.
+         🪪 method.nonObject
+ ------ -------------------------------------------------------------------------
+ ------ --------------------------------------------------------------------------------------
+  Line   src/Core/ConfigurationLoader.php
+ ------ --------------------------------------------------------------------------------------
+  25     Method TimeSeriesPhp\Core\ConfigurationLoader::loadFromFile() return
+         type has no value type specified in iterable type array.
+         🪪 missingType.iterableValue
+         💡 See:
+            https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type
+  35     Method TimeSeriesPhp\Core\ConfigurationLoader::loadFromFile() should
+         return array but returns mixed.
+         🪪 return.type
+  49     Method TimeSeriesPhp\Core\ConfigurationLoader::loadFromDirectory()
+         return type has no value type specified in iterable type array.
+         🪪 missingType.iterableValue
+         💡 See:
+            https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type
+  78     Method TimeSeriesPhp\Core\ConfigurationLoader::processConfiguration()
+         has parameter $configs with no value type specified in iterable type
+         array.
+         🪪 missingType.iterableValue
+         💡 See:
+            https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type
+  78     Method TimeSeriesPhp\Core\ConfigurationLoader::processConfiguration()
+         return type has no value type specified in iterable type array.
+         🪪 missingType.iterableValue
+         💡 See:
+            https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type
+  82     Parameter #1 $configuration of method
+         Symfony\Component\Config\Definition\Processor::processConfiguration()
+         expects Symfony\Component\Config\Definition\ConfigurationInterface,
+         object given.
+         🪪 argument.type
+ ------ --------------------------------------------------------------------------------------
+ ------ -------------------------------------------------------------------------------
+  Line   src/Core/Driver/AbstractDriverConfiguration.php
+ ------ -------------------------------------------------------------------------------
+  26     Call to an undefined method
+         Symfony\Component\Config\Definition\Builder\NodeDefinition::children().
+         🪪 method.notFound
+  26     Cannot call method arrayNode() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method defaultNull() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method defaultNull() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method defaultNull() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method defaultValue() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method info() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method info() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method info() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method info() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method info() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method info() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method integerNode() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method isRequired() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method scalarNode() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method scalarNode() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method scalarNode() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method scalarNode() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method useAttributeAsKey() on mixed.
+         🪪 method.nonObject
+  26     Cannot call method variablePrototype() on mixed.
+         🪪 method.nonObject
+  56     Parameter #1 $rootNode of method
+         TimeSeriesPhp\Core\Driver\AbstractDriverConfiguration::configureSchema()
+         expects
+         Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition,
+         Symfony\Component\Config\Definition\Builder\NodeDefinition given.
+         🪪 argument.type
+  85     Method
+         TimeSeriesPhp\Core\Driver\AbstractDriverConfiguration::processConfiguration()
+         should return array<string, mixed> but returns array.
+         🪪 return.type
+ ------ -------------------------------------------------------------------------------
+ ------ -----------------------------------------------------------------
+  Line   src/Core/Driver/DriverFactory.php
+ ------ -----------------------------------------------------------------
+  47     Parameter #1 $id of method
+         Symfony\Component\DependencyInjection\ContainerInterface::has()
+         expects string, mixed given.
+         🪪 argument.type
+  48     Parameter #2 ...$values of function sprintf expects
+         bool|float|int|string|null, mixed given.
+         🪪 argument.type
+  53     Parameter #1 $id of method
+         Symfony\Component\DependencyInjection\ContainerInterface::get()
+         expects string, mixed given.
+         🪪 argument.type
+ ------ -----------------------------------------------------------------
+ ------ -----------------------------------------------------------------------------
+  Line   src/Drivers/Example/ExampleDriver.php
+ ------ -----------------------------------------------------------------------------
+  31     Property TimeSeriesPhp\Drivers\Example\ExampleDriver::$config is
+         never read, only written.
+         🪪 property.onlyWritten
+         💡 See:
+            https://phpstan.org/developing-extensions/always-read-written-properties
+  58     Method TimeSeriesPhp\Drivers\Example\ExampleDriver::connect() has
+         TimeSeriesPhp\Exceptions\Driver\ConnectionException in PHPDoc @throws
+         tag but it's not thrown.
+         🪪 throws.unusedType
+  66     Dead catch - Exception is never thrown in the try block.
+         🪪 catch.neverThrown
+  99     Dead catch - Exception is never thrown in the try block.
+         🪪 catch.neverThrown
+  122    Dead catch - Exception is never thrown in the try block.
+         🪪 catch.neverThrown
+  161    Parameter #1 $rawQuery of class
+         TimeSeriesPhp\Exceptions\Query\RawQueryException constructor expects
+         TimeSeriesPhp\Contracts\Query\RawQueryInterface, string given.
+         🪪 argument.type
+  169    Parameter #1 $rawQuery of class
+         TimeSeriesPhp\Exceptions\Query\RawQueryException constructor expects
+         TimeSeriesPhp\Contracts\Query\RawQueryInterface, string given.
+         🪪 argument.type
+  191    Dead catch - Exception is never thrown in the try block.
+         🪪 catch.neverThrown
+  214    Dead catch - Exception is never thrown in the try block.
+         🪪 catch.neverThrown
+  236    Dead catch - Exception is never thrown in the try block.
+         🪪 catch.neverThrown
+  261    Dead catch - Exception is never thrown in the try block.
+         🪪 catch.neverThrown
+ ------ -----------------------------------------------------------------------------
+ ------ ---------------------------------------------------------------------------------
+  Line   src/Drivers/Example/ExampleDriverConfiguration.php
+ ------ ---------------------------------------------------------------------------------
+  33     Call to an undefined method
+         Symfony\Component\Config\Definition\Builder\NodeParentInterface::integerNode().
+         🪪 method.notFound
+  33     Cannot call method defaultValue() on mixed.
+         🪪 method.nonObject
+  33     Cannot call method defaultValue() on mixed.
+         🪪 method.nonObject
+  33     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  33     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  33     Cannot call method end() on mixed.
+         🪪 method.nonObject
+  33     Cannot call method enumNode() on mixed.
+         🪪 method.nonObject
+  33     Cannot call method info() on mixed.
+         🪪 method.nonObject
+  33     Cannot call method info() on mixed.
+         🪪 method.nonObject
+  33     Cannot call method values() on mixed.
+         🪪 method.nonObject
+ ------ ---------------------------------------------------------------------------------
+ ------ --------------------------------------------------------------------------------------
+  Line   src/Services/Cache.php
+ ------ --------------------------------------------------------------------------------------
+  39     Property TimeSeriesPhp\Services\Cache::$driverConfig type has no
+         value type specified in iterable type array.
+         🪪 missingType.iterableValue
+         💡 See:
+            https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type
+  44     Property TimeSeriesPhp\Services\Cache::$memoryCache type has no value
+         type specified in iterable type array.
+         🪪 missingType.iterableValue
+         💡 See:
+            https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type
+  51     Method TimeSeriesPhp\Services\Cache::__construct() has parameter
+         $config with no value type specified in iterable type array.
+         🪪 missingType.iterableValue
+         💡 See:
+            https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type
+  53     Property TimeSeriesPhp\Services\Cache::$enabled (bool) does not
+         accept mixed.
+         🪪 assign.propertyType
+  54     Property TimeSeriesPhp\Services\Cache::$defaultTtl (int) does not
+         accept mixed.
+         🪪 assign.propertyType
+  55     Property TimeSeriesPhp\Services\Cache::$driver (string) does not
+         accept mixed.
+         🪪 assign.propertyType
+  56     Property TimeSeriesPhp\Services\Cache::$prefix (string) does not
+         accept mixed.
+         🪪 assign.propertyType
+  57     Property TimeSeriesPhp\Services\Cache::$driverConfig (array) does not
+         accept mixed.
+         🪪 assign.propertyType
+  84     Class SebastianBergmann\Diff\ConfigurationException constructor
+         invoked with 1 parameter, 3-5 required.
+         🪪 arguments.count
+  120    Class SebastianBergmann\Diff\ConfigurationException constructor
+         invoked with 1 parameter, 3-5 required.
+         🪪 arguments.count
+  153    Class SebastianBergmann\Diff\ConfigurationException constructor
+         invoked with 1 parameter, 3-5 required.
+         🪪 arguments.count
+  183    Class SebastianBergmann\Diff\ConfigurationException constructor
+         invoked with 1 parameter, 3-5 required.
+         🪪 arguments.count
+  202    Method TimeSeriesPhp\Services\Cache::getMultiple() has parameter
+         $keys with no value type specified in iterable type iterable.
+         🪪 missingType.iterableValue
+         💡 See:
+            https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type
+  202    Method TimeSeriesPhp\Services\Cache::getMultiple() return type has no
+         value type specified in iterable type iterable.
+         🪪 missingType.iterableValue
+         💡 See:
+            https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type
+  206    Parameter #1 $key of method TimeSeriesPhp\Services\Cache::get()
+         expects string, mixed given.
+         🪪 argument.type
+  221    Method TimeSeriesPhp\Services\Cache::setMultiple() has parameter
+         $values with no value type specified in iterable type iterable.
+         🪪 missingType.iterableValue
+         💡 See:
+            https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type
+  225    Parameter #1 $key of method TimeSeriesPhp\Services\Cache::set()
+         expects string, mixed given.
+         🪪 argument.type
+  239    Method TimeSeriesPhp\Services\Cache::deleteMultiple() has parameter
+         $keys with no value type specified in iterable type iterable.
+         🪪 missingType.iterableValue
+         💡 See:
+            https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type
+  243    Parameter #1 $key of method TimeSeriesPhp\Services\Cache::delete()
+         expects string, mixed given.
+         🪪 argument.type
+  271    Class SebastianBergmann\Diff\ConfigurationException constructor
+         invoked with 1 parameter, 3-5 required.
+         🪪 arguments.count
+  298    Method TimeSeriesPhp\Services\Cache::normalizeTtl() never returns
+         null so it can be removed from the return type.
+         🪪 return.unusedType
+  323    Cannot access offset 'expires' on mixed.
+         🪪 offsetAccess.nonOffsetAccessible
+  329    Cannot access offset 'value' on mixed.
+         🪪 offsetAccess.nonOffsetAccessible
+  367    Cannot access offset 'expires' on mixed.
+         🪪 offsetAccess.nonOffsetAccessible
+  431    Parameter #1 $filename of function is_dir expects string, mixed
+         given.
+         🪪 argument.type
+  436    Parameter #1 $directory of class RecursiveDirectoryIterator
+         constructor expects string, mixed given.
+         🪪 argument.type
+  441    Cannot call method isDir() on mixed.
+         🪪 method.nonObject
+  442    Cannot call method getRealPath() on mixed.
+         🪪 method.nonObject
+  442    Parameter #1 $directory of function rmdir expects string, mixed
+         given.
+         🪪 argument.type
+  444    Cannot call method getRealPath() on mixed.
+         🪪 method.nonObject
+  444    Parameter #1 $filename of function unlink expects string, mixed
+         given.
+         🪪 argument.type
+  476    Binary operation "." between mixed and '/' results in an error.
+         🪪 binaryOp.invalid
+  481    Method TimeSeriesPhp\Services\Cache::readCacheFile() return type has
+         no value type specified in iterable type array.
+         🪪 missingType.iterableValue
+         💡 See:
+            https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type
+ ------ --------------------------------------------------------------------------------------
+ ------ --------------------------------------------------------------------------------------
+  Line   src/Services/ConfigurationManager.php
+ ------ --------------------------------------------------------------------------------------
+  20     Property TimeSeriesPhp\Services\ConfigurationManager::$config type
+         has no value type specified in iterable type array.
+         🪪 missingType.iterableValue
+         💡 See:
+            https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type
+  45     Method TimeSeriesPhp\Services\ConfigurationManager::getConfig()
+         return type has no value type specified in iterable type array.
+         🪪 missingType.iterableValue
+         💡 See:
+            https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type
+  80     Method
+         TimeSeriesPhp\Services\ConfigurationManager::getDefaultDriverConfig()
+         return type has no value type specified in iterable type array.
+         🪪 missingType.iterableValue
+         💡 See:
+            https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type
+  83     Part $defaultDriver (mixed) of encapsed string cannot be cast to
+         string.
+         🪪 encapsedStringPart.nonString
+  86     Part $defaultDriver (mixed) of encapsed string cannot be cast to
+         string.
+         🪪 encapsedStringPart.nonString
+  89     Method
+         TimeSeriesPhp\Services\ConfigurationManager::getDefaultDriverConfig()
+         should return array but returns mixed.
+         🪪 return.type
+  100    Method TimeSeriesPhp\Services\ConfigurationManager::getDriverConfig()
+         return type has no value type specified in iterable type array.
+         🪪 missingType.iterableValue
+         💡 See:
+            https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type
+  108    Method TimeSeriesPhp\Services\ConfigurationManager::getDriverConfig()
+         should return array but returns mixed.
+         🪪 return.type
+ ------ --------------------------------------------------------------------------------------
+ ------ --------------------------------------------------------------------------------------
+  Line   src/Services/Logger.php
+ ------ --------------------------------------------------------------------------------------
+  65     Method TimeSeriesPhp\Services\Logger::__construct() has parameter
+         $config with no value type specified in iterable type array.
+         🪪 missingType.iterableValue
+         💡 See:
+            https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type
+  67     Property TimeSeriesPhp\Services\Logger::$minLevel (string) does not
+         accept mixed.
+         🪪 assign.propertyType
+  68     Property TimeSeriesPhp\Services\Logger::$file (string|null) does not
+         accept mixed.
+         🪪 assign.propertyType
+  69     Property TimeSeriesPhp\Services\Logger::$maxSize (int) does not
+         accept mixed.
+         🪪 assign.propertyType
+  70     Property TimeSeriesPhp\Services\Logger::$maxFiles (int) does not
+         accept mixed.
+         🪪 assign.propertyType
+  71     Property TimeSeriesPhp\Services\Logger::$timestamps (bool) does not
+         accept mixed.
+         🪪 assign.propertyType
+  72     Property TimeSeriesPhp\Services\Logger::$format (string) does not
+         accept mixed.
+         🪪 assign.propertyType
+  105    Parameter #1 $path of function dirname expects string, string|null
+         given.
+         🪪 argument.type
+  111    Parameter #1 $filename of function file_put_contents expects string,
+         string|null given.
+         🪪 argument.type
+  125    Method TimeSeriesPhp\Services\Logger::formatMessage() has parameter
+         $context with no value type specified in iterable type array.
+         🪪 missingType.iterableValue
+         💡 See:
+            https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type
+  132    Method TimeSeriesPhp\Services\Logger::formatMessage() should return
+         string but returns string|false.
+         🪪 return.type
+  159    Method TimeSeriesPhp\Services\Logger::interpolate() has parameter
+         $context with no value type specified in iterable type array.
+         🪪 missingType.iterableValue
+         💡 See:
+            https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type
+  194    Parameter #1 $from of function rename expects string, string|null
+         given.
+         🪪 argument.type
+ ------ --------------------------------------------------------------------------------------
+ ------ -----------------------------------------------------------
+  Line   tests/Core/DependencyInjection/DriverCompilerPassTest.php
+ ------ -----------------------------------------------------------
+  63     Cannot access offset 'name' on mixed.
+         🪪 offsetAccess.nonOffsetAccessible
+ ------ -----------------------------------------------------------
+ ------ ---------------------------------------------------------------------------------
+  Line   tests/Core/Driver/AbstractDriverConfigurationTest.php
+ ------ ---------------------------------------------------------------------------------
+  18     Property
+         TimeSeriesPhp\Tests\Core\Driver\AbstractDriverConfigurationTest::$configuration
+         has no type specified.
+         🪪 missingType.property
+  31     Call to an undefined method
+         Symfony\Component\Config\Definition\Builder\NodeParentInterface::end().
+         🪪 method.notFound
+  50     Cannot call method getConfigTreeBuilder() on mixed.
+         🪪 method.nonObject
+  59     Cannot call method processConfiguration() on mixed.
+         🪪 method.nonObject
+  69     Cannot access offset 'database' on mixed.
+         🪪 offsetAccess.nonOffsetAccessible
+  70     Cannot access offset 'host' on mixed.
+         🪪 offsetAccess.nonOffsetAccessible
+  71     Cannot access offset 'port' on mixed.
+         🪪 offsetAccess.nonOffsetAccessible
+  72     Cannot access offset 'username' on mixed.
+         🪪 offsetAccess.nonOffsetAccessible
+  73     Cannot access offset 'password' on mixed.
+         🪪 offsetAccess.nonOffsetAccessible
+  74     Cannot access offset 'test_option' on mixed.
+         🪪 offsetAccess.nonOffsetAccessible
+  80     Cannot call method processConfiguration() on mixed.
+         🪪 method.nonObject
+  85     Cannot access offset 'database' on mixed.
+         🪪 offsetAccess.nonOffsetAccessible
+  86     Cannot access offset 'host' on mixed.
+         🪪 offsetAccess.nonOffsetAccessible
+  87     Cannot access offset 'port' on mixed.
+         🪪 offsetAccess.nonOffsetAccessible
+  88     Cannot access offset 'username' on mixed.
+         🪪 offsetAccess.nonOffsetAccessible
+  89     Cannot access offset 'password' on mixed.
+         🪪 offsetAccess.nonOffsetAccessible
+  90     Cannot access offset 'test_option' on mixed.
+         🪪 offsetAccess.nonOffsetAccessible
+  91     Cannot access offset 'options' on mixed.
+         🪪 offsetAccess.nonOffsetAccessible
+ ------ ---------------------------------------------------------------------------------
+ ------ --------------------------------------------------------------------------------
+  Line   tests/Drivers/Example/ExampleDriverConfigurationTest.php
+ ------ --------------------------------------------------------------------------------
+  16     Property
+         TimeSeriesPhp\Tests\Drivers\Example\ExampleDriverConfigurationTest::$processor
+         is never read, only written.
+         🪪 property.onlyWritten
+         💡 See:
+            https://phpstan.org/developing-extensions/always-read-written-properties
+ ------ --------------------------------------------------------------------------------
+ ------ -----------------------------------------------------------------
+  Line   tests/Services/CacheTest.php
+ ------ -----------------------------------------------------------------
+  39     Cannot call method isDir() on mixed.
+         🪪 method.nonObject
+  40     Cannot call method getRealPath() on mixed.
+         🪪 method.nonObject
+  40     Parameter #1 $directory of function rmdir expects string, mixed
+         given.
+         🪪 argument.type
+  42     Cannot call method getRealPath() on mixed.
+         🪪 method.nonObject
+  42     Parameter #1 $filename of function unlink expects string, mixed
+         given.
+         🪪 argument.type
+  138    Cannot access offset 'key1'|'key2'|'key3' on iterable.
+         🪪 offsetAccess.nonOffsetAccessible
+ ------ -----------------------------------------------------------------
+ ------ -------------------------------------------------------
+  Line   tests/Services/ConfigurationManagerTest.php
+ ------ -------------------------------------------------------
+  70     Parameter #2 $array of method
+         PHPUnit\Framework\Assert::assertArrayHasKey() expects
+         array|ArrayAccess, mixed given.
+         🪪 argument.type
+  71     Parameter #2 $array of method
+         PHPUnit\Framework\Assert::assertArrayHasKey() expects
+         array|ArrayAccess, mixed given.
+         🪪 argument.type
+ ------ -------------------------------------------------------
+ ------ -------------------------------------------------------------------
+  Line   tests/Services/LoggerTest.php
+ ------ -------------------------------------------------------------------
+  43     Parameter #2 $haystack of method
+         PHPUnit\Framework\Assert::assertStringContainsString() expects
+         string, string|false given.
+         🪪 argument.type
+  64     Parameter #2 $haystack of method
+         PHPUnit\Framework\Assert::assertStringNotContainsString() expects
+         string, string|false given.
+         🪪 argument.type
+  65     Parameter #2 $haystack of method
+         PHPUnit\Framework\Assert::assertStringNotContainsString() expects
+         string, string|false given.
+         🪪 argument.type
+  66     Parameter #2 $haystack of method
+         PHPUnit\Framework\Assert::assertStringContainsString() expects
+         string, string|false given.
+         🪪 argument.type
+  67     Parameter #2 $haystack of method
+         PHPUnit\Framework\Assert::assertStringContainsString() expects
+         string, string|false given.
+         🪪 argument.type
+  84     Parameter #2 $haystack of method
+         PHPUnit\Framework\Assert::assertStringContainsString() expects
+         string, string|false given.
+         🪪 argument.type
+  101    Parameter #1 $json of function json_decode expects string,
+         string|false given.
+         🪪 argument.type
+  122    Parameter #2 $haystack of method
+         PHPUnit\Framework\Assert::assertStringContainsString() expects
+         string, string|false given.
+         🪪 argument.type
+ ------ -------------------------------------------------------------------
+
+ [ERROR] Found 201 errors
+
+$

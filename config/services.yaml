@@ -42,3 +42,7 @@ services:
 
     # Add more service definitions when explicit configuration is needed
     # Please note that last definitions always *replace* previous ones
+
+    # Register the driver factory
+    TimeSeriesPhp\Core\Driver\DriverFactory:
+        public: true

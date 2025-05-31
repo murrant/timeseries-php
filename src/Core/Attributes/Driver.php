@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TimeSeriesPhp\Core\Attributes;
 
 use Attribute;

@@ -7,6 +7,7 @@ namespace TimeSeriesPhp\Core;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use TimeSeriesPhp\Core\DependencyInjection\DriverCompilerPass;
 use TimeSeriesPhp\Exceptions\TSDBException;
 
 /**
@@ -33,6 +34,9 @@ class ContainerFactory
             $projectDir = dirname($configDir);
             $container->setParameter('kernel.project_dir', $projectDir);
             $container->setParameter('kernel.cache_dir', $projectDir.'/var/cache');
+
+            // Add compiler passes
+            $container->addCompilerPass(new DriverCompilerPass());
 
             $loader = new YamlFileLoader($container, new FileLocator($configDir));
             $loader->load('services.yaml');
