@@ -2,9 +2,11 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool;
 
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\InputStream;
 use Symfony\Component\Process\Process;
+use TimeSeriesPhp\Contracts\Driver\ConfigurableInterface;
 use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
 use TimeSeriesPhp\Core\Attributes\Driver;
 use TimeSeriesPhp\Core\Data\DataPoint;
@@ -14,82 +16,45 @@ use TimeSeriesPhp\Drivers\RRDtool\Config\RRDtoolConfig;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolCommandTimeoutException;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolException;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolPrematureUpdateException;
-use TimeSeriesPhp\Drivers\RRDtool\Factory\InputStreamFactory;
 use TimeSeriesPhp\Drivers\RRDtool\Factory\InputStreamFactoryInterface;
-use TimeSeriesPhp\Drivers\RRDtool\Factory\ProcessFactory;
 use TimeSeriesPhp\Drivers\RRDtool\Factory\ProcessFactoryInterface;
-use TimeSeriesPhp\Drivers\RRDtool\Factory\QueryBuilderFactory;
-use TimeSeriesPhp\Drivers\RRDtool\Factory\QueryBuilderFactoryInterface;
-use TimeSeriesPhp\Drivers\RRDtool\Factory\TagStrategyFactory;
 use TimeSeriesPhp\Drivers\RRDtool\Factory\TagStrategyFactoryInterface;
+use TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolQueryBuilder;
 use TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolRawQuery;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 use TimeSeriesPhp\Exceptions\Driver\DriverException;
 use TimeSeriesPhp\Exceptions\Driver\WriteException;
 use TimeSeriesPhp\Exceptions\Query\RawQueryException;
-use TimeSeriesPhp\Services\Logs\Logger;
 
-#[Driver(name: 'rrdtool', configClass: RRDtoolConfig::class)]
-class RRDtoolDriver extends AbstractTimeSeriesDB
+
+#[Driver(name: 'rrdtool', queryBuilderClass: RRDtoolQueryBuilder::class, configClass: RRDtoolConfig::class)]
+class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterface
 {
-    protected bool $debug = false;
-
-    protected string $rrdDir = '';
-
-    protected string $rrdtoolPath = 'rrdtool';
-
-    protected string $rrdcachedAddress = '';
 
     protected RRDTagStrategyInterface $tagStrategy;
 
-    /**
-     * @var bool Whether the driver is connected
-     */
     protected bool $connected = false;
 
-    /**
-     * @var ProcessFactoryInterface The process factory
-     */
-    protected ProcessFactoryInterface $processFactory;
-
-    /**
-     * @var InputStreamFactoryInterface The input stream factory
-     */
-    protected InputStreamFactoryInterface $inputStreamFactory;
-
-    /**
-     * @var TagStrategyFactoryInterface The tag strategy factory
-     */
-    protected TagStrategyFactoryInterface $tagStrategyFactory;
-
-    /**
-     * @var QueryBuilderFactoryInterface The RRDtool query builder factory
-     */
-    protected QueryBuilderFactoryInterface $rrdQueryBuilderFactory;
-
-    /**
-     * Constructor
-     *
-     * @param  ProcessFactoryInterface|null  $processFactory  The process factory
-     * @param  InputStreamFactoryInterface|null  $inputStreamFactory  The input stream factory
-     * @param  TagStrategyFactoryInterface|null  $tagStrategyFactory  The tag strategy factory
-     * @param  QueryBuilderFactoryInterface|null  $queryBuilderFactory  The query builder factory
-     * @param  \TimeSeriesPhp\Contracts\Query\QueryBuilderInterface|null  $parentQueryBuilderFactory  The parent query builder factory
-     */
     public function __construct(
-        ?ProcessFactoryInterface $processFactory = null,
-        ?InputStreamFactoryInterface $inputStreamFactory = null,
-        ?TagStrategyFactoryInterface $tagStrategyFactory = null,
-        ?QueryBuilderFactoryInterface $queryBuilderFactory = null,
-        ?\TimeSeriesPhp\Contracts\Query\QueryBuilderInterface $parentQueryBuilderFactory = null
+        protected RRDtoolConfig $config,
+        protected ProcessFactoryInterface $processFactory,
+        protected InputStreamFactoryInterface $inputStreamFactory,
+        protected TagStrategyFactoryInterface $tagStrategyFactory,
+        RRDtoolQueryBuilder $queryBuilder,
+        LoggerInterface $logger,
     ) {
-        parent::__construct($parentQueryBuilderFactory);
+        parent::__construct($queryBuilder, $logger);
+    }
 
-        $this->processFactory = $processFactory ?? new ProcessFactory;
-        $this->inputStreamFactory = $inputStreamFactory ?? new InputStreamFactory;
-        $this->tagStrategyFactory = $tagStrategyFactory ?? new TagStrategyFactory;
-        $this->rrdQueryBuilderFactory = $queryBuilderFactory ?? new QueryBuilderFactory;
+    /**
+     * Configure the driver with the given configuration
+     *
+     * @param  array<string, mixed>  $config
+     */
+    public function configure(array $config): void
+    {
+        $this->config = $this->config->createFromArray($config);
     }
 
     /**
@@ -97,7 +62,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
      */
     public function getRrdcachedAddress(): string
     {
-        return $this->rrdcachedAddress;
+        return $this->config->rrdcached_address;
     }
 
     private ?Process $persistentProcess = null;
@@ -111,33 +76,27 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
      */
     protected function doConnect(): bool
     {
-        $this->debug = $this->config->getBool('debug');
-        $this->rrdDir = $this->config->getString('rrd_dir');
-        $this->commandTimeout = $this->config->getInt('command_timeout');
-        $this->rrdtoolPath = $this->config->getString('rrdtool_path');
-        if ($this->config->getBool('use_rrdcached')) {
-            $this->rrdcachedAddress = $this->config->getString('rrdcached_address');
-            if (empty($this->rrdcachedAddress)) {
+
+        if ($this->config->use_rrdcached) {
+            if (empty($this->config->rrdcached_address)) {
                 throw new ConnectionException('rrdcached address must be specified when use_rrdcached is true');
             }
         }
 
-        if (! is_dir($this->rrdDir)) {
-            if (! mkdir($this->rrdDir, 0755, true)) {
-                throw new ConnectionException("Cannot create RRD directory: {$this->rrdDir}");
+        if (! is_dir($this->config->rrd_dir)) {
+            if (! mkdir($this->config->rrd_dir, 0755, true)) {
+                throw new ConnectionException("Cannot create RRD directory: {$this->config->rrd_dir}");
             }
         }
 
-        if (! is_writable($this->rrdDir)) {
-            throw new ConnectionException("RRD directory is not writable: {$this->rrdDir}");
+        if (! is_writable($this->config->rrd_dir)) {
+            throw new ConnectionException("RRD directory is not writable: {$this->config->rrd_dir}");
         }
 
-        $tagStrategyClass = $this->config->getString('tag_strategy');
-        $this->tagStrategy = $this->tagStrategyFactory->create($tagStrategyClass, $this->rrdDir);
-        $this->queryBuilder = $this->rrdQueryBuilderFactory->create($this->tagStrategy);
+        $this->tagStrategy = $this->tagStrategyFactory->create($this->config->tag_strategy, $this->config->rrd_dir);
 
-        if ($this->config->getBool('persistent_process')) {
-            $this->persistentProcess = $this->processFactory->create([$this->rrdtoolPath, '-']);
+        if ($this->config->persistent_process) {
+            $this->persistentProcess = $this->processFactory->create([$this->config->rrdtool_path, '-']);
             $this->persistentInput = $this->inputStreamFactory->create();
             $this->persistentProcess->setInput($this->persistentInput);
             $this->persistentProcess->setTimeout(null);
@@ -146,10 +105,10 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
 
         $this->connected = true;
 
-        Logger::info('Connected to RRDtool successfully', [
-            'rrd_dir' => $this->rrdDir,
-            'rrdtool_path' => $this->rrdtoolPath,
-            'use_rrdcached' => ! empty($this->rrdcachedAddress),
+        $this->logger->info('Connected to RRDtool successfully', [
+            'rrd_dir' => $this->config->rrd_dir,
+            'rrdtool_path' => $this->config->rrdtool_path,
+            'use_rrdcached' => $this->config->use_rrdcached && ! empty($this->config->rrdcached_address),
             'persistent_process' => $this->persistentProcess !== null,
             'tag_strategy' => get_class($this->tagStrategy),
         ]);
@@ -181,12 +140,12 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     private function runRrdtoolCommand(string $command, array $args): string
     {
         array_unshift($args, $command);
-        if ($this->rrdcachedAddress) {
-            array_push($args, '--daemon', $this->rrdcachedAddress);
+        if ($this->config->rrdcached_address) {
+            array_push($args, '--daemon', $this->config->rrdcached_address);
         }
 
-        if ($this->debug) {
-            Logger::debug('Running rrdtool command', [
+        if ($this->config->debug) {
+            $this->logger->debug('Running rrdtool command', [
                 'command' => $command,
                 'args' => $args,
                 'full_command' => implode(' ', $args),
@@ -202,7 +161,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
             $timeout = time() + $this->commandTimeout;
             $this->persistentProcess->waitUntil(function (string $type, string $output) use ($command, $args, $timeout) {
                 // FIXME debug output?
-                if ($this->debug && function_exists('dump')) {
+                if ($this->config->debug && function_exists('dump')) {
                     dump("Type: $type  $output");
                 }
 
@@ -238,7 +197,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
             return $output;
         }
 
-        array_unshift($args, $this->rrdtoolPath);
+        array_unshift($args, $this->config->rrdtool_path);
         $process = new Process($args);
         $process->setTimeout($this->commandTimeout);
 
@@ -299,7 +258,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
 
             return true;
         } catch (RRDtoolException $e) {
-            throw new WriteException($e->getDebugMessage($this->debug), $e->getCode(), $e);
+            throw new WriteException($e->getDebugMessage($this->config->debug), $e->getCode(), $e);
         }
     }
 
@@ -400,14 +359,14 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
                 ]],
             ]);
         } catch (RRDtoolException $e) {
-            throw new RawQueryException($query, $e->getDebugMessage($this->debug), $e->getCode(), $e);
+            throw new RawQueryException($query, $e->getDebugMessage($this->config->debug), $e->getCode(), $e);
         }
     }
 
     public function createDatabase(string $database): bool
     {
         // RRDtool doesn't have databases, but we can create a subdirectory
-        $dbDir = $this->rrdDir.'/'.$database;
+        $dbDir = $this->config->rrd_dir.'/'.$database;
 
         if (! is_dir($dbDir)) {
             return mkdir($dbDir, 0755, true);
@@ -422,10 +381,10 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     public function getDatabases(): array
     {
         $databases = [];
-        $items = scandir($this->rrdDir);
+        $items = scandir($this->config->rrd_dir);
 
         foreach ($items as $item) {
-            if ($item !== '.' && $item !== '..' && is_dir($this->rrdDir.'/'.$item)) {
+            if ($item !== '.' && $item !== '..' && is_dir($this->config->rrd_dir.'/'.$item)) {
                 $databases[] = $item;
             }
         }
@@ -493,8 +452,8 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
             return false;
         }
 
-        $step ??= $this->config->getInt('default_step');
-        $archives ??= $this->config->getArray('default_archives');
+        $step ??= $this->config->default_step;
+        $archives ??= $this->config->default_archives;
 
         if (empty($data_sources)) {
             throw new WriteException('Data sources must be specified for custom RRD creation');
@@ -513,7 +472,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
 
             return true;
         } catch (RRDtoolException $e) {
-            throw new WriteException('Failed to create RRD file: '.$e->getDebugMessage($this->debug), $e->getCode(), $e);
+            throw new WriteException('Failed to create RRD file: '.$e->getDebugMessage($this->config->debug), $e->getCode(), $e);
         }
     }
 
@@ -526,7 +485,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     {
         try {
             // set up a temp file for output if file output is requested and no file is specified
-            if ($this->config->getString('graph_output') === 'file' && $graphConfig->filename == '-') {
+            if ($this->config->graph_output === 'file' && $graphConfig->filename == '-') {
                 $imgFormat = $graphConfig->getParam('--imgformat') ?? $graphConfig->getParam('-a');
                 $suffix = $imgFormat ? '.'.strtolower($imgFormat) : '.png';
 
@@ -545,7 +504,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
 
             return $graphConfig->filename;
         } catch (RRDtoolException $e) {
-            throw new DriverException('Failed to create RRD graph: '.$e->getDebugMessage($this->debug), $e->getCode(), $e);
+            throw new DriverException('Failed to create RRD graph: '.$e->getDebugMessage($this->config->debug), $e->getCode(), $e);
         }
     }
 }

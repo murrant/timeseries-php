@@ -7,8 +7,6 @@ use TimeSeriesPhp\Core\Attributes\Config;
 use TimeSeriesPhp\Core\Driver\AbstractDriverConfiguration;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
-use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
-use TimeSeriesPhp\Exceptions\Config\ConfigurationException;
 
 /**
  * Configuration for the RRDtool driver
@@ -50,22 +48,6 @@ class RRDtoolConfig extends AbstractDriverConfiguration
             'RRA:MIN:0.5:12:1488',         // 1hour min for 2 months
         ],
     ) {}
-
-    /**
-     * Get the tag strategy instance
-     *
-     * @throws ConfigurationException
-     */
-    public function getTagStrategy(): RRDTagStrategyInterface
-    {
-        $instance = new $this->tag_strategy;
-
-        if (! $instance instanceof RRDTagStrategyInterface) {
-            throw new ConfigurationException('Invalid tag strategy class, must implement RRDTagStrategyInterface');
-        }
-
-        return $instance;
-    }
 
     /**
      * Configure the schema for this driver

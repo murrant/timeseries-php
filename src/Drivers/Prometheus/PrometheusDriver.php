@@ -8,120 +8,71 @@ use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\UriFactoryInterface;
+use Psr\Log\LoggerInterface;
+use TimeSeriesPhp\Contracts\Driver\ConfigurableInterface;
 use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
 use TimeSeriesPhp\Core\Attributes\Driver;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Drivers\Prometheus\Config\PrometheusConfig;
-use TimeSeriesPhp\Exceptions\Config\ConfigurationException;
+use TimeSeriesPhp\Drivers\Prometheus\Query\PrometheusQueryBuilder;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 use TimeSeriesPhp\Exceptions\Query\RawQueryException;
 use TimeSeriesPhp\Exceptions\TSDBException;
-use TimeSeriesPhp\Services\Logs\Logger;
 
-#[Driver(name: 'prometheus', configClass: PrometheusConfig::class)]
-class PrometheusDriver extends AbstractTimeSeriesDB
+
+#[Driver(name: 'prometheus', queryBuilderClass: PrometheusQueryBuilder::class, configClass: PrometheusConfig::class)]
+class PrometheusDriver extends AbstractTimeSeriesDB implements ConfigurableInterface
 {
-    private string $apiUrl = '';
-
-    private int $timeout = 0;
-
-    private bool $verifySSL = true;
-
-    private bool $debug = false;
-
-    /**
-     * @var ClientInterface The HTTP client
-     */
-    private ClientInterface $client;
-
-    /**
-     * @var RequestFactoryInterface The request factory
-     */
-    private RequestFactoryInterface $requestFactory;
-
-    /**
-     * @var UriFactoryInterface The URI factory
-     */
-    private UriFactoryInterface $uriFactory;
-
-    /**
-     * @var StreamFactoryInterface The stream factory
-     */
-    private StreamFactoryInterface $streamFactory;
-
-    /**
-     * @var \TimeSeriesPhp\Drivers\Prometheus\Query\QueryBuilder The query builder
-     */
-    private \TimeSeriesPhp\Drivers\Prometheus\Query\QueryBuilder $prometheusQueryBuilder;
-
     /**
      * @var bool Whether the driver is connected
      */
     private bool $connected = false;
 
-    /**
-     * Constructor
-     *
-     * @param  ClientInterface  $client  The HTTP client
-     * @param  RequestFactoryInterface  $requestFactory  The request factory
-     * @param  UriFactoryInterface  $uriFactory  The URI factory
-     * @param  StreamFactoryInterface  $streamFactory  The stream factory
-     * @param  \TimeSeriesPhp\Drivers\Prometheus\Query\QueryBuilder  $prometheusQueryBuilder  The query builder
-     * @param  \TimeSeriesPhp\Contracts\Query\QueryBuilderInterface|null  $parentQueryBuilderFactory  The parent query builder factory
-     */
     public function __construct(
-        ClientInterface $client,
-        RequestFactoryInterface $requestFactory,
-        UriFactoryInterface $uriFactory,
-        StreamFactoryInterface $streamFactory,
-        \TimeSeriesPhp\Drivers\Prometheus\Query\QueryBuilder $prometheusQueryBuilder,
-        ?\TimeSeriesPhp\Contracts\Query\QueryBuilderInterface $parentQueryBuilderFactory = null
+        protected ClientInterface $client,
+        protected RequestFactoryInterface $requestFactory,
+        protected UriFactoryInterface $uriFactory,
+        protected StreamFactoryInterface $streamFactory,
+        protected PrometheusConfig $config,
+        PrometheusQueryBuilder $queryBuilder,
+        LoggerInterface $logger,
     ) {
-        parent::__construct($parentQueryBuilderFactory);
+        parent::__construct($queryBuilder, $logger);
+    }
 
-        $this->client = $client;
-        $this->requestFactory = $requestFactory;
-        $this->uriFactory = $uriFactory;
-        $this->streamFactory = $streamFactory;
-        $this->prometheusQueryBuilder = $prometheusQueryBuilder;
+    /**
+     * Configure the driver with the given configuration
+     *
+     * @param  array<string, mixed>  $config
+     */
+    public function configure(array $config): void
+    {
+        $this->config = $this->config->createFromArray($config);
     }
 
     protected function doConnect(): bool
     {
-        if (! $this->config instanceof PrometheusConfig) {
-            throw new ConfigurationException('Invalid configuration type. Expected PrometheusConfig.');
-        }
-
         try {
-            // Get configuration values directly
-            $this->apiUrl = rtrim($this->config->getString('url'), '/');
-            $this->timeout = $this->config->getInt('timeout');
-            $this->verifySSL = $this->config->getBool('verify_ssl');
-            $this->debug = $this->config->getBool('debug');
-
-            // Initialize the query builder
-            $this->queryBuilder = $this->prometheusQueryBuilder;
-
             // Test connection by pinging the API
             $response = $this->makeApiRequest('/api/v1/status/config');
             $this->connected = $response['status'] === 'success';
 
             if ($this->connected) {
-                Logger::info('Connected to Prometheus successfully', [
-                    'url' => $this->apiUrl,
-                    'timeout' => $this->timeout,
-                    'verify_ssl' => $this->verifySSL,
-                    'debug' => $this->debug,
+                $this->logger->info('Connected to Prometheus successfully', [
+                    'url' => $this->config->url,
+                    'timeout' => $this->config->timeout,
+                    'verify_ssl' => $this->config->verify_ssl,
+                    'debug' => $this->config->debug,
                 ]);
             }
 
             return $this->connected;
         } catch (Exception $e) {
-            Logger::error('Prometheus connection failed: '.$e->getMessage(), [
+            $this->logger->error('Prometheus connection failed: '.$e->getMessage(), [
                 'exception' => get_class($e),
-                'url' => $this->apiUrl,
+                'url' => $this->config->url,
             ]);
             $this->connected = false;
 
@@ -232,7 +183,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB
     private function makeApiRequest(string $endpoint, array $params = []): array
     {
         // Build the URL with query parameters
-        $uri = $this->uriFactory->createUri($this->apiUrl.$endpoint);
+        $uri = $this->uriFactory->createUri($this->config->url.$endpoint);
         if (! empty($params)) {
             $uri = $uri->withQuery(http_build_query($params));
         }
@@ -240,8 +191,8 @@ class PrometheusDriver extends AbstractTimeSeriesDB
         // Create the request
         $request = $this->requestFactory->createRequest('GET', $uri);
 
-        if ($this->debug) {
-            Logger::debug('Prometheus API request', [
+        if ($this->config->debug) {
+            $this->logger->debug('Prometheus API request', [
                 'url' => (string) $uri,
                 'params' => $params,
             ]);
@@ -253,8 +204,8 @@ class PrometheusDriver extends AbstractTimeSeriesDB
             $httpCode = $response->getStatusCode();
             $responseBody = (string) $response->getBody();
 
-            if ($this->debug) {
-                Logger::debug('Prometheus API response', [
+            if ($this->config->debug) {
+                $this->logger->debug('Prometheus API response', [
                     'http_code' => $httpCode,
                     'response' => $responseBody,
                 ]);
@@ -270,8 +221,8 @@ class PrometheusDriver extends AbstractTimeSeriesDB
             /** @var array{'status': string, 'error'?: string, 'data': array{'result'?: array{'metric': string, 'value': ?scalar}}} $data */
             return $data;
         } catch (ClientExceptionInterface $e) {
-            if ($this->debug) {
-                Logger::error('Prometheus API request failed: '.$e->getMessage(), [
+            if ($this->config->debug) {
+                $this->logger->error('Prometheus API request failed: '.$e->getMessage(), [
                     'exception' => get_class($e),
                     'url' => (string) $uri,
                     'params' => $params,
@@ -307,41 +258,5 @@ class PrometheusDriver extends AbstractTimeSeriesDB
     public function isConnected(): bool
     {
         return $this->connected;
-    }
-
-    /**
-     * Set the HTTP client for API requests
-     * This is primarily used for testing to inject a mock client
-     */
-    public function setClient(ClientInterface $client): void
-    {
-        $this->client = $client;
-    }
-
-    /**
-     * Set the request factory for creating PSR-7 requests
-     * This is primarily used for testing to inject a mock factory
-     */
-    public function setRequestFactory(RequestFactoryInterface $requestFactory): void
-    {
-        $this->requestFactory = $requestFactory;
-    }
-
-    /**
-     * Set the URI factory for creating PSR-7 URIs
-     * This is primarily used for testing to inject a mock factory
-     */
-    public function setUriFactory(UriFactoryInterface $uriFactory): void
-    {
-        $this->uriFactory = $uriFactory;
-    }
-
-    /**
-     * Set the stream factory for creating PSR-7 streams
-     * This is primarily used for testing to inject a mock factory
-     */
-    public function setStreamFactory(StreamFactoryInterface $streamFactory): void
-    {
-        $this->streamFactory = $streamFactory;
     }
 }

@@ -146,16 +146,4 @@ class NullDriver extends AbstractTimeSeriesDB implements ConfigurableInterface
     {
         $this->connected = false;
     }
-
-    /**
-     * Get the driver configuration
-     *
-     * @return array<string, mixed> The driver configuration
-     */
-    public function getConfig(): array
-    {
-        return [
-            'debug' => $this->config->debug,
-        ];
-    }
 }

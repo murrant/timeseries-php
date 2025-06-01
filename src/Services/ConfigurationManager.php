@@ -38,16 +38,6 @@ class ConfigurationManager
     }
 
     /**
-     * Get the entire configuration
-     *
-     * @return array<string, mixed> The entire configuration
-     */
-    public function getConfig(): array
-    {
-        return $this->config;
-    }
-
-    /**
      * Get a specific configuration value
      *
      * @param  string  $key  The configuration key (dot notation)

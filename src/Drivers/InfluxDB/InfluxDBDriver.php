@@ -15,23 +15,23 @@ use InfluxDB2\Service\BucketsService;
 use InfluxDB2\Service\DeleteService;
 use InfluxDB2\Service\OrganizationsService;
 use InfluxDB2\WriteApi;
+use Psr\Log\LoggerInterface;
+use TimeSeriesPhp\Contracts\Driver\ConfigurableInterface;
 use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
 use TimeSeriesPhp\Core\Attributes\Driver;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Drivers\InfluxDB\Config\InfluxDBConfig;
-use TimeSeriesPhp\Drivers\InfluxDB\Query\QueryBuilder;
-use TimeSeriesPhp\Exceptions\Config\ConfigurationException;
+use TimeSeriesPhp\Drivers\InfluxDB\Query\InfluxDBQueryBuilder;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 use TimeSeriesPhp\Exceptions\Driver\DatabaseException;
 use TimeSeriesPhp\Exceptions\Driver\WriteException;
 use TimeSeriesPhp\Exceptions\Query\RawQueryException;
-use TimeSeriesPhp\Services\Logs\Logger;
 use TimeSeriesPhp\Utils\Convert;
 
-#[Driver(name: 'influxdb', configClass: InfluxDBConfig::class)]
-class InfluxDBDriver extends AbstractTimeSeriesDB
+#[Driver(name: 'influxdb', queryBuilderClass: InfluxDBQueryBuilder::class, configClass: InfluxDBConfig::class)]
+class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterface
 {
     protected ?Client $client = null;
 
@@ -40,8 +40,6 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     protected ?QueryApi $queryApi = null;
 
     protected ?BucketsService $bucketsService = null;
-
-    protected string $org = '';
 
     protected ?string $orgId = null;
 
@@ -52,68 +50,49 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
      */
     protected bool $connected = false;
 
-    /**
-     * @var Client The InfluxDB client
-     */
-    protected Client $influxClient;
-
-    /**
-     * @var QueryBuilder The InfluxDB query builder
-     */
-    protected QueryBuilder $influxQueryBuilder;
-
-    /**
-     * Constructor
-     *
-     * @param  Client  $influxClient  The InfluxDB client
-     * @param  QueryBuilder  $influxQueryBuilder  The InfluxDB query builder
-     * @param  \TimeSeriesPhp\Contracts\Query\QueryBuilderInterface|null  $parentQueryBuilderFactory  The parent query builder factory
-     */
     public function __construct(
-        Client $influxClient,
-        QueryBuilder $influxQueryBuilder,
-        ?\TimeSeriesPhp\Contracts\Query\QueryBuilderInterface $parentQueryBuilderFactory = null
+        protected Client $influxClient,
+        protected InfluxDBConfig $config,
+        InfluxDBQueryBuilder $queryBuilder,
+        LoggerInterface $logger,
     ) {
-        parent::__construct($parentQueryBuilderFactory);
+        parent::__construct($queryBuilder, $logger);
 
-        $this->influxClient = $influxClient;
-        $this->influxQueryBuilder = $influxQueryBuilder;
+    }
+
+    /**
+     * Configure the driver with the given configuration
+     *
+     * @param  array<string, mixed>  $config
+     */
+    public function configure(array $config): void
+    {
+        $this->config = $this->config->createFromArray($config);
     }
 
     protected function doConnect(): bool
     {
-        if (! $this->config instanceof InfluxDBConfig) {
-            throw new ConfigurationException('Invalid configuration type. Expected InfluxDBConfig.');
-        }
-
         try {
             // Use the injected client
             $this->client = $this->influxClient;
             $this->writeApi = $this->client->createWriteApi();
             $this->queryApi = $this->client->createQueryApi();
 
-            // Store config values for easier access
-            $this->org = $this->config->getString('org');
-            $this->bucket = $this->config->getString('bucket');
-
-            // Use the injected query builder
-            $this->queryBuilder = $this->influxQueryBuilder;
-
             // Test connection by pinging
             $ping = $this->client->ping();
             $this->connected = ! empty($ping);
 
-            Logger::info('Connected to InfluxDB successfully', [
-                'org' => $this->org,
-                'bucket' => $this->bucket,
+            $this->logger->info('Connected to InfluxDB successfully', [
+                'org' => $this->config->org,
+                'bucket' => $this->config->bucket,
             ]);
 
             return $this->connected;
         } catch (\Throwable $e) {
-            Logger::error('InfluxDB connection failed: '.$e->getMessage(), [
+            $this->logger->error('InfluxDB connection failed: '.$e->getMessage(), [
                 'exception' => get_class($e),
-                'org' => $this->org,
-                'bucket' => $this->bucket,
+                'org' => $this->config->org,
+                'bucket' => $this->config->bucket,
             ]);
             $this->connected = false;
 
@@ -203,7 +182,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
         }
 
         try {
-            $queryResult = $this->queryApi->query($query->getRawQuery(), $this->org);
+            $queryResult = $this->queryApi->query($query->getRawQuery(), $this->config->org);
             $result = new QueryResult;
 
             if ($queryResult !== null) {
@@ -244,7 +223,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
             return true;
         } catch (\Throwable $e) {
-            Logger::error('Failed to create bucket: '.$e->getMessage(), [
+            $this->logger->error('Failed to create bucket: '.$e->getMessage(), [
                 'exception' => get_class($e),
                 'database' => $database,
             ]);
@@ -275,7 +254,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
             return $bucketNames;
         } catch (\Throwable $e) {
-            Logger::error('Failed to list buckets: '.$e->getMessage(), [
+            $this->logger->error('Failed to list buckets: '.$e->getMessage(), [
                 'exception' => get_class($e),
             ]);
 
@@ -300,11 +279,11 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             $predicate->setStop($stop ?? new DateTime);
             $predicate->setPredicate("_measurement=\"{$measurement}\"");
 
-            $service->postDelete($predicate, bucket: $this->bucket, org_id: $this->getOrgId());
+            $service->postDelete($predicate, bucket: $this->config->bucket, org_id: $this->getOrgId());
 
             return true;
         } catch (\Throwable $e) {
-            Logger::error('Failed to delete measurement: '.$e->getMessage(), [
+            $this->logger->error('Failed to delete measurement: '.$e->getMessage(), [
                 'exception' => get_class($e),
                 'measurement' => $measurement,
                 'start' => $start ? $start->format('c') : null,
@@ -382,7 +361,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
 
             if ($orgs !== null) {
                 foreach ($orgs as $org) {
-                    if ($org->getName() == $this->org) {
+                    if ($org->getName() == $this->config->org) {
                         $this->orgId = $org->getId() ?? '';
 
                         return $this->orgId;

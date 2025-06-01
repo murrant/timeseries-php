@@ -4,24 +4,23 @@ namespace TimeSeriesPhp\Drivers\Aggregate;
 
 use DateTime;
 use Psr\Log\LoggerInterface;
+use TimeSeriesPhp\Contracts\Driver\ConfigurableInterface;
 use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
 use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
 use TimeSeriesPhp\Core\Attributes\Driver;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
+use TimeSeriesPhp\Core\Driver\DriverFactory;
 use TimeSeriesPhp\Drivers\Aggregate\Config\AggregateConfig;
-use TimeSeriesPhp\Drivers\Aggregate\Factory\ContainerDriverFactory;
-use TimeSeriesPhp\Drivers\Aggregate\Factory\DriverFactoryInterface;
 use TimeSeriesPhp\Drivers\Null\NullQueryBuilder;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 use TimeSeriesPhp\Exceptions\Driver\DatabaseException;
 use TimeSeriesPhp\Exceptions\Driver\WriteException;
 use TimeSeriesPhp\Exceptions\Query\RawQueryException;
-use TimeSeriesPhp\Services\Logs\Logger;
 
-#[Driver(name: 'aggregate', configClass: AggregateConfig::class, queryBuilderClass: ContainerDriverFactory::class)]
-class AggregateDriver extends AbstractTimeSeriesDB
+#[Driver(name: 'aggregate', configClass: AggregateConfig::class)]
+class AggregateDriver extends AbstractTimeSeriesDB implements ConfigurableInterface
 {
     /** @var TimeSeriesInterface[] */
     protected array $writeDatabases = [];
@@ -29,20 +28,26 @@ class AggregateDriver extends AbstractTimeSeriesDB
     protected ?TimeSeriesInterface $readDatabase = null;
 
     /**
-     * @var DriverFactoryInterface The TSDB factory
-     */
-    protected DriverFactoryInterface $tsdbFactory;
-
-    /**
      * @var bool Whether the driver is connected
      */
     protected bool $connected = false;
 
     public function __construct(
-        DriverFactoryInterface $tsdbFactory,
-        protected LoggerInterface $logger
+        protected DriverFactory $driverFactory,
+        protected AggregateConfig $config,
+        LoggerInterface $logger,
     ) {
         parent::__construct(new NullQueryBuilder, $logger); // this will send all queries to the read database
+    }
+
+    /**
+     * Configure the driver with the given configuration
+     *
+     * @param  array<string, mixed>  $config
+     */
+    public function configure(array $config): void
+    {
+        $this->config = $this->config->createFromArray($config);
     }
 
     /**
@@ -50,9 +55,6 @@ class AggregateDriver extends AbstractTimeSeriesDB
      */
     protected function doConnect(): bool
     {
-        if (! $this->config instanceof AggregateConfig) {
-            throw new ConnectionException('Invalid configuration type. Expected AggregateConfig.');
-        }
 
         // Connect to write databases
         $writeDatabaseConfigs = $this->config->getWriteDatabases();
@@ -62,17 +64,16 @@ class AggregateDriver extends AbstractTimeSeriesDB
                     throw new ConnectionException('Driver must be a string');
                 }
                 $driver = (string) $dbConfig['driver'];
-                unset($dbConfig['driver']);
 
-                $db = $this->tsdbFactory->create($driver, $this->tsdbFactory->createConfig($driver, $dbConfig));
+                $db = $this->driverFactory->create($driver);
                 $this->writeDatabases[] = $db;
 
-                Logger::info('Connected to write database', [
+                $this->logger->info('Connected to write database', [
                     'driver' => $this->getDriverName(),
                     'write_driver' => $driver,
                 ]);
             } catch (\Throwable $e) {
-                Logger::error('Failed to connect to write database', [
+                $this->logger->error('Failed to connect to write database', [
                     'driver' => $this->getDriverName(),
                     'write_driver' => $dbConfig['driver'] ?? 'unknown',
                     'error' => $e->getMessage(),
@@ -89,16 +90,17 @@ class AggregateDriver extends AbstractTimeSeriesDB
                     throw new ConnectionException('Driver must be a string');
                 }
                 $driver = (string) $readDatabaseConfig['driver'];
-                unset($readDatabaseConfig['driver']);
 
-                $this->readDatabase = $this->tsdbFactory->create($driver, $this->tsdbFactory->createConfig($driver, $readDatabaseConfig));
+                /** @var array<string, mixed> $readConfig */
+                $readConfig = $readDatabaseConfig['config'] ?? [];
+                $this->readDatabase = $this->driverFactory->create($driver, $readConfig);
 
-                Logger::info('Connected to read database', [
+                $this->logger->info('Connected to read database', [
                     'driver' => $this->getDriverName(),
                     'read_driver' => $driver,
                 ]);
             } catch (\Throwable $e) {
-                Logger::error('Failed to connect to read database', [
+                $this->logger->error('Failed to connect to read database', [
                     'driver' => $this->getDriverName(),
                     'read_driver' => $readDatabaseConfig['driver'] ?? 'unknown',
                     'error' => $e->getMessage(),
@@ -109,7 +111,7 @@ class AggregateDriver extends AbstractTimeSeriesDB
             // Use the first write database for reading if no read database is configured
             $this->readDatabase = $this->writeDatabases[0];
 
-            Logger::info('Using first write database for reading', [
+            $this->logger->info('Using first write database for reading', [
                 'driver' => $this->getDriverName(),
             ]);
         } else {

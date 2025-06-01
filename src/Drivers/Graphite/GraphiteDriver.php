@@ -2,63 +2,44 @@
 
 namespace TimeSeriesPhp\Drivers\Graphite;
 
+use Psr\Log\LoggerInterface;
+use TimeSeriesPhp\Contracts\Driver\ConfigurableInterface;
 use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
 use TimeSeriesPhp\Core\Attributes\Driver;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Drivers\Graphite\Config\GraphiteConfig;
-use TimeSeriesPhp\Drivers\Graphite\Factory\QueryBuilderFactory;
-use TimeSeriesPhp\Drivers\Graphite\Factory\QueryBuilderFactoryInterface;
+use TimeSeriesPhp\Drivers\Graphite\Query\GraphiteQueryBuilder;
 use TimeSeriesPhp\Exceptions\Config\ConfigurationException;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 use TimeSeriesPhp\Exceptions\Driver\WriteException;
 use TimeSeriesPhp\Exceptions\Query\RawQueryException;
-use TimeSeriesPhp\Services\Logs\Logger;
 
-#[Driver(name: 'graphite', configClass: GraphiteConfig::class)]
-class GraphiteDriver extends AbstractTimeSeriesDB
+#[Driver(name: 'graphite', queryBuilderClass: GraphiteQueryBuilder::class, configClass: GraphiteConfig::class)]
+class GraphiteDriver extends AbstractTimeSeriesDB implements ConfigurableInterface
 {
-    /**
-     * @var QueryBuilderFactoryInterface The query builder factory
-     */
-    protected QueryBuilderFactoryInterface $graphiteQueryBuilderFactory;
+    /** @var resource|null $socket */
+    private $socket = null;
 
-    /**
-     * Constructor
-     *
-     * @param  QueryBuilderFactoryInterface|null  $queryBuilderFactory  The query builder factory
-     * @param  \TimeSeriesPhp\Contracts\Query\QueryBuilderInterface|null  $queryBuilder  The query builder
-     * @param  \Psr\Log\LoggerInterface|null  $logger  The logger
-     */
     public function __construct(
-        ?QueryBuilderFactoryInterface $queryBuilderFactory = null,
-        ?\TimeSeriesPhp\Contracts\Query\QueryBuilderInterface $queryBuilder = null,
-        ?\Psr\Log\LoggerInterface $logger = null
+        protected GraphiteConfig $config,
+        GraphiteQueryBuilder $queryBuilder,
+        LoggerInterface $logger,
     ) {
-        parent::__construct($queryBuilder ?? new \TimeSeriesPhp\Drivers\Graphite\Query\GraphiteQueryBuilder, $logger ?? new \TimeSeriesPhp\Services\Logs\Logger);
-
-        $this->graphiteQueryBuilderFactory = $queryBuilderFactory ?? new QueryBuilderFactory;
+        parent::__construct($queryBuilder, $logger);
     }
 
     /**
-     * @var resource|null
+     * Configure the driver with the given configuration
+     *
+     * @param  array<string, mixed>  $config
      */
-    protected mixed $socket = null;
+    public function configure(array $config): void
+    {
+        $this->config = $this->config->createFromArray($config);
+    }
 
-    protected string $host = 'localhost';
-
-    protected int $port = 2003;
-
-    protected string $protocol = 'tcp';
-
-    protected int $timeout = 30;
-
-    protected string $prefix = '';
-
-    protected int $batchSize = 500;
-
-    protected string $webUrl = '';
 
     /**
      * @var bool Whether the driver is connected
@@ -70,43 +51,28 @@ class GraphiteDriver extends AbstractTimeSeriesDB
      */
     protected function doConnect(): bool
     {
-        if (! $this->config instanceof GraphiteConfig) {
-            throw new ConfigurationException('Invalid configuration type. Expected GraphiteConfig.');
-        }
-
-        try {
-            $this->host = $this->config->host;
-            $this->port = $this->config->port;
-            $this->protocol = $this->config->protocol;
-            $this->timeout = $this->config->timeout;
-            $this->prefix = $this->config->prefix;
-            $this->batchSize = $this->config->batch_size;
-            $this->webUrl = $this->config->getWebUrl();
-
-            // Initialize query builder
-            $this->queryBuilder = $this->graphiteQueryBuilderFactory->create($this->prefix);
-
+       try {
             // Test connection by opening and closing a socket
             $this->getSocket();
             $this->closeSocket();
 
             $this->connected = true;
 
-            Logger::info('Connected to Graphite successfully', [
-                'host' => $this->host,
-                'port' => $this->port,
-                'protocol' => $this->protocol,
-                'prefix' => $this->prefix,
-                'batch_size' => $this->batchSize,
+            $this->logger->info('Connected to Graphite successfully', [
+                'host' => $this->config->host,
+                'port' => $this->config->port,
+                'protocol' => $this->config->protocol,
+                'prefix' => $this->config->prefix,
+                'batch_size' => $this->config->batch_size,
             ]);
 
             return true;
         } catch (\Exception $e) {
-            Logger::error('Graphite connection failed: '.$e->getMessage(), [
+            $this->logger->error('Graphite connection failed: '.$e->getMessage(), [
                 'exception' => get_class($e),
-                'host' => $this->host,
-                'port' => $this->port,
-                'protocol' => $this->protocol,
+                'host' => $this->config->host,
+                'port' => $this->config->port,
+                'protocol' => $this->config->protocol,
             ]);
             $this->connected = false;
 
@@ -131,7 +97,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
             $tagPath = $this->formatTagPath($dataPoint->getTags());
 
             // In Graphite, tags are typically part of the metric path
-            $metricPrefix = $this->prefix ? $this->prefix.'.' : '';
+            $metricPrefix = $this->config->prefix ? $this->config->prefix.'.' : '';
 
             $success = true;
 
@@ -166,7 +132,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
 
             $success = true;
             $batchCount = 0;
-            $metricPrefix = $this->prefix ? $this->prefix.'.' : '';
+            $metricPrefix = $this->config->prefix ? $this->config->prefix.'.' : '';
 
             foreach ($dataPoints as $dataPoint) {
                 $timestamp = $dataPoint->getTimestamp()->getTimestamp();
@@ -180,7 +146,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
                     $batchCount++;
 
                     // If we've reached the batch size, flush the socket
-                    if ($batchCount >= $this->batchSize) {
+                    if ($batchCount >= $this->config->batch_size) {
                         $this->closeSocket();
                         $batchCount = 0;
                     }
@@ -221,6 +187,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
             return false;
         }
 
+        // TODO wtf, this is the job of the Query Builder
         $metricPath = $metricPrefix.$measurement.$tagPath.'.'.$key;
         $line = $metricPath.' '.$value.' '.$timestamp."\n";
 
@@ -238,11 +205,11 @@ class GraphiteDriver extends AbstractTimeSeriesDB
 
         try {
             $queryString = $query->getRawQuery();
-            $url = $this->webUrl.'?'.$queryString;
+            $url = $this->config->getWebUrl().'?'.$queryString;
 
             $context = stream_context_create([
                 'http' => [
-                    'timeout' => $this->timeout,
+                    'timeout' => $this->config->timeout,
                 ],
             ]);
 
@@ -255,7 +222,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
             // Check if the response is empty or not valid JSON
             if (empty($response) || $response[0] !== '[') {
                 // Return an empty result if the response is not valid
-                Logger::warning('Graphite returned an invalid or empty response', [
+                $this->logger->warning('Graphite returned an invalid or empty response', [
                     'url' => $url,
                     'response_length' => strlen($response),
                     'response_start' => substr($response, 0, 20),
@@ -268,7 +235,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
             $data = json_decode($response, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                Logger::warning('Failed to parse Graphite JSON response', [
+                $this->logger->warning('Failed to parse Graphite JSON response', [
                     'error' => json_last_error_msg(),
                     'response_length' => strlen($response),
                 ]);
@@ -333,15 +300,15 @@ class GraphiteDriver extends AbstractTimeSeriesDB
         $errno = 0;
         $errstr = '';
 
-        $protocol = $this->protocol === 'udp' ? 'udp' : 'tcp';
-        $this->socket = fsockopen($protocol.'://'.$this->host, $this->port, $errno, $errstr, $this->timeout) ?: null;
+        $protocol = $this->config->protocol === 'udp' ? 'udp' : 'tcp';
+        $this->socket = fsockopen($protocol.'://'.$this->config->host, $this->config->port, $errno, $errstr, $this->config->timeout) ?: null;
 
         if ($this->socket === null) {
             throw new ConnectionException("Failed to connect to Graphite: {$errstr} ({$errno})");
         }
 
         // Set socket timeout
-        stream_set_timeout($this->socket, $this->timeout);
+        stream_set_timeout($this->socket, $this->config->timeout);
 
         return $this->socket;
     }

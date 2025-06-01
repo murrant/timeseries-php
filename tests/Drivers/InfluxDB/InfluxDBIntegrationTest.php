@@ -49,11 +49,24 @@ class InfluxDBIntegrationTest extends TestCase
             'debug' => false,
         ]);
 
-        // Create a real InfluxDBDriver
-        $this->driver = new InfluxDBDriver;
+        // Create a real InfluxDBDriver with the client and query builder
+        $client = new \InfluxDB2\Client([
+            'url' => $influxUrl,
+            'token' => $influxToken,
+            'org' => $influxOrg,
+            'bucket' => $influxBucket,
+            'timeout' => 5,
+            'verifySSL' => false,
+            'debug' => false,
+        ]);
+        $queryBuilder = new \TimeSeriesPhp\Drivers\InfluxDB\Query\QueryBuilder();
+        $this->driver = new InfluxDBDriver($client, $queryBuilder);
+
+        // Configure the driver
+        $this->driver->configure($this->config->getConfig());
 
         try {
-            $connected = $this->driver->connect($this->config);
+            $connected = $this->driver->connect();
             if (! $connected) {
                 $this->markTestSkipped('Could not connect to InfluxDB at '.$influxUrl);
             }
