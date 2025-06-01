@@ -41,9 +41,10 @@ services:
             \$config: '%logging%'
         public: true
 
-    # Cache drivers are registered via the CacheDriverCompilerPass
-    TimeSeriesPhp\Services\Cache\ArrayCacheDriver:
-        public: true
+    Psr\SimpleCache\CacheInterface:
+        factory: ['Symfony\Component\Cache\Psr16Cache', 'create']
+        arguments:
+            - '@cache.app'
 YAML;
 
         file_put_contents($this->configDir.'/services.yaml', $servicesContent);
@@ -101,7 +102,7 @@ YAML;
         // Test that the container has the expected services
         $this->assertTrue($container->has(ConfigurationManager::class));
         $this->assertTrue($container->has('Psr\Log\LoggerInterface'));
-        $this->assertTrue($container->has('TimeSeriesPhp\Services\Cache\ArrayCacheDriver'));
+        $this->assertTrue($container->has('Psr\SimpleCache\CacheInterface'));;
     }
 
     public function test_create_with_invalid_config_dir(): void

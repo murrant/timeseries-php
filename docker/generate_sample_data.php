@@ -19,7 +19,7 @@ ini_set('display_errors', 1);
 
 // Parse command line arguments
 $options = getopt('hi:', ['help', 'iterations:', 'interval:'] );;
-$maxIterations = isset($options['iterations']) ? (int) $options['iterations'] : (isset($options['i']) ? (int) $options['i'] : 3);
+$maxIterations = isset($options['iterations']) ? (int) $options['iterations'] : (isset($options['i']) ? (int) $options['i'] : 1); // default 1
 $interval = isset($options['interval']) ? (int) $options['interval'] : 10; // seconds between writes
 
 // Display usage information if --help is provided

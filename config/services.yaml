@@ -33,7 +33,10 @@ services:
             $config: '%logging%'
         public: true
 
-    # Cache services are now registered via the CacheDriverCompilerPass
+    Psr\SimpleCache\CacheInterface:
+        factory: ['Symfony\Component\Cache\Psr16Cache', 'create']
+        arguments:
+            - '@cache.app'
 
     # Add more service definitions when explicit configuration is needed
     # Please note that last definitions always *replace* previous ones

@@ -1,0 +1,27 @@
+parameters:
+    rrdtool.tag_strategy.class:
+        file_name: TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy
+        folder: TimeSeriesPhp\Drivers\RRDtool\Tags\FolderStrategy
+        no_tags: TimeSeriesPhp\Drivers\RRDtool\Tags\NoTagsStrategy
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface:
+        class: '%timeseriesphp.tag_strategy.class%'
+        arguments:
+            $strategy: '%timeseriesphp.tag_strategy%'
+
+    TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy:
+        arguments:
+            $strategy: 'file_name'
+
+    TimeSeriesPhp\Drivers\RRDtool\Tags\FolderStrategy:
+        arguments:
+            $strategy: 'folder'
+
+    TimeSeriesPhp\Drivers\RRDtool\Tags\NoTagsStrategy:
+        arguments:
+            $strategy: 'no_tags'
