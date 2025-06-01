@@ -23,10 +23,10 @@ readonly class TagCondition
     public function matches(string $value): bool
     {
         return match ($this->operator) {
-            '=' => File::sanitizeTag($this->getStringValue()) === File::sanitizeTag($value),
-            'IN' => in_array(File::sanitizeTag($value), array_map(fn ($v) => File::sanitizeTag((string) $v), $this->getValues())),
-            'REGEX' => (bool) preg_match($this->getStringValue(), File::sanitizeTag($value)),
-            'NOT IN' => ! in_array(File::sanitizeTag($value), array_map(fn ($v) => File::sanitizeTag((string) $v), $this->getValues())),
+            '=' => File::sanitizeTagValue($this->getStringValue()) === File::sanitizeTagValue($value),
+            'IN' => in_array(File::sanitizeTagValue($value), array_map(fn ($v) => File::sanitizeTagValue((string) $v), $this->getValues())),
+            'REGEX' => (bool) preg_match($this->getStringValue(), File::sanitizeTagValue($value)),
+            'NOT IN' => ! in_array(File::sanitizeTagValue($value), array_map(fn ($v) => File::sanitizeTagValue((string) $v), $this->getValues())),
             'BETWEEN' => $value >= $this->getValues()[0] && $value <= $this->getValues()[1],
             default => throw new RRDtoolTagException("Operator $this->operator not supported"),
         };

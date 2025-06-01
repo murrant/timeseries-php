@@ -19,8 +19,7 @@ trait EncodesTagsInFilename
         if (! empty($tags)) {
             ksort($tags); // Ensure consistent naming
             $tagStr = implode(File::TAG_SEPARATOR, array_map(function ($k, $v) {
-                $k = File::sanitizeTag($k);
-                $v = File::sanitizeTag($v);
+                $v = File::sanitizeTagValue($v);
 
                 return $k.File::TAG_VALUE_SEPARATOR.$v;
             }, array_keys($tags), array_values($tags)));

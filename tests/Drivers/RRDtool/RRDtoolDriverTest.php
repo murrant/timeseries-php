@@ -3,15 +3,19 @@
 namespace TimeSeriesPhp\Tests\Drivers\RRDtool;
 
 use DateTime;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
+use Symfony\Component\Process\InputStream;
+use Symfony\Component\Process\Process;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Drivers\RRDtool\Config\RRDtoolConfig;
-use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolTagException;
 use TimeSeriesPhp\Drivers\RRDtool\Factory\InputStreamFactoryInterface;
 use TimeSeriesPhp\Drivers\RRDtool\Factory\ProcessFactoryInterface;
-use TimeSeriesPhp\Drivers\RRDtool\Factory\QueryBuilderFactoryInterface;
 use TimeSeriesPhp\Drivers\RRDtool\Factory\TagStrategyFactoryInterface;
+use TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolQueryBuilder;
 use TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolRawQuery;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
@@ -21,11 +25,23 @@ class RRDtoolDriverTest extends TestCase
 {
     private RRDtoolDriver $driver;
 
-    private RRDtoolConfig $config;
-
     private string $tempDir;
 
     private string $rrdtoolPath = '/usr/bin/rrdtool';
+
+    private RRDtoolConfig $config;
+
+    private MockObject&ProcessFactoryInterface $processFactory;
+
+    private MockObject&InputStreamFactoryInterface $inputStreamFactory;
+
+    private MockObject&TagStrategyFactoryInterface $tagStrategyFactory;
+
+    private MockObject&RRDTagStrategyInterface $tagStrategy;
+
+    private RRDtoolQueryBuilder $queryBuilder;
+
+    private LoggerInterface $logger;
 
     protected function setUp(): void
     {
@@ -33,214 +49,161 @@ class RRDtoolDriverTest extends TestCase
         $this->tempDir = sys_get_temp_dir().'/rrdtool_test_'.uniqid();
         mkdir($this->tempDir, 0777, true);
 
-        // Mock the RRDtoolConfig
-        $this->config = $this->createMock(RRDtoolConfig::class);
+        // Create configuration
+        $this->config = new RRDtoolConfig(
+            rrdtool_path: $this->rrdtoolPath,
+            rrd_dir: $this->tempDir.'/',
+            use_rrdcached: false,
+            persistent_process: true,
+            command_timeout: 180,
+            rrdcached_address: '',
+            default_step: 300,
+            debug: false,
+            graph_output: 'string',
+            tag_strategy: FileNameStrategy::class,
+            default_archives: [
+                'RRA:AVERAGE:0.5:1:2016',      // 5min for 1 week
+                'RRA:AVERAGE:0.5:12:1488',     // 1hour for 2 months
+                'RRA:AVERAGE:0.5:288:366',     // 1day for 1 year
+            ]
+        );
 
-        // Configure the mock to return expected values
-        $this->config->method('getString')
-            ->willReturnCallback(function ($key) {
-                return match ($key) {
-                    'rrd_dir' => $this->tempDir.'/',
-                    'rrdtool_path' => $this->rrdtoolPath,
-                    'rrdcached_address' => '',
-                    'tag_strategy' => FileNameStrategy::class,
-                    default => '',
-                };
-            });
-
-        $this->config->method('getBool')
-            ->willReturnCallback(function ($key) {
-                return match ($key) {
-                    'use_rrdcached' => false,
-                    default => false,
-                };
-            });
-
-        $this->config->method('getInt')
-            ->willReturnCallback(function ($key) {
-                return match ($key) {
-                    'default_step' => 300,
-                    default => 0,
-                };
-            });
-
-        $this->config->method('getArray')
-            ->willReturnCallback(function ($key) {
-                return match ($key) {
-                    'default_archives' => [
-                        'RRA:AVERAGE:0.5:1:2016',      // 5min for 1 week
-                        'RRA:AVERAGE:0.5:12:1488',     // 1hour for 2 months
-                        'RRA:AVERAGE:0.5:288:366',     // 1day for 1 year
-                    ],
-                    default => [],
-                };
-            });
-
-        // Create a mock tag strategy
-        $tagStrategy = $this->createMock(RRDTagStrategyInterface::class);
-        $tagStrategy->method('getFilePath')
-            ->willReturnCallback(
-                /** @param array<string, string> $tags */
-                function (string $measurement, array $tags = []) {
-                    $tagString = '';
-                    if (! empty($tags)) {
-                        ksort($tags);
-                        foreach ($tags as $key => $value) {
-                            if (! is_scalar($value)) {
-                                throw new RRDtoolTagException('Tag value must be a scalar');
-                            }
-
-                            $tagString .= "_{$key}-".str_replace('.', '\\.', (string) $value);
-                        }
+        // Create mock tag strategy
+        $this->tagStrategy = $this->createMock(RRDTagStrategyInterface::class);
+        $this->tagStrategy->method('getFilePath')
+            ->willReturnCallback(function (string $measurement, array $tags = []) {
+                $tagString = '';
+                if (!empty($tags)) {
+                    ksort($tags);
+                    foreach ($tags as $key => $value) {
+                        $tagString .= "_{$key}-" . str_replace('.', '\\.', (string)$value);
                     }
+                }
+                return $this->tempDir . '/' . $measurement . $tagString . '.rrd';
+            });
 
-                    return $this->tempDir.'/'.$measurement.$tagString.'.rrd';
-                });
+        // Create mock process
+        $mockProcess = $this->createMock(Process::class);
+        $mockProcess->method('setTimeout')->willReturnSelf();
+        $mockProcess->method('setInput')->willReturnSelf();
+        $mockProcess->method('getExitCode')->willReturn(0);
+        $mockProcess->method('getOutput')->willReturn('OK');
+
+        // For void methods, we don't set a return value
+        $mockProcess->expects($this->any())->method('start');
+        $mockProcess->expects($this->any())->method('run');
+
+        // Create mock input stream
+        $mockInputStream = $this->createMock(InputStream::class);
+        // For void methods, we don't set a return value
+        $mockInputStream->expects($this->any())->method('write');
 
         // Create mock factories
-        $mockProcessFactory = $this->createMock(ProcessFactoryInterface::class);
-        $mockInputStreamFactory = $this->createMock(InputStreamFactoryInterface::class);
-        $mockTagStrategyFactory = $this->createMock(TagStrategyFactoryInterface::class);
-        $mockQueryBuilderFactory = $this->createMock(QueryBuilderFactoryInterface::class);
+        $this->processFactory = $this->createMock(ProcessFactoryInterface::class);
+        $this->processFactory->method('create')->willReturn($mockProcess);
 
-        // Configure the mock tag strategy factory to return the tag strategy
-        $mockTagStrategyFactory->method('create')
-            ->willReturn($tagStrategy);
+        $this->inputStreamFactory = $this->createMock(InputStreamFactoryInterface::class);
+        $this->inputStreamFactory->method('create')->willReturn($mockInputStream);
 
-        // Configure the mock query builder factory to return a query builder
-        $mockQueryBuilderFactory->method('create')
-            ->willReturn(new \TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolQueryBuilder($tagStrategy));
+        $this->tagStrategyFactory = $this->createMock(TagStrategyFactoryInterface::class);
+        $this->tagStrategyFactory->method('create')->willReturn($this->tagStrategy);
 
-        // Create a subclass of RRDtoolDriver that overrides methods that would execute commands
-        $this->driver = new class($this->tempDir, $tagStrategy, $mockProcessFactory, $mockInputStreamFactory, $mockTagStrategyFactory, $mockQueryBuilderFactory) extends RRDtoolDriver
-        {
-            protected string $tempDir;
+        // Create query builder
+        $this->queryBuilder = new RRDtoolQueryBuilder($this->tagStrategy);
 
-            public function __construct(
-                string $tempDir,
-                RRDTagStrategyInterface $tagStrategy,
-                ProcessFactoryInterface $processFactory,
-                InputStreamFactoryInterface $inputStreamFactory,
-                TagStrategyFactoryInterface $tagStrategyFactory,
-                QueryBuilderFactoryInterface $queryBuilderFactory
-            ) {
-                parent::__construct($processFactory, $inputStreamFactory, $tagStrategyFactory, $queryBuilderFactory);
+        // Create logger
+        $this->logger = new NullLogger();
 
-                $this->tempDir = $tempDir;
-                $this->tagStrategy = $tagStrategy;
-                $this->rrdDir = $tempDir.'/';
-                $this->connected = true;
-                $this->queryBuilder = new \TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolQueryBuilder($this->tagStrategy);
+        // Create driver with mocked dependencies
+        $this->driver = $this->getMockBuilder(RRDtoolDriver::class)
+            ->setConstructorArgs([
+                $this->config,
+                $this->processFactory,
+                $this->inputStreamFactory,
+                $this->tagStrategyFactory,
+                $this->queryBuilder,
+                $this->logger
+            ])
+            ->onlyMethods(['doConnect', 'doWrite', 'rawQuery', 'createRRDWithCustomConfig', 'getRRDGraph', 'createDatabase', 'getDatabases'])
+            ->getMock();
+
+        // Mock methods to avoid executing real commands
+        $this->driver->method('doConnect')->willReturn(true);
+
+        $this->driver->method('doWrite')->willReturnCallback(function (DataPoint $dataPoint) {
+            $rrdPath = $this->tagStrategy->getFilePath($dataPoint->getMeasurement(), $dataPoint->getTags());
+
+            // Simulate creating the RRD file
+            if (!file_exists($rrdPath)) {
+                touch($rrdPath);
             }
 
-            protected function doConnect(): bool
-            {
-                return true;
+            // For debugging, store the update string in a file
+            $fields = $dataPoint->getFields();
+            $values = [];
+
+            foreach (array_keys($fields) as $dsName) {
+                $value = $fields[$dsName] ?? 'U';
+                $values[] = (is_numeric($value) || $value === 'U') ? $value : 'U';
             }
 
-            protected function doWrite(\TimeSeriesPhp\Core\Data\DataPoint $dataPoint): bool
-            {
-                // Mock implementation that simulates the real behavior
-                $rrdPath = $this->tagStrategy->getFilePath($dataPoint->getMeasurement(), $dataPoint->getTags());
+            $updateString = $dataPoint->getTimestamp()->getTimestamp() . ':' . implode(':', $values);
+            file_put_contents($rrdPath . '.update', $updateString);
 
-                // Simulate creating the RRD file
-                if (! file_exists($rrdPath)) {
-                    touch($rrdPath);
-                }
+            return true;
+        });
 
-                // Simulate processing the values to test null handling
-                $fields = $dataPoint->getFields();
-                $values = [];
-
-                // Simulate the data source order (simplified)
-                $dataSourceOrder = array_keys($fields);
-
-                foreach ($dataSourceOrder as $dsName) {
-                    // This is the key part that tests our fix
-                    // Get the value or use 'U' (unknown) if the field doesn't exist
-                    $value = $fields[$dsName] ?? 'U';
-
-                    // Ensure the value is valid for RRDtool (numeric or 'U')
-                    // This handles null values, objects, arrays, or any other non-numeric type
-                    if ($value === 'U' || is_numeric($value)) {
-                        $processedValue = $value;
-                    } else {
-                        $processedValue = 'U'; // Use 'U' for any non-numeric value including null
-                    }
-
-                    $values[] = $processedValue;
-                }
-
-                // In a real implementation, this would be passed to RRDtool
-                $updateString = $dataPoint->getTimestamp()->getTimestamp().':'.implode(':', $values);
-
-                // For debugging, store the update string in a file
-                file_put_contents($rrdPath.'.update', $updateString);
-
-                return true;
-            }
-
-            public function rawQuery(\TimeSeriesPhp\Contracts\Query\RawQueryInterface $query): \TimeSeriesPhp\Core\Data\QueryResult
-            {
-                // Mock implementation that doesn't execute commands
-                if ($query instanceof \TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolRawQuery && $query->command === 'xport') {
-                    return new \TimeSeriesPhp\Core\Data\QueryResult([
-                        'cpu_usage' => [
-                            ['date' => time(), 'value' => 23.5],
-                            ['date' => time() + 300, 'value' => 24.0],
-                            ['date' => time() + 600, 'value' => 24.5],
-                        ],
-                    ]);
-                }
-
-                return new \TimeSeriesPhp\Core\Data\QueryResult([
-                    'output' => [
-                        ['date' => time(), 'value' => 'Mocked output'],
+        $this->driver->method('rawQuery')->willReturnCallback(function ($query) {
+            if ($query instanceof RRDtoolRawQuery && $query->command === 'xport') {
+                return new QueryResult([
+                    'cpu_usage' => [
+                        ['date' => time(), 'value' => 23.5],
+                        ['date' => time() + 300, 'value' => 24.0],
+                        ['date' => time() + 600, 'value' => 24.5],
                     ],
                 ]);
             }
 
-            public function createRRDWithCustomConfig(string $filename, array $data_sources, ?int $step = null, ?array $archives = null): bool
-            {
-                // Mock implementation that doesn't execute commands
+            return new QueryResult([
+                'output' => [
+                    ['date' => time(), 'value' => 'Mocked output'],
+                ],
+            ]);
+        });
 
-                // Simulate creating the RRD file
-                if (! file_exists($filename)) {
-                    touch($filename);
-                }
-
-                return file_exists($filename);
+        $this->driver->method('createRRDWithCustomConfig')->willReturnCallback(function (string $filename, array $data_sources) {
+            if (!file_exists($filename)) {
+                touch($filename);
             }
+            return file_exists($filename);
+        });
 
-            public function getRRDGraph(RRDtoolRawQuery $graphConfig): string
-            {
-                // Mock implementation that doesn't execute commands
-                $outputPath = $this->tempDir.'/graph_'.uniqid().'.png';
-                touch($outputPath);
+        $this->driver->method('getRRDGraph')->willReturnCallback(function () {
+            $outputPath = $this->tempDir . '/graph_' . uniqid() . '.png';
+            touch($outputPath);
+            return $outputPath;
+        });
 
-                return $outputPath;
+        $this->driver->method('createDatabase')->willReturnCallback(function (string $database) {
+            $dbDir = $this->tempDir . '/' . $database;
+            if (!is_dir($dbDir)) {
+                mkdir($dbDir, 0777, true);
             }
+            return true;
+        });
 
-            public function createDatabase(string $database): bool
-            {
-                // Create the database directory
-                $dbDir = $this->tempDir.'/'.$database;
-                if (! is_dir($dbDir)) {
-                    mkdir($dbDir, 0777, true);
-                }
+        $this->driver->method('getDatabases')->willReturn(['test_db']);
 
-                return true;
-            }
+        // Set connected property to true using reflection
+        $reflection = new \ReflectionClass($this->driver);
+        $property = $reflection->getProperty('connected');
+        $property->setAccessible(true);
+        $property->setValue($this->driver, true);
 
-            public function getDatabases(): array
-            {
-                // Mock implementation that returns a fixed list
-                return ['test_db'];
-            }
-        };
-
-        // Connect the driver
-        $this->driver->connect($this->config);
+        // Set tagStrategy property using reflection
+        $property = $reflection->getProperty('tagStrategy');
+        $property->setAccessible(true);
+        $property->setValue($this->driver, $this->tagStrategy);
     }
 
     protected function tearDown(): void
@@ -268,6 +231,14 @@ class RRDtoolDriverTest extends TestCase
         if (is_dir($dir)) {
             rmdir($dir);
         }
+    }
+
+    /**
+     * Helper method to get the RRD file path for a measurement and tags
+     */
+    private function getRRDPath(string $measurement, array $tags = []): string
+    {
+        return $this->tagStrategy->getFilePath($measurement, $tags);
     }
 
     public function test_connect(): void
@@ -365,7 +336,7 @@ class RRDtoolDriverTest extends TestCase
             'RRA:AVERAGE:0.5:1:1440',  // 1min for 1 day
             'RRA:MAX:0.5:1:1440',      // 1min max for 1 day
         ];
-        $file = $this->driver->getRRDPath('custom_metric', ['host' => 'server1']);
+        $file = $this->getRRDPath('custom_metric', ['host' => 'server1']);
 
         $result = $this->driver->createRRDWithCustomConfig($file, $dataSources, 80, $archives);
 
@@ -375,7 +346,7 @@ class RRDtoolDriverTest extends TestCase
 
     public function test_get_rrd_graph(): void
     {
-        $rrdPath = $this->driver->getRRDPath('cpu_usage', ['host' => 'server1']);
+        $rrdPath = $this->getRRDPath('cpu_usage', ['host' => 'server1']);
 
         $outputPath = $this->tempDir.'/graph_'.uniqid().'.png';
         $rawQuery = new RRDtoolRawQuery('graph', $outputPath);
