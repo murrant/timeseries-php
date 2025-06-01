@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   influxdb:
     image: influxdb:2.7
@@ -83,7 +81,3 @@ volumes:
   graphite-data:
   rrdcached-data:
   rrdcached-journal:
-
-# Note: RRDtool is a command-line tool and not a server, so it's not included in this Docker Compose file.
-# Please install RRDtool locally as described in the TSDB_SETUP.md documentation.
-# However, rrdcached is a daemon that can be run as a server, so it's included in this Docker Compose file.
