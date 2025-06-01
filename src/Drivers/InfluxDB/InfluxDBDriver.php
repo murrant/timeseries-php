@@ -21,10 +21,7 @@ use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Drivers\InfluxDB\Config\InfluxDBConfig;
-use TimeSeriesPhp\Drivers\InfluxDB\Factory\ClientFactory;
-use TimeSeriesPhp\Drivers\InfluxDB\Factory\ClientFactoryInterface;
-use TimeSeriesPhp\Drivers\InfluxDB\Factory\QueryBuilderFactory;
-use TimeSeriesPhp\Drivers\InfluxDB\Factory\QueryBuilderFactoryInterface;
+use TimeSeriesPhp\Drivers\InfluxDB\Query\QueryBuilder;
 use TimeSeriesPhp\Exceptions\Config\ConfigurationException;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 use TimeSeriesPhp\Exceptions\Driver\DatabaseException;
@@ -56,31 +53,31 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     protected bool $connected = false;
 
     /**
-     * @var ClientFactoryInterface The client factory
+     * @var Client The InfluxDB client
      */
-    protected ClientFactoryInterface $clientFactory;
+    protected Client $influxClient;
 
     /**
-     * @var QueryBuilderFactoryInterface The InfluxDB query builder factory
+     * @var QueryBuilder The InfluxDB query builder
      */
-    protected QueryBuilderFactoryInterface $influxQueryBuilderFactory;
+    protected QueryBuilder $influxQueryBuilder;
 
     /**
      * Constructor
      *
-     * @param  ClientFactoryInterface|null  $clientFactory  The client factory
-     * @param  QueryBuilderFactoryInterface|null  $queryBuilderFactory  The InfluxDB query builder factory
+     * @param  Client  $influxClient  The InfluxDB client
+     * @param  QueryBuilder  $influxQueryBuilder  The InfluxDB query builder
      * @param  \TimeSeriesPhp\Contracts\Query\QueryBuilderInterface|null  $parentQueryBuilderFactory  The parent query builder factory
      */
     public function __construct(
-        ?ClientFactoryInterface $clientFactory = null,
-        ?QueryBuilderFactoryInterface $queryBuilderFactory = null,
+        Client $influxClient,
+        QueryBuilder $influxQueryBuilder,
         ?\TimeSeriesPhp\Contracts\Query\QueryBuilderInterface $parentQueryBuilderFactory = null
     ) {
         parent::__construct($parentQueryBuilderFactory);
 
-        $this->clientFactory = $clientFactory ?? new ClientFactory;
-        $this->influxQueryBuilderFactory = $queryBuilderFactory ?? new QueryBuilderFactory;
+        $this->influxClient = $influxClient;
+        $this->influxQueryBuilder = $influxQueryBuilder;
     }
 
     protected function doConnect(): bool
@@ -90,8 +87,8 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
         }
 
         try {
-            // Use the client factory to create the client
-            $this->client = $this->clientFactory->create($this->config->getClientConfig());
+            // Use the injected client
+            $this->client = $this->influxClient;
             $this->writeApi = $this->client->createWriteApi();
             $this->queryApi = $this->client->createQueryApi();
 
@@ -99,8 +96,8 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
             $this->org = $this->config->getString('org');
             $this->bucket = $this->config->getString('bucket');
 
-            // Use the query builder factory to create the query builder
-            $this->queryBuilder = $this->influxQueryBuilderFactory->create($this->bucket);
+            // Use the injected query builder
+            $this->queryBuilder = $this->influxQueryBuilder;
 
             // Test connection by pinging
             $ping = $this->client->ping();

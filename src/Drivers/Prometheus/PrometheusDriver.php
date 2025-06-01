@@ -14,16 +14,7 @@ use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Drivers\Prometheus\Config\PrometheusConfig;
-use TimeSeriesPhp\Drivers\Prometheus\Factory\HttpClientFactory;
-use TimeSeriesPhp\Drivers\Prometheus\Factory\HttpClientFactoryInterface;
-use TimeSeriesPhp\Drivers\Prometheus\Factory\QueryBuilderFactory;
-use TimeSeriesPhp\Drivers\Prometheus\Factory\QueryBuilderFactoryInterface;
-use TimeSeriesPhp\Drivers\Prometheus\Factory\RequestFactoryFactory;
-use TimeSeriesPhp\Drivers\Prometheus\Factory\RequestFactoryFactoryInterface;
-use TimeSeriesPhp\Drivers\Prometheus\Factory\StreamFactoryFactory;
-use TimeSeriesPhp\Drivers\Prometheus\Factory\StreamFactoryFactoryInterface;
-use TimeSeriesPhp\Drivers\Prometheus\Factory\UriFactoryFactory;
-use TimeSeriesPhp\Drivers\Prometheus\Factory\UriFactoryFactoryInterface;
+use TimeSeriesPhp\Drivers\Prometheus\Query\QueryBuilder;
 use TimeSeriesPhp\Exceptions\Config\ConfigurationException;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 use TimeSeriesPhp\Exceptions\Query\RawQueryException;
@@ -41,13 +32,30 @@ class PrometheusDriver extends AbstractTimeSeriesDB
 
     private bool $debug = false;
 
-    private ?ClientInterface $client = null;
+    /**
+     * @var ClientInterface The HTTP client
+     */
+    private ClientInterface $client;
 
-    private ?RequestFactoryInterface $requestFactory = null;
+    /**
+     * @var RequestFactoryInterface The request factory
+     */
+    private RequestFactoryInterface $requestFactory;
 
-    private ?UriFactoryInterface $uriFactory = null;
+    /**
+     * @var UriFactoryInterface The URI factory
+     */
+    private UriFactoryInterface $uriFactory;
 
-    private ?StreamFactoryInterface $streamFactory = null;
+    /**
+     * @var StreamFactoryInterface The stream factory
+     */
+    private StreamFactoryInterface $streamFactory;
+
+    /**
+     * @var \TimeSeriesPhp\Drivers\Prometheus\Query\QueryBuilder The query builder
+     */
+    private \TimeSeriesPhp\Drivers\Prometheus\Query\QueryBuilder $prometheusQueryBuilder;
 
     /**
      * @var bool Whether the driver is connected
@@ -55,55 +63,30 @@ class PrometheusDriver extends AbstractTimeSeriesDB
     private bool $connected = false;
 
     /**
-     * @var HttpClientFactoryInterface The HTTP client factory
-     */
-    private HttpClientFactoryInterface $httpClientFactory;
-
-    /**
-     * @var RequestFactoryFactoryInterface The request factory factory
-     */
-    private RequestFactoryFactoryInterface $requestFactoryFactory;
-
-    /**
-     * @var UriFactoryFactoryInterface The URI factory factory
-     */
-    private UriFactoryFactoryInterface $uriFactoryFactory;
-
-    /**
-     * @var StreamFactoryFactoryInterface The stream factory factory
-     */
-    private StreamFactoryFactoryInterface $streamFactoryFactory;
-
-    /**
-     * @var QueryBuilderFactoryInterface The query builder factory
-     */
-    private QueryBuilderFactoryInterface $prometheusQueryBuilderFactory;
-
-    /**
      * Constructor
      *
-     * @param  HttpClientFactoryInterface|null  $httpClientFactory  The HTTP client factory
-     * @param  RequestFactoryFactoryInterface|null  $requestFactoryFactory  The request factory factory
-     * @param  UriFactoryFactoryInterface|null  $uriFactoryFactory  The URI factory factory
-     * @param  StreamFactoryFactoryInterface|null  $streamFactoryFactory  The stream factory factory
-     * @param  QueryBuilderFactoryInterface|null  $queryBuilderFactory  The query builder factory
+     * @param  ClientInterface  $client  The HTTP client
+     * @param  RequestFactoryInterface  $requestFactory  The request factory
+     * @param  UriFactoryInterface  $uriFactory  The URI factory
+     * @param  StreamFactoryInterface  $streamFactory  The stream factory
+     * @param  \TimeSeriesPhp\Drivers\Prometheus\Query\QueryBuilder  $prometheusQueryBuilder  The query builder
      * @param  \TimeSeriesPhp\Contracts\Query\QueryBuilderInterface|null  $parentQueryBuilderFactory  The parent query builder factory
      */
     public function __construct(
-        ?HttpClientFactoryInterface $httpClientFactory = null,
-        ?RequestFactoryFactoryInterface $requestFactoryFactory = null,
-        ?UriFactoryFactoryInterface $uriFactoryFactory = null,
-        ?StreamFactoryFactoryInterface $streamFactoryFactory = null,
-        ?QueryBuilderFactoryInterface $queryBuilderFactory = null,
+        ClientInterface $client,
+        RequestFactoryInterface $requestFactory,
+        UriFactoryInterface $uriFactory,
+        StreamFactoryInterface $streamFactory,
+        \TimeSeriesPhp\Drivers\Prometheus\Query\QueryBuilder $prometheusQueryBuilder,
         ?\TimeSeriesPhp\Contracts\Query\QueryBuilderInterface $parentQueryBuilderFactory = null
     ) {
         parent::__construct($parentQueryBuilderFactory);
 
-        $this->httpClientFactory = $httpClientFactory ?? new HttpClientFactory;
-        $this->requestFactoryFactory = $requestFactoryFactory ?? new RequestFactoryFactory;
-        $this->uriFactoryFactory = $uriFactoryFactory ?? new UriFactoryFactory;
-        $this->streamFactoryFactory = $streamFactoryFactory ?? new StreamFactoryFactory;
-        $this->prometheusQueryBuilderFactory = $queryBuilderFactory ?? new QueryBuilderFactory;
+        $this->client = $client;
+        $this->requestFactory = $requestFactory;
+        $this->uriFactory = $uriFactory;
+        $this->streamFactory = $streamFactory;
+        $this->prometheusQueryBuilder = $prometheusQueryBuilder;
     }
 
     protected function doConnect(): bool
@@ -119,25 +102,8 @@ class PrometheusDriver extends AbstractTimeSeriesDB
             $this->verifySSL = $this->config->getBool('verify_ssl');
             $this->debug = $this->config->getBool('debug');
 
-            // Initialize HTTP client and factories if not already set
-            if ($this->client === null) {
-                $this->client = $this->httpClientFactory->create();
-            }
-
-            if ($this->requestFactory === null) {
-                $this->requestFactory = $this->requestFactoryFactory->create();
-            }
-
-            if ($this->uriFactory === null) {
-                $this->uriFactory = $this->uriFactoryFactory->create();
-            }
-
-            if ($this->streamFactory === null) {
-                $this->streamFactory = $this->streamFactoryFactory->create();
-            }
-
             // Initialize the query builder
-            $this->queryBuilder = $this->prometheusQueryBuilderFactory->create();
+            $this->queryBuilder = $this->prometheusQueryBuilder;
 
             // Test connection by pinging the API
             $response = $this->makeApiRequest('/api/v1/status/config');
@@ -266,26 +232,6 @@ class PrometheusDriver extends AbstractTimeSeriesDB
      */
     private function makeApiRequest(string $endpoint, array $params = []): array
     {
-        // All dependencies should be injected by now, but just in case, initialize them if they're not
-        if ($this->requestFactory === null) {
-            $this->requestFactory = $this->requestFactoryFactory->create();
-        }
-
-        if ($this->uriFactory === null) {
-            $this->uriFactory = $this->uriFactoryFactory->create();
-        }
-
-        if ($this->streamFactory === null) {
-            $this->streamFactory = $this->streamFactoryFactory->create();
-        }
-
-        // Use injected client or create one if not set
-        if ($this->client === null) {
-            $this->client = $this->httpClientFactory->create();
-        }
-
-        $client = $this->client;
-
         // Build the URL with query parameters
         $uri = $this->uriFactory->createUri($this->apiUrl.$endpoint);
         if (! empty($params)) {
@@ -304,7 +250,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB
 
         try {
             // Execute the request
-            $response = $client->sendRequest($request);
+            $response = $this->client->sendRequest($request);
             $httpCode = $response->getStatusCode();
             $responseBody = (string) $response->getBody();
 
