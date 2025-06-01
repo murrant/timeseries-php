@@ -4,10 +4,12 @@ namespace TimeSeriesPhp\Tests\Drivers\Aggregate;
 
 use DateTime;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
 use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
+use TimeSeriesPhp\Core\Driver\DriverFactory;
 use TimeSeriesPhp\Drivers\Aggregate\AggregateDriver;
 use TimeSeriesPhp\Drivers\Aggregate\Config\AggregateConfig;
 
@@ -41,8 +43,32 @@ class AggregateDriverTest extends TestCase
         $this->mockWriteDb2 = $this->createMock(TimeSeriesInterface::class);
         $this->mockReadDb = $this->createMock(TimeSeriesInterface::class);
 
+        // Create a mock DriverFactory
+        $mockDriverFactory = $this->createMock(DriverFactory::class);
+
+        // Create a mock logger
+        $mockLogger = $this->createMock(LoggerInterface::class);
+
+        // Create a config with two write databases and one read database
+        $this->config = new AggregateConfig(
+            [
+                [
+                    'driver' => 'influxdb',
+                    'url' => 'http://influxdb1.example.com:8086',
+                ],
+                [
+                    'driver' => 'influxdb',
+                    'url' => 'http://influxdb2.example.com:8086',
+                ],
+            ],
+            [
+                'driver' => 'influxdb',
+                'url' => 'http://influxdb-read.example.com:8086',
+            ]
+        );
+
         // Create a test subclass of AggregateDriver that doesn't actually connect to real databases
-        $this->driver = new class($this->mockWriteDb1, $this->mockWriteDb2, $this->mockReadDb) extends AggregateDriver
+        $this->driver = new class($mockDriverFactory, $this->config, $mockLogger, $this->mockWriteDb1, $this->mockWriteDb2, $this->mockReadDb) extends AggregateDriver
         {
             /**
              * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
@@ -60,15 +86,22 @@ class AggregateDriverTest extends TestCase
             private $mockReadDb;
 
             /**
+             * @param  DriverFactory  $driverFactory
+             * @param  AggregateConfig  $config
+             * @param  LoggerInterface  $logger
              * @param  TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject  $mockWriteDb1
              * @param  TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject  $mockWriteDb2
              * @param  TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject  $mockReadDb
              */
             public function __construct(
+                DriverFactory $driverFactory,
+                AggregateConfig $config,
+                LoggerInterface $logger,
                 $mockWriteDb1,
                 $mockWriteDb2,
                 $mockReadDb
             ) {
+                parent::__construct($driverFactory, $config, $logger);
                 $this->mockWriteDb1 = $mockWriteDb1;
                 $this->mockWriteDb2 = $mockWriteDb2;
                 $this->mockReadDb = $mockReadDb;
@@ -83,24 +116,6 @@ class AggregateDriverTest extends TestCase
                 return true;
             }
         };
-
-        // Create a config with two write databases and one read database
-        $this->config = new AggregateConfig([
-            'write_databases' => [
-                [
-                    'driver' => 'influxdb',
-                    'url' => 'http://influxdb1.example.com:8086',
-                ],
-                [
-                    'driver' => 'influxdb',
-                    'url' => 'http://influxdb2.example.com:8086',
-                ],
-            ],
-            'read_database' => [
-                'driver' => 'influxdb',
-                'url' => 'http://influxdb-read.example.com:8086',
-            ],
-        ]);
 
         // Connect the driver
         $this->driver->connect($this->config);
@@ -387,8 +402,14 @@ class AggregateDriverTest extends TestCase
 
     public function test_read_database_fallback(): void
     {
+        // Create a mock DriverFactory
+        $mockDriverFactory = $this->createMock(DriverFactory::class);
+
+        // Create a mock logger
+        $mockLogger = $this->createMock(LoggerInterface::class);
+
         // Create a driver with write databases only
-        $driver = new class($this->mockWriteDb1, $this->mockWriteDb2) extends AggregateDriver
+        $driver = new class($mockDriverFactory, $mockLogger, $this->mockWriteDb1, $this->mockWriteDb2) extends AggregateDriver
         {
             /**
              * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
@@ -401,13 +422,31 @@ class AggregateDriverTest extends TestCase
             private $mockWriteDb2;
 
             /**
+             * @param  DriverFactory  $driverFactory
+             * @param  LoggerInterface  $logger
              * @param  TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject  $mockWriteDb1
              * @param  TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject  $mockWriteDb2
              */
             public function __construct(
+                DriverFactory $driverFactory,
+                LoggerInterface $logger,
                 $mockWriteDb1,
                 $mockWriteDb2
             ) {
+                // Create a minimal config with just the required write databases
+                $config = new AggregateConfig(
+                    [
+                        [
+                            'driver' => 'influxdb',
+                            'url' => 'http://influxdb1.example.com:8086',
+                        ],
+                        [
+                            'driver' => 'influxdb',
+                            'url' => 'http://influxdb2.example.com:8086',
+                        ],
+                    ]
+                );
+                parent::__construct($driverFactory, $config, $logger);
                 $this->mockWriteDb1 = $mockWriteDb1;
                 $this->mockWriteDb2 = $mockWriteDb2;
             }
@@ -423,8 +462,8 @@ class AggregateDriverTest extends TestCase
         };
 
         // Create a config with write databases only
-        $config = new AggregateConfig([
-            'write_databases' => [
+        $config = new AggregateConfig(
+            [
                 [
                     'driver' => 'influxdb',
                     'url' => 'http://influxdb1.example.com:8086',
@@ -433,9 +472,8 @@ class AggregateDriverTest extends TestCase
                     'driver' => 'influxdb',
                     'url' => 'http://influxdb2.example.com:8086',
                 ],
-            ],
-            // No read_database specified
-        ]);
+            ]
+        );
 
         // Connect the driver
         $driver->connect($config);

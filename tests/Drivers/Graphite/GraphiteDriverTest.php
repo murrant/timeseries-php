@@ -52,8 +52,10 @@ class GraphiteDriverTest extends TestCase
         $queryBuilder = new GraphiteQueryBuilder;
 
         // Create a real instance of GraphiteDriver with mocked methods
-        $this->driver = new class($queryBuilderFactory, $queryBuilder, $this->logger) extends GraphiteDriver
+        $this->driver = new class($this->config, $queryBuilder, $this->logger) extends GraphiteDriver
         {
+            /** @var resource|null */
+            private $socket = null;
             protected function doConnect(): bool
             {
                 $this->connected = true;
