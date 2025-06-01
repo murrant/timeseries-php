@@ -59,7 +59,7 @@ class InfluxDBIntegrationTest extends TestCase
             'verifySSL' => false,
             'debug' => false,
         ]);
-        $queryBuilder = new \TimeSeriesPhp\Drivers\InfluxDB\Query\QueryBuilder();
+        $queryBuilder = new \TimeSeriesPhp\Drivers\InfluxDB\Query\QueryBuilder;
         $this->driver = new InfluxDBDriver($client, $queryBuilder);
 
         // Configure the driver

@@ -73,13 +73,14 @@ class RRDtoolDriverTest extends TestCase
         $this->tagStrategy->method('getFilePath')
             ->willReturnCallback(function (string $measurement, array $tags = []) {
                 $tagString = '';
-                if (!empty($tags)) {
+                if (! empty($tags)) {
                     ksort($tags);
                     foreach ($tags as $key => $value) {
-                        $tagString .= "_{$key}-" . str_replace('.', '\\.', (string)$value);
+                        $tagString .= "_{$key}-".str_replace('.', '\\.', (string) $value);
                     }
                 }
-                return $this->tempDir . '/' . $measurement . $tagString . '.rrd';
+
+                return $this->tempDir.'/'.$measurement.$tagString.'.rrd';
             });
 
         // Create mock process
@@ -112,7 +113,7 @@ class RRDtoolDriverTest extends TestCase
         $this->queryBuilder = new RRDtoolQueryBuilder($this->tagStrategy);
 
         // Create logger
-        $this->logger = new NullLogger();
+        $this->logger = new NullLogger;
 
         // Create driver with mocked dependencies
         $this->driver = $this->getMockBuilder(RRDtoolDriver::class)
@@ -122,7 +123,7 @@ class RRDtoolDriverTest extends TestCase
                 $this->inputStreamFactory,
                 $this->tagStrategyFactory,
                 $this->queryBuilder,
-                $this->logger
+                $this->logger,
             ])
             ->onlyMethods(['doConnect', 'doWrite', 'rawQuery', 'createRRDWithCustomConfig', 'getRRDGraph', 'createDatabase', 'getDatabases'])
             ->getMock();
@@ -134,7 +135,7 @@ class RRDtoolDriverTest extends TestCase
             $rrdPath = $this->tagStrategy->getFilePath($dataPoint->getMeasurement(), $dataPoint->getTags());
 
             // Simulate creating the RRD file
-            if (!file_exists($rrdPath)) {
+            if (! file_exists($rrdPath)) {
                 touch($rrdPath);
             }
 
@@ -147,8 +148,8 @@ class RRDtoolDriverTest extends TestCase
                 $values[] = (is_numeric($value) || $value === 'U') ? $value : 'U';
             }
 
-            $updateString = $dataPoint->getTimestamp()->getTimestamp() . ':' . implode(':', $values);
-            file_put_contents($rrdPath . '.update', $updateString);
+            $updateString = $dataPoint->getTimestamp()->getTimestamp().':'.implode(':', $values);
+            file_put_contents($rrdPath.'.update', $updateString);
 
             return true;
         });
@@ -172,23 +173,26 @@ class RRDtoolDriverTest extends TestCase
         });
 
         $this->driver->method('createRRDWithCustomConfig')->willReturnCallback(function (string $filename, array $data_sources) {
-            if (!file_exists($filename)) {
+            if (! file_exists($filename)) {
                 touch($filename);
             }
+
             return file_exists($filename);
         });
 
         $this->driver->method('getRRDGraph')->willReturnCallback(function () {
-            $outputPath = $this->tempDir . '/graph_' . uniqid() . '.png';
+            $outputPath = $this->tempDir.'/graph_'.uniqid().'.png';
             touch($outputPath);
+
             return $outputPath;
         });
 
         $this->driver->method('createDatabase')->willReturnCallback(function (string $database) {
-            $dbDir = $this->tempDir . '/' . $database;
-            if (!is_dir($dbDir)) {
+            $dbDir = $this->tempDir.'/'.$database;
+            if (! is_dir($dbDir)) {
                 mkdir($dbDir, 0777, true);
             }
+
             return true;
         });
 

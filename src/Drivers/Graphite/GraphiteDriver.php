@@ -11,7 +11,6 @@ use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Drivers\Graphite\Config\GraphiteConfig;
 use TimeSeriesPhp\Drivers\Graphite\Query\GraphiteQueryBuilder;
-use TimeSeriesPhp\Exceptions\Config\ConfigurationException;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 use TimeSeriesPhp\Exceptions\Driver\WriteException;
 use TimeSeriesPhp\Exceptions\Query\RawQueryException;
@@ -19,7 +18,7 @@ use TimeSeriesPhp\Exceptions\Query\RawQueryException;
 #[Driver(name: 'graphite', queryBuilderClass: GraphiteQueryBuilder::class, configClass: GraphiteConfig::class)]
 class GraphiteDriver extends AbstractTimeSeriesDB implements ConfigurableInterface
 {
-    /** @var resource|null $socket */
+    /** @var resource|null */
     private $socket = null;
 
     public function __construct(
@@ -40,18 +39,14 @@ class GraphiteDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
         $this->config = $this->config->createFromArray($config);
     }
 
-
     /**
      * @var bool Whether the driver is connected
      */
     protected bool $connected = false;
 
-    /**
-     * @throws ConfigurationException
-     */
     protected function doConnect(): bool
     {
-       try {
+        try {
             // Test connection by opening and closing a socket
             $this->getSocket();
             $this->closeSocket();

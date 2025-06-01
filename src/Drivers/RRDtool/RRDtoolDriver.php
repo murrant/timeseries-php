@@ -27,11 +27,9 @@ use TimeSeriesPhp\Exceptions\Driver\DriverException;
 use TimeSeriesPhp\Exceptions\Driver\WriteException;
 use TimeSeriesPhp\Exceptions\Query\RawQueryException;
 
-
 #[Driver(name: 'rrdtool', queryBuilderClass: RRDtoolQueryBuilder::class, configClass: RRDtoolConfig::class)]
 class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterface
 {
-
     protected RRDTagStrategyInterface $tagStrategy;
 
     protected bool $connected = false;
