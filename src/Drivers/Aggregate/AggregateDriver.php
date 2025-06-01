@@ -3,6 +3,7 @@
 namespace TimeSeriesPhp\Drivers\Aggregate;
 
 use DateTime;
+use Psr\Log\LoggerInterface;
 use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
 use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
 use TimeSeriesPhp\Core\Attributes\Driver;
@@ -10,15 +11,16 @@ use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Drivers\Aggregate\Config\AggregateConfig;
+use TimeSeriesPhp\Drivers\Aggregate\Factory\ContainerDriverFactory;
 use TimeSeriesPhp\Drivers\Aggregate\Factory\DriverFactoryInterface;
-use TimeSeriesPhp\Drivers\Aggregate\Factory\DriverManagerDriverFactory;
+use TimeSeriesPhp\Drivers\Null\NullQueryBuilder;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 use TimeSeriesPhp\Exceptions\Driver\DatabaseException;
 use TimeSeriesPhp\Exceptions\Driver\WriteException;
 use TimeSeriesPhp\Exceptions\Query\RawQueryException;
 use TimeSeriesPhp\Services\Logs\Logger;
 
-#[Driver(name: 'aggregate', configClass: AggregateConfig::class)]
+#[Driver(name: 'aggregate', configClass: AggregateConfig::class, queryBuilderClass: ContainerDriverFactory::class)]
 class AggregateDriver extends AbstractTimeSeriesDB
 {
     /** @var TimeSeriesInterface[] */
@@ -36,19 +38,11 @@ class AggregateDriver extends AbstractTimeSeriesDB
      */
     protected bool $connected = false;
 
-    /**
-     * Constructor
-     *
-     * @param  DriverFactoryInterface|null  $tsdbFactory  The TSDB factory
-     * @param  \TimeSeriesPhp\Contracts\Query\QueryBuilderInterface|null  $queryBuilderFactory  The query builder factory
-     */
     public function __construct(
-        ?DriverFactoryInterface $tsdbFactory = null,
-        ?\TimeSeriesPhp\Contracts\Query\QueryBuilderInterface $queryBuilderFactory = null
+        DriverFactoryInterface $tsdbFactory,
+        protected LoggerInterface $logger
     ) {
-        parent::__construct($queryBuilderFactory);
-
-        $this->tsdbFactory = $tsdbFactory ?? new DriverManagerDriverFactory;
+        parent::__construct(new NullQueryBuilder, $logger); // this will send all queries to the read database
     }
 
     /**
