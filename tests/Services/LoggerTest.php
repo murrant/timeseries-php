@@ -40,6 +40,7 @@ class LoggerTest extends TestCase
 
         $this->assertFileExists($this->tempFile);
         $content = file_get_contents($this->tempFile);
+        $this->assertNotFalse($content, 'Failed to read log file');
         $this->assertStringContainsString('[INFO] Test message', $content);
     }
 
@@ -60,6 +61,7 @@ class LoggerTest extends TestCase
 
         $this->assertFileExists($this->tempFile);
         $content = file_get_contents($this->tempFile);
+        $this->assertNotFalse($content, 'Failed to read log file');
 
         $this->assertStringNotContainsString('Debug message', $content);
         $this->assertStringNotContainsString('Info message', $content);
@@ -81,6 +83,7 @@ class LoggerTest extends TestCase
 
         $this->assertFileExists($this->tempFile);
         $content = file_get_contents($this->tempFile);
+        $this->assertNotFalse($content, 'Failed to read log file');
         $this->assertStringContainsString('[INFO] User john_doe logged in', $content);
     }
 
@@ -97,6 +100,7 @@ class LoggerTest extends TestCase
 
         $this->assertFileExists($this->tempFile);
         $content = file_get_contents($this->tempFile);
+        $this->assertNotFalse($content, 'Failed to read log file');
 
         $logEntry = json_decode($content, true);
         $this->assertIsArray($logEntry);
@@ -118,6 +122,7 @@ class LoggerTest extends TestCase
 
         $this->assertFileExists($this->tempFile);
         $content = file_get_contents($this->tempFile);
+        $this->assertNotFalse($content, 'Failed to read log file');
 
         $this->assertStringContainsString('[INFO] Test message {"user":"john"}', $content);
     }

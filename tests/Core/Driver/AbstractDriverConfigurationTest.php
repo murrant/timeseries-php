@@ -15,7 +15,7 @@ class AbstractDriverConfigurationTest extends TestCase
     /**
      * Test implementation of AbstractDriverConfiguration
      */
-    private $configuration;
+    private AbstractDriverConfiguration $configuration;
 
     protected function setUp(): void
     {
@@ -66,12 +66,26 @@ class AbstractDriverConfigurationTest extends TestCase
             'test_option' => false,
         ]);
 
+        // Assert that the processed configuration is an array
+        $this->assertIsArray($config);
+
         // Assert that the processed configuration has the expected values
+        $this->assertArrayHasKey('database', $config);
         $this->assertEquals('test_db', $config['database']);
+
+        $this->assertArrayHasKey('host', $config);
         $this->assertEquals('example.com', $config['host']);
+
+        $this->assertArrayHasKey('port', $config);
         $this->assertEquals(8086, $config['port']);
+
+        $this->assertArrayHasKey('username', $config);
         $this->assertEquals('user', $config['username']);
+
+        $this->assertArrayHasKey('password', $config);
         $this->assertEquals('pass', $config['password']);
+
+        $this->assertArrayHasKey('test_option', $config);
         $this->assertFalse($config['test_option']);
     }
 
@@ -82,13 +96,29 @@ class AbstractDriverConfigurationTest extends TestCase
             'database' => 'test_db',
         ]);
 
+        // Assert that the processed configuration is an array
+        $this->assertIsArray($config);
+
         // Assert that the processed configuration has the expected default values
+        $this->assertArrayHasKey('database', $config);
         $this->assertEquals('test_db', $config['database']);
+
+        $this->assertArrayHasKey('host', $config);
         $this->assertEquals('localhost', $config['host']);
+
+        $this->assertArrayHasKey('port', $config);
         $this->assertNull($config['port']);
+
+        $this->assertArrayHasKey('username', $config);
         $this->assertNull($config['username']);
+
+        $this->assertArrayHasKey('password', $config);
         $this->assertNull($config['password']);
+
+        $this->assertArrayHasKey('test_option', $config);
         $this->assertTrue($config['test_option']);
+
+        $this->assertArrayHasKey('options', $config);
         $this->assertIsArray($config['options']);
         $this->assertEmpty($config['options']);
     }

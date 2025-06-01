@@ -7,19 +7,15 @@ namespace TimeSeriesPhp\Tests\Drivers\Null;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
-use Symfony\Component\Config\Definition\Processor;
 use TimeSeriesPhp\Drivers\Null\NullConfig;
 
 class NullDriverConfigurationTest extends TestCase
 {
     private NullConfig $configuration;
 
-    private Processor $processor;
-
     protected function setUp(): void
     {
         $this->configuration = new NullConfig;
-        $this->processor = new Processor;
     }
 
     public function test_implements_configuration_interface(): void

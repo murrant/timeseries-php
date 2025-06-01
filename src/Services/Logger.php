@@ -34,9 +34,9 @@ class Logger extends AbstractLogger
     private string $minLevel;
 
     /**
-     * @var string|null The log file path (null for stderr)
+     * @var string The log file path (empty string for stderr)
      */
-    private ?string $file;
+    private string $file;
 
     /**
      * @var int Maximum log file size before rotation
@@ -77,7 +77,7 @@ class Logger extends AbstractLogger
      * Logs with an arbitrary level.
      *
      * @param  string|int  $level
-     * @param array<string, mixed> $context
+     * @param  array<string, mixed>  $context
      *
      * @throws TSDBException If the log cannot be written
      */
@@ -90,7 +90,7 @@ class Logger extends AbstractLogger
 
         $logMessage = $this->formatMessage($level, $message, $context);
 
-        if ($this->file === null) {
+        if ($this->file === '') {
             // Log to stderr
             fwrite(STDERR, $logMessage.PHP_EOL);
 
@@ -98,8 +98,6 @@ class Logger extends AbstractLogger
         }
 
         try {
-            // At this point, we know $this->file is not null, but we need to assert this for static analysis
-            assert($this->file !== null);
             $filePath = $this->file; // Create a local variable that PHPStan can track
 
             // Check if we need to rotate the log file
@@ -179,12 +177,12 @@ class Logger extends AbstractLogger
     /**
      * Rotate the log file
      *
-     * @throws TSDBException If the log file path is null
+     * @throws TSDBException If the log file path is empty
      */
     private function rotateLogFile(): void
     {
-        if ($this->file === null) {
-            throw new TSDBException('Cannot rotate log file: file path is null');
+        if ($this->file === '') {
+            throw new TSDBException('Cannot rotate log file: file path is empty');
         }
 
         // Remove the oldest log file if we've reached the maximum number of files

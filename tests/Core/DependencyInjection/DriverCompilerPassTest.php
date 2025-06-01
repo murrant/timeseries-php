@@ -72,7 +72,13 @@ class DriverCompilerPassTest extends TestCase
         $tags = $definition->getTag('timeseries.driver');
 
         // Assert that the tag has the correct name
-        $this->assertEquals('null', $tags[0]['name']);
+        $this->assertIsArray($tags);
+        $this->assertNotEmpty($tags);
+
+        // Cast to array to help static analysis
+        $firstTag = (array) $tags[0];
+        $this->assertArrayHasKey('name', $firstTag);
+        $this->assertEquals('null', $firstTag['name']);
     }
 
     public function test_process_registers_config_class(): void

@@ -66,8 +66,13 @@ YAML;
         $this->assertIsArray($config);
         $this->assertArrayHasKey('default_driver', $config);
         $this->assertEquals('test_driver', $config['default_driver']);
+
         $this->assertArrayHasKey('drivers', $config);
+        $this->assertIsArray($config['drivers']);
+
         $this->assertArrayHasKey('test_driver', $config['drivers']);
+        $this->assertIsArray($config['drivers']['test_driver']);
+
         $this->assertArrayHasKey('url', $config['drivers']['test_driver']);
         $this->assertEquals('http://localhost:9999', $config['drivers']['test_driver']['url']);
     }
