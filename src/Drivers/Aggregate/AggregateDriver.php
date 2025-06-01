@@ -37,7 +37,8 @@ class AggregateDriver extends AbstractTimeSeriesDB implements ConfigurableInterf
         protected AggregateConfig $config,
         LoggerInterface $logger,
     ) {
-        parent::__construct(new NullQueryBuilder, $logger); // this will send all queries to the read database
+        parent::__construct(new NullQueryBuilder, $logger);
+        // this driver will send all queries to the read database queryBuilder
     }
 
     /**
