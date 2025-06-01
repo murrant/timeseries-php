@@ -1,11 +1,10 @@
 <?php
 
-namespace TimeSeriesPhp\Drivers\RRDtool\Config;
+namespace TimeSeriesPhp\Drivers\RRDtool;
 
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use TimeSeriesPhp\Core\Attributes\Config;
 use TimeSeriesPhp\Core\Driver\AbstractDriverConfiguration;
-use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
 
 /**

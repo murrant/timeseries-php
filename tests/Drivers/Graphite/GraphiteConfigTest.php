@@ -7,7 +7,7 @@ namespace TimeSeriesPhp\Tests\Drivers\Graphite;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
-use TimeSeriesPhp\Drivers\Graphite\Config\GraphiteConfig;
+use TimeSeriesPhp\Drivers\Graphite\GraphiteConfig;
 
 class GraphiteConfigTest extends TestCase
 {

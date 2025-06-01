@@ -12,7 +12,6 @@ use TimeSeriesPhp\Core\Attributes\Driver;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
-use TimeSeriesPhp\Drivers\RRDtool\Config\RRDtoolConfig;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolCommandTimeoutException;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolException;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolPrematureUpdateException;
@@ -33,6 +32,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
     protected RRDTagStrategyInterface $tagStrategy;
 
     protected bool $connected = false;
+    protected RRDtoolQueryBuilder $rrdQueryBuilder;
 
     public function __construct(
         protected RRDtoolConfig $config,
@@ -43,6 +43,8 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
         LoggerInterface $logger,
     ) {
         parent::__construct($queryBuilder, $logger);
+
+        $this->rrdQueryBuilder = $queryBuilder;
     }
 
     /**
@@ -92,6 +94,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
         }
 
         $this->tagStrategy = $this->tagStrategyFactory->create($this->config->tag_strategy, $this->config->rrd_dir);
+        $this->rrdQueryBuilder->tagStrategy = $this->tagStrategy;
 
         if ($this->config->persistent_process) {
             $this->persistentProcess = $this->processFactory->create([$this->config->rrdtool_path, '-']);

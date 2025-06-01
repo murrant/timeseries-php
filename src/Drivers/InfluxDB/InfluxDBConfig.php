@@ -1,12 +1,11 @@
 <?php
 
-namespace TimeSeriesPhp\Drivers\InfluxDB\Config;
+namespace TimeSeriesPhp\Drivers\InfluxDB;
 
 use InfluxDB2\Model\WritePrecision;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use TimeSeriesPhp\Core\Attributes\Config;
 use TimeSeriesPhp\Core\Driver\AbstractDriverConfiguration;
-use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
 
 /**
  * Configuration for the InfluxDB driver

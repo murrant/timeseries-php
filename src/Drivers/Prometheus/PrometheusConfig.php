@@ -1,11 +1,10 @@
 <?php
 
-namespace TimeSeriesPhp\Drivers\Prometheus\Config;
+namespace TimeSeriesPhp\Drivers\Prometheus;
 
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use TimeSeriesPhp\Core\Attributes\Config;
 use TimeSeriesPhp\Core\Driver\AbstractDriverConfiguration;
-use TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver;
 
 /**
  * Configuration for the Prometheus driver

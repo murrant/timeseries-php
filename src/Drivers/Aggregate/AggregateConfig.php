@@ -1,11 +1,10 @@
 <?php
 
-namespace TimeSeriesPhp\Drivers\Aggregate\Config;
+namespace TimeSeriesPhp\Drivers\Aggregate;
 
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use TimeSeriesPhp\Core\Attributes\Config;
 use TimeSeriesPhp\Core\Driver\AbstractDriverConfiguration;
-use TimeSeriesPhp\Drivers\Aggregate\AggregateDriver;
 use TimeSeriesPhp\Exceptions\Config\ConfigurationException;
 
 /**

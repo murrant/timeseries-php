@@ -9,7 +9,6 @@ use TimeSeriesPhp\Core\Attributes\Driver;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
-use TimeSeriesPhp\Drivers\Graphite\Config\GraphiteConfig;
 use TimeSeriesPhp\Drivers\Graphite\Query\GraphiteQueryBuilder;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 use TimeSeriesPhp\Exceptions\Driver\WriteException;

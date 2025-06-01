@@ -10,8 +10,8 @@ use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\DriverFactory;
+use TimeSeriesPhp\Drivers\Aggregate\AggregateConfig;
 use TimeSeriesPhp\Drivers\Aggregate\AggregateDriver;
-use TimeSeriesPhp\Drivers\Aggregate\Config\AggregateConfig;
 
 class AggregateDriverTest extends TestCase
 {

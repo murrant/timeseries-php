@@ -12,7 +12,6 @@ use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Core\Driver\DriverFactory;
-use TimeSeriesPhp\Drivers\Aggregate\Config\AggregateConfig;
 use TimeSeriesPhp\Drivers\Null\NullQueryBuilder;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 use TimeSeriesPhp\Exceptions\Driver\DatabaseException;

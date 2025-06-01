@@ -22,7 +22,6 @@ use TimeSeriesPhp\Core\Attributes\Driver;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
-use TimeSeriesPhp\Drivers\InfluxDB\Config\InfluxDBConfig;
 use TimeSeriesPhp\Drivers\InfluxDB\Query\InfluxDBQueryBuilder;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 use TimeSeriesPhp\Exceptions\Driver\DatabaseException;

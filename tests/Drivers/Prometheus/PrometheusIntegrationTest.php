@@ -5,7 +5,7 @@ namespace TimeSeriesPhp\Tests\Drivers\Prometheus;
 use PHPUnit\Framework\TestCase;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Query\RawQuery;
-use TimeSeriesPhp\Drivers\Prometheus\Config\PrometheusConfig;
+use TimeSeriesPhp\Drivers\Prometheus\PrometheusConfig;
 use TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver;
 
 /**

@@ -3,7 +3,7 @@
 namespace TimeSeriesPhp\Tests\Drivers\Aggregate;
 
 use PHPUnit\Framework\TestCase;
-use TimeSeriesPhp\Drivers\Aggregate\Config\AggregateConfig;
+use TimeSeriesPhp\Drivers\Aggregate\AggregateConfig;
 use TimeSeriesPhp\Exceptions\Config\ConfigurationException;
 
 class AggregateConfigTest extends TestCase

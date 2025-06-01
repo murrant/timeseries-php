@@ -1,11 +1,10 @@
 <?php
 
-namespace TimeSeriesPhp\Drivers\Graphite\Config;
+namespace TimeSeriesPhp\Drivers\Graphite;
 
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use TimeSeriesPhp\Core\Attributes\Config;
 use TimeSeriesPhp\Core\Driver\AbstractDriverConfiguration;
-use TimeSeriesPhp\Drivers\Graphite\GraphiteDriver;
 
 /**
  * Configuration for the Graphite driver
