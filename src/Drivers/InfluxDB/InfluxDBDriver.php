@@ -49,15 +49,17 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
      * @var bool Whether the driver is connected
      */
     protected bool $connected = false;
+    protected InfluxDBQueryBuilder $influxQueryBuilder;
 
     public function __construct(
         protected Client $influxClient,
         protected InfluxDBConfig $config,
-        InfluxDBQueryBuilder $queryBuilder,
+         InfluxDBQueryBuilder $queryBuilder,
         LoggerInterface $logger,
     ) {
         parent::__construct($queryBuilder, $logger);
 
+        $this->influxQueryBuilder = $queryBuilder;
     }
 
     /**
@@ -77,6 +79,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
             $this->client = $this->influxClient;
             $this->writeApi = $this->client->createWriteApi();
             $this->queryApi = $this->client->createQueryApi();
+            $this->influxQueryBuilder->bucket = $this->config->bucket;
 
             // Test connection by pinging
             $ping = $this->client->ping();

@@ -13,7 +13,7 @@ use TimeSeriesPhp\Exceptions\Query\RawQueryException;
 class InfluxDBQueryBuilder implements QueryBuilderInterface
 {
     public function __construct(
-        private readonly string $bucket
+        public string $bucket = '%bucket%',
     ) {}
 
     /**

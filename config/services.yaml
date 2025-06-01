@@ -41,3 +41,8 @@ services:
     # Register the driver factory
     TimeSeriesPhp\Core\Driver\DriverFactory:
         public: true
+
+    Symfony\Component\DependencyInjection\ContainerInterface: '@service_container'
+    Namespace\ImportService:
+        arguments:
+            - '@service_container'
