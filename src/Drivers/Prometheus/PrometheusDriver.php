@@ -6,7 +6,6 @@ use Exception;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
-use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\UriFactoryInterface;
 use Psr\Log\LoggerInterface;
 use TimeSeriesPhp\Contracts\Driver\ConfigurableInterface;
@@ -33,7 +32,6 @@ class PrometheusDriver extends AbstractTimeSeriesDB implements ConfigurableInter
         protected ClientInterface $client,
         protected RequestFactoryInterface $requestFactory,
         protected UriFactoryInterface $uriFactory,
-        protected StreamFactoryInterface $streamFactory,
         protected PrometheusConfig $config,
         PrometheusQueryBuilder $queryBuilder,
         LoggerInterface $logger,

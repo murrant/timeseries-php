@@ -1,10 +1,8 @@
 #!/usr/bin/env php
 <?php
 
-namespace TimeSeriesPhp\Docker;
-
-use DateTime;
 use TimeSeriesPhp\Core\Data\DataPoint;
+use TimeSeriesPhp\Exceptions\TSDBException;
 use TimeSeriesPhp\TSDB;
 
 /**
@@ -17,6 +15,22 @@ use TimeSeriesPhp\TSDB;
 // Set up error reporting
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+
+
+// Parse command line arguments
+$options = getopt('hi:', ['help', 'iterations:', 'interval:'] );;
+$maxIterations = isset($options['iterations']) ? (int) $options['iterations'] : (isset($options['i']) ? (int) $options['i'] : 3);
+$interval = isset($options['interval']) ? (int) $options['interval'] : 10; // seconds between writes
+
+// Display usage information if --help is provided
+if (isset($options['h']) || isset($options['help'])) {
+    echo "Usage: php generate_sample_data.php [--iterations=<number>]\n";
+    echo "Options:\n";
+    echo "  --iterations=<number>  Number of iterations to run (default: 3, 0 for infinite)\n";
+    echo "  --interval=<number>    Number of seconds to wait between iterations (default: 10)\n";
+    echo "  --help, -h             Display this help message\n";
+    exit(0);
+}
 
 // Autoload dependencies
 require_once __DIR__.'/../vendor/autoload.php';
@@ -127,13 +141,17 @@ $measurements = [
 ];
 
 // Connect to each database
+// Note: If you encounter connection errors like "Failed to build container", it may be due to missing dependencies
+// in the container. This script is designed to be run in a Docker environment where all dependencies are available.
+// If running outside of Docker, you may need to install the required dependencies or modify the script to create
+// the necessary client objects manually.
 $databases = [];
 foreach ($config as $name => $dbConfig) {
     try {
         echo "Connecting to $name...\n";
         $databases[$name] = TSDB::start($dbConfig['driver'], $dbConfig['config']);
         echo "Connected to $name successfully.\n";
-    } catch (\Exception $e) {
+    } catch (TSDBException $e) {
         echo "Error connecting to $name: ".$e->getMessage()."\n";
     }
 }
@@ -163,11 +181,9 @@ function generateDataPoint(string $measurement, array $measurementConfig): DataP
 }
 
 // Main loop to generate and write data
-$interval = 10; // seconds between writes
 $iterations = 0;
-$maxIterations = 3; // Set to 0 for infinite loop, reduced to 3 for testing
-
-echo "Starting data generation loop...\n";
+$for = $maxIterations === 0 ? 'forever' : $maxIterations.' times';
+echo "Starting data generation loop every {$interval}s, $for\n";
 while ($iterations < $maxIterations || $maxIterations === 0) {
     $timestamp = new DateTime;
     echo 'Iteration '.($iterations + 1).' at '.$timestamp->format('Y-m-d H:i:s')."\n";
@@ -209,12 +225,15 @@ while ($iterations < $maxIterations || $maxIterations === 0) {
                 }
             }
             echo "Successfully wrote data to $name.\n";
-        } catch (\Exception $e) {
+        } catch (TSDBException $e) {
             echo "Error writing to $name: ".$e->getMessage()."\n";
         }
     }
 
     $iterations++;
+    if ($maxIterations !== 0 && $iterations >= $maxIterations) {
+        break;
+    }
     echo "Sleeping for $interval seconds...\n";
     sleep($interval);
 }

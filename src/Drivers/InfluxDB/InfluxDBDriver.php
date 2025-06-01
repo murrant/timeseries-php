@@ -33,7 +33,7 @@ use TimeSeriesPhp\Utils\Convert;
 #[Driver(name: 'influxdb', queryBuilderClass: InfluxDBQueryBuilder::class, configClass: InfluxDBConfig::class)]
 class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterface
 {
-    protected ?Client $client = null;
+    protected Client $client;
 
     protected ?WriteApi $writeApi = null;
 
@@ -52,13 +52,14 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
     protected InfluxDBQueryBuilder $influxQueryBuilder;
 
     public function __construct(
-        protected Client $influxClient,
-        protected InfluxDBConfig $config,
-         InfluxDBQueryBuilder $queryBuilder,
+        InfluxDBQueryBuilder $queryBuilder,
         LoggerInterface $logger,
+        protected InfluxDBConfig $config,
+        ?Client $client = null,
     ) {
         parent::__construct($queryBuilder, $logger);
 
+        $this->client = $client ?? new Client($this->config->getClientConfig());
         $this->influxQueryBuilder = $queryBuilder;
     }
 

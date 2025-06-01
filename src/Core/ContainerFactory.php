@@ -31,6 +31,17 @@ class ContainerFactory
         try {
             $container = new ContainerBuilder;
 
+            // Enable environment variable processing
+            $container->getParameterBag()->add([
+                'env(TSDB_DEFAULT_DRIVER)' => 'influxdb',
+                'env(INFLUXDB_URL)' => 'http://localhost:8086',
+                'env(INFLUXDB_TOKEN)' => '',
+                'env(INFLUXDB_ORG)' => '',
+                'env(INFLUXDB_BUCKET)' => 'default',
+                'env(INFLUXDB_PRECISION)' => 'ns',
+                'env(PROMETHEUS_URL)' => 'http://localhost:9090',
+            ]);
+
             // Set the project directory parameter
             $projectDir = dirname($configDir);
             $container->setParameter('kernel.project_dir', $projectDir);

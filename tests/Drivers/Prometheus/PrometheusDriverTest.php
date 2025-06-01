@@ -121,7 +121,6 @@ class PrometheusDriverTest extends TestCase
                 ClientInterface $mockClient,
                 RequestFactoryInterface $mockRequestFactory,
                 UriFactoryInterface $mockUriFactory,
-                StreamFactoryInterface $mockStreamFactory,
                 \Psr\Log\LoggerInterface $mockLogger
             ) {
                 // Bypass the parent constructor to avoid the inconsistency
@@ -133,7 +132,6 @@ class PrometheusDriverTest extends TestCase
                 $this->client = $mockClient;
                 $this->requestFactory = $mockRequestFactory;
                 $this->uriFactory = $mockUriFactory;
-                $this->streamFactory = $mockStreamFactory;
                 $this->connected = true;
             }
 
