@@ -46,10 +46,10 @@ class GraphiteDriverTest extends TestCase
         $this->logger = $this->createMock(LoggerInterface::class);
 
         // Create a query builder factory
-        $queryBuilderFactory = new QueryBuilderFactory();
+        $queryBuilderFactory = new QueryBuilderFactory;
 
         // Create a query builder
-        $queryBuilder = new GraphiteQueryBuilder();
+        $queryBuilder = new GraphiteQueryBuilder;
 
         // Create a real instance of GraphiteDriver with mocked methods
         $this->driver = new class($queryBuilderFactory, $queryBuilder, $this->logger) extends GraphiteDriver
@@ -138,7 +138,8 @@ class GraphiteDriverTest extends TestCase
 
     public function test_write_not_connected(): void
     {
-        $this->expectException(ConnectionException::class);
+        $this->expectException(\TimeSeriesPhp\Exceptions\Driver\WriteException::class);
+        $this->expectExceptionMessage('Not connected to Graphite');
 
         $dataPoint = new DataPoint(
             'cpu',

@@ -2,33 +2,57 @@
 
 namespace TimeSeriesPhp\Drivers\Prometheus\Config;
 
+use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use TimeSeriesPhp\Core\Attributes\Config;
-use TimeSeriesPhp\Core\Config\AbstractConfig;
+use TimeSeriesPhp\Core\Driver\AbstractDriverConfiguration;
 use TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver;
-use TimeSeriesPhp\Exceptions\Config\ConfigurationException;
 
+/**
+ * Configuration for the Prometheus driver
+ */
 #[Config('prometheus', PrometheusDriver::class)]
-class PrometheusConfig extends AbstractConfig
+class PrometheusConfig extends AbstractDriverConfiguration
 {
-    protected array $defaults = [
-        'url' => 'http://localhost:9090',
-        'timeout' => 30,
-        'verify_ssl' => true,
-        'debug' => false,
-    ];
-
-    protected array $required = ['url'];
+    /**
+     * @param  string  $url  The Prometheus server URL
+     * @param  int  $timeout  Connection timeout in seconds
+     * @param  bool  $verify_ssl  Whether to verify SSL certificates
+     * @param  bool  $debug  Enable debug mode
+     */
+    public function __construct(
+        public readonly string $url = 'http://localhost:9090',
+        public readonly int $timeout = 30,
+        public readonly bool $verify_ssl = true,
+        public readonly bool $debug = false,
+    ) {}
 
     /**
-     * @throws ConfigurationException
+     * Configure the schema for this driver
+     *
+     * @param  ArrayNodeDefinition  $rootNode  The root node
      */
-    public function __construct(array $config = [])
+    protected function configureSchema(ArrayNodeDefinition $rootNode): void
     {
-        $this->addValidator('url', fn ($url) => is_string($url) && ! empty($url));
-        $this->addValidator('timeout', fn ($timeout) => is_int($timeout) && $timeout > 0);
-        $this->addValidator('verify_ssl', fn ($verify) => is_bool($verify));
-        $this->addValidator('debug', fn ($debug) => is_bool($debug));
-
-        parent::__construct($config);
+        $rootNode
+            ->children()
+            ->scalarNode('url')
+            ->info('The Prometheus server URL')
+            ->isRequired()
+            ->cannotBeEmpty()
+            ->end()
+            ->integerNode('timeout')
+            ->info('Connection timeout in seconds')
+            ->defaultValue(30)
+            ->min(1)
+            ->end()
+            ->booleanNode('verify_ssl')
+            ->info('Whether to verify SSL certificates')
+            ->defaultTrue()
+            ->end()
+            ->booleanNode('debug')
+            ->info('Enable debug mode')
+            ->defaultFalse()
+            ->end()
+            ->end();
     }
 }

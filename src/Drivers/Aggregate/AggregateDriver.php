@@ -32,6 +32,11 @@ class AggregateDriver extends AbstractTimeSeriesDB
     protected DriverFactoryInterface $tsdbFactory;
 
     /**
+     * @var bool Whether the driver is connected
+     */
+    protected bool $connected = false;
+
+    /**
      * Constructor
      *
      * @param  DriverFactoryInterface|null  $tsdbFactory  The TSDB factory

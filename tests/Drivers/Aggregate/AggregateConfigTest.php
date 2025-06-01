@@ -19,31 +19,32 @@ class AggregateConfigTest extends TestCase
 
     public function test_custom_values(): void
     {
-        $config = new AggregateConfig([
-            'write_databases' => [
-                [
-                    'driver' => 'influxdb',
-                    'url' => 'http://influxdb1.example.com:8086',
-                    'token' => 'token1',
-                    'org' => 'org1',
-                    'bucket' => 'bucket1',
-                ],
-                [
-                    'driver' => 'influxdb',
-                    'url' => 'http://influxdb2.example.com:8086',
-                    'token' => 'token2',
-                    'org' => 'org2',
-                    'bucket' => 'bucket2',
-                ],
-            ],
-            'read_database' => [
+        $write_databases = [
+            [
                 'driver' => 'influxdb',
-                'url' => 'http://influxdb-read.example.com:8086',
-                'token' => 'token-read',
-                'org' => 'org-read',
-                'bucket' => 'bucket-read',
+                'url' => 'http://influxdb1.example.com:8086',
+                'token' => 'token1',
+                'org' => 'org1',
+                'bucket' => 'bucket1',
             ],
-        ]);
+            [
+                'driver' => 'influxdb',
+                'url' => 'http://influxdb2.example.com:8086',
+                'token' => 'token2',
+                'org' => 'org2',
+                'bucket' => 'bucket2',
+            ],
+        ];
+
+        $read_database = [
+            'driver' => 'influxdb',
+            'url' => 'http://influxdb-read.example.com:8086',
+            'token' => 'token-read',
+            'org' => 'org-read',
+            'bucket' => 'bucket-read',
+        ];
+
+        $config = new AggregateConfig($write_databases, $read_database);
 
         $writeDatabases = $config->getWriteDatabases();
         $this->assertCount(2, $writeDatabases);
@@ -73,17 +74,17 @@ class AggregateConfigTest extends TestCase
         $this->expectException(ConfigurationException::class);
         $this->expectExceptionMessage('Driver not specified for write database at index 0');
 
-        new AggregateConfig([
-            'write_databases' => [
-                [
-                    // Missing driver
-                    'url' => 'http://influxdb1.example.com:8086',
-                    'token' => 'token1',
-                    'org' => 'org1',
-                    'bucket' => 'bucket1',
-                ],
+        $write_databases = [
+            [
+                // Missing driver
+                'url' => 'http://influxdb1.example.com:8086',
+                'token' => 'token1',
+                'org' => 'org1',
+                'bucket' => 'bucket1',
             ],
-        ]);
+        ];
+
+        new AggregateConfig($write_databases);
     }
 
     public function test_missing_driver_in_read_database(): void
@@ -91,36 +92,37 @@ class AggregateConfigTest extends TestCase
         $this->expectException(ConfigurationException::class);
         $this->expectExceptionMessage('Driver not specified for read database');
 
-        new AggregateConfig([
-            'write_databases' => [
-                [
-                    'driver' => 'influxdb',
-                    'url' => 'http://influxdb1.example.com:8086',
-                    'token' => 'token1',
-                    'org' => 'org1',
-                    'bucket' => 'bucket1',
-                ],
+        $write_databases = [
+            [
+                'driver' => 'influxdb',
+                'url' => 'http://influxdb1.example.com:8086',
+                'token' => 'token1',
+                'org' => 'org1',
+                'bucket' => 'bucket1',
             ],
-            'read_database' => [
-                // Missing driver
-                'url' => 'http://influxdb-read.example.com:8086',
-                'token' => 'token-read',
-                'org' => 'org-read',
-                'bucket' => 'bucket-read',
-            ],
-        ]);
+        ];
+
+        $read_database = [
+            // Missing driver
+            'url' => 'http://influxdb-read.example.com:8086',
+            'token' => 'token-read',
+            'org' => 'org-read',
+            'bucket' => 'bucket-read',
+        ];
+
+        new AggregateConfig($write_databases, $read_database);
     }
 
     public function test_get_write_databases(): void
     {
-        $config = new AggregateConfig([
-            'write_databases' => [
-                [
-                    'driver' => 'influxdb',
-                    'url' => 'http://influxdb1.example.com:8086',
-                ],
+        $write_databases = [
+            [
+                'driver' => 'influxdb',
+                'url' => 'http://influxdb1.example.com:8086',
             ],
-        ]);
+        ];
+
+        $config = new AggregateConfig($write_databases);
 
         $writeDatabases = $config->getWriteDatabases();
         $this->assertCount(1, $writeDatabases);
@@ -130,16 +132,16 @@ class AggregateConfigTest extends TestCase
 
     public function test_get_read_database_fallback(): void
     {
-        $config = new AggregateConfig([
-            'write_databases' => [
-                [
-                    'driver' => 'influxdb',
-                    'url' => 'http://influxdb1.example.com:8086',
-                    'token' => 'token1',
-                ],
+        $write_databases = [
+            [
+                'driver' => 'influxdb',
+                'url' => 'http://influxdb1.example.com:8086',
+                'token' => 'token1',
             ],
-            // No read_database specified, should fall back to first write database
-        ]);
+        ];
+        // No read_database specified, should fall back to first write database
+
+        $config = new AggregateConfig($write_databases);
 
         $readDatabase = $config->getReadDatabase();
         $this->assertNotNull($readDatabase);
@@ -150,38 +152,45 @@ class AggregateConfigTest extends TestCase
 
     public function test_add_write_database(): void
     {
-        $config = new AggregateConfig([
-            'write_databases' => [
-                [
-                    'driver' => 'influxdb',
-                    'url' => 'http://influxdb1.example.com:8086',
-                ],
+        $write_databases = [
+            [
+                'driver' => 'influxdb',
+                'url' => 'http://influxdb1.example.com:8086',
             ],
-        ]);
+        ];
 
-        $config->addWriteDatabase([
+        $config = new AggregateConfig($write_databases);
+
+        $newConfig = $config->addWriteDatabase([
             'driver' => 'prometheus',
             'url' => 'http://prometheus.example.com:9090',
         ]);
 
+        // Check that the original config is unchanged
         $writeDatabases = $config->getWriteDatabases();
-        $this->assertCount(2, $writeDatabases);
+        $this->assertCount(1, $writeDatabases);
         $this->assertEquals('influxdb', $writeDatabases[0]['driver']);
         $this->assertEquals('http://influxdb1.example.com:8086', $writeDatabases[0]['url']);
-        $this->assertEquals('prometheus', $writeDatabases[1]['driver']);
-        $this->assertEquals('http://prometheus.example.com:9090', $writeDatabases[1]['url']);
+
+        // Check that the new config has both databases
+        $newWriteDatabases = $newConfig->getWriteDatabases();
+        $this->assertCount(2, $newWriteDatabases);
+        $this->assertEquals('influxdb', $newWriteDatabases[0]['driver']);
+        $this->assertEquals('http://influxdb1.example.com:8086', $newWriteDatabases[0]['url']);
+        $this->assertEquals('prometheus', $newWriteDatabases[1]['driver']);
+        $this->assertEquals('http://prometheus.example.com:9090', $newWriteDatabases[1]['url']);
     }
 
     public function test_add_write_database_missing_driver(): void
     {
-        $config = new AggregateConfig([
-            'write_databases' => [
-                [
-                    'driver' => 'influxdb',
-                    'url' => 'http://influxdb1.example.com:8086',
-                ],
+        $write_databases = [
+            [
+                'driver' => 'influxdb',
+                'url' => 'http://influxdb1.example.com:8086',
             ],
-        ]);
+        ];
+
+        $config = new AggregateConfig($write_databases);
 
         $this->expectException(ConfigurationException::class);
         $this->expectExceptionMessage('Driver not specified for write database');
@@ -194,36 +203,43 @@ class AggregateConfigTest extends TestCase
 
     public function test_set_read_database(): void
     {
-        $config = new AggregateConfig([
-            'write_databases' => [
-                [
-                    'driver' => 'influxdb',
-                    'url' => 'http://influxdb1.example.com:8086',
-                ],
+        $write_databases = [
+            [
+                'driver' => 'influxdb',
+                'url' => 'http://influxdb1.example.com:8086',
             ],
-        ]);
+        ];
 
-        $config->setReadDatabase([
+        $config = new AggregateConfig($write_databases);
+
+        $newConfig = $config->setReadDatabase([
             'driver' => 'prometheus',
             'url' => 'http://prometheus.example.com:9090',
         ]);
 
+        // Check that the original config is unchanged
         $readDatabase = $config->getReadDatabase();
         $this->assertNotNull($readDatabase);
-        $this->assertEquals('prometheus', $readDatabase['driver']);
-        $this->assertEquals('http://prometheus.example.com:9090', $readDatabase['url']);
+        $this->assertEquals('influxdb', $readDatabase['driver']);
+        $this->assertEquals('http://influxdb1.example.com:8086', $readDatabase['url']);
+
+        // Check that the new config has the new read database
+        $newReadDatabase = $newConfig->getReadDatabase();
+        $this->assertNotNull($newReadDatabase);
+        $this->assertEquals('prometheus', $newReadDatabase['driver']);
+        $this->assertEquals('http://prometheus.example.com:9090', $newReadDatabase['url']);
     }
 
     public function test_set_read_database_missing_driver(): void
     {
-        $config = new AggregateConfig([
-            'write_databases' => [
-                [
-                    'driver' => 'influxdb',
-                    'url' => 'http://influxdb1.example.com:8086',
-                ],
+        $write_databases = [
+            [
+                'driver' => 'influxdb',
+                'url' => 'http://influxdb1.example.com:8086',
             ],
-        ]);
+        ];
+
+        $config = new AggregateConfig($write_databases);
 
         $this->expectException(ConfigurationException::class);
         $this->expectExceptionMessage('Driver not specified for read database');

@@ -15,7 +15,7 @@ class GraphiteConfigTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->configuration = new GraphiteConfig();
+        $this->configuration = new GraphiteConfig;
     }
 
     public function test_implements_configuration_interface(): void

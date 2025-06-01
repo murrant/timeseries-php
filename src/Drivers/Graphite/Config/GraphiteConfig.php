@@ -14,16 +14,16 @@ use TimeSeriesPhp\Drivers\Graphite\GraphiteDriver;
 class GraphiteConfig extends AbstractDriverConfiguration
 {
     /**
-     * @param string $host The Graphite server host
-     * @param int $port The Graphite server port
-     * @param string $protocol The protocol to use (tcp or udp)
-     * @param int $timeout Connection timeout in seconds
-     * @param string $prefix Prefix for metrics
-     * @param int $batch_size Maximum number of metrics to send in a batch
-     * @param string $web_host The Graphite web server host
-     * @param int $web_port The Graphite web server port
-     * @param string $web_protocol The web protocol to use (http or https)
-     * @param string $web_path The path to the render API
+     * @param  string  $host  The Graphite server host
+     * @param  int  $port  The Graphite server port
+     * @param  string  $protocol  The protocol to use (tcp or udp)
+     * @param  int  $timeout  Connection timeout in seconds
+     * @param  string  $prefix  Prefix for metrics
+     * @param  int  $batch_size  Maximum number of metrics to send in a batch
+     * @param  string  $web_host  The Graphite web server host
+     * @param  int  $web_port  The Graphite web server port
+     * @param  string  $web_protocol  The web protocol to use (http or https)
+     * @param  string  $web_path  The path to the render API
      */
     public function __construct(
         public readonly string $host = 'localhost',
@@ -41,60 +41,60 @@ class GraphiteConfig extends AbstractDriverConfiguration
     /**
      * Configure the schema for this driver
      *
-     * @param ArrayNodeDefinition $rootNode The root node
+     * @param  ArrayNodeDefinition  $rootNode  The root node
      */
     protected function configureSchema(ArrayNodeDefinition $rootNode): void
     {
         $rootNode
             ->children()
             ->scalarNode('host')
-                ->info('The Graphite server host')
-                ->defaultValue('localhost')
-                ->cannotBeEmpty()
+            ->info('The Graphite server host')
+            ->defaultValue('localhost')
+            ->cannotBeEmpty()
             ->end()
             ->integerNode('port')
-                ->info('The Graphite server port')
-                ->defaultValue(2003)
-                ->min(1)
+            ->info('The Graphite server port')
+            ->defaultValue(2003)
+            ->min(1)
             ->end()
             ->enumNode('protocol')
-                ->info('The protocol to use (tcp or udp)')
-                ->values(['tcp', 'udp'])
-                ->defaultValue('tcp')
+            ->info('The protocol to use (tcp or udp)')
+            ->values(['tcp', 'udp'])
+            ->defaultValue('tcp')
             ->end()
             ->integerNode('timeout')
-                ->info('Connection timeout in seconds')
-                ->defaultValue(30)
-                ->min(1)
+            ->info('Connection timeout in seconds')
+            ->defaultValue(30)
+            ->min(1)
             ->end()
             ->scalarNode('prefix')
-                ->info('Prefix for metrics')
-                ->defaultValue('')
+            ->info('Prefix for metrics')
+            ->defaultValue('')
             ->end()
             ->integerNode('batch_size')
-                ->info('Maximum number of metrics to send in a batch')
-                ->defaultValue(500)
-                ->min(1)
+            ->info('Maximum number of metrics to send in a batch')
+            ->defaultValue(500)
+            ->min(1)
             ->end()
             ->scalarNode('web_host')
-                ->info('The Graphite web server host')
-                ->defaultValue('localhost')
-                ->cannotBeEmpty()
+            ->info('The Graphite web server host')
+            ->defaultValue('localhost')
+            ->cannotBeEmpty()
             ->end()
             ->integerNode('web_port')
-                ->info('The Graphite web server port')
-                ->defaultValue(8080)
-                ->min(1)
+            ->info('The Graphite web server port')
+            ->defaultValue(8080)
+            ->min(1)
             ->end()
             ->enumNode('web_protocol')
-                ->info('The web protocol to use (http or https)')
-                ->values(['http', 'https'])
-                ->defaultValue('http')
+            ->info('The web protocol to use (http or https)')
+            ->values(['http', 'https'])
+            ->defaultValue('http')
             ->end()
             ->scalarNode('web_path')
-                ->info('The path to the render API')
-                ->defaultValue('/render')
-                ->cannotBeEmpty()
+            ->info('The path to the render API')
+            ->defaultValue('/render')
+            ->cannotBeEmpty()
             ->end()
             ->end();
     }

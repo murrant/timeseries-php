@@ -44,6 +44,11 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     protected RRDTagStrategyInterface $tagStrategy;
 
     /**
+     * @var bool Whether the driver is connected
+     */
+    protected bool $connected = false;
+
+    /**
      * @var ProcessFactoryInterface The process factory
      */
     protected ProcessFactoryInterface $processFactory;
@@ -432,6 +437,16 @@ class RRDtoolDriver extends AbstractTimeSeriesDB
     {
         $this->persistentProcess?->stop();
         $this->connected = false;
+    }
+
+    /**
+     * Check if connected to the database
+     *
+     * @return bool True if connected
+     */
+    public function isConnected(): bool
+    {
+        return $this->connected;
     }
 
     /**

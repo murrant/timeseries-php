@@ -36,7 +36,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB
         ?\TimeSeriesPhp\Contracts\Query\QueryBuilderInterface $queryBuilder = null,
         ?\Psr\Log\LoggerInterface $logger = null
     ) {
-        parent::__construct($queryBuilder ?? new \TimeSeriesPhp\Drivers\Graphite\Query\GraphiteQueryBuilder(), $logger ?? new \TimeSeriesPhp\Services\Logs\Logger());
+        parent::__construct($queryBuilder ?? new \TimeSeriesPhp\Drivers\Graphite\Query\GraphiteQueryBuilder, $logger ?? new \TimeSeriesPhp\Services\Logs\Logger);
 
         $this->graphiteQueryBuilderFactory = $queryBuilderFactory ?? new QueryBuilderFactory;
     }

@@ -50,6 +50,11 @@ class PrometheusDriver extends AbstractTimeSeriesDB
     private ?StreamFactoryInterface $streamFactory = null;
 
     /**
+     * @var bool Whether the driver is connected
+     */
+    private bool $connected = false;
+
+    /**
      * @var HttpClientFactoryInterface The HTTP client factory
      */
     private HttpClientFactoryInterface $httpClientFactory;

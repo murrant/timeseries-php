@@ -2,49 +2,109 @@
 
 namespace TimeSeriesPhp\Drivers\InfluxDB\Config;
 
+use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use TimeSeriesPhp\Core\Attributes\Config;
-use TimeSeriesPhp\Core\Config\AbstractConfig;
+use TimeSeriesPhp\Core\Driver\AbstractDriverConfiguration;
 use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
-use TimeSeriesPhp\Exceptions\Config\ConfigurationException;
 
+/**
+ * Configuration for the InfluxDB connection
+ */
 #[Config('influxdb_connection', InfluxDBDriver::class)]
-class ConnectionConfig extends AbstractConfig
+class ConnectionConfig extends AbstractDriverConfiguration
 {
-    protected array $defaults = [
-        'pool_size' => 10,
-        'max_idle_time' => 300, // seconds
-        'connection_lifetime' => 3600, // seconds
-        'health_check_interval' => 60, // seconds
-        'reconnect_on_failure' => true,
-        'circuit_breaker' => [
+    /**
+     * @param  int  $pool_size  Maximum number of connections in the pool
+     * @param  int  $max_idle_time  Maximum time in seconds a connection can be idle
+     * @param  int  $connection_lifetime  Maximum lifetime of a connection in seconds
+     * @param  int  $health_check_interval  Interval in seconds between health checks
+     * @param  bool  $reconnect_on_failure  Whether to reconnect on failure
+     * @param  array<string, mixed>  $circuit_breaker  Circuit breaker configuration
+     */
+    public function __construct(
+        public readonly int $pool_size = 10,
+        public readonly int $max_idle_time = 300,
+        public readonly int $connection_lifetime = 3600,
+        public readonly int $health_check_interval = 60,
+        public readonly bool $reconnect_on_failure = true,
+        public readonly array $circuit_breaker = [
             'enabled' => false,
             'failure_threshold' => 5,
             'timeout' => 60,
             'recovery_timeout' => 300,
         ],
-    ];
+    ) {}
 
-    public function __construct(array $config = [])
+    /**
+     * Configure the schema for this driver
+     *
+     * @param  ArrayNodeDefinition  $rootNode  The root node
+     */
+    protected function configureSchema(ArrayNodeDefinition $rootNode): void
     {
-        $this->addValidator('pool_size', fn ($size) => is_int($size) && $size > 0 && $size <= 100);
-        $this->addValidator('max_idle_time', fn ($time) => is_int($time) && $time > 0);
-        $this->addValidator('connection_lifetime', fn ($time) => is_int($time) && $time > 0);
-        $this->addValidator('circuit_breaker', fn ($breaker) => is_array($breaker));
-
-        parent::__construct($config);
+        $rootNode
+            ->children()
+            ->integerNode('pool_size')
+            ->info('Maximum number of connections in the pool')
+            ->defaultValue(10)
+            ->min(1)
+            ->max(100)
+            ->end()
+            ->integerNode('max_idle_time')
+            ->info('Maximum time in seconds a connection can be idle')
+            ->defaultValue(300)
+            ->min(1)
+            ->end()
+            ->integerNode('connection_lifetime')
+            ->info('Maximum lifetime of a connection in seconds')
+            ->defaultValue(3600)
+            ->min(1)
+            ->end()
+            ->integerNode('health_check_interval')
+            ->info('Interval in seconds between health checks')
+            ->defaultValue(60)
+            ->min(1)
+            ->end()
+            ->booleanNode('reconnect_on_failure')
+            ->info('Whether to reconnect on failure')
+            ->defaultTrue()
+            ->end()
+            ->arrayNode('circuit_breaker')
+            ->info('Circuit breaker configuration')
+            ->addDefaultsIfNotSet()
+            ->children()
+            ->booleanNode('enabled')
+            ->info('Whether the circuit breaker is enabled')
+            ->defaultFalse()
+            ->end()
+            ->integerNode('failure_threshold')
+            ->info('Number of failures before opening the circuit')
+            ->defaultValue(5)
+            ->min(1)
+            ->end()
+            ->integerNode('timeout')
+            ->info('Time in seconds the circuit stays open')
+            ->defaultValue(60)
+            ->min(1)
+            ->end()
+            ->integerNode('recovery_timeout')
+            ->info('Time in seconds before attempting recovery')
+            ->defaultValue(300)
+            ->min(1)
+            ->end()
+            ->end()
+            ->end()
+            ->end();
     }
 
     /**
      * @return array<string, bool|float|int|string|null>
-     *
-     * @throws ConfigurationException
      */
     public function getCircuitBreakerConfig(): array
     {
-        $config = $this->getArray('circuit_breaker');
         $typedConfig = [];
 
-        foreach ($config as $key => $value) {
+        foreach ($this->circuit_breaker as $key => $value) {
             if (is_string($key)) {
                 if (is_bool($value) || is_float($value) || is_int($value) || is_string($value) || is_null($value)) {
                     $typedConfig[$key] = $value;
@@ -64,10 +124,10 @@ class ConnectionConfig extends AbstractConfig
     }
 
     /**
-     * @throws ConfigurationException
+     * Check if the circuit breaker is enabled
      */
     public function isCircuitBreakerEnabled(): bool
     {
-        return (bool) ($this->getArray('circuit_breaker')['enabled'] ?? false);
+        return (bool) ($this->circuit_breaker['enabled'] ?? false);
     }
 }

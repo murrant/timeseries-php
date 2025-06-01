@@ -19,30 +19,19 @@ class InfluxDBDriverTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->config = $this->createMock(InfluxDBConfig::class);
+        // Create a real instance of InfluxDBConfig with test values
+        $this->config = new InfluxDBConfig(
+            url: 'http://localhost:8086',
+            token: 'test-token',
+            org: 'test-org',
+            bucket: 'test-bucket',
+            timeout: 30,
+            verify_ssl: true,
+            debug: false
+        );
 
-        // Configure the mock to return expected values
-        $this->config->method('get')
-            ->willReturnMap([
-                ['url', null, 'http://localhost:8086'],
-                ['token', null, 'test-token'],
-                ['org', null, 'test-org'],
-                ['bucket', null, 'test-bucket'],
-                ['timeout', null, 30],
-                ['verify_ssl', null, true],
-                ['debug', null, false],
-            ]);
-
-        $this->config->method('getClientConfig')
-            ->willReturn([
-                'url' => 'http://localhost:8086',
-                'token' => 'test-token',
-                'bucket' => 'test-bucket',
-                'org' => 'test-org',
-                'timeout' => 30,
-                'verifySSL' => true,
-                'debug' => false,
-            ]);
+        // Create a mock logger
+        $mockLogger = $this->createMock(\Psr\Log\LoggerInterface::class);
 
         // Create a mock client
         $mockClient = $this->createMock(\InfluxDB2\Client::class);
@@ -64,16 +53,23 @@ class InfluxDBDriverTest extends TestCase
         $mockBucketsService->method('postBuckets')->willReturn($mockBucket);
 
         // Create a real instance of InfluxDBDriver with mocked methods
-        $this->driver = new class($mockClient, $mockWriteApi, $mockQueryApi, $mockBucketsService) extends InfluxDBDriver
+        $this->driver = new class($mockClient, $mockWriteApi, $mockQueryApi, $mockBucketsService, $mockLogger) extends InfluxDBDriver
         {
             /**
              * @param  \InfluxDB2\Client  $mockClient
              * @param  \InfluxDB2\WriteApi  $mockWriteApi
              * @param  \InfluxDB2\QueryApi  $mockQueryApi
              * @param  \InfluxDB2\Service\BucketsService  $mockBucketsService
+             * @param  \Psr\Log\LoggerInterface  $mockLogger
              */
-            public function __construct($mockClient, $mockWriteApi, $mockQueryApi, $mockBucketsService)
+            public function __construct($mockClient, $mockWriteApi, $mockQueryApi, $mockBucketsService, $mockLogger)
             {
+                // Bypass the parent constructor to avoid the inconsistency
+                // Set required properties directly
+                $this->queryBuilder = new InfluxDBQueryBuilder('test-bucket');
+                $this->logger = $mockLogger;
+
+                // Set up the mocked properties
                 $this->client = $mockClient;
                 $this->writeApi = $mockWriteApi;
                 $this->queryApi = $mockQueryApi;
@@ -81,7 +77,6 @@ class InfluxDBDriverTest extends TestCase
                 $this->org = 'test-org';
                 $this->bucket = 'test-bucket';
                 $this->connected = true;
-                $this->queryBuilder = new InfluxDBQueryBuilder('test-bucket');
             }
 
             protected function doConnect(): bool

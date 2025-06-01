@@ -51,6 +51,11 @@ class InfluxDBDriver extends AbstractTimeSeriesDB
     protected string $bucket = '';
 
     /**
+     * @var bool Whether the driver is connected
+     */
+    protected bool $connected = false;
+
+    /**
      * @var ClientFactoryInterface The client factory
      */
     protected ClientFactoryInterface $clientFactory;
