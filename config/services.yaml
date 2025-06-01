@@ -46,3 +46,16 @@ services:
     Namespace\ImportService:
         arguments:
             - '@service_container'
+
+    Psr\Http\Client\ClientInterface:
+        class: Http\Adapter\Guzzle7\Client
+        arguments: ['@http_client']
+
+    Psr\Http\Message\RequestFactoryInterface:
+        class: Nyholm\Psr7\Factory\Psr17Factory
+
+    Psr\Http\Message\UriFactoryInterface:
+        class: Nyholm\Psr7\Factory\Psr17Factory
+
+    http_client:
+        class: GuzzleHttp\Client

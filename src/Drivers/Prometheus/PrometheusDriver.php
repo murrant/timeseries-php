@@ -4,7 +4,6 @@ namespace TimeSeriesPhp\Drivers\Prometheus;
 
 use Exception;
 use Psr\Http\Client\ClientExceptionInterface;
-use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\UriFactoryInterface;
 use Psr\Log\LoggerInterface;
@@ -29,7 +28,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB implements ConfigurableInter
     private bool $connected = false;
 
     public function __construct(
-        protected ClientInterface $client,
+        protected \Psr\Http\Client\ClientInterface $client,
         protected RequestFactoryInterface $requestFactory,
         protected UriFactoryInterface $uriFactory,
         protected PrometheusConfig $config,
