@@ -40,7 +40,7 @@ class ConfigurationManager
     /**
      * Get the entire configuration
      *
-     * @return array The entire configuration
+     * @return array<string, mixed> The entire configuration
      */
     public function getConfig(): array
     {
@@ -73,19 +73,29 @@ class ConfigurationManager
     /**
      * Get the default driver configuration
      *
-     * @return array The default driver configuration
+     * @return array<string, mixed> The default driver configuration
      *
      * @throws ConfigurationException If the default driver is not configured
      */
     public function getDefaultDriverConfig(): array
     {
         $defaultDriver = $this->get('default_driver');
+
+        if (! is_string($defaultDriver)) {
+            throw new ConfigurationException('Default driver must be a string');
+        }
+
         $driverConfig = $this->get("drivers.$defaultDriver");
 
         if ($driverConfig === null) {
             throw new ConfigurationException("Default driver '$defaultDriver' is not configured");
         }
 
+        if (! is_array($driverConfig)) {
+            throw new ConfigurationException("Configuration for driver '$defaultDriver' must be an array");
+        }
+
+        /** @var array<string, mixed> $driverConfig */
         return $driverConfig;
     }
 
@@ -93,7 +103,7 @@ class ConfigurationManager
      * Get a specific driver configuration
      *
      * @param  string  $driver  The driver name
-     * @return array The driver configuration
+     * @return array<string, mixed> The driver configuration
      *
      * @throws ConfigurationException If the driver is not configured
      */
@@ -105,6 +115,11 @@ class ConfigurationManager
             throw new ConfigurationException("Driver '$driver' is not configured");
         }
 
+        if (! is_array($driverConfig)) {
+            throw new ConfigurationException("Configuration for driver '$driver' must be an array");
+        }
+
+        /** @var array<string, mixed> $driverConfig */
         return $driverConfig;
     }
 }

@@ -29,7 +29,6 @@ class NullDriver extends AbstractTimeSeriesDB implements ConfigurableInterface
         parent::__construct($queryBuilder, $logger);
     }
 
-
     /**
      * @var bool Whether the driver is connected
      */

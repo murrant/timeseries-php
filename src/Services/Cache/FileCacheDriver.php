@@ -6,6 +6,7 @@ namespace TimeSeriesPhp\Services\Cache;
 
 use TimeSeriesPhp\Contracts\Cache\CacheDriverInterface;
 use TimeSeriesPhp\Core\Attributes\CacheDriver;
+use TimeSeriesPhp\Utils\Convert;
 
 /**
  * File-based cache driver implementation
@@ -21,11 +22,11 @@ class FileCacheDriver implements CacheDriverInterface
     /**
      * Create a new FileCacheDriver instance
      *
-     * @param  array  $config  Driver-specific configuration
+     * @param  array<string, mixed>  $config  Driver-specific configuration
      */
     public function __construct(array $config)
     {
-        $this->directory = $config['directory'] ?? sys_get_temp_dir().'/tsdb_cache';
+        $this->directory = Convert::toString($config['directory'] ?? sys_get_temp_dir().'/tsdb_cache');
 
         // Ensure the cache directory exists
         if (! is_dir($this->directory)) {
@@ -106,10 +107,21 @@ class FileCacheDriver implements CacheDriverInterface
         );
 
         foreach ($files as $file) {
+            // Ensure $file is a SplFileInfo object
+            if (! $file instanceof \SplFileInfo) {
+                continue;
+            }
+
             if ($file->isDir()) {
-                rmdir($file->getRealPath());
+                $path = $file->getRealPath();
+                if (is_string($path)) {
+                    rmdir($path);
+                }
             } else {
-                unlink($file->getRealPath());
+                $path = $file->getRealPath();
+                if (is_string($path)) {
+                    unlink($path);
+                }
             }
         }
 
@@ -171,7 +183,17 @@ class FileCacheDriver implements CacheDriverInterface
         try {
             $data = unserialize($content);
 
-            return is_array($data) ? $data : null;
+            if (! is_array($data)) {
+                return null;
+            }
+
+            // Ensure the array has the expected structure
+            if (! isset($data['value']) || ! array_key_exists('expires', $data)) {
+                return null;
+            }
+
+            /** @var array<string, mixed> $data */
+            return $data;
         } catch (\Exception $e) {
             return null;
         }

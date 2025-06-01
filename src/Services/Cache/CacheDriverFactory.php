@@ -44,7 +44,7 @@ class CacheDriverFactory
         $driverConfig = $config[$driver] ?? [];
 
         return match ($driver) {
-            'array' => new ArrayCacheDriver($driverConfig),
+            'array' => new ArrayCacheDriver,
             'file' => new FileCacheDriver($driverConfig),
             default => $this->resolveCustomDriver($driver, $driverConfig),
         };

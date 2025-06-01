@@ -75,6 +75,7 @@ abstract class AbstractDriverConfiguration implements ConfigurationInterface
 
         /** @var Config $config */
         $config = $attributes[0]->newInstance();
+
         return $config->name;
     }
 
@@ -115,7 +116,7 @@ abstract class AbstractDriverConfiguration implements ConfigurationInterface
         $reflection = new \ReflectionClass(static::class);
         $constructor = $reflection->getConstructor();
 
-        if (!$constructor) {
+        if (! $constructor) {
             return $reflection->newInstance();
         }
 

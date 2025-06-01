@@ -15,12 +15,11 @@ use TimeSeriesPhp\Core\Driver\AbstractDriverConfiguration;
 class NullConfig extends AbstractDriverConfiguration
 {
     /**
-     * @param bool $debug Enable debug mode
+     * @param  bool  $debug  Enable debug mode
      */
     public function __construct(
         public readonly bool $debug = false,
     ) {}
-
 
     /**
      * Configure the schema for this driver

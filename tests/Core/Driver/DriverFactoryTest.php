@@ -54,7 +54,7 @@ class DriverFactoryTest extends TestCase
     public function test_create_driver_by_name(): void
     {
         // Create a driver by name
-        $driver = $this->factory->create('example', ['database' => 'test_db']);
+        $driver = $this->factory->create('null', ['database' => 'test_db']);
 
         // Assert that the driver is an instance of TimeSeriesInterface
         $this->assertInstanceOf(TimeSeriesInterface::class, $driver);
@@ -69,15 +69,16 @@ class DriverFactoryTest extends TestCase
     public function test_create_driver_with_configuration(): void
     {
         // Create a driver with configuration
-        $driver = $this->factory->create('example', [
+        $driver = $this->factory->create('null', [
             'database' => 'test_db',
             'host' => 'example.com',
             'port' => 8086,
             'username' => 'user',
             'password' => 'pass',
-            'use_ssl' => true,
-            'timeout' => 60,
-            'mode' => 'advanced',
+            'debug' => true,
+            'options' => [
+                'custom_option' => 'value',
+            ],
         ]);
 
         // Assert that the driver is an instance of NullDriver

@@ -19,16 +19,6 @@ class ArrayCacheDriver implements CacheDriverInterface
     private array $cache = [];
 
     /**
-     * Create a new ArrayCacheDriver instance
-     *
-     * @param  array  $config  Driver-specific configuration
-     */
-    public function __construct(array $config = [])
-    {
-        // Array driver doesn't need any specific configuration
-    }
-
-    /**
      * {@inheritdoc}
      */
     public function get(string $key, mixed $default = null): mixed

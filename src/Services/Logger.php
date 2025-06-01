@@ -7,6 +7,7 @@ namespace TimeSeriesPhp\Services;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
 use TimeSeriesPhp\Exceptions\TSDBException;
+use TimeSeriesPhp\Utils\Convert;
 
 /**
  * PSR-3 compatible logger implementation
@@ -60,22 +61,23 @@ class Logger extends AbstractLogger
     /**
      * Create a new Logger instance
      *
-     * @param  array  $config  The logger configuration
+     * @param  array<string, mixed>  $config  The logger configuration
      */
     public function __construct(array $config)
     {
-        $this->minLevel = $config['level'] ?? LogLevel::INFO;
-        $this->file = $config['file'] ?? null;
-        $this->maxSize = $config['max_size'] ?? 10485760; // 10MB
-        $this->maxFiles = $config['max_files'] ?? 5;
-        $this->timestamps = $config['timestamps'] ?? true;
-        $this->format = $config['format'] ?? 'simple';
+        $this->minLevel = Convert::toString($config['level'] ?? LogLevel::INFO);
+        $this->file = Convert::toString($config['file'] ?? null);
+        $this->maxSize = Convert::toInt($config['max_size'] ?? 10485760); // 10MB
+        $this->maxFiles = Convert::toInt($config['max_files'] ?? 5);
+        $this->timestamps = Convert::toBool($config['timestamps'] ?? true);
+        $this->format = Convert::toString($config['format'] ?? 'simple');
     }
 
     /**
      * Logs with an arbitrary level.
      *
-     * @param  mixed  $level
+     * @param  string|int  $level
+     * @param array<string, mixed> $context
      *
      * @throws TSDBException If the log cannot be written
      */
@@ -96,19 +98,23 @@ class Logger extends AbstractLogger
         }
 
         try {
+            // At this point, we know $this->file is not null, but we need to assert this for static analysis
+            assert($this->file !== null);
+            $filePath = $this->file; // Create a local variable that PHPStan can track
+
             // Check if we need to rotate the log file
-            if (file_exists($this->file) && filesize($this->file) > $this->maxSize) {
+            if (file_exists($filePath) && filesize($filePath) > $this->maxSize) {
                 $this->rotateLogFile();
             }
 
             // Ensure the directory exists
-            $dir = dirname($this->file);
+            $dir = dirname($filePath);
             if (! is_dir($dir)) {
                 mkdir($dir, 0755, true);
             }
 
             // Append to the log file
-            file_put_contents($this->file, $logMessage.PHP_EOL, FILE_APPEND | LOCK_EX);
+            file_put_contents($filePath, $logMessage.PHP_EOL, FILE_APPEND | LOCK_EX);
         } catch (\Exception $e) {
             throw new TSDBException('Failed to write to log file: '.$e->getMessage(), 0, $e);
         }
@@ -119,7 +125,7 @@ class Logger extends AbstractLogger
      *
      * @param  string  $level  The log level
      * @param  string|\Stringable  $message  The log message
-     * @param  array  $context  The log context
+     * @param  array<string, mixed>  $context  The log context
      * @return string The formatted log message
      */
     private function formatMessage(string $level, string|\Stringable $message, array $context): string
@@ -134,14 +140,14 @@ class Logger extends AbstractLogger
                 'level' => $level,
                 'message' => $message,
                 'context' => $context,
-            ]);
+            ]) ?: '';
         } elseif ($this->format === 'detailed') {
             return sprintf(
                 '%s[%s] %s %s',
                 $timestamp,
                 strtoupper($level),
                 $message,
-                ! empty($context) ? json_encode($context) : ''
+                ! empty($context) ? (json_encode($context) ?: '') : ''
             );
         } else {
             // Simple format
@@ -153,7 +159,7 @@ class Logger extends AbstractLogger
      * Interpolate context values into the message placeholders
      *
      * @param  string  $message  The message with placeholders
-     * @param  array  $context  The context array
+     * @param  array<string, mixed>  $context  The context array
      * @return string The interpolated message
      */
     private function interpolate(string $message, array $context): string
@@ -172,9 +178,15 @@ class Logger extends AbstractLogger
 
     /**
      * Rotate the log file
+     *
+     * @throws TSDBException If the log file path is null
      */
     private function rotateLogFile(): void
     {
+        if ($this->file === null) {
+            throw new TSDBException('Cannot rotate log file: file path is null');
+        }
+
         // Remove the oldest log file if we've reached the maximum number of files
         $oldestLog = $this->file.'.'.$this->maxFiles;
         if (file_exists($oldestLog)) {

@@ -32,4 +32,14 @@ class Convert
     {
         return (string) (is_scalar($value) ? $value : self::toScalar($value));
     }
+
+    public static function toInt(mixed $param): int
+    {
+        return (int) self::toScalar($param);
+    }
+
+    public static function toBool(mixed $timestamps): bool
+    {
+        return (bool) self::toScalar($timestamps);
+    }
 }
