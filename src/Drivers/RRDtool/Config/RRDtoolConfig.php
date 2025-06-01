@@ -2,59 +2,54 @@
 
 namespace TimeSeriesPhp\Drivers\RRDtool\Config;
 
+use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use TimeSeriesPhp\Core\Attributes\Config;
-use TimeSeriesPhp\Core\Config\AbstractConfig;
+use TimeSeriesPhp\Core\Driver\AbstractDriverConfiguration;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
 use TimeSeriesPhp\Exceptions\Config\ConfigurationException;
 
+/**
+ * Configuration for the RRDtool driver
+ */
 #[Config('rrdtool', RRDtoolDriver::class)]
-class RRDtoolConfig extends AbstractConfig
+class RRDtoolConfig extends AbstractDriverConfiguration
 {
-    protected array $defaults = [
-        'rrdtool_path' => 'rrdtool',
-        'rrd_dir' => '/tmp/rrd',
-        'use_rrdcached' => false,
-        'persistent_process' => true,
-        'command_timeout' => 180,
-        'rrdcached_address' => '',
-        'default_step' => 300,
-        'debug' => false,
-        'graph_output' => 'string', // or file
-        'tag_strategy' => FileNameStrategy::class,
-        'default_archives' => [
+    /**
+     * @param  string  $rrdtool_path  Path to the rrdtool executable
+     * @param  string  $rrd_dir  Directory to store RRD files
+     * @param  bool  $use_rrdcached  Whether to use rrdcached
+     * @param  bool  $persistent_process  Whether to use a persistent rrdtool process
+     * @param  int  $command_timeout  Command timeout in seconds
+     * @param  string  $rrdcached_address  The rrdcached address
+     * @param  int  $default_step  Default step in seconds
+     * @param  bool  $debug  Enable debug mode
+     * @param  string  $graph_output  Graph output format
+     * @param  string  $tag_strategy  Tag strategy class
+     * @param  array<string>  $default_archives  Default RRD archives
+     */
+    public function __construct(
+        public readonly string $rrdtool_path = 'rrdtool',
+        public readonly string $rrd_dir = '/tmp/rrd',
+        public readonly bool $use_rrdcached = false,
+        public readonly bool $persistent_process = true,
+        public readonly int $command_timeout = 180,
+        public readonly string $rrdcached_address = '',
+        public readonly int $default_step = 300,
+        public readonly bool $debug = false,
+        public readonly string $graph_output = 'string',
+        public readonly string $tag_strategy = FileNameStrategy::class,
+        public readonly array $default_archives = [
             'RRA:AVERAGE:0.5:1:2016',      // 5min for 1 week
             'RRA:AVERAGE:0.5:12:1488',     // 1hour for 2 months
             'RRA:AVERAGE:0.5:288:366',     // 1day for 1 year
             'RRA:MAX:0.5:1:2016',          // 5min max for 1 week
             'RRA:MAX:0.5:12:1488',         // 1hour max for 2 months
             'RRA:MIN:0.5:1:2016',          // 5min min for 1 week
-            'RRA:MIN:0.5:12:1488',          // 1hour min for 2 months
+            'RRA:MIN:0.5:12:1488',         // 1hour min for 2 months
         ],
-    ];
-
-    protected array $required = ['rrd_dir'];
-
-    public function __construct(array $config = [])
-    {
-        $this->addValidator('rrdtool_path', fn ($path) => is_string($path) && ! empty($path));
-        $this->addValidator('rrd_dir', fn ($dir) => is_string($dir) && ! empty($dir));
-        $this->addValidator('debug', fn ($debug) => is_bool($debug));
-        $this->addValidator('graph_output', fn ($out) => is_string($out) && in_array($out, ['string', 'file']));
-        $this->addValidator('use_rrdcached', fn ($use) => is_bool($use));
-        $this->addValidator('persistent_process', fn ($persistent) => is_bool($persistent));
-        $this->addValidator('command_timeout', fn ($timeout) => is_int($timeout) && $timeout >= 0);
-        $this->addValidator('rrdcached_address', fn ($address) => ! ($this->getBool('use_rrdcached') && empty($address)));
-        $this->addValidator('default_step', fn ($step) => is_int($step) && $step > 0);
-        $this->addValidator('default_archives', fn ($archives) => is_array($archives) && ! empty($archives));
-        $this->addValidator('tag_strategy', function ($strategy) {
-            return is_string($strategy) && class_exists($strategy) &&
-                   is_subclass_of($strategy, RRDTagStrategyInterface::class);
-        });
-
-        parent::__construct($config);
-    }
+    ) {}
 
     /**
      * Get the tag strategy instance
@@ -63,13 +58,83 @@ class RRDtoolConfig extends AbstractConfig
      */
     public function getTagStrategy(): RRDTagStrategyInterface
     {
-        $strategyClass = $this->getString('tag_strategy');
-        $instance = new $strategyClass;
+        $instance = new $this->tag_strategy;
 
         if (! $instance instanceof RRDTagStrategyInterface) {
             throw new ConfigurationException('Invalid tag strategy class, must implement RRDTagStrategyInterface');
         }
 
         return $instance;
+    }
+
+    /**
+     * Configure the schema for this driver
+     *
+     * @param  ArrayNodeDefinition  $rootNode  The root node
+     */
+    protected function configureSchema(ArrayNodeDefinition $rootNode): void
+    {
+        $rootNode
+            ->children()
+            ->scalarNode('rrdtool_path')
+            ->info('Path to the rrdtool executable')
+            ->defaultValue('rrdtool')
+            ->cannotBeEmpty()
+            ->end()
+            ->scalarNode('rrd_dir')
+            ->info('Directory to store RRD files')
+            ->isRequired()
+            ->cannotBeEmpty()
+            ->end()
+            ->booleanNode('use_rrdcached')
+            ->info('Whether to use rrdcached')
+            ->defaultFalse()
+            ->end()
+            ->booleanNode('persistent_process')
+            ->info('Whether to use a persistent rrdtool process')
+            ->defaultTrue()
+            ->end()
+            ->integerNode('command_timeout')
+            ->info('Command timeout in seconds')
+            ->defaultValue(180)
+            ->min(0)
+            ->end()
+            ->scalarNode('rrdcached_address')
+            ->info('The rrdcached address')
+            ->defaultValue('')
+            ->end()
+            ->integerNode('default_step')
+            ->info('Default step in seconds')
+            ->defaultValue(300)
+            ->min(1)
+            ->end()
+            ->booleanNode('debug')
+            ->info('Enable debug mode')
+            ->defaultFalse()
+            ->end()
+            ->enumNode('graph_output')
+            ->info('Graph output format')
+            ->values(['string', 'file'])
+            ->defaultValue('string')
+            ->end()
+            ->scalarNode('tag_strategy')
+            ->info('Tag strategy class')
+            ->defaultValue(FileNameStrategy::class)
+            ->cannotBeEmpty()
+            ->end()
+            ->arrayNode('default_archives')
+            ->info('Default RRD archives')
+            ->prototype('scalar')->end()
+            ->defaultValue([
+                'RRA:AVERAGE:0.5:1:2016',      // 5min for 1 week
+                'RRA:AVERAGE:0.5:12:1488',     // 1hour for 2 months
+                'RRA:AVERAGE:0.5:288:366',     // 1day for 1 year
+                'RRA:MAX:0.5:1:2016',          // 5min max for 1 week
+                'RRA:MAX:0.5:12:1488',         // 1hour max for 2 months
+                'RRA:MIN:0.5:1:2016',          // 5min min for 1 week
+                'RRA:MIN:0.5:12:1488',         // 1hour min for 2 months
+            ])
+            ->end()
+            ->end();
     }
 }

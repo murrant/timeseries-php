@@ -19,7 +19,7 @@ class StreamFactoryFactory implements StreamFactoryFactoryInterface
     /**
      * Constructor
      *
-     * @param ContainerInterface|null $container The service container
+     * @param  ContainerInterface|null  $container  The service container
      */
     public function __construct(?ContainerInterface $container = null)
     {
