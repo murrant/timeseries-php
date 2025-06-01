@@ -4,50 +4,59 @@ namespace TimeSeriesPhp\Tests\Drivers\Graphite;
 
 use DateTime;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Query\Query;
 use TimeSeriesPhp\Core\Query\RawQuery;
 use TimeSeriesPhp\Drivers\Graphite\Config\GraphiteConfig;
+use TimeSeriesPhp\Drivers\Graphite\Factory\QueryBuilderFactory;
 use TimeSeriesPhp\Drivers\Graphite\GraphiteDriver;
 use TimeSeriesPhp\Drivers\Graphite\Query\GraphiteQueryBuilder;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 
+/**
+ * Test for the GraphiteDriver
+ */
 class GraphiteDriverTest extends TestCase
 {
     private GraphiteDriver $driver;
 
     private GraphiteConfig $config;
 
+    private LoggerInterface $logger;
+
     protected function setUp(): void
     {
-        $this->config = $this->createMock(GraphiteConfig::class);
+        // Create a real GraphiteConfig instance with default values
+        $this->config = new GraphiteConfig(
+            host: 'localhost',
+            port: 2003,
+            protocol: 'tcp',
+            timeout: 30,
+            prefix: '',
+            batch_size: 500,
+            web_host: 'localhost',
+            web_port: 8080,
+            web_protocol: 'http',
+            web_path: '/render'
+        );
 
-        // Configure the mock to return expected values
-        $this->config->method('get')
-            ->willReturnMap([
-                ['host', null, 'localhost'],
-                ['port', null, 2003],
-                ['protocol', null, 'tcp'],
-                ['timeout', null, 30],
-                ['prefix', null, ''],
-                ['batch_size', null, 500],
-                ['web_host', null, 'localhost'],
-                ['web_port', null, 8080],
-                ['web_protocol', null, 'http'],
-                ['web_path', null, '/render'],
-            ]);
+        // Create a mock logger
+        $this->logger = $this->createMock(LoggerInterface::class);
 
-        $this->config->method('getWebUrl')
-            ->willReturn('http://localhost:8080/render');
+        // Create a query builder factory
+        $queryBuilderFactory = new QueryBuilderFactory();
+
+        // Create a query builder
+        $queryBuilder = new GraphiteQueryBuilder();
 
         // Create a real instance of GraphiteDriver with mocked methods
-        $this->driver = new class extends GraphiteDriver
+        $this->driver = new class($queryBuilderFactory, $queryBuilder, $this->logger) extends GraphiteDriver
         {
             protected function doConnect(): bool
             {
                 $this->connected = true;
-                $this->queryBuilder = new GraphiteQueryBuilder;
 
                 return true;
             }

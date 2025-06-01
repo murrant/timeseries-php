@@ -28,13 +28,15 @@ class GraphiteDriver extends AbstractTimeSeriesDB
      * Constructor
      *
      * @param  QueryBuilderFactoryInterface|null  $queryBuilderFactory  The query builder factory
-     * @param  \TimeSeriesPhp\Contracts\Query\QueryBuilderInterface|null  $parentQueryBuilderFactory  The parent query builder factory
+     * @param  \TimeSeriesPhp\Contracts\Query\QueryBuilderInterface|null  $queryBuilder  The query builder
+     * @param  \Psr\Log\LoggerInterface|null  $logger  The logger
      */
     public function __construct(
         ?QueryBuilderFactoryInterface $queryBuilderFactory = null,
-        ?\TimeSeriesPhp\Contracts\Query\QueryBuilderInterface $parentQueryBuilderFactory = null
+        ?\TimeSeriesPhp\Contracts\Query\QueryBuilderInterface $queryBuilder = null,
+        ?\Psr\Log\LoggerInterface $logger = null
     ) {
-        parent::__construct($parentQueryBuilderFactory);
+        parent::__construct($queryBuilder ?? new \TimeSeriesPhp\Drivers\Graphite\Query\GraphiteQueryBuilder(), $logger ?? new \TimeSeriesPhp\Services\Logs\Logger());
 
         $this->graphiteQueryBuilderFactory = $queryBuilderFactory ?? new QueryBuilderFactory;
     }
@@ -59,6 +61,11 @@ class GraphiteDriver extends AbstractTimeSeriesDB
     protected string $webUrl = '';
 
     /**
+     * @var bool Whether the driver is connected
+     */
+    protected bool $connected = false;
+
+    /**
      * @throws ConfigurationException
      */
     protected function doConnect(): bool
@@ -68,12 +75,12 @@ class GraphiteDriver extends AbstractTimeSeriesDB
         }
 
         try {
-            $this->host = $this->config->getString('host');
-            $this->port = $this->config->getInt('port');
-            $this->protocol = $this->config->getString('protocol');
-            $this->timeout = $this->config->getInt('timeout');
-            $this->prefix = $this->config->getString('prefix');
-            $this->batchSize = $this->config->getInt('batch_size');
+            $this->host = $this->config->host;
+            $this->port = $this->config->port;
+            $this->protocol = $this->config->protocol;
+            $this->timeout = $this->config->timeout;
+            $this->prefix = $this->config->prefix;
+            $this->batchSize = $this->config->batch_size;
             $this->webUrl = $this->config->getWebUrl();
 
             // Initialize query builder

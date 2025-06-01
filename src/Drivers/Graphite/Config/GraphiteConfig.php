@@ -2,46 +2,101 @@
 
 namespace TimeSeriesPhp\Drivers\Graphite\Config;
 
+use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use TimeSeriesPhp\Core\Attributes\Config;
-use TimeSeriesPhp\Core\Config\AbstractConfig;
+use TimeSeriesPhp\Core\Driver\AbstractDriverConfiguration;
 use TimeSeriesPhp\Drivers\Graphite\GraphiteDriver;
-use TimeSeriesPhp\Exceptions\Config\ConfigurationException;
 
+/**
+ * Configuration for the Graphite driver
+ */
 #[Config('graphite', GraphiteDriver::class)]
-class GraphiteConfig extends AbstractConfig
+class GraphiteConfig extends AbstractDriverConfiguration
 {
-    protected array $defaults = [
-        'host' => 'localhost',
-        'port' => 2003,
-        'protocol' => 'tcp',
-        'timeout' => 30,
-        'prefix' => '',
-        'batch_size' => 500,
-        'web_host' => 'localhost',
-        'web_port' => 8080,
-        'web_protocol' => 'http',
-        'web_path' => '/render',
-    ];
-
-    protected array $required = ['host', 'port'];
+    /**
+     * @param string $host The Graphite server host
+     * @param int $port The Graphite server port
+     * @param string $protocol The protocol to use (tcp or udp)
+     * @param int $timeout Connection timeout in seconds
+     * @param string $prefix Prefix for metrics
+     * @param int $batch_size Maximum number of metrics to send in a batch
+     * @param string $web_host The Graphite web server host
+     * @param int $web_port The Graphite web server port
+     * @param string $web_protocol The web protocol to use (http or https)
+     * @param string $web_path The path to the render API
+     */
+    public function __construct(
+        public readonly string $host = 'localhost',
+        public readonly int $port = 2003,
+        public readonly string $protocol = 'tcp',
+        public readonly int $timeout = 30,
+        public readonly string $prefix = '',
+        public readonly int $batch_size = 500,
+        public readonly string $web_host = 'localhost',
+        public readonly int $web_port = 8080,
+        public readonly string $web_protocol = 'http',
+        public readonly string $web_path = '/render',
+    ) {}
 
     /**
-     * @throws ConfigurationException
+     * Configure the schema for this driver
+     *
+     * @param ArrayNodeDefinition $rootNode The root node
      */
-    public function __construct(array $config = [])
+    protected function configureSchema(ArrayNodeDefinition $rootNode): void
     {
-        $this->addValidator('host', fn ($host) => is_string($host) && ! empty($host));
-        $this->addValidator('port', fn ($port) => is_int($port) && $port > 0);
-        $this->addValidator('protocol', fn ($protocol) => in_array($protocol, ['tcp', 'udp']));
-        $this->addValidator('timeout', fn ($timeout) => is_int($timeout) && $timeout > 0);
-        $this->addValidator('prefix', fn ($prefix) => is_string($prefix));
-        $this->addValidator('batch_size', fn ($size) => is_int($size) && $size > 0);
-        $this->addValidator('web_host', fn ($host) => is_string($host) && ! empty($host));
-        $this->addValidator('web_port', fn ($port) => is_int($port) && $port > 0);
-        $this->addValidator('web_protocol', fn ($protocol) => in_array($protocol, ['http', 'https']));
-        $this->addValidator('web_path', fn ($path) => is_string($path) && ! empty($path));
-
-        parent::__construct($config);
+        $rootNode
+            ->children()
+            ->scalarNode('host')
+                ->info('The Graphite server host')
+                ->defaultValue('localhost')
+                ->cannotBeEmpty()
+            ->end()
+            ->integerNode('port')
+                ->info('The Graphite server port')
+                ->defaultValue(2003)
+                ->min(1)
+            ->end()
+            ->enumNode('protocol')
+                ->info('The protocol to use (tcp or udp)')
+                ->values(['tcp', 'udp'])
+                ->defaultValue('tcp')
+            ->end()
+            ->integerNode('timeout')
+                ->info('Connection timeout in seconds')
+                ->defaultValue(30)
+                ->min(1)
+            ->end()
+            ->scalarNode('prefix')
+                ->info('Prefix for metrics')
+                ->defaultValue('')
+            ->end()
+            ->integerNode('batch_size')
+                ->info('Maximum number of metrics to send in a batch')
+                ->defaultValue(500)
+                ->min(1)
+            ->end()
+            ->scalarNode('web_host')
+                ->info('The Graphite web server host')
+                ->defaultValue('localhost')
+                ->cannotBeEmpty()
+            ->end()
+            ->integerNode('web_port')
+                ->info('The Graphite web server port')
+                ->defaultValue(8080)
+                ->min(1)
+            ->end()
+            ->enumNode('web_protocol')
+                ->info('The web protocol to use (http or https)')
+                ->values(['http', 'https'])
+                ->defaultValue('http')
+            ->end()
+            ->scalarNode('web_path')
+                ->info('The path to the render API')
+                ->defaultValue('/render')
+                ->cannotBeEmpty()
+            ->end()
+            ->end();
     }
 
     /**
@@ -49,7 +104,7 @@ class GraphiteConfig extends AbstractConfig
      */
     public function getConnectionString(): string
     {
-        return $this->getString('host').':'.$this->getInt('port');
+        return $this->host.':'.$this->port;
     }
 
     /**
@@ -57,6 +112,6 @@ class GraphiteConfig extends AbstractConfig
      */
     public function getWebUrl(): string
     {
-        return $this->getString('web_protocol').'://'.$this->getString('web_host').':'.$this->getInt('web_port').$this->getString('web_path');
+        return $this->web_protocol.'://'.$this->web_host.':'.$this->web_port.$this->web_path;
     }
 }

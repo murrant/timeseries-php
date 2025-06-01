@@ -318,4 +318,14 @@ class AggregateDriver extends AbstractTimeSeriesDB
 
         $this->connected = false;
     }
+
+    /**
+     * Check if connected to the database
+     *
+     * @return bool True if connected
+     */
+    public function isConnected(): bool
+    {
+        return $this->connected;
+    }
 }
