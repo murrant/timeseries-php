@@ -86,9 +86,6 @@ class AggregateDriverTest extends TestCase
             private $mockReadDb;
 
             /**
-             * @param  DriverFactory  $driverFactory
-             * @param  AggregateConfig  $config
-             * @param  LoggerInterface  $logger
              * @param  TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject  $mockWriteDb1
              * @param  TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject  $mockWriteDb2
              * @param  TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject  $mockReadDb
@@ -422,8 +419,6 @@ class AggregateDriverTest extends TestCase
             private $mockWriteDb2;
 
             /**
-             * @param  DriverFactory  $driverFactory
-             * @param  LoggerInterface  $logger
              * @param  TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject  $mockWriteDb1
              * @param  TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject  $mockWriteDb2
              */

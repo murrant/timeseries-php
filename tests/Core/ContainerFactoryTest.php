@@ -102,7 +102,7 @@ YAML;
         // Test that the container has the expected services
         $this->assertTrue($container->has(ConfigurationManager::class));
         $this->assertTrue($container->has('Psr\Log\LoggerInterface'));
-        $this->assertTrue($container->has('Psr\SimpleCache\CacheInterface'));;
+        $this->assertTrue($container->has('Psr\SimpleCache\CacheInterface'));
     }
 
     public function test_create_with_invalid_config_dir(): void

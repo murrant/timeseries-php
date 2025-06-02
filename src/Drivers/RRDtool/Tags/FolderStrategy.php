@@ -68,7 +68,7 @@ class FolderStrategy implements RRDTagStrategyInterface
 
         // optimize search path if possible
         $searchPath = $this->baseDir;
-        foreach ($this->folderTags as $index => $folderTag) {
+        foreach ($this->folderTags as $folderTag) {
             // Check if there are any OR conditions for this folder tag
             $hasOrCondition = false;
             foreach ($tagConditions as $tagCondition) {

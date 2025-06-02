@@ -1,27 +1,46 @@
 parameters:
-    rrdtool.tag_strategy.class:
-        file_name: TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy
-        folder: TimeSeriesPhp\Drivers\RRDtool\Tags\FolderStrategy
-        no_tags: TimeSeriesPhp\Drivers\RRDtool\Tags\NoTagsStrategy
+    rrdtool.rrdtool_path: 'rrdtool'
+    rrdtool.rrd_dir: '/tmp/rrd'
+    rrdtool.use_rrdcached: false
+    rrdtool.rrdcached_address: ''
+    rrdtool.persistent_process: true
+    rrdtool.default_step: 300
+    rrdtool.debug: false
+    rrdtool.command_timeout: 180
+    rrdtool.graph_output: 'string'
+    rrdtool.tag_strategy: TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy
+    rrdtool.default_archives:
+        - 'RRA:AVERAGE:0.5:1:2016'   # 5min for 1 week
+        - 'RRA:AVERAGE:0.5:12:1488'  # 1hour for 2 months
+        - 'RRA:AVERAGE:0.5:288:366'  # 1day for 1 year
+        - 'RRA:MAX:0.5:1:2016'       # 5min max for 1 week
+        - 'RRA:MAX:0.5:12:1488'      # 1hour max for 2 months
+        - 'RRA:MIN:0.5:1:2016'       # 5min min for 1 week
+        - 'RRA:MIN:0.5:12:1488'      # 1hour min for 2 months
 
 services:
-    _defaults:
-        autowire: true
-        autoconfigure: true
+    TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig:
+        arguments:
+            $persistent_process: '%rrdtool.persistent_process%'
+            $command_timeout: '%rrdtool.command_timeout%'
+            $rrdcached_address: '%rrdtool.rrdcached_address%'
+            $default_step: '%rrdtool.default_step%'
+            $debug: '%rrdtool.debug%'
+            $graph_output: '%rrdtool.graph_output%'
+            $tag_strategy: '%rrdtool.tag_strategy%'
+            $default_archives: '%rrdtool.default_archives%'
 
     TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface:
-        class: '%timeseriesphp.tag_strategy.class%'
-        arguments:
-            $strategy: '%timeseriesphp.tag_strategy%'
+        class: '%rrdtool.tag_strategy%'
 
     TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy:
         arguments:
-            $strategy: 'file_name'
+            $baseDir: '%rrdtool.rrd_dir%'
 
     TimeSeriesPhp\Drivers\RRDtool\Tags\FolderStrategy:
         arguments:
-            $strategy: 'folder'
+            $baseDir: '%rrdtool.rrd_dir%'
 
     TimeSeriesPhp\Drivers\RRDtool\Tags\NoTagsStrategy:
         arguments:
-            $strategy: 'no_tags'
+            $baseDir: '%rrdtool.rrd_dir%'

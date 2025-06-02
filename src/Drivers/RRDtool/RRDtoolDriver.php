@@ -32,6 +32,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
     protected RRDTagStrategyInterface $tagStrategy;
 
     protected bool $connected = false;
+
     protected RRDtoolQueryBuilder $rrdQueryBuilder;
 
     public function __construct(

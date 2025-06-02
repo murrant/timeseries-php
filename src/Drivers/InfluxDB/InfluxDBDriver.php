@@ -48,6 +48,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
      * @var bool Whether the driver is connected
      */
     protected bool $connected = false;
+
     protected InfluxDBQueryBuilder $influxQueryBuilder;
 
     public function __construct(

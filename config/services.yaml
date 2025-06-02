@@ -1,8 +1,13 @@
 # This file is the entry point to configure your own services.
 # Files in the packages/ directory configure your dependencies.
 
+imports:
+    # Import driver configs in the mono-repo
+    - { resource: '../src/Drivers/*/config/*.yaml' }
+
 parameters:
-    # Add your parameters here
+    # Default driver to use when none is specified
+    default_driver: 'influxdb'
 
 services:
     # Default configuration for services in *this* file

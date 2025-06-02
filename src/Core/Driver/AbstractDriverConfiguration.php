@@ -23,35 +23,7 @@ abstract class AbstractDriverConfiguration implements ConfigurationInterface
         $treeBuilder = new TreeBuilder($this->getConfigName());
         $rootNode = $treeBuilder->getRootNode();
 
-        // Define the base configuration schema
-        $rootNode
-            ->children()
-            ->scalarNode('host')
-            ->info('The host to connect to')
-            ->defaultValue('localhost')
-            ->end()
-            ->integerNode('port')
-            ->info('The port to connect to')
-            ->defaultNull()
-            ->end()
-            ->scalarNode('username')
-            ->info('The username to authenticate with')
-            ->defaultNull()
-            ->end()
-            ->scalarNode('password')
-            ->info('The password to authenticate with')
-            ->defaultNull()
-            ->end()
-            ->scalarNode('database')
-            ->info('The default database to use')
-            ->isRequired()
-            ->end()
-            ->arrayNode('options')
-            ->info('Additional options for the driver')
-            ->useAttributeAsKey('name')
-            ->variablePrototype()->end()
-            ->end()
-            ->end();
+        // Define the base configuration schema (none right now)
 
         // Allow drivers to extend the configuration schema
         $this->configureSchema($rootNode);

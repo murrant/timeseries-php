@@ -7,7 +7,6 @@ namespace TimeSeriesPhp\Core;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
-use TimeSeriesPhp\Core\DependencyInjection\CacheDriverCompilerPass;
 use TimeSeriesPhp\Core\DependencyInjection\DriverCompilerPass;
 use TimeSeriesPhp\Exceptions\TSDBException;
 
@@ -49,7 +48,6 @@ class ContainerFactory
 
             // Add compiler passes
             $container->addCompilerPass(new DriverCompilerPass);
-            $container->addCompilerPass(new CacheDriverCompilerPass);
 
             $loader = new YamlFileLoader($container, new FileLocator($configDir));
             $loader->load('services.yaml');
@@ -66,6 +64,7 @@ class ContainerFactory
             }
 
             $container->compile();
+            dump($container);
 
             return $container;
         } catch (\Exception $e) {

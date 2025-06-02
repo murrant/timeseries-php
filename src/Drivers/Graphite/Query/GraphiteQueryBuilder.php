@@ -166,7 +166,7 @@ class GraphiteQueryBuilder implements QueryBuilderInterface
         }
 
         // Handle ordering
-        foreach ($query->getOrderBy() as $field => $direction) {
+        foreach ($query->getOrderBy() as $direction) {
             $desc = strtoupper($direction) === 'DESC';
             if ($desc) {
                 $target = "sortByMaxima($target)";

@@ -162,7 +162,7 @@ class RRDtoolQueryBuilder implements QueryBuilderInterface
                 'FIRST' => $rawQuery->vdef($varName, 'v1,FIRST'),
                 'LAST' => $rawQuery->vdef($varName, 'v1,LAST'),
                 'STDDEV' => $this->buildStddevAggregation($rawQuery, $varName, $field),
-                default => str_starts_with($function, 'PERCENTILE_') ? (function () use ($rawQuery, $varName, $function) {
+                default => str_starts_with($function, 'PERCENTILE_') ? (function () use ($rawQuery, $varName, $function): void {
                     $percentile = floatval(substr($function, 11));
                     $rawQuery->vdef($varName, "v1,{$percentile},PERCENT");
                 })() : null,

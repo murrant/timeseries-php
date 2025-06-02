@@ -56,6 +56,7 @@ class GraphiteDriverTest extends TestCase
         {
             /** @var resource|null */
             private $socket = null;
+
             protected function doConnect(): bool
             {
                 $this->connected = true;
