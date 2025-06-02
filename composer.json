@@ -56,6 +56,12 @@
     "test:rector": "rector --dry-run",
     "test:unit": "phpunit",
     "test:integration": "phpunit --group=integration",
+    "integrate":
+    [
+      "@docker:up",
+      "@test:integration",
+      "@docker:down"
+    ],
     "test": [
       "@test:style",
       "@test:analyze",
