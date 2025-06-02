@@ -75,9 +75,45 @@ services:
       timeout: 10s
       retries: 3
 
+  # opentsdb (disabled by default)
+  # opentsdb:
+  #   image: petergrace/opentsdb-docker:latest
+  #   container_name: timeseries-php-opentsdb
+  #   ports:
+  #     - "4242:4242"
+  #   environment:
+  #     - HBASE_CONF=/etc/hbase
+  #   volumes:
+  #     - opentsdb-data:/data
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:4242"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+
+  # timescaledb (disabled by default)
+  # timescaledb:
+  #   image: timescale/timescaledb:latest-pg14
+  #   container_name: timeseries-php-timescaledb
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=secret
+  #     - POSTGRES_DB=timeseries
+  #   volumes:
+  #     - timescaledb-data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD", "pg_isready", "-U", "postgres"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+
 volumes:
   influxdb-data:
   prometheus-data:
   graphite-data:
   rrdcached-data:
   rrdcached-journal:
+  opentsdb-data:
+  timescaledb-data:
