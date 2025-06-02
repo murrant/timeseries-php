@@ -27,7 +27,7 @@ class TSDB
 
     private static ?ContainerInterface $container = null;
 
-    private LoggerInterface $logger;
+    private readonly LoggerInterface $logger;
 
     /**
      * Create a new TimeSeries instance

@@ -66,7 +66,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB implements ConfigurableInter
             return $this->connected;
         } catch (Exception $e) {
             $this->logger->error('Prometheus connection failed: '.$e->getMessage(), [
-                'exception' => get_class($e),
+                'exception' => $e::class,
                 'url' => $this->config->url,
             ]);
             $this->connected = false;
@@ -218,7 +218,7 @@ class PrometheusDriver extends AbstractTimeSeriesDB implements ConfigurableInter
         } catch (ClientExceptionInterface $e) {
             if ($this->config->debug) {
                 $this->logger->error('Prometheus API request failed: '.$e->getMessage(), [
-                    'exception' => get_class($e),
+                    'exception' => $e::class,
                     'url' => (string) $uri,
                     'params' => $params,
                 ]);

@@ -63,7 +63,7 @@ class GraphiteDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
             return true;
         } catch (\Exception $e) {
             $this->logger->error('Graphite connection failed: '.$e->getMessage(), [
-                'exception' => get_class($e),
+                'exception' => $e::class,
                 'host' => $this->config->host,
                 'port' => $this->config->port,
                 'protocol' => $this->config->protocol,

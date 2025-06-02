@@ -31,32 +31,32 @@ class Logger extends AbstractLogger
     /**
      * @var string The minimum log level to record
      */
-    private string $minLevel;
+    private readonly string $minLevel;
 
     /**
      * @var string The log file path (empty string for stderr)
      */
-    private string $file;
+    private readonly string $file;
 
     /**
      * @var int Maximum log file size before rotation
      */
-    private int $maxSize;
+    private readonly int $maxSize;
 
     /**
      * @var int Maximum number of log files to keep
      */
-    private int $maxFiles;
+    private readonly int $maxFiles;
 
     /**
      * @var bool Whether to include timestamps in log messages
      */
-    private bool $timestamps;
+    private readonly bool $timestamps;
 
     /**
      * @var string Log format (simple, detailed, json)
      */
-    private string $format;
+    private readonly string $format;
 
     /**
      * Create a new Logger instance

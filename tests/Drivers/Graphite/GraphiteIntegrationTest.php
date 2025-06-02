@@ -49,7 +49,7 @@ class GraphiteIntegrationTest extends TestCase
         $this->driver = new GraphiteDriver;
 
         try {
-            $connected = $this->driver->connect($this->config);
+            $connected = $this->driver->connect();
             if (! $connected) {
                 $this->markTestSkipped('Could not connect to Graphite at '.$graphiteHost.':'.$graphitePort);
             }

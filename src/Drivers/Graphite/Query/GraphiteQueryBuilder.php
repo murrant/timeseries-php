@@ -32,9 +32,7 @@ class GraphiteQueryBuilder implements QueryBuilderInterface
         } else {
             // For multiple fields, we need to use group() function
             if (count($fields) > 1) {
-                $fieldPaths = array_map(function ($field) use ($metricPath) {
-                    return '"'.$metricPath.'.'.$field.'"';
-                }, $fields);
+                $fieldPaths = array_map(fn($field) => '"'.$metricPath.'.'.$field.'"', $fields);
                 $target = 'group('.implode(', ', $fieldPaths).')';
             } else {
                 $target = $metricPath.'.'.$fields[0];

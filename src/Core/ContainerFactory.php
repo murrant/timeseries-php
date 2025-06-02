@@ -25,7 +25,7 @@ class ContainerFactory
      */
     public static function create(?string $configDir = null): ContainerBuilder
     {
-        $configDir = $configDir ?? dirname(__DIR__, 2).'/config';
+        $configDir ??= dirname(__DIR__, 2).'/config';
 
         try {
             $container = new ContainerBuilder;

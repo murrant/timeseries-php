@@ -94,7 +94,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
             return $this->connected;
         } catch (\Throwable $e) {
             $this->logger->error('InfluxDB connection failed: '.$e->getMessage(), [
-                'exception' => get_class($e),
+                'exception' => $e::class,
                 'org' => $this->config->org,
                 'bucket' => $this->config->bucket,
             ]);
@@ -228,7 +228,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
             return true;
         } catch (\Throwable $e) {
             $this->logger->error('Failed to create bucket: '.$e->getMessage(), [
-                'exception' => get_class($e),
+                'exception' => $e::class,
                 'database' => $database,
             ]);
 
@@ -259,7 +259,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
             return $bucketNames;
         } catch (\Throwable $e) {
             $this->logger->error('Failed to list buckets: '.$e->getMessage(), [
-                'exception' => get_class($e),
+                'exception' => $e::class,
             ]);
 
             throw new DatabaseException('Failed to list databases: '.$e->getMessage(), 0, $e);
@@ -288,7 +288,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
             return true;
         } catch (\Throwable $e) {
             $this->logger->error('Failed to delete measurement: '.$e->getMessage(), [
-                'exception' => get_class($e),
+                'exception' => $e::class,
                 'measurement' => $measurement,
                 'start' => $start ? $start->format('c') : null,
                 'stop' => $stop ? $stop->format('c') : null,

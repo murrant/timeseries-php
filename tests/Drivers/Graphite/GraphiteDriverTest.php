@@ -119,14 +119,14 @@ class GraphiteDriverTest extends TestCase
 
     public function test_connect(): void
     {
-        $result = $this->driver->connect($this->config);
+        $result = $this->driver->connect();
         $this->assertTrue($result);
         $this->assertTrue($this->driver->isConnected());
     }
 
     public function test_write(): void
     {
-        $this->driver->connect($this->config);
+        $this->driver->connect();
 
         $dataPoint = new DataPoint(
             'cpu',
@@ -155,7 +155,7 @@ class GraphiteDriverTest extends TestCase
 
     public function test_write_batch(): void
     {
-        $this->driver->connect($this->config);
+        $this->driver->connect();
 
         $dataPoints = [
             new DataPoint(
@@ -176,7 +176,7 @@ class GraphiteDriverTest extends TestCase
 
     public function test_query(): void
     {
-        $this->driver->connect($this->config);
+        $this->driver->connect();
 
         $query = new Query('cpu');
         $query->select(['usage'])
@@ -194,7 +194,7 @@ class GraphiteDriverTest extends TestCase
 
     public function test_raw_query(): void
     {
-        $this->driver->connect($this->config);
+        $this->driver->connect();
 
         $rawQuery = new RawQuery('target=cpu.usage&from=-1h&until=now&format=json');
         $result = $this->driver->rawQuery($rawQuery);
@@ -208,7 +208,7 @@ class GraphiteDriverTest extends TestCase
 
     public function test_create_database(): void
     {
-        $this->driver->connect($this->config);
+        $this->driver->connect();
 
         $result = $this->driver->createDatabase('test_db');
         $this->assertTrue($result);
@@ -216,7 +216,7 @@ class GraphiteDriverTest extends TestCase
 
     public function test_list_databases(): void
     {
-        $this->driver->connect($this->config);
+        $this->driver->connect();
 
         $databases = $this->driver->getDatabases();
         $this->assertEmpty($databases, 'Graphite should return an empty array of databases');
@@ -224,7 +224,7 @@ class GraphiteDriverTest extends TestCase
 
     public function test_close(): void
     {
-        $this->driver->connect($this->config);
+        $this->driver->connect();
         $this->driver->close();
 
         $this->assertFalse($this->driver->isConnected());

@@ -43,7 +43,7 @@ class PrometheusIntegrationTest extends TestCase
         $this->driver = new PrometheusDriver;
 
         try {
-            $connected = $this->driver->connect($this->config);
+            $connected = $this->driver->connect();
             if (! $connected) {
                 $this->markTestSkipped('Could not connect to Prometheus at '.$prometheusUrl);
             }

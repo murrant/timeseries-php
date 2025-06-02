@@ -5,23 +5,11 @@ namespace TimeSeriesPhp\Core\Data;
 class QueryResult
 {
     /**
-     * @var array<string, array<int, array{'date': int|string, 'value': ?scalar}>>
-     */
-    private array $series;
-
-    /**
-     * @var array<string, mixed>
-     */
-    private array $metadata;
-
-    /**
      * @param  array<string, array<int, array{'date': int|string, 'value': ?scalar}>>  $series
      * @param  array<string, mixed>  $metadata
      */
-    public function __construct(array $series = [], array $metadata = [])
+    public function __construct(private array $series = [], private readonly array $metadata = [])
     {
-        $this->series = $series;
-        $this->metadata = $metadata;
     }
 
     public function appendPoint(int|string $timestamp, string $field, float|int|string|bool|null $value): void

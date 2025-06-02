@@ -92,7 +92,7 @@ class InfluxDBIntegrationTest extends TestCase
                 $pastDay = (new DateTime)->modify('-1 day');
                 $this->driver->deleteMeasurement('cpu_usage', $pastDay, $now);
                 $this->driver->deleteMeasurement('memory_usage', $pastDay, $now);
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 // Ignore cleanup errors
             }
 

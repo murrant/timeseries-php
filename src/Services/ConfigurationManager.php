@@ -17,7 +17,7 @@ class ConfigurationManager
     /**
      * @var array<string, mixed> The processed configuration
      */
-    private array $config;
+    private readonly array $config;
 
     /**
      * Create a new ConfigurationManager instance
@@ -28,7 +28,7 @@ class ConfigurationManager
      */
     public function __construct(?string $configDir = null)
     {
-        $configDir = $configDir ?? dirname(__DIR__, 2).'/config';
+        $configDir ??= dirname(__DIR__, 2).'/config';
 
         // Load configuration from all files in the packages directory
         $configs = [ConfigurationLoader::loadFromDirectory($configDir)];

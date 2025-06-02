@@ -53,9 +53,7 @@ class PrometheusDriverTest extends TestCase
             ->willReturnSelf();
 
         $mockUri->method('__toString')
-            ->willReturnCallback(function () {
-                return 'http://localhost:9090/api/v1/query';
-            });
+            ->willReturnCallback(fn() => 'http://localhost:9090/api/v1/query');
 
         // Configure request factory mock
         $mockRequestFactory->method('createRequest')
@@ -89,11 +87,10 @@ class PrometheusDriverTest extends TestCase
 
         // Configure stream mock to return appropriate response body
         $mockStream->method('__toString')
-            ->willReturnCallback(function () use ($queryResponseBody) {
+            ->willReturnCallback(fn() =>
                 // In a real implementation, we would check the request URI to determine which response to return
                 // For simplicity, we'll just return the query response for all requests
-                return $queryResponseBody;
-            });
+                $queryResponseBody);
 
         // Configure response mock
         $mockResponse->method('getStatusCode')
@@ -164,7 +161,7 @@ class PrometheusDriverTest extends TestCase
         };
 
         // Connect the driver
-        $this->driver->connect($this->config);
+        $this->driver->connect();
     }
 
     public function test_connect(): void

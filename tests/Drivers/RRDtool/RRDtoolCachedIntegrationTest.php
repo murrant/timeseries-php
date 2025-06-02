@@ -89,7 +89,7 @@ class RRDtoolCachedIntegrationTest extends TestCase
 
         // Create a real RRDtoolDriver
         $this->driver = new RRDtoolDriver;
-        $this->driver->connect($this->config);
+        $this->driver->connect();
     }
 
     protected function tearDown(): void
@@ -264,7 +264,7 @@ class RRDtoolCachedIntegrationTest extends TestCase
         ]);
 
         $noCacheDriver = new RRDtoolDriver;
-        $noCacheDriver->connect($noCacheConfig);
+        $noCacheDriver->connect();
 
         $startNoCache = microtime(true);
 

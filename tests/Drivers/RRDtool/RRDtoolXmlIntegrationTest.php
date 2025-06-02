@@ -74,7 +74,7 @@ class RRDtoolXmlIntegrationTest extends TestCase
 
         // Create a real RRDtoolDriver
         $this->driver = new RRDtoolDriver;
-        $this->driver->connect($this->config);
+        $this->driver->connect();
 
         // Restore RRD files from XML
         $this->restoreRRDFromXML();

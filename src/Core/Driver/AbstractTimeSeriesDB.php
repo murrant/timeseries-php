@@ -21,7 +21,7 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
     /**
      * @var QueryBuilderInterface|null The query builder factory to use for creating query builders
      */
-    protected ?QueryBuilderInterface $queryBuilderFactory;
+    protected ?QueryBuilderInterface $queryBuilderFactory = null;
 
     public function __construct(
         protected QueryBuilderInterface $queryBuilder,
@@ -88,7 +88,7 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
         } catch (\Throwable $e) {
             $this->logger->error('Write failed with exception', [
                 'driver' => $this->getDriverName(),
-                'exception' => get_class($e),
+                'exception' => $e::class,
                 'message' => $e->getMessage(),
                 'measurement' => $dataPoint->getMeasurement(),
             ]);
@@ -168,7 +168,7 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
         } catch (\Throwable $e) {
             $this->logger->error('Batch write failed with exception', [
                 'driver' => $this->getDriverName(),
-                'exception' => get_class($e),
+                'exception' => $e::class,
                 'message' => $e->getMessage(),
                 'count' => count($dataPoints),
             ]);
@@ -213,7 +213,7 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
                 $errors[$index] = $e->getMessage();
                 $this->logger->error('Exception during write operation', [
                     'driver' => $this->getDriverName(),
-                    'exception' => get_class($e),
+                    'exception' => $e::class,
                     'message' => $e->getMessage(),
                     'index' => $index,
                     'measurement' => $dataPoint->getMeasurement(),

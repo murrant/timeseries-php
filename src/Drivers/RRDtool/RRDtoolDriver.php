@@ -112,7 +112,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
             'rrdtool_path' => $this->config->rrdtool_path,
             'use_rrdcached' => $this->config->use_rrdcached && ! empty($this->config->rrdcached_address),
             'persistent_process' => $this->persistentProcess !== null,
-            'tag_strategy' => get_class($this->tagStrategy),
+            'tag_strategy' => $this->tagStrategy::class,
         ]);
 
         return true;
@@ -309,10 +309,8 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
     {
         // If we have legend data but no matches with requestedFields, use the legend as is
         // This handles the case where the xport command uses different field names than the ones requested
-        $legend = array_filter($json['meta']['legend'], function ($field) use ($requestedFields) {
-            return in_array('*', $requestedFields)
-                || in_array($field, $requestedFields);
-        });
+        $legend = array_filter($json['meta']['legend'], fn($field) => in_array('*', $requestedFields)
+            || in_array($field, $requestedFields));
 
         // If no fields matched, use all legend fields
         if (empty($legend) && ! empty($json['meta']['legend'])) {

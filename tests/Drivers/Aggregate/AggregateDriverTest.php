@@ -71,21 +71,6 @@ class AggregateDriverTest extends TestCase
         $this->driver = new class($mockDriverFactory, $this->config, $mockLogger, $this->mockWriteDb1, $this->mockWriteDb2, $this->mockReadDb) extends AggregateDriver
         {
             /**
-             * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
-             */
-            private $mockWriteDb1;
-
-            /**
-             * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
-             */
-            private $mockWriteDb2;
-
-            /**
-             * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
-             */
-            private $mockReadDb;
-
-            /**
              * @param  TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject  $mockWriteDb1
              * @param  TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject  $mockWriteDb2
              * @param  TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject  $mockReadDb
@@ -94,14 +79,11 @@ class AggregateDriverTest extends TestCase
                 DriverFactory $driverFactory,
                 AggregateConfig $config,
                 LoggerInterface $logger,
-                $mockWriteDb1,
-                $mockWriteDb2,
-                $mockReadDb
+                private $mockWriteDb1,
+                private $mockWriteDb2,
+                private $mockReadDb
             ) {
                 parent::__construct($driverFactory, $config, $logger);
-                $this->mockWriteDb1 = $mockWriteDb1;
-                $this->mockWriteDb2 = $mockWriteDb2;
-                $this->mockReadDb = $mockReadDb;
             }
 
             protected function doConnect(): bool
@@ -115,7 +97,7 @@ class AggregateDriverTest extends TestCase
         };
 
         // Connect the driver
-        $this->driver->connect($this->config);
+        $this->driver->connect();
     }
 
     public function test_connect(): void
@@ -409,24 +391,14 @@ class AggregateDriverTest extends TestCase
         $driver = new class($mockDriverFactory, $mockLogger, $this->mockWriteDb1, $this->mockWriteDb2) extends AggregateDriver
         {
             /**
-             * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
-             */
-            private $mockWriteDb1;
-
-            /**
-             * @var TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject
-             */
-            private $mockWriteDb2;
-
-            /**
              * @param  TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject  $mockWriteDb1
              * @param  TimeSeriesInterface&\PHPUnit\Framework\MockObject\MockObject  $mockWriteDb2
              */
             public function __construct(
                 DriverFactory $driverFactory,
                 LoggerInterface $logger,
-                $mockWriteDb1,
-                $mockWriteDb2
+                private $mockWriteDb1,
+                private $mockWriteDb2
             ) {
                 // Create a minimal config with just the required write databases
                 $config = new AggregateConfig(
@@ -442,8 +414,6 @@ class AggregateDriverTest extends TestCase
                     ]
                 );
                 parent::__construct($driverFactory, $config, $logger);
-                $this->mockWriteDb1 = $mockWriteDb1;
-                $this->mockWriteDb2 = $mockWriteDb2;
             }
 
             protected function doConnect(): bool
@@ -471,7 +441,7 @@ class AggregateDriverTest extends TestCase
         );
 
         // Connect the driver
-        $driver->connect($config);
+        $driver->connect();
 
         $rawQuery = $this->createMock(RawQueryInterface::class);
         $queryResult = new QueryResult([]);

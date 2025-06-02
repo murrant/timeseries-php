@@ -72,7 +72,7 @@ class RRDtoolIntegrationTest extends TestCase
 
         // Create a real RRDtoolDriver
         $this->driver = new RRDtoolDriver;
-        $this->driver->connect($this->config);
+        $this->driver->connect();
     }
 
     protected function tearDown(): void

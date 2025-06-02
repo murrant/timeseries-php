@@ -10,8 +10,6 @@ use TimeSeriesPhp\Exceptions\Query\QueryException;
 
 class Query
 {
-    private readonly string $measurement;
-
     /**
      * @var string[]
      */
@@ -67,9 +65,8 @@ class Query
 
     private ?string $timezone = null;
 
-    public function __construct(string $measurement)
+    public function __construct(private readonly string $measurement)
     {
-        $this->measurement = $measurement;
     }
 
     // Enhanced field selection with aliases and calculations
@@ -419,14 +416,12 @@ class Query
      */
     public function getConditionsAsArray(): array
     {
-        return array_map(function (QueryCondition $condition) {
-            return [
-                'field' => $condition->getField(),
-                'operator' => $condition->getOperator()->value,
-                'value' => $condition->getValue(),
-                'type' => $condition->getType(),
-            ];
-        }, $this->conditions);
+        return array_map(fn(QueryCondition $condition) => [
+            'field' => $condition->getField(),
+            'operator' => $condition->getOperator()->value,
+            'value' => $condition->getValue(),
+            'type' => $condition->getType(),
+        ], $this->conditions);
     }
 
     public function getStartTime(): ?DateTime

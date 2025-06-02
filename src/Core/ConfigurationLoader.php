@@ -25,7 +25,7 @@ class ConfigurationLoader
      */
     public static function loadFromFile(string $configFile, ?string $configDir = null): array
     {
-        $configDir = $configDir ?? dirname(__DIR__, 2).'/config';
+        $configDir ??= dirname(__DIR__, 2).'/config';
         $fullPath = $configDir.'/'.$configFile;
 
         if (! file_exists($fullPath)) {
@@ -52,7 +52,7 @@ class ConfigurationLoader
      */
     public static function loadFromDirectory(?string $configDir = null): array
     {
-        $configDir = $configDir ?? dirname(__DIR__, 2).'/config';
+        $configDir ??= dirname(__DIR__, 2).'/config';
         $packagesDir = $configDir.'/packages';
 
         if (! is_dir($packagesDir)) {

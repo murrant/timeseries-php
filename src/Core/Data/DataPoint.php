@@ -7,18 +7,6 @@ use TimeSeriesPhp\Utils\Convert;
 
 class DataPoint
 {
-    private readonly string $measurement;
-
-    /**
-     * @var array<string, string>
-     */
-    private array $tags;
-
-    /**
-     * @var array<string, ?scalar>
-     */
-    private array $fields;
-
     private readonly DateTime $timestamp;
 
     /**
@@ -26,14 +14,11 @@ class DataPoint
      * @param  array<string, string>  $tags
      */
     public function __construct(
-        string $measurement,
-        array $fields,
-        array $tags = [],
+        private readonly string $measurement,
+        private array $fields,
+        private array $tags = [],
         ?DateTime $timestamp = null
     ) {
-        $this->measurement = $measurement;
-        $this->fields = $fields;
-        $this->tags = $tags;
         $this->timestamp = $timestamp ?? new DateTime;
     }
 
