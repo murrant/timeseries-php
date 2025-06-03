@@ -5,22 +5,23 @@ namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 use SplFileInfo;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolFilenameTooLongException;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolTagException;
+use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
 
 class FileNameStrategy implements RRDTagStrategyInterface
 {
     use EncodesTagsInFilename;
 
     public function __construct(
-        public readonly string $baseDir
+        public readonly RRDtoolConfig $config,
     ) {
-        if (! str_ends_with($this->baseDir, DIRECTORY_SEPARATOR)) {
+        if (! str_ends_with($this->getBaseDir(), DIRECTORY_SEPARATOR)) {
             throw new RRDtoolTagException('Base directory must end with a slash');
         }
     }
 
     public function getBaseDir(): string
     {
-        return $this->baseDir;
+        return $this->config->rrd_dir;
     }
 
     /**
@@ -32,17 +33,17 @@ class FileNameStrategy implements RRDTagStrategyInterface
     {
         $filename = $this->encodeTags($measurement, $tags);
 
-        return $this->baseDir.$filename;
+        return $this->getBaseDir().$filename;
     }
 
     public function resolveFilePaths(string $measurement, array $tagConditions): array
     {
         if (empty($tagConditions)) {
-            return glob($this->baseDir.$measurement.'*.rrd') ?: [];
+            return glob($this->getBaseDir().$measurement.'*.rrd') ?: [];
         }
 
         $files = [];
-        $dirIterator = new \RecursiveDirectoryIterator($this->baseDir);
+        $dirIterator = new \RecursiveDirectoryIterator($this->getBaseDir());
         $iterator = new \RecursiveIteratorIterator($dirIterator);
 
         foreach ($iterator as $file) {

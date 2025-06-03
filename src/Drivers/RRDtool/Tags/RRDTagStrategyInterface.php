@@ -3,13 +3,14 @@
 namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolTagException;
+use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
 
 interface RRDTagStrategyInterface
 {
     /**
      * @throws RRDtoolTagException
      */
-    public function __construct(string $baseDir);
+    public function __construct(RRDtoolConfig $config);
 
     public function getBaseDir(): string;
 

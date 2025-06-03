@@ -3,26 +3,25 @@
 namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolTagException;
+use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
 use TimeSeriesPhp\Utils\File;
 
 class NoTagsStrategy implements RRDTagStrategyInterface
 {
-    protected string $folderSeparator = '/';
-
     /**
      * @throws RRDtoolTagException
      */
     public function __construct(
-        public readonly string $baseDir
+        public readonly RRDtoolConfig $config,
     ) {
-        if (! str_ends_with($this->baseDir, $this->folderSeparator)) {
+        if (! str_ends_with($this->getBaseDir(), DIRECTORY_SEPARATOR)) {
             throw new RRDtoolTagException('Base directory must end with a slash');
         }
     }
 
     public function getBaseDir(): string
     {
-        return $this->baseDir;
+        return $this->config->rrd_dir;
     }
 
     /**
@@ -33,18 +32,18 @@ class NoTagsStrategy implements RRDTagStrategyInterface
         // Ignore tags, use only measurement name
         $measurement = File::sanitize($measurement);
 
-        return $this->baseDir.$measurement.'.rrd';
+        return $this->getBaseDir().$measurement.'.rrd';
     }
 
     public function findMeasurementsByTags(array $tagConditions): array
     {
-        return array_map(fn ($file) => basename($file, '.rrd'), glob($this->baseDir.'*.rrd') ?: []);
+        return array_map(fn ($file) => basename($file, '.rrd'), glob($this->getBaseDir().'*.rrd') ?: []);
     }
 
     public function resolveFilePaths(string $measurement, array $tagConditions): array
     {
         $measurement = File::sanitize($measurement);
 
-        return glob($this->baseDir.$measurement.'*.rrd') ?: [];
+        return glob($this->getBaseDir().$measurement.'*.rrd') ?: [];
     }
 }

@@ -4,6 +4,7 @@ namespace TimeSeriesPhp\Drivers\RRDtool\Tags;
 
 use SplFileInfo;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolTagException;
+use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
 use TimeSeriesPhp\Utils\File;
 
 class FolderStrategy implements RRDTagStrategyInterface
@@ -16,22 +17,22 @@ class FolderStrategy implements RRDTagStrategyInterface
      * @throws RRDtoolTagException
      */
     public function __construct(
-        public readonly string $baseDir,
+        public readonly RRDtoolConfig $config,
         protected readonly array $folderTags = [],
     ) {
-        if (! str_ends_with($this->baseDir, DIRECTORY_SEPARATOR)) {
+        if (! str_ends_with($this->getBaseDir(), DIRECTORY_SEPARATOR)) {
             throw new RRDtoolTagException('Base directory must end with a slash');
         }
     }
 
     public function getBaseDir(): string
     {
-        return $this->baseDir;
+        return $this->config->rrd_dir;
     }
 
     public function getFilePath(string $measurement, array $tags = []): string
     {
-        $path = $this->baseDir;
+        $path = $this->getBaseDir();
         $filenameTags = $tags;
 
         // Process folder tags
@@ -43,7 +44,7 @@ class FolderStrategy implements RRDTagStrategyInterface
         }
 
         // Create directories if they don't exist
-        if (! is_dir($path) && $path !== $this->baseDir) {
+        if (! is_dir($path) && $path !== $this->getBaseDir()) {
             mkdir($path, 0755, true);
         }
 
@@ -60,14 +61,14 @@ class FolderStrategy implements RRDTagStrategyInterface
         if (empty($tagConditions)) {
             $path = implode(DIRECTORY_SEPARATOR, array_fill(0, count($this->folderTags), '*'));
 
-            return glob($this->baseDir.$path.DIRECTORY_SEPARATOR.$measurement.'*.rrd') ?: [];
+            return glob($this->getBaseDir().$path.DIRECTORY_SEPARATOR.$measurement.'*.rrd') ?: [];
         }
 
         $files = [];
         $baseFolderTags = [];
 
         // optimize search path if possible
-        $searchPath = $this->baseDir;
+        $searchPath = $this->getBaseDir();
         foreach ($this->folderTags as $folderTag) {
             // Check if there are any OR conditions for this folder tag
             $hasOrCondition = false;

@@ -32,15 +32,5 @@ services:
 
     TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface:
         class: '%rrdtool.tag_strategy%'
-
-    TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy:
         arguments:
-            $baseDir: '%rrdtool.rrd_dir%'
-
-    TimeSeriesPhp\Drivers\RRDtool\Tags\FolderStrategy:
-        arguments:
-            $baseDir: '%rrdtool.rrd_dir%'
-
-    TimeSeriesPhp\Drivers\RRDtool\Tags\NoTagsStrategy:
-        arguments:
-            $baseDir: '%rrdtool.rrd_dir%'
+          [ '@TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig' ]
