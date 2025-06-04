@@ -71,6 +71,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
     public function configure(array $config): void
     {
         $this->config = $this->config->createFromArray($config);
+        $this->client = new Client($this->config->getClientConfig());
     }
 
     protected function doConnect(): bool

@@ -1,3 +1,5 @@
+name: timeseries-php
+
 services:
   influxdb:
     image: influxdb:2.7

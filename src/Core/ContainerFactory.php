@@ -64,7 +64,6 @@ class ContainerFactory
             }
 
             $container->compile();
-            dump($container);
 
             return $container;
         } catch (\Exception $e) {

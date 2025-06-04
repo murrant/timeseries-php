@@ -233,8 +233,11 @@ while ($iterations < $maxIterations || $maxIterations === 0) {
     if ($maxIterations !== 0 && $iterations >= $maxIterations) {
         break;
     }
-    echo "Sleeping for $interval seconds...\n";
-    sleep($interval);
+
+    // if operations took longer, sleep less to keep cadence
+    $sleep_time = max(0, $interval - ($timestamp->getTimestamp() - time()));
+    printf("Sleeping for %d seconds%s...\n", $sleep_time, $sleep_time !== $interval ? "(remaining of {\$interval}s)" : '');
+    sleep($sleep_time);
 }
 
 echo "Data generation complete.\n";
