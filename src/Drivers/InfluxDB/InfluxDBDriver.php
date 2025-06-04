@@ -76,8 +76,6 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
     protected function doConnect(): bool
     {
         try {
-            // Use the injected client
-            $this->client = $this->influxClient;
             $this->writeApi = $this->client->createWriteApi();
             $this->queryApi = $this->client->createQueryApi();
             $this->influxQueryBuilder->bucket = $this->config->bucket;
@@ -143,7 +141,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
 
             return true;
         } catch (\Throwable $e) {
-            throw new WriteException('Failed to write data point: '.$e->getMessage(), 0, $e);
+            throw new WriteException('Failed to write data point: '.$e->getMessage(), previous: $e);
         }
     }
 
@@ -405,7 +403,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
     public function close(): void
     {
         $this->writeApi?->close();
-        $this->client = null;
+        $this->client->close();
         $this->connected = false;
     }
 

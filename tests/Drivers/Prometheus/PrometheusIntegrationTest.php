@@ -2,11 +2,15 @@
 
 namespace TimeSeriesPhp\Tests\Drivers\Prometheus;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\HttpFactory;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Query\RawQuery;
 use TimeSeriesPhp\Drivers\Prometheus\PrometheusConfig;
 use TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver;
+use TimeSeriesPhp\Drivers\Prometheus\Query\PrometheusQueryBuilder;
 
 /**
  * Integration test for Prometheus driver that assumes Prometheus is available
@@ -17,8 +21,6 @@ use TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver;
 class PrometheusIntegrationTest extends TestCase
 {
     private PrometheusDriver $driver;
-
-    private PrometheusConfig $config;
 
     protected function setUp(): void
     {
@@ -32,15 +34,17 @@ class PrometheusIntegrationTest extends TestCase
         $timeout = getenv('PROMETHEUS_TIMEOUT') ?: 5;
 
         // Create a real PrometheusConfig
-        $this->config = new PrometheusConfig([
-            'url' => $prometheusUrl,
-            'timeout' => $timeout,
-            'verify_ssl' => false, // Don't verify SSL for testing
-            'debug' => false,
-        ]);
+        $config = new PrometheusConfig(
+            url: $prometheusUrl,
+            timeout: (int) $timeout,
+            verify_ssl: false, // Don't verify SSL for testing
+            debug: false,
+        );
+
+        $httpFactory = new HttpFactory();
 
         // Create a real Prometheus Driver
-        $this->driver = new PrometheusDriver;
+        $this->driver = new PrometheusDriver(new Client, $httpFactory, $httpFactory, $config, new PrometheusQueryBuilder, new NullLogger);
 
         try {
             $connected = $this->driver->connect();

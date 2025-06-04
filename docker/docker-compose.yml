@@ -58,7 +58,7 @@ services:
     ports:
       - "42217:42217"
     volumes:
-      - rrdcached-data:/data/db/data/cached
+      - rrdcached-data:/data/db
       - rrdcached-journal:/data/journal
     environment:
       - TZ=UTC
@@ -69,6 +69,9 @@ services:
       - RRDCACHED_WRITE_JITTER=1800
       - RRDCACHED_WRITE_THREADS=4
       - RRDCACHED_FLUSH_DEAD_DATA_INTERVAL=3600
+    # fix file permissions
+    command: >
+      sh -c "chown 1000:1000 /data/db /data/journal && exec /init"
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "42217"]
       interval: 30s

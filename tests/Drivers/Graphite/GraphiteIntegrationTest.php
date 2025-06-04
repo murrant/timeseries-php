@@ -4,11 +4,13 @@ namespace TimeSeriesPhp\Tests\Drivers\Graphite;
 
 use DateTime;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Query\RawQuery;
 use TimeSeriesPhp\Drivers\Graphite\GraphiteConfig;
 use TimeSeriesPhp\Drivers\Graphite\GraphiteDriver;
+use TimeSeriesPhp\Drivers\Graphite\Query\GraphiteQueryBuilder;
 
 /**
  * Integration test for Graphite driver that assumes Graphite is available
@@ -19,8 +21,6 @@ use TimeSeriesPhp\Drivers\Graphite\GraphiteDriver;
 class GraphiteIntegrationTest extends TestCase
 {
     private GraphiteDriver $driver;
-
-    private GraphiteConfig $config;
 
     protected function setUp(): void
     {
@@ -35,18 +35,17 @@ class GraphiteIntegrationTest extends TestCase
         $graphiteQueryPort = getenv('GRAPHITE_QUERY_PORT') ?: 8080; // Default web port
 
         // Create a real GraphiteConfig
-        $this->config = new GraphiteConfig([
-            'host' => $graphiteHost,
-            'port' => $graphitePort,
-            'query_port' => $graphiteQueryPort,
-            'protocol' => 'tcp', // Use TCP for testing
-            'timeout' => 5, // Short timeout for testing
-            'prefix' => 'test.integration',
-            'debug' => false,
-        ]);
+        $config = new GraphiteConfig(
+            host: $graphiteHost,
+            port: (int) $graphitePort,
+            protocol: 'tcp',
+            timeout: 5, // Use TCP for testing
+            prefix: 'test.integration', // Short timeout for testing
+            web_port: (int) $graphiteQueryPort,
+        );
 
         // Create a real Graphite Driver
-        $this->driver = new GraphiteDriver;
+        $this->driver = new GraphiteDriver($config, new GraphiteQueryBuilder, new NullLogger);
 
         try {
             $connected = $this->driver->connect();

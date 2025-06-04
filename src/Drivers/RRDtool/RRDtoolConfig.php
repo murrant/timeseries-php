@@ -28,7 +28,7 @@ class RRDtoolConfig extends AbstractDriverConfiguration
      */
     public function __construct(
         public readonly string $rrdtool_path = 'rrdtool',
-        public readonly string $rrd_dir = '/tmp/rrd',
+        public readonly string $rrd_dir = '/tmp/rrd/',
         public readonly bool $use_rrdcached = false,
         public readonly bool $persistent_process = true,
         public readonly int $command_timeout = 180,

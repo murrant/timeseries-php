@@ -7,6 +7,7 @@ use TimeSeriesPhp\Contracts\Query\QueryBuilderInterface;
 use TimeSeriesPhp\Contracts\Query\QueryCondition;
 use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
 use TimeSeriesPhp\Core\Query\Query;
+use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\NoTagsStrategy;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\TagCondition;
@@ -15,7 +16,7 @@ use TimeSeriesPhp\Exceptions\Query\QueryException;
 class RRDtoolQueryBuilder implements QueryBuilderInterface
 {
     public function __construct(
-        public RRDTagStrategyInterface $tagStrategy = new NoTagsStrategy('/tmp/')
+        public RRDTagStrategyInterface $tagStrategy = new NoTagsStrategy(new RRDtoolConfig('/tmp/rrd/'))
     ) {}
 
     /**

@@ -4,8 +4,11 @@ namespace TimeSeriesPhp\Tests\Drivers\RRDtool;
 
 use DateTime;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
+use TimeSeriesPhp\Drivers\RRDtool\Factory\ProcessFactory;
+use TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolQueryBuilder;
 use TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolRawQuery;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
@@ -70,25 +73,28 @@ class RRDtoolCachedIntegrationTest extends TestCase
         }
 
         // Create a real RRDtoolConfig with rrdcached enabled
-        $this->config = new RRDtoolConfig([
-            'rrd_dir' => $this->dataDir,
-            'rrdtool_path' => $this->rrdtoolPath,
-            'use_rrdcached' => true,
-            'rrdcached_address' => $this->rrdcachedAddress,
-            'default_step' => 60, // Use a smaller step for testing
-            'tag_strategy' => FileNameStrategy::class,
-            'debug' => true,
-            'persistent_process' => false,
-            'graph_output' => 'file',
-            'default_archives' => [
+        $config = new RRDtoolConfig(
+            rrdtool_path: $this->rrdtoolPath,
+            rrd_dir: $this->dataDir,
+            use_rrdcached: true,
+            persistent_process: false,
+            rrdcached_address: $this->rrdcachedAddress, // Use a smaller step for testing
+            default_step: 60,
+            debug: true,
+            graph_output: 'file',
+            tag_strategy: FileNameStrategy::class,
+            default_archives: [
                 'RRA:AVERAGE:0.5:1:1440',  // 1min for 1 day
                 'RRA:MAX:0.5:1:1440',      // 1min max for 1 day
                 'RRA:MIN:0.5:1:1440',      // 1min min for 1 day
             ],
-        ]);
+        );
+
+        $tag_strategy_class = $config->tag_strategy;
+        $tagStrategy = new $tag_strategy_class($config);
 
         // Create a real RRDtoolDriver
-        $this->driver = new RRDtoolDriver;
+        $this->driver = new RRDtoolDriver($config, new ProcessFactory, $tagStrategy, new RRDtoolQueryBuilder($tagStrategy), new NullLogger);
         $this->driver->connect();
     }
 
@@ -253,17 +259,21 @@ class RRDtoolCachedIntegrationTest extends TestCase
         $cachedTime = $endCached - $startCached;
 
         // Now create a driver without rrdcached
-        $noCacheConfig = new RRDtoolConfig([
-            'rrd_dir' => $this->dataDir,
-            'rrdtool_path' => $this->rrdtoolPath,
-            'use_rrdcached' => false,
-            'default_step' => 60,
-            'tag_strategy' => FileNameStrategy::class,
-            'debug' => false,
-            'persistent_process' => false,
-        ]);
+        $noCacheConfig = new RRDtoolConfig(
+            rrdtool_path: $this->rrdtoolPath,
+            rrd_dir: $this->dataDir,
+            use_rrdcached: false,
+            persistent_process: false,
+            default_step: 60,
+            debug: false,
+            tag_strategy: FileNameStrategy::class,
+        );
 
-        $noCacheDriver = new RRDtoolDriver;
+        $tag_strategy_class = $noCacheConfig->tag_strategy;
+        $tagStrategy = new $tag_strategy_class($noCacheConfig);
+
+        // Create a real RRDtoolDriver
+        $noCacheDriver= new RRDtoolDriver($noCacheConfig, new ProcessFactory, $tagStrategy, new RRDtoolQueryBuilder($tagStrategy), new NullLogger);
         $noCacheDriver->connect();
 
         $startNoCache = microtime(true);

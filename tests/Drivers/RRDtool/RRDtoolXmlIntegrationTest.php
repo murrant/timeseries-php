@@ -4,8 +4,12 @@ namespace TimeSeriesPhp\Tests\Drivers\RRDtool;
 
 use DateTime;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Query\Query;
+use TimeSeriesPhp\Drivers\RRDtool\Factory\ProcessFactory;
+use TimeSeriesPhp\Drivers\RRDtool\Factory\TagStrategyFactory;
+use TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolQueryBuilder;
 use TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolRawQuery;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
@@ -19,8 +23,6 @@ use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
 class RRDtoolXmlIntegrationTest extends TestCase
 {
     private RRDtoolDriver $driver;
-
-    private RRDtoolConfig $config;
 
     private string $dataDir;
 
@@ -56,24 +58,27 @@ class RRDtoolXmlIntegrationTest extends TestCase
         }
 
         // Create a real RRDtoolConfig
-        $this->config = new RRDtoolConfig([
-            'rrd_dir' => $this->dataDir,
-            'rrdtool_path' => $this->rrdtoolPath,
-            'use_rrdcached' => false,
-            'default_step' => 60, // Use a smaller step for testing
-            'tag_strategy' => FileNameStrategy::class,
-            'debug' => false,
-            'persistent_process' => false,
-            'graph_output' => 'file',
-            'default_archives' => [
+        $config = new RRDtoolConfig(
+            rrdtool_path: $this->rrdtoolPath,
+            rrd_dir: $this->dataDir,
+            use_rrdcached: false,
+            persistent_process: false, // Use a smaller step for testing
+            default_step: 60,
+            debug: false,
+            graph_output: 'file',
+            tag_strategy: FileNameStrategy::class,
+            default_archives: [
                 'RRA:AVERAGE:0.5:1:1440',  // 1min for 1 day
                 'RRA:MAX:0.5:1:1440',      // 1min max for 1 day
                 'RRA:MIN:0.5:1:1440',      // 1min min for 1 day
             ],
-        ]);
+        );
+
+        $tag_strategy_class = $config->tag_strategy;
+        $tagStrategy = new $tag_strategy_class($config);
 
         // Create a real RRDtoolDriver
-        $this->driver = new RRDtoolDriver;
+        $this->driver = new RRDtoolDriver($config, new ProcessFactory, $tagStrategy, new RRDtoolQueryBuilder($tagStrategy), new NullLogger);
         $this->driver->connect();
 
         // Restore RRD files from XML

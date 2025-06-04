@@ -4,12 +4,14 @@ namespace TimeSeriesPhp\Tests\Drivers\InfluxDB;
 
 use DateTime;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Query\Query;
 use TimeSeriesPhp\Core\Query\RawQuery;
 use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig;
 use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
+use TimeSeriesPhp\Drivers\InfluxDB\Query\InfluxDBQueryBuilder;
 
 /**
  * Integration test for InfluxDBDriver that assumes InfluxDB is available
@@ -20,8 +22,6 @@ use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
 class InfluxDBIntegrationTest extends TestCase
 {
     private InfluxDBDriver $driver;
-
-    private InfluxDBConfig $config;
 
     private string $testBucket = 'test_integration';
 
@@ -39,31 +39,19 @@ class InfluxDBIntegrationTest extends TestCase
         $influxBucket = getenv('INFLUXDB_BUCKET') ?: $this->testBucket;
 
         // Create a real InfluxDBConfig
-        $this->config = new InfluxDBConfig([
-            'url' => $influxUrl,
-            'token' => $influxToken,
-            'org' => $influxOrg,
-            'bucket' => $influxBucket,
-            'timeout' => 5, // Short timeout for testing
-            'verify_ssl' => false, // Don't verify SSL for testing
-            'debug' => false,
-        ]);
+        $config = new InfluxDBConfig(
+            url: $influxUrl,
+            token: $influxToken,
+            org: $influxOrg,
+            bucket: $influxBucket,
+            timeout: 5, // Short timeout for testing
+            verify_ssl: false, // Don't verify SSL for testing
+            debug: false,
+        );
 
         // Create a real InfluxDBDriver with the client and query builder
-        $client = new \InfluxDB2\Client([
-            'url' => $influxUrl,
-            'token' => $influxToken,
-            'org' => $influxOrg,
-            'bucket' => $influxBucket,
-            'timeout' => 5,
-            'verifySSL' => false,
-            'debug' => false,
-        ]);
-        $queryBuilder = new \TimeSeriesPhp\Drivers\InfluxDB\Query\QueryBuilder;
-        $this->driver = new InfluxDBDriver($client, $queryBuilder);
-
-        // Configure the driver
-        $this->driver->configure($this->config->getConfig());
+        $client = new \InfluxDB2\Client($config->getClientConfig());
+        $this->driver = new InfluxDBDriver(new InfluxDBQueryBuilder, new NullLogger, $config, $client);
 
         try {
             $connected = $this->driver->connect();

@@ -15,7 +15,6 @@ use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolCommandTimeoutException;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolException;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolPrematureUpdateException;
-use TimeSeriesPhp\Drivers\RRDtool\Factory\InputStreamFactoryInterface;
 use TimeSeriesPhp\Drivers\RRDtool\Factory\ProcessFactoryInterface;
 use TimeSeriesPhp\Drivers\RRDtool\Factory\TagStrategyFactoryInterface;
 use TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolQueryBuilder;
@@ -29,8 +28,6 @@ use TimeSeriesPhp\Exceptions\Query\RawQueryException;
 #[Driver(name: 'rrdtool', queryBuilderClass: RRDtoolQueryBuilder::class, configClass: RRDtoolConfig::class)]
 class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterface
 {
-    protected RRDTagStrategyInterface $tagStrategy;
-
     protected bool $connected = false;
 
     protected RRDtoolQueryBuilder $rrdQueryBuilder;
@@ -38,8 +35,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
     public function __construct(
         protected RRDtoolConfig $config,
         protected ProcessFactoryInterface $processFactory,
-        protected InputStreamFactoryInterface $inputStreamFactory,
-        protected TagStrategyFactoryInterface $tagStrategyFactory,
+        protected RRDTagStrategyInterface $tagStrategy,
         RRDtoolQueryBuilder $queryBuilder,
         LoggerInterface $logger,
     ) {
@@ -94,12 +90,11 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
             throw new ConnectionException("RRD directory is not writable: {$this->config->rrd_dir}");
         }
 
-        $this->tagStrategy = $this->tagStrategyFactory->create($this->config->tag_strategy, $this->config->rrd_dir);
         $this->rrdQueryBuilder->tagStrategy = $this->tagStrategy;
 
         if ($this->config->persistent_process) {
             $this->persistentProcess = $this->processFactory->create([$this->config->rrdtool_path, '-']);
-            $this->persistentInput = $this->inputStreamFactory->create();
+            $this->persistentInput = new InputStream;
             $this->persistentProcess->setInput($this->persistentInput);
             $this->persistentProcess->setTimeout(null);
             $this->persistentProcess->start();
