@@ -26,7 +26,7 @@ class ConfigurationLoader
     public static function loadFromFile(string $configFile, ?string $configDir = null): array
     {
         $configDir ??= dirname(__DIR__, 2).'/config';
-        $fullPath = $configDir.'/'.$configFile;
+        $fullPath = $configDir.DIRECTORY_SEPARATOR.$configFile;
 
         if (! file_exists($fullPath)) {
             throw new TSDBException("Configuration file not found: $fullPath");

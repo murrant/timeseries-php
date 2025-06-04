@@ -63,7 +63,7 @@ class RRDtoolCachedIntegrationTest extends TestCase
         $this->dataDir = 'data/cached/';
 
         // Ensure the directory exists and is writable
-        $absoluteDir = rtrim(__DIR__.'/data/cached', '/').'/';
+        $absoluteDir = rtrim(__DIR__.'/data/cached', DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
         if (! is_dir($absoluteDir)) {
             mkdir($absoluteDir, 0777, true);
         }
@@ -76,7 +76,7 @@ class RRDtoolCachedIntegrationTest extends TestCase
         $config = new RRDtoolConfig(
             rrdtool_path: $this->rrdtoolPath,
             rrd_dir: $this->dataDir,
-            use_rrdcached: true,
+            rrdcached_enabled: true,
             persistent_process: false,
             rrdcached_address: $this->rrdcachedAddress, // Use a smaller step for testing
             default_step: 60,
@@ -262,7 +262,7 @@ class RRDtoolCachedIntegrationTest extends TestCase
         $noCacheConfig = new RRDtoolConfig(
             rrdtool_path: $this->rrdtoolPath,
             rrd_dir: $this->dataDir,
-            use_rrdcached: false,
+            rrdcached_enabled: false,
             persistent_process: false,
             default_step: 60,
             debug: false,

@@ -25,7 +25,7 @@ $interval = isset($options['interval']) ? (int) $options['interval'] : 10; // se
 if (isset($options['h']) || isset($options['help'])) {
     echo "Usage: php generate_sample_data.php [--iterations=<number>]\n";
     echo "Options:\n";
-    echo "  --iterations=<number>  Number of iterations to run (default: 3, 0 for infinite)\n";
+    echo "  -i, --iterations=<number>  Number of iterations to run (default: 3, 0 for infinite)\n";
     echo "  --interval=<number>    Number of seconds to wait between iterations (default: 10)\n";
     echo "  --help, -h             Display this help message\n";
     exit(0);
@@ -77,7 +77,7 @@ $config = [
         'config' => [
             'rrdtool_path' => 'rrdtool',
             'rrd_dir' => '/tmp/rrd',
-            'use_rrdcached' => true,
+            'rrdcached_enabled' => true,
             'rrdcached_address' => 'localhost:42217',
             'persistent_process' => true,
             'command_timeout' => 180,

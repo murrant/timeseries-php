@@ -44,7 +44,7 @@ class RRDtoolIntegrationTest extends TestCase
         $this->rrdtoolPath = trim($output[0]);
 
         // Use the data directory for RRD files
-        $this->dataDir = rtrim(__DIR__.'/data', '/').'/';
+        $this->dataDir = rtrim(__DIR__.'/data', DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
 
         // Ensure the directory exists and is writable
         if (! is_dir($this->dataDir)) {
@@ -59,7 +59,7 @@ class RRDtoolIntegrationTest extends TestCase
         $config = new RRDtoolConfig(
             rrdtool_path: $this->rrdtoolPath,
             rrd_dir: $this->dataDir,
-            use_rrdcached: false,
+            rrdcached_enabled: false,
             persistent_process: false, // Use a smaller step for testing
             default_step: 60,
             debug: false,

@@ -16,7 +16,7 @@ class RRDtoolConfig extends AbstractDriverConfiguration
     /**
      * @param  string  $rrdtool_path  Path to the rrdtool executable
      * @param  string  $rrd_dir  Directory to store RRD files
-     * @param  bool  $use_rrdcached  Whether to use rrdcached
+     * @param  bool  $rrdcached_enabled  Whether to use rrdcached
      * @param  bool  $persistent_process  Whether to use a persistent rrdtool process
      * @param  int  $command_timeout  Command timeout in seconds
      * @param  string  $rrdcached_address  The rrdcached address
@@ -29,7 +29,7 @@ class RRDtoolConfig extends AbstractDriverConfiguration
     public function __construct(
         public readonly string $rrdtool_path = 'rrdtool',
         public readonly string $rrd_dir = '/tmp/rrd/',
-        public readonly bool $use_rrdcached = false,
+        public readonly bool $rrdcached_enabled = false,
         public readonly bool $persistent_process = true,
         public readonly int $command_timeout = 180,
         public readonly string $rrdcached_address = '',
@@ -67,7 +67,7 @@ class RRDtoolConfig extends AbstractDriverConfiguration
             ->isRequired()
             ->cannotBeEmpty()
             ->end()
-            ->booleanNode('use_rrdcached')
+            ->booleanNode('rrdcached_enabled')
             ->info('Whether to use rrdcached')
             ->defaultFalse()
             ->end()

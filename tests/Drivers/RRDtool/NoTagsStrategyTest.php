@@ -20,7 +20,7 @@ class NoTagsStrategyTest extends TestCase
         // Create a temporary directory for testing
         $this->tempDir = sys_get_temp_dir().'/rrdtool_test_'.uniqid();
         mkdir($this->tempDir, 0777, true);
-        $this->baseDir = $this->tempDir.'/';
+        $this->baseDir = $this->tempDir.DIRECTORY_SEPARATOR;
         $this->strategy = new NoTagsStrategy($this->baseDir);
     }
 

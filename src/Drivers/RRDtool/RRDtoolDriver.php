@@ -74,9 +74,9 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
     protected function doConnect(): bool
     {
 
-        if ($this->config->use_rrdcached) {
+        if ($this->config->rrdcached_enabled) {
             if (empty($this->config->rrdcached_address)) {
-                throw new ConnectionException('rrdcached address must be specified when use_rrdcached is true');
+                throw new ConnectionException('rrdcached address must be specified when rrdcached_enabled is true');
             }
         }
 
@@ -105,7 +105,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
         $this->logger->info('Connected to RRDtool successfully', [
             'rrd_dir' => $this->config->rrd_dir,
             'rrdtool_path' => $this->config->rrdtool_path,
-            'use_rrdcached' => $this->config->use_rrdcached && ! empty($this->config->rrdcached_address),
+            'rrdcached_enabled' => $this->config->rrdcached_enabled && ! empty($this->config->rrdcached_address),
             'persistent_process' => $this->persistentProcess !== null,
             'tag_strategy' => $this->tagStrategy::class,
         ]);
@@ -122,7 +122,13 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
      */
     public function getRRDPath(string $measurement, array $tags = []): string
     {
-        return $this->tagStrategy->getFilePath($measurement, $tags);
+        $filePath = $this->tagStrategy->getFilePath($measurement, $tags);
+
+        if ($this->config->rrdcached_enabled) {
+            $filePath = ltrim(str_replace($this->config->rrd_dir, '', $filePath), DIRECTORY_SEPARATOR);
+        }
+
+        return $filePath;
     }
 
     /**
@@ -361,7 +367,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
     public function createDatabase(string $database): bool
     {
         // RRDtool doesn't have databases, but we can create a subdirectory
-        $dbDir = $this->config->rrd_dir.'/'.$database;
+        $dbDir = $this->config->rrd_dir.DIRECTORY_SEPARATOR.$database;
 
         if (! is_dir($dbDir)) {
             return mkdir($dbDir, 0755, true);
@@ -379,7 +385,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
         $items = scandir($this->config->rrd_dir);
 
         foreach ($items as $item) {
-            if ($item !== '.' && $item !== '..' && is_dir($this->config->rrd_dir.'/'.$item)) {
+            if ($item !== '.' && $item !== '..' && is_dir($this->config->rrd_dir.DIRECTORY_SEPARATOR.$item)) {
                 $databases[] = $item;
             }
         }

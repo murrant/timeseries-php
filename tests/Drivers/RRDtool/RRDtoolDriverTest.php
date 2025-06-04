@@ -52,8 +52,8 @@ class RRDtoolDriverTest extends TestCase
         // Create configuration
         $this->config = new RRDtoolConfig(
             rrdtool_path: $this->rrdtoolPath,
-            rrd_dir: $this->tempDir.'/',
-            use_rrdcached: false,
+            rrd_dir: $this->tempDir.DIRECTORY_SEPARATOR,
+            rrdcached_enabled: false,
             persistent_process: true,
             command_timeout: 180,
             rrdcached_address: '',
@@ -80,7 +80,7 @@ class RRDtoolDriverTest extends TestCase
                     }
                 }
 
-                return $this->tempDir.'/'.$measurement.$tagString.'.rrd';
+                return $this->tempDir.DIRECTORY_SEPARATOR.$measurement.$tagString.'.rrd';
             });
 
         // Create mock process
@@ -188,7 +188,7 @@ class RRDtoolDriverTest extends TestCase
         });
 
         $this->driver->method('createDatabase')->willReturnCallback(function (string $database) {
-            $dbDir = $this->tempDir.'/'.$database;
+            $dbDir = $this->tempDir.DIRECTORY_SEPARATOR.$database;
             if (! is_dir($dbDir)) {
                 mkdir($dbDir, 0777, true);
             }

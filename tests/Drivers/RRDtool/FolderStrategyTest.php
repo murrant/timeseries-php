@@ -25,7 +25,7 @@ class FolderStrategyTest extends TestCase
         // Create a temporary directory for testing
         $this->tempDir = sys_get_temp_dir().'/rrdtool_test_'.uniqid();
         mkdir($this->tempDir, 0777, true);
-        $this->baseDir = $this->tempDir.'/';
+        $this->baseDir = $this->tempDir.DIRECTORY_SEPARATOR;
         $this->folderTags = ['region', 'host'];
         $this->strategy = new FolderStrategy($this->baseDir, $this->folderTags);
     }
@@ -48,7 +48,7 @@ class FolderStrategyTest extends TestCase
                 continue;
             }
 
-            $path = $dir.'/'.$object;
+            $path = $dir.DIRECTORY_SEPARATOR.$object;
             if (is_dir($path)) {
                 $this->removeDirectory($path);
             } else {
