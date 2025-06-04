@@ -212,6 +212,7 @@ while ($iterations < $maxIterations || $maxIterations === 0) {
     }
 
     // Write data to each database
+    $last_timestamp = microtime(true);
     foreach ($databases as $name => $db) {
         try {
             echo "Writing to $name...\n";
@@ -223,7 +224,7 @@ while ($iterations < $maxIterations || $maxIterations === 0) {
                     }
                 }
             }
-            echo "Successfully wrote data to $name.\n";
+            printf("Successfully wrote data to $name in %.3fs.\n", microtime(true) - $last_timestamp );
         } catch (TSDBException $e) {
             echo "Error writing to $name: ".$e->getMessage()."\n";
         }
