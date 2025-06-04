@@ -1,6 +1,6 @@
 <?php
 
-namespace TimeSeriesPhp\Drivers\Graphite\Query;
+namespace TimeSeriesPhp\Drivers\Graphite;
 
 use TimeSeriesPhp\Contracts\Query\ComparisonOperator;
 use TimeSeriesPhp\Contracts\Query\QueryBuilderInterface;

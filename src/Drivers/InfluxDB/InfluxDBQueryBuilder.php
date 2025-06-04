@@ -1,6 +1,6 @@
 <?php
 
-namespace TimeSeriesPhp\Drivers\InfluxDB\Query;
+namespace TimeSeriesPhp\Drivers\InfluxDB;
 
 use TimeSeriesPhp\Contracts\Query\ComparisonOperator;
 use TimeSeriesPhp\Contracts\Query\QueryBuilderInterface;

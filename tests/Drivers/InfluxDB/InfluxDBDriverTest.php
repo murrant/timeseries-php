@@ -19,7 +19,7 @@ use TimeSeriesPhp\Drivers\InfluxDB\Factory\ClientFactoryInterface;
 use TimeSeriesPhp\Drivers\InfluxDB\Factory\QueryBuilderFactoryInterface;
 use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig;
 use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
-use TimeSeriesPhp\Drivers\InfluxDB\Query\InfluxDBQueryBuilder;
+use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBQueryBuilder;
 
 class InfluxDBDriverTest extends TestCase
 {

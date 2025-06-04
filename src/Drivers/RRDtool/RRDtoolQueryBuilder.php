@@ -1,13 +1,12 @@
 <?php
 
-namespace TimeSeriesPhp\Drivers\RRDtool\Query;
+namespace TimeSeriesPhp\Drivers\RRDtool;
 
 use TimeSeriesPhp\Contracts\Query\ComparisonOperator;
 use TimeSeriesPhp\Contracts\Query\QueryBuilderInterface;
 use TimeSeriesPhp\Contracts\Query\QueryCondition;
 use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
 use TimeSeriesPhp\Core\Query\Query;
-use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\NoTagsStrategy;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\TagCondition;

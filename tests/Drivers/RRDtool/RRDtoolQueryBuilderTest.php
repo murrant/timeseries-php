@@ -5,7 +5,7 @@ namespace TimeSeriesPhp\Tests\Drivers\RRDtool;
 use DateTime;
 use PHPUnit\Framework\TestCase;
 use TimeSeriesPhp\Core\Query\Query;
-use TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolQueryBuilder;
+use TimeSeriesPhp\Drivers\RRDtool\RRDtoolQueryBuilder;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
 
 class RRDtoolQueryBuilderTest extends TestCase

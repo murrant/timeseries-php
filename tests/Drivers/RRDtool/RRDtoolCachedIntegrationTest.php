@@ -8,10 +8,10 @@ use Psr\Log\NullLogger;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Drivers\RRDtool\Factory\ProcessFactory;
-use TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolQueryBuilder;
-use TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolRawQuery;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
+use TimeSeriesPhp\Drivers\RRDtool\RRDtoolQueryBuilder;
+use TimeSeriesPhp\Drivers\RRDtool\RRDtoolRawQuery;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
 
 /**

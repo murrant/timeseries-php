@@ -17,8 +17,6 @@ use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolException;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolPrematureUpdateException;
 use TimeSeriesPhp\Drivers\RRDtool\Factory\ProcessFactoryInterface;
 use TimeSeriesPhp\Drivers\RRDtool\Factory\TagStrategyFactoryInterface;
-use TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolQueryBuilder;
-use TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolRawQuery;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 use TimeSeriesPhp\Exceptions\Driver\DriverException;

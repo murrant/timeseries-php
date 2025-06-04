@@ -5,7 +5,7 @@ namespace TimeSeriesPhp\Tests\Drivers\Prometheus;
 use DateTime;
 use PHPUnit\Framework\TestCase;
 use TimeSeriesPhp\Core\Query\Query;
-use TimeSeriesPhp\Drivers\Prometheus\Query\PrometheusQueryBuilder;
+use TimeSeriesPhp\Drivers\Prometheus\PrometheusQueryBuilder;
 
 class PrometheusQueryBuilderTest extends TestCase
 {

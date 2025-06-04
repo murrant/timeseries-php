@@ -22,7 +22,7 @@ use TimeSeriesPhp\Core\Attributes\Driver;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
-use TimeSeriesPhp\Drivers\InfluxDB\Query\InfluxDBQueryBuilder;
+use TimeSeriesPhp\Drivers\InfluxDB\Factory\ClientFactoryInterface;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 use TimeSeriesPhp\Exceptions\Driver\DatabaseException;
 use TimeSeriesPhp\Exceptions\Driver\WriteException;
@@ -32,7 +32,7 @@ use TimeSeriesPhp\Utils\Convert;
 #[Driver(name: 'influxdb', queryBuilderClass: InfluxDBQueryBuilder::class, configClass: InfluxDBConfig::class)]
 class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterface
 {
-    protected Client $client;
+    protected ?Client $client;
 
     protected ?WriteApi $writeApi = null;
 
@@ -55,11 +55,10 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
         InfluxDBQueryBuilder $queryBuilder,
         LoggerInterface $logger,
         protected InfluxDBConfig $config,
-        ?Client $client = null,
+        protected ClientFactoryInterface $clientFactory,
     ) {
         parent::__construct($queryBuilder, $logger);
 
-        $this->client = $client ?? new Client($this->config->getClientConfig());
         $this->influxQueryBuilder = $queryBuilder;
     }
 
@@ -71,12 +70,12 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
     public function configure(array $config): void
     {
         $this->config = $this->config->createFromArray($config);
-        $this->client = new Client($this->config->getClientConfig());
     }
 
     protected function doConnect(): bool
     {
         try {
+            $this->client = $this->clientFactory->create($this->config->getClientConfig());
             $this->writeApi = $this->client->createWriteApi();
             $this->queryApi = $this->client->createQueryApi();
             $this->influxQueryBuilder->bucket = $this->config->bucket;

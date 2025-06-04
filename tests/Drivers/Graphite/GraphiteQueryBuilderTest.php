@@ -5,7 +5,7 @@ namespace TimeSeriesPhp\Tests\Drivers\Graphite;
 use DateTime;
 use PHPUnit\Framework\TestCase;
 use TimeSeriesPhp\Core\Query\Query;
-use TimeSeriesPhp\Drivers\Graphite\Query\GraphiteQueryBuilder;
+use TimeSeriesPhp\Drivers\Graphite\GraphiteQueryBuilder;
 
 class GraphiteQueryBuilderTest extends TestCase
 {

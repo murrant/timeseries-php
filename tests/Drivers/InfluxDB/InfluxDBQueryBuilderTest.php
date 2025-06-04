@@ -5,7 +5,7 @@ namespace TimeSeriesPhp\Tests\Drivers\InfluxDB;
 use DateTime;
 use PHPUnit\Framework\TestCase;
 use TimeSeriesPhp\Core\Query\Query;
-use TimeSeriesPhp\Drivers\InfluxDB\Query\InfluxDBQueryBuilder;
+use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBQueryBuilder;
 
 class InfluxDBQueryBuilderTest extends TestCase
 {

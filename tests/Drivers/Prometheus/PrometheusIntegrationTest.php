@@ -10,7 +10,7 @@ use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Query\RawQuery;
 use TimeSeriesPhp\Drivers\Prometheus\PrometheusConfig;
 use TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver;
-use TimeSeriesPhp\Drivers\Prometheus\Query\PrometheusQueryBuilder;
+use TimeSeriesPhp\Drivers\Prometheus\PrometheusQueryBuilder;
 
 /**
  * Integration test for Prometheus driver that assumes Prometheus is available

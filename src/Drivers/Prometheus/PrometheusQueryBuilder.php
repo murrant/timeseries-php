@@ -1,6 +1,6 @@
 <?php
 
-namespace TimeSeriesPhp\Drivers\Prometheus\Query;
+namespace TimeSeriesPhp\Drivers\Prometheus;
 
 use TimeSeriesPhp\Contracts\Query\ComparisonOperator;
 use TimeSeriesPhp\Contracts\Query\QueryBuilderInterface;

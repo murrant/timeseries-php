@@ -14,10 +14,10 @@ use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Drivers\RRDtool\Factory\InputStreamFactoryInterface;
 use TimeSeriesPhp\Drivers\RRDtool\Factory\ProcessFactoryInterface;
 use TimeSeriesPhp\Drivers\RRDtool\Factory\TagStrategyFactoryInterface;
-use TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolQueryBuilder;
-use TimeSeriesPhp\Drivers\RRDtool\Query\RRDtoolRawQuery;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
+use TimeSeriesPhp\Drivers\RRDtool\RRDtoolQueryBuilder;
+use TimeSeriesPhp\Drivers\RRDtool\RRDtoolRawQuery;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
 

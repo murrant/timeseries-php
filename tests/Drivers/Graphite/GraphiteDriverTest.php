@@ -12,7 +12,7 @@ use TimeSeriesPhp\Core\Query\RawQuery;
 use TimeSeriesPhp\Drivers\Graphite\Factory\QueryBuilderFactory;
 use TimeSeriesPhp\Drivers\Graphite\GraphiteConfig;
 use TimeSeriesPhp\Drivers\Graphite\GraphiteDriver;
-use TimeSeriesPhp\Drivers\Graphite\Query\GraphiteQueryBuilder;
+use TimeSeriesPhp\Drivers\Graphite\GraphiteQueryBuilder;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 
 /**

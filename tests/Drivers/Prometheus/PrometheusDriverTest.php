@@ -122,7 +122,7 @@ class PrometheusDriverTest extends TestCase
             ) {
                 // Bypass the parent constructor to avoid the inconsistency
                 // Set required properties directly
-                $this->queryBuilder = new \TimeSeriesPhp\Drivers\Prometheus\Query\PrometheusQueryBuilder;
+                $this->queryBuilder = new \TimeSeriesPhp\Drivers\Prometheus\PrometheusQueryBuilder;
                 $this->logger = $mockLogger;
 
                 // Set up the mocked properties

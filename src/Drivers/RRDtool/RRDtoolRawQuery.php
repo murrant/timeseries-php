@@ -1,6 +1,6 @@
 <?php
 
-namespace TimeSeriesPhp\Drivers\RRDtool\Query;
+namespace TimeSeriesPhp\Drivers\RRDtool;
 
 use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
 
