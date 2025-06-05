@@ -82,7 +82,7 @@ $config = [
             'persistent_process' => true,
             'command_timeout' => 180,
             'default_step' => 60, // 1 minute
-            'debug' => false,
+            'debug' => true,
         ],
     ],
 ];

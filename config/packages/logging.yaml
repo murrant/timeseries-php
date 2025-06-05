@@ -4,7 +4,7 @@ parameters:
     # Logging configuration
     logging:
         # Log level (debug, info, notice, warning, error, critical, alert, emergency)
-        level: 'info'
+        level: 'debug'
 
         # Log file path (null for stderr)
         file: null
@@ -19,4 +19,4 @@ parameters:
         timestamps: true
 
         # Log format (simple, detailed, json)
-        format: 'simple'
+        format: 'json'

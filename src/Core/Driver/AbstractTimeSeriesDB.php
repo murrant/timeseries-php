@@ -121,6 +121,11 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
         ]);
 
         $rawQuery = $this->queryBuilder->build($query);
+
+        $this->logger->debug('Built raw query', [
+            'query' => $rawQuery->getRawQuery(),
+        ]);
+
         $result = $this->rawQuery($rawQuery);
 
         $this->logger->debug('Query executed', [
