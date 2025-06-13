@@ -1,0 +1,6 @@
+ - [ ] Add write adapters
+   - [ ] rrdtool direct connection
+   - [ ] rrdtool persistent process stdin
+   - [ ] rrdtool command per process
+   - [ ] influxdb 2.x http
+   - [ ] influxdb 2 udp
