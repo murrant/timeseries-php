@@ -3,14 +3,6 @@
 namespace TimeSeriesPhp\Drivers\InfluxDB;
 
 use DateTime;
-use InfluxDB2\Model\BucketRetentionRules;
-use InfluxDB2\Model\Buckets;
-use InfluxDB2\Model\DeletePredicateRequest;
-use InfluxDB2\Model\Organizations;
-use InfluxDB2\Model\PostBucketRequest;
-use InfluxDB2\Service\BucketsService;
-use InfluxDB2\Service\DeleteService;
-use InfluxDB2\Service\OrganizationsService;
 use Psr\Log\LoggerInterface;
 use TimeSeriesPhp\Contracts\Connection\ConnectionAdapterInterface;
 use TimeSeriesPhp\Contracts\Driver\ConfigurableInterface;
@@ -168,17 +160,31 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
 
     public function createDatabase(string $database): bool
     {
+        if (! $this->isConnected()) {
+            throw new ConnectionException('Not connected to InfluxDB');
+        }
+
         try {
-            $bucketsService = $this->getBucketsService();
+            // Create the bucket request payload
+            $payload = json_encode([
+                'name' => $database,
+                'retentionRules' => [
+                    [
+                        'everySeconds' => 0, // No expiration
+                        'type' => 'expire',
+                    ],
+                ],
+            ]);
 
-            $rule = new BucketRetentionRules;
-            $rule->setEverySeconds(0); // No expiration
-            $bucketRequest = new PostBucketRequest;
+            if ($payload === false) {
+                throw new \JsonException('Failed to encode bucket creation request');
+            }
 
-            $bucketRequest->setName($database)
-                ->setRetentionRules([$rule])
-                ->setOrgId($this->getOrgId());
-            $bucketsService->postBuckets($bucketRequest);
+            $response = $this->connectionAdapter->executeCommand('create_bucket', $payload);
+
+            if (! $response->success) {
+                throw new DatabaseException('Failed to create bucket: ' . $response->error);
+            }
 
             return true;
         } catch (\Throwable $e) {
@@ -196,18 +202,26 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
      */
     public function getDatabases(): array
     {
+        if (! $this->isConnected()) {
+            throw new ConnectionException('Not connected to InfluxDB');
+        }
+
         try {
-            $bucketsService = $this->getBucketsService();
-            $buckets = $bucketsService->getBuckets(org_id: $this->getOrgId());
-            if (! $buckets instanceof Buckets) {
-                throw new DatabaseException('Invalid object returned from getBuckets');
+            $response = $this->connectionAdapter->executeCommand('get_buckets', '');
+
+            if (! $response->success) {
+                throw new DatabaseException('Failed to list buckets: ' . $response->error);
+            }
+
+            $data = json_decode($response->data, true);
+            if (! is_array($data) || ! isset($data['buckets']) || ! is_array($data['buckets'])) {
+                throw new DatabaseException('Invalid response format from buckets API');
             }
 
             $bucketNames = [];
-            $bucketsList = $buckets->getBuckets();
-            if ($bucketsList !== null) {
-                foreach ($bucketsList as $bucket) {
-                    $bucketNames[] = $bucket->getName();
+            foreach ($data['buckets'] as $bucket) {
+                if (is_array($bucket) && isset($bucket['name']) && is_string($bucket['name'])) {
+                    $bucketNames[] = $bucket['name'];
                 }
             }
 
@@ -226,19 +240,30 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
      */
     public function deleteMeasurement(string $measurement, ?DateTime $start = null, ?DateTime $stop = null): bool
     {
-        if ($this->client === null) {
-            throw new ConnectionException('Client is not initialized');
+        if (! $this->isConnected()) {
+            throw new ConnectionException('Not connected to InfluxDB');
         }
 
         try {
-            /** @var DeleteService $service */
-            $service = $this->client->createService(DeleteService::class);
-            $predicate = new DeletePredicateRequest;
-            $predicate->setStart($start ?? new DateTime('1970-01-01T00:00:00Z'));
-            $predicate->setStop($stop ?? new DateTime);
-            $predicate->setPredicate("_measurement=\"{$measurement}\"");
+            // Create the delete request payload
+            $startTime = $start ?? new DateTime('1970-01-01T00:00:00Z');
+            $stopTime = $stop ?? new DateTime();
 
-            $service->postDelete($predicate, bucket: $this->config->bucket, org_id: $this->getOrgId());
+            $payload = json_encode([
+                'start' => $startTime->format('Y-m-d\TH:i:s\Z'),
+                'stop' => $stopTime->format('Y-m-d\TH:i:s\Z'),
+                'predicate' => "_measurement=\"{$measurement}\"",
+            ]);
+
+            if ($payload === false) {
+                throw new \JsonException('Failed to encode delete request');
+            }
+
+            $response = $this->connectionAdapter->executeCommand('delete_measurement', $payload);
+
+            if (! $response->success) {
+                throw new DatabaseException('Failed to delete measurement: ' . $response->error);
+            }
 
             return true;
         } catch (\Throwable $e) {
@@ -259,25 +284,27 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
     public function getHealth(): array
     {
         try {
-            if ($this->client === null) {
-                throw new ConnectionException('Client is not initialized');
+            if (! $this->isConnected()) {
+                throw new ConnectionException('Not connected to InfluxDB');
             }
 
-            $health = $this->client->ping();
+            $response = $this->connectionAdapter->executeCommand('ping', '');
 
-            // The return types from upstream give us a bit of trouble :/
+            if (! $response->success) {
+                throw new ConnectionException('Failed to ping InfluxDB: ' . $response->error);
+            }
+
+            // Extract build and version from response metadata
             $build = 'Unknown';
             $version = 'Unknown';
 
-            if (isset($health['X-Influxdb-Build']) && is_array($health['X-Influxdb-Build']) && isset($health['X-Influxdb-Build'][0])) {
-                if (is_scalar($health['X-Influxdb-Build'][0])) {
-                    $build = (string) $health['X-Influxdb-Build'][0];
-                }
-            }
-
-            if (isset($health['X-Influxdb-Version']) && is_array($health['X-Influxdb-Version']) && isset($health['X-Influxdb-Version'][0])) {
-                if (is_scalar($health['X-Influxdb-Version'][0])) {
-                    $version = (string) $health['X-Influxdb-Version'][0];
+            if (isset($response->metadata['headers']) && is_array($response->metadata['headers'])) {
+                foreach ($response->metadata['headers'] as $header) {
+                    if (is_string($header) && str_starts_with($header, 'X-Influxdb-Build:')) {
+                        $build = trim(substr($header, strlen('X-Influxdb-Build:')));
+                    } elseif (is_string($header) && str_starts_with($header, 'X-Influxdb-Version:')) {
+                        $version = trim(substr($header, strlen('X-Influxdb-Version:')));
+                    }
                 }
             }
 
@@ -293,68 +320,6 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
                 'version' => 'Unknown',
             ];
         }
-    }
-
-    /**
-     * @throws ConnectionException
-     * @throws DatabaseException
-     */
-    private function getOrgId(): string
-    {
-        if ($this->orgId === null) {
-            if ($this->client === null) {
-                throw new ConnectionException('Client is not initialized');
-            }
-
-            $orgService = $this->client->createService(OrganizationsService::class);
-            if (! $orgService instanceof OrganizationsService) {
-                throw new DatabaseException('Failed to create OrganizationsService');
-            }
-
-            $organizations = $orgService->getOrgs();
-            if (! $organizations instanceof Organizations) {
-                throw new DatabaseException('Invalid object returned from getOrgs');
-            }
-
-            $orgs = $organizations->getOrgs();
-
-            if ($orgs !== null) {
-                foreach ($orgs as $org) {
-                    if ($org->getName() == $this->config->org) {
-                        $this->orgId = $org->getId() ?? '';
-
-                        return $this->orgId;
-                    }
-                }
-            }
-
-            $this->orgId = '';
-        }
-
-        return $this->orgId;
-    }
-
-    /**
-     * @throws ConnectionException
-     * @throws DatabaseException
-     */
-    private function getBucketsService(): BucketsService
-    {
-        if ($this->bucketsService === null) {
-            if ($this->client === null) {
-                throw new ConnectionException('Client is not initialized');
-            }
-
-            $service = $this->client->createService(BucketsService::class);
-
-            if (! $service instanceof BucketsService) {
-                throw new DatabaseException('Failed to create BucketsService');
-            }
-
-            $this->bucketsService = $service;
-        }
-
-        return $this->bucketsService;
     }
 
     /**

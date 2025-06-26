@@ -33,6 +33,7 @@ class InfluxDBConfig extends AbstractDriverConfiguration
         public readonly bool $debug = false,
         public readonly string $precision = TimePrecision::NS->value,
         public readonly string $connection_type = 'http',
+        public readonly ?string $socket_path = null,
     ) {}
 
     /**
@@ -86,6 +87,10 @@ class InfluxDBConfig extends AbstractDriverConfiguration
             ->info('The connection type')
             ->values(['http', 'socket'])
             ->defaultValue('http')
+            ->end()
+            ->scalarNode('socket_path')
+            ->info('The path to the Unix socket for socket connections')
+            ->defaultNull()
             ->end()
             ->end();
     }

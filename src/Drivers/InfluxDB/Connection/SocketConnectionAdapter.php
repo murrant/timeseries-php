@@ -12,7 +12,7 @@ class SocketConnectionAdapter implements ConnectionAdapterInterface
 {
     private bool $connected = false;
 
-    private $socket = null;
+    private ?\Socket $socket = null;
 
     public function __construct(
         private readonly InfluxDBConfig $config,
@@ -24,7 +24,7 @@ class SocketConnectionAdapter implements ConnectionAdapterInterface
         try {
             // Parse socket path from config
             $socketPath = $this->config->socket_path;
-            if (empty($socketPath)) {
+            if (empty($socketPath) || !is_string($socketPath)) {
                 throw new ConnectionException('Socket path is not configured');
             }
 
@@ -32,6 +32,11 @@ class SocketConnectionAdapter implements ConnectionAdapterInterface
             $this->socket = @socket_create(AF_UNIX, SOCK_STREAM, 0);
             if ($this->socket === false) {
                 throw new ConnectionException('Failed to create socket: '.socket_strerror(socket_last_error()));
+            }
+
+            // Ensure socket is valid
+            if (!$this->socket instanceof \Socket) {
+                throw new ConnectionException('Socket is not valid');
             }
 
             $result = @socket_connect($this->socket, $socketPath);
@@ -77,6 +82,11 @@ class SocketConnectionAdapter implements ConnectionAdapterInterface
                 'data' => $data,
             ])."\n";
 
+            // Ensure socket is valid
+            if (!$this->socket instanceof \Socket) {
+                throw new ConnectionException('Socket is not valid');
+            }
+
             // Send the request
             $bytesSent = socket_write($this->socket, $request, strlen($request));
             if ($bytesSent === false) {
@@ -86,24 +96,44 @@ class SocketConnectionAdapter implements ConnectionAdapterInterface
             // Read the response
             $response = '';
             $buffer = '';
+
+            // Ensure socket is valid
+            if (!$this->socket instanceof \Socket) {
+                throw new ConnectionException('Socket is not valid');
+            }
+
             while (socket_recv($this->socket, $buffer, 4096, 0) > 0) {
                 $response .= $buffer;
-                if (str_ends_with($buffer, "\n")) {
+                if (is_string($buffer) && str_ends_with($buffer, "\n")) {
                     break;
                 }
             }
 
             // Parse the response
+            /** @var array<string, mixed>|null $responseData */
             $responseData = json_decode($response, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 return CommandResponse::failure('Failed to parse response: '.json_last_error_msg());
             }
 
-            if (isset($responseData['error'])) {
-                return CommandResponse::failure($responseData['error'], $responseData['metadata'] ?? []);
+            if (!is_array($responseData)) {
+                return CommandResponse::failure('Invalid response format');
             }
 
-            return CommandResponse::success($responseData['data'] ?? '', $responseData['metadata'] ?? []);
+            if (isset($responseData['error']) && is_string($responseData['error'])) {
+                $metadata = isset($responseData['metadata']) && is_array($responseData['metadata']) 
+                    ? $responseData['metadata'] 
+                    : [];
+                return CommandResponse::failure($responseData['error'], $metadata);
+            }
+
+            $data = isset($responseData['data']) && is_string($responseData['data']) 
+                ? $responseData['data'] 
+                : '';
+            $metadata = isset($responseData['metadata']) && is_array($responseData['metadata']) 
+                ? $responseData['metadata'] 
+                : [];
+            return CommandResponse::success($data, $metadata);
         } catch (\Throwable $e) {
             return CommandResponse::failure("Command execution failed: {$e->getMessage()}");
         }
@@ -111,7 +141,7 @@ class SocketConnectionAdapter implements ConnectionAdapterInterface
 
     public function close(): void
     {
-        if ($this->socket !== null) {
+        if ($this->socket instanceof \Socket) {
             socket_close($this->socket);
             $this->socket = null;
         }

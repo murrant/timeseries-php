@@ -59,11 +59,12 @@ class ContainerFactory
             // Load bundles from bundles.php if it exists
             $bundlesFile = $configDir.'/bundles.php';
             if (file_exists($bundlesFile)) {
+                /** @var array<class-string, array<string, bool>> $bundles */
                 $bundles = require $bundlesFile;
                 foreach ($bundles as $bundleClass => $environments) {
-                    if (isset($environments['all']) && $environments['all'] === true ||
-                        isset($environments[$container->getParameter('kernel.environment')]) &&
-                        $environments[$container->getParameter('kernel.environment')] === true) {
+                    if ((isset($environments['all']) && $environments['all'] === true) ||
+                        (isset($environments[$container->getParameter('kernel.environment')]) &&
+                        $environments[$container->getParameter('kernel.environment')] === true)) {
                         if (class_exists($bundleClass)) {
                             $bundle = new $bundleClass;
                             if ($bundle instanceof BundleInterface) {

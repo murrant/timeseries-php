@@ -68,7 +68,7 @@ class LineProtocolFormatter
         return str_replace([',', '=', ' '], ['\,', '\=', '\ '], $key);
     }
 
-    private function formatFieldValue($value): string
+    private function formatFieldValue(string|bool|int|float $value): string
     {
         if (is_string($value)) {
             return '"'.str_replace(['"', '\\'], ['\\"', '\\\\'], $value).'"';

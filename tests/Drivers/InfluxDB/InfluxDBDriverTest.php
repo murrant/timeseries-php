@@ -137,7 +137,21 @@ class InfluxDBDriverTest extends TestCase
         // Create a mock connection adapter
         $mockConnectionAdapter = $this->createMock(ConnectionAdapterInterface::class);
         $mockConnectionAdapter->method('connect')->willReturn(true);
-        $mockConnectionAdapter->method('executeCommand')->willReturn(new CommandResponse(true, ''));
+        $mockConnectionAdapter->method('executeCommand')->willReturnCallback(function ($command, $data) {
+            if ($command === 'ping') {
+                return new CommandResponse(
+                    true, 
+                    '', 
+                    [
+                        'headers' => [
+                            'X-Influxdb-Build: test_build',
+                            'X-Influxdb-Version: test_version'
+                        ]
+                    ]
+                );
+            }
+            return new CommandResponse(true, '');
+        });
 
         // Create a formatter
         $writeFormatter = new LineProtocolFormatter;
