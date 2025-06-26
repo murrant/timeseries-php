@@ -7,7 +7,7 @@ parameters:
         level: 'debug'
 
         # Log file path (null for stderr)
-        file: null
+        file: /tmp/tsdb.log
 
         # Maximum log file size in bytes before rotation (default: 10MB)
         max_size: 10485760
