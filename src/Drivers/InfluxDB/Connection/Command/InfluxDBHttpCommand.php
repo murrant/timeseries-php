@@ -23,6 +23,7 @@ interface InfluxDBHttpCommand
 
     /**
      * Get additional HTTP headers
+     *
      * @return array<string, string>
      */
     public function getHeaders(): array;

@@ -11,19 +11,19 @@ class QueryCommand extends AbstractInfluxDBHttpCommand
 {
     private string $data = '';
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public function getEndpoint(): string
     {
         return '/query';
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public function getMethod(): string
     {
         return 'GET';
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public function getQueryParams(string $orgId, string $bucket, string $precision): array
     {
         return [
@@ -32,7 +32,7 @@ class QueryCommand extends AbstractInfluxDBHttpCommand
         ];
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public function processData(string $data, string $orgId): string
     {
         $this->data = $data;

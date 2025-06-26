@@ -20,6 +20,7 @@ use TimeSeriesPhp\TSDB;
 class InfluxDBIntegrationTest extends TestCase
 {
     private TimeSeriesInterface $driver;
+
     private TSDB $tsdb;
 
     private string $testBucket = 'test_integration';

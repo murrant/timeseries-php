@@ -134,7 +134,7 @@ class RRDtoolCachedIntegrationTest extends TestCase
         $this->assertEquals('cpu_usage_host-server1.rrd', $file);
 
         // If we need the full path, we should concatenate it with the data directory
-        $fullPath = $this->dataDir . $file;
+        $fullPath = $this->dataDir.$file;
         $this->assertStringEndsWith('cpu_usage_host-server1.rrd', $fullPath);
     }
 

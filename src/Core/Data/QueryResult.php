@@ -10,6 +10,41 @@ class QueryResult
      */
     public function __construct(private array $series = [], private readonly array $metadata = []) {}
 
+    /**
+     * Add a series to the result
+     *
+     * @param  string  $name  The name of the series
+     * @param  array<int, string>  $columns  The column names
+     * @param  array<int, array<int, mixed>>  $values  The values for each row
+     * @param  array<string, mixed>  $tags  The tags for the series
+     */
+    public function addSeries(string $name, array $columns, array $values, array $tags = []): void
+    {
+        foreach ($values as $row) {
+            $timestamp = null;
+            $timeIndex = array_search('time', $columns);
+
+            if ($timeIndex !== false && isset($row[$timeIndex])) {
+                $timestamp = $row[$timeIndex];
+            }
+
+            foreach ($columns as $i => $column) {
+                if ($column !== 'time' && isset($row[$i])) {
+                    $fieldName = $name.'.'.$column;
+
+                    // Ensure timestamp is a valid type
+                    $validTimestamp = $timestamp !== null ? (is_string($timestamp) || is_int($timestamp) ? $timestamp : (string) time()) : (string) time();
+
+                    // Ensure value is a valid type
+                    $value = $row[$i];
+                    $validValue = is_scalar($value) ? (string) $value : null;
+
+                    $this->appendPoint($validTimestamp, $fieldName, $validValue);
+                }
+            }
+        }
+    }
+
     public function appendPoint(int|string $timestamp, string $field, float|int|string|bool|null $value): void
     {
         $this->series[$field][] = ['date' => $timestamp, 'value' => $value];

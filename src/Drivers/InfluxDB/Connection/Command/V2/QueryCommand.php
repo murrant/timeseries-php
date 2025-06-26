@@ -9,25 +9,25 @@ use TimeSeriesPhp\Drivers\InfluxDB\Connection\Command\AbstractInfluxDBHttpComman
  */
 class QueryCommand extends AbstractInfluxDBHttpCommand
 {
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public function getEndpoint(): string
     {
         return '/api/v2/query';
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public function getMethod(): string
     {
         return 'POST';
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public function getHeaders(): array
     {
         return ['Content-Type' => 'application/vnd.flux'];
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public function getQueryParams(string $orgId, string $bucket, string $precision): array
     {
         return [

@@ -58,7 +58,11 @@ class DeleteMeasurementCommand extends AbstractInfluxDBHttpCommand
             return 'q=DROP MEASUREMENT "unknown"';
         }
 
-        $measurement = (string) $decodedData['measurement'];
+        // Ensure measurement is a string
+        $measurement = is_string($decodedData['measurement'])
+            ? $decodedData['measurement']
+            : (is_scalar($decodedData['measurement']) ? (string) $decodedData['measurement'] : 'unknown');
+
         // Escape the measurement name for the query
         $escapedName = str_replace('"', '\"', $measurement);
 

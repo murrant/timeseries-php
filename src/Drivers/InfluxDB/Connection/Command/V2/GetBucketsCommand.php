@@ -9,20 +9,19 @@ use TimeSeriesPhp\Drivers\InfluxDB\Connection\Command\AbstractInfluxDBHttpComman
  */
 class GetBucketsCommand extends AbstractInfluxDBHttpCommand
 {
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public function getEndpoint(): string
     {
         return '/api/v2/buckets';
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public function getMethod(): string
     {
         return 'GET';
     }
 
-
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public function getQueryParams(string $orgId, string $bucket, string $precision): array
     {
         return [

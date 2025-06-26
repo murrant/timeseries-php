@@ -45,7 +45,7 @@ class GetBucketsCommand extends AbstractInfluxDBHttpCommand
         ];
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public function processData(string $data, string $orgId): string
     {
         // For v1, we don't need to process the input data

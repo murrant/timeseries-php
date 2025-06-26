@@ -9,7 +9,7 @@ I’m using Symfony 7 with autowiring, autoconfiguration, and PSR-12 style. Code
    Formatting: pint
    Static Analysis: phpstan
 - Never throw a generic \Exception, use TSDBException as the base exception
-- Never use eval()
+- Never use eval() or match(true)
 - Inline code comments should only be used when they are needed to explain something that is not obvious
 - Use constructor property promotion when appropriate
 - This package is under development and does not need to maintain backwards compatibility

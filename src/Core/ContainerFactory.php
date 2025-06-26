@@ -62,9 +62,11 @@ class ContainerFactory
                 /** @var array<class-string, array<string, bool>> $bundles */
                 $bundles = require $bundlesFile;
                 foreach ($bundles as $bundleClass => $environments) {
+                    // Ensure environment is a string
+                    $envParam = $container->getParameter('kernel.environment');
+                    $environment = is_string($envParam) ? $envParam : (is_scalar($envParam) ? (string) $envParam : 'dev');
                     if ((isset($environments['all']) && $environments['all'] === true) ||
-                        (isset($environments[$container->getParameter('kernel.environment')]) &&
-                        $environments[$container->getParameter('kernel.environment')] === true)) {
+                        (isset($environments[$environment]) && $environments[$environment] === true)) {
                         if (class_exists($bundleClass)) {
                             $bundle = new $bundleClass;
                             if ($bundle instanceof BundleInterface) {

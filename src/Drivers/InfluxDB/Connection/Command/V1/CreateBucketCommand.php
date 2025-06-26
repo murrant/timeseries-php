@@ -57,7 +57,11 @@ class CreateBucketCommand extends AbstractInfluxDBHttpCommand
             return 'q=CREATE DATABASE "default"';
         }
 
-        $dbName = (string) $decodedData['name'];
+        // Ensure name is a string
+        $dbName = is_string($decodedData['name'])
+            ? $decodedData['name']
+            : (is_scalar($decodedData['name']) ? (string) $decodedData['name'] : 'default');
+
         // Escape the database name for the query
         $escapedName = str_replace('"', '\"', $dbName);
 

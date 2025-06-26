@@ -142,6 +142,12 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
         }
     }
 
+    /**
+     * Parse the query response from InfluxDB
+     *
+     * @param  string  $responseData  The response data from InfluxDB
+     * @return QueryResult The parsed query result
+     */
     private function parseQueryResponse(string $responseData): QueryResult
     {
         $result = new QueryResult;
@@ -149,7 +155,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
         try {
             $data = json_decode($responseData, true);
 
-            if (!$data || !is_array($data)) {
+            if (! $data || ! is_array($data)) {
                 return $result;
             }
 
@@ -157,12 +163,42 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
             if (isset($data['results']) && is_array($data['results'])) {
                 // InfluxDB v1 format
                 foreach ($data['results'] as $resultSet) {
+                    if (! is_array($resultSet)) {
+                        continue;
+                    }
+
                     if (isset($resultSet['series']) && is_array($resultSet['series'])) {
                         foreach ($resultSet['series'] as $series) {
-                            $name = $series['name'] ?? 'unknown';
-                            $columns = $series['columns'] ?? [];
-                            $values = $series['values'] ?? [];
-                            $tags = $series['tags'] ?? [];
+                            if (! is_array($series)) {
+                                continue;
+                            }
+
+                            $name = isset($series['name']) && is_string($series['name']) ? $series['name'] : 'unknown';
+
+                            // Ensure columns are strings
+                            $rawColumns = isset($series['columns']) && is_array($series['columns']) ? $series['columns'] : [];
+                            $columns = [];
+                            foreach ($rawColumns as $col) {
+                                $columns[] = is_string($col) ? $col : (is_scalar($col) ? (string) $col : 'unknown');
+                            }
+
+                            // Ensure values are properly formatted
+                            $rawValues = isset($series['values']) && is_array($series['values']) ? $series['values'] : [];
+                            $values = [];
+                            foreach ($rawValues as $row) {
+                                if (is_array($row)) {
+                                    $values[] = $row;
+                                }
+                            }
+
+                            // Ensure tags are properly formatted
+                            $rawTags = isset($series['tags']) && is_array($series['tags']) ? $series['tags'] : [];
+                            $tags = [];
+                            foreach ($rawTags as $key => $value) {
+                                if (is_string($key)) {
+                                    $tags[$key] = $value;
+                                }
+                            }
 
                             $result->addSeries($name, $columns, $values, $tags);
                         }
@@ -171,6 +207,10 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
             } elseif (isset($data['tables']) && is_array($data['tables'])) {
                 // InfluxDB v2 format with tables
                 foreach ($data['tables'] as $table) {
+                    if (! is_array($table)) {
+                        continue;
+                    }
+
                     if (isset($table['data']) && is_array($table['data'])) {
                         $columns = [];
                         $values = [];
@@ -178,28 +218,54 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
                         $tags = [];
 
                         foreach ($table['data'] as $row) {
-                            if (empty($columns) && isset($row['columns'])) {
+                            if (! is_array($row)) {
+                                continue;
+                            }
+
+                            if (empty($columns) && isset($row['columns']) && is_array($row['columns'])) {
                                 $columns = $row['columns'];
                             }
 
-                            if (isset($row['values'])) {
+                            if (isset($row['values']) && is_array($row['values'])) {
                                 $values[] = $row['values'];
                             }
 
                             // Try to extract measurement name
-                            if (!isset($name) && isset($row['_measurement'])) {
+                            if ($name === 'unknown' && isset($row['_measurement']) && is_string($row['_measurement'])) {
                                 $name = $row['_measurement'];
                             }
 
                             // Extract tags
                             foreach ($row as $key => $value) {
-                                if (strpos($key, '_') !== 0 && $key !== 'result' && $key !== 'table') {
+                                if (is_string($key) && strpos($key, '_') !== 0 && $key !== 'result' && $key !== 'table') {
                                     $tags[$key] = $value;
                                 }
                             }
                         }
 
-                        $result->addSeries($name, $columns, $values, $tags);
+                        // Ensure columns are strings
+                        $stringColumns = [];
+                        foreach ($columns as $col) {
+                            $stringColumns[] = is_string($col) ? $col : (string) $col;
+                        }
+
+                        // Ensure values are properly formatted
+                        $formattedValues = [];
+                        foreach ($values as $row) {
+                            if (is_array($row)) {
+                                $formattedValues[] = $row;
+                            }
+                        }
+
+                        // Ensure tags are properly formatted
+                        $formattedTags = [];
+                        foreach ($tags as $key => $value) {
+                            if (is_string($key)) {
+                                $formattedTags[$key] = $value;
+                            }
+                        }
+
+                        $result->addSeries($name, $stringColumns, $formattedValues, $formattedTags);
                     }
                 }
             } else {
@@ -211,15 +277,19 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
                 $tags = [];
 
                 // Extract data from the response
-                foreach ($data as $record) {
-                    if (is_array($record)) {
+                if (is_array($data)) {
+                    foreach ($data as $record) {
+                        if (! is_array($record)) {
+                            continue;
+                        }
+
                         if (empty($columns)) {
                             // First record contains column names
                             $columns = array_keys($record);
                         }
 
                         // Extract measurement name if available
-                        if (isset($record['_measurement'])) {
+                        if (isset($record['_measurement']) && is_string($record['_measurement'])) {
                             $name = $record['_measurement'];
                         }
 
@@ -232,20 +302,42 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
 
                         // Extract tags
                         foreach ($record as $key => $value) {
-                            if (strpos($key, '_') !== 0 && $key !== 'result' && $key !== 'table') {
+                            if (is_string($key) && strpos($key, '_') !== 0 && $key !== 'result' && $key !== 'table') {
                                 $tags[$key] = $value;
                             }
                         }
                     }
-                }
 
-                if (!empty($columns) && !empty($values)) {
-                    $result->addSeries($name, $columns, $values, $tags);
+                    if (! empty($columns) && ! empty($values)) {
+                        // Ensure columns are strings
+                        $stringColumns = [];
+                        foreach ($columns as $col) {
+                            $stringColumns[] = is_string($col) ? $col : (string) $col;
+                        }
+
+                        // Ensure values are properly formatted
+                        $formattedValues = [];
+                        foreach ($values as $row) {
+                            if (is_array($row)) {
+                                $formattedValues[] = $row;
+                            }
+                        }
+
+                        // Ensure tags are properly formatted
+                        $formattedTags = [];
+                        foreach ($tags as $key => $value) {
+                            if (is_string($key)) {
+                                $formattedTags[$key] = $value;
+                            }
+                        }
+
+                        $result->addSeries($name, $stringColumns, $formattedValues, $formattedTags);
+                    }
                 }
             }
         } catch (\Throwable $e) {
             // Log the error but return an empty result
-            $this->logger->error('Failed to parse query response: ' . $e->getMessage(), [
+            $this->logger->error('Failed to parse query response: '.$e->getMessage(), [
                 'exception' => $e::class,
                 'response' => $responseData,
             ]);
