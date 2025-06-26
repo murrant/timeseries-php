@@ -129,7 +129,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
 
         try {
             // Execute the query command
-            $response = $this->connectionAdapter->executeCommand('write', $query->getRawQuery());
+            $response = $this->connectionAdapter->executeCommand('query', $query->getRawQuery());
 
             if (! $response->success) {
                 throw new RawQueryException($query, 'Query execution failed: '.$response->error);
@@ -146,7 +146,110 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
     {
         $result = new QueryResult;
 
-        // TODO implement
+        try {
+            $data = json_decode($responseData, true);
+
+            if (!$data || !is_array($data)) {
+                return $result;
+            }
+
+            // Handle InfluxDB v2 Flux response format
+            if (isset($data['results']) && is_array($data['results'])) {
+                // InfluxDB v1 format
+                foreach ($data['results'] as $resultSet) {
+                    if (isset($resultSet['series']) && is_array($resultSet['series'])) {
+                        foreach ($resultSet['series'] as $series) {
+                            $name = $series['name'] ?? 'unknown';
+                            $columns = $series['columns'] ?? [];
+                            $values = $series['values'] ?? [];
+                            $tags = $series['tags'] ?? [];
+
+                            $result->addSeries($name, $columns, $values, $tags);
+                        }
+                    }
+                }
+            } elseif (isset($data['tables']) && is_array($data['tables'])) {
+                // InfluxDB v2 format with tables
+                foreach ($data['tables'] as $table) {
+                    if (isset($table['data']) && is_array($table['data'])) {
+                        $columns = [];
+                        $values = [];
+                        $name = 'unknown';
+                        $tags = [];
+
+                        foreach ($table['data'] as $row) {
+                            if (empty($columns) && isset($row['columns'])) {
+                                $columns = $row['columns'];
+                            }
+
+                            if (isset($row['values'])) {
+                                $values[] = $row['values'];
+                            }
+
+                            // Try to extract measurement name
+                            if (!isset($name) && isset($row['_measurement'])) {
+                                $name = $row['_measurement'];
+                            }
+
+                            // Extract tags
+                            foreach ($row as $key => $value) {
+                                if (strpos($key, '_') !== 0 && $key !== 'result' && $key !== 'table') {
+                                    $tags[$key] = $value;
+                                }
+                            }
+                        }
+
+                        $result->addSeries($name, $columns, $values, $tags);
+                    }
+                }
+            } else {
+                // Try to handle Flux CSV-like format
+                // This is a simplified parser for the most common case
+                $name = 'unknown';
+                $columns = [];
+                $values = [];
+                $tags = [];
+
+                // Extract data from the response
+                foreach ($data as $record) {
+                    if (is_array($record)) {
+                        if (empty($columns)) {
+                            // First record contains column names
+                            $columns = array_keys($record);
+                        }
+
+                        // Extract measurement name if available
+                        if (isset($record['_measurement'])) {
+                            $name = $record['_measurement'];
+                        }
+
+                        // Extract values
+                        $rowValues = [];
+                        foreach ($columns as $column) {
+                            $rowValues[] = $record[$column] ?? null;
+                        }
+                        $values[] = $rowValues;
+
+                        // Extract tags
+                        foreach ($record as $key => $value) {
+                            if (strpos($key, '_') !== 0 && $key !== 'result' && $key !== 'table') {
+                                $tags[$key] = $value;
+                            }
+                        }
+                    }
+                }
+
+                if (!empty($columns) && !empty($values)) {
+                    $result->addSeries($name, $columns, $values, $tags);
+                }
+            }
+        } catch (\Throwable $e) {
+            // Log the error but return an empty result
+            $this->logger->error('Failed to parse query response: ' . $e->getMessage(), [
+                'exception' => $e::class,
+                'response' => $responseData,
+            ]);
+        }
 
         return $result;
     }

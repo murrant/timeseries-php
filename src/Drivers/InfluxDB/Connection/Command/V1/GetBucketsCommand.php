@@ -45,14 +45,7 @@ class GetBucketsCommand extends AbstractInfluxDBHttpCommand
         ];
     }
 
-    /**
-     * Process the data for this command
-     * Convert the v1 response format to match the v2 format
-     *
-     * @param  string  $data  The input data
-     * @param  string  $orgId  The organization ID
-     * @return string The processed data
-     */
+    /** @inheritDoc */
     public function processData(string $data, string $orgId): string
     {
         // For v1, we don't need to process the input data

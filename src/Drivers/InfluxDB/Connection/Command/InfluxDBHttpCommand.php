@@ -22,6 +22,12 @@ interface InfluxDBHttpCommand
     public function getMethod(): string;
 
     /**
+     * Get additional HTTP headers
+     * @return array<string, string>
+     */
+    public function getHeaders(): array;
+
+    /**
      * Get the query parameters for this command
      *
      * @param  string  $orgId  The organization ID

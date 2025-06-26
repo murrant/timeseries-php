@@ -214,15 +214,7 @@ class HttpConnectionAdapter implements ConnectionAdapterInterface
                 'org' => $this->config->org,
             ]);
 
-            // Set empty string to prevent repeated API calls
-            $this->orgId = '';
-
-            // Ensure we always throw a ConnectionException
-            if ($e instanceof ConnectionException) {
-                throw $e;
-            }
-
-            throw new ConnectionException('Failed to get organization ID: '.$e->getMessage(), 0, $e);
+            return $this->orgId ?? '';
         }
     }
 }
