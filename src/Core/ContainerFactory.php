@@ -61,11 +61,11 @@ class ContainerFactory
             if (file_exists($bundlesFile)) {
                 $bundles = require $bundlesFile;
                 foreach ($bundles as $bundleClass => $environments) {
-                    if (isset($environments['all']) && $environments['all'] === true || 
-                        isset($environments[$container->getParameter('kernel.environment')]) && 
+                    if (isset($environments['all']) && $environments['all'] === true ||
+                        isset($environments[$container->getParameter('kernel.environment')]) &&
                         $environments[$container->getParameter('kernel.environment')] === true) {
                         if (class_exists($bundleClass)) {
-                            $bundle = new $bundleClass();
+                            $bundle = new $bundleClass;
                             if ($bundle instanceof BundleInterface) {
                                 $bundle->build($container);
                             }

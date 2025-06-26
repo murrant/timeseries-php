@@ -62,6 +62,13 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
     public function configure(array $config): void
     {
         $this->config = $this->config->createFromArray($config);
+
+        // Recreate the connection adapter with the updated config
+        if ($this->config->connection_type === 'http') {
+            $this->connectionAdapter = $this->createHttpConnectionAdapter();
+        } else {
+            $this->connectionAdapter = new SocketConnectionAdapter($this->config, $this->logger);
+        }
     }
 
     protected function doConnect(): bool
