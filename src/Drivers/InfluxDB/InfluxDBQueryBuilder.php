@@ -31,10 +31,10 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
         if ($query->getStartTime() && $query->getEndTime()) {
             $start = $query->getStartTime()->format('c');
             $stop = $query->getEndTime()->format('c');
-            $fluxQuery .= "  |> range(start: {$start}, stop: {$stop})\n";
+            $fluxQuery .= "  |> range(start: time(v: \"{$start}\"), stop: time(v: \"{$stop}\"))\n";
         } elseif ($query->getStartTime()) {
             $start = $query->getStartTime()->format('c');
-            $fluxQuery .= "  |> range(start: {$start})\n";
+            $fluxQuery .= "  |> range(start: time(v: \"{$start}\"))\n";
         } elseif ($query->getRelativeTime()) {
             // Handle relative time (e.g., "last 1h")
             $fluxQuery .= '  |> range(start: -'.$this->formatDateInterval($query->getRelativeTime()).")\n";
@@ -115,6 +115,9 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
             $fieldCondition = implode(' or ', $fieldConditions);
             $fluxQuery .= "  |> filter(fn: (r) => {$fieldCondition})\n";
         }
+
+        // Always add a pivot to make the result more usable
+        $fluxQuery .= "  |> pivot(rowKey:[\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n";
 
         // Handle distinct
         if ($query->isDistinct()) {

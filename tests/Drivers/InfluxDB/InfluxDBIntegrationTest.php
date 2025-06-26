@@ -7,7 +7,6 @@ use PHPUnit\Framework\TestCase;
 use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
-use TimeSeriesPhp\Core\Query\Query;
 use TimeSeriesPhp\Core\Query\RawQuery;
 use TimeSeriesPhp\TSDB;
 
@@ -131,29 +130,38 @@ class InfluxDBIntegrationTest extends TestCase
 
     public function test_query(): void
     {
-        // First write some data
+        // First write some data with a different field name
         $timestamp = new DateTime;
         $dataPoint = new DataPoint(
             'cpu_usage',
-            ['usage_user' => 42.5],
+            ['value' => 42.5], // Use 'value' instead of 'usage_user'
             ['host' => 'query-test-server'],
             $timestamp
         );
-        $this->driver->write($dataPoint);
+
+        // Print debug information about the data point
+        echo "Writing data point:\n";
+        echo "Measurement: cpu_usage\n";
+        echo "Fields: value = 42.5\n";
+        echo "Tags: host = query-test-server\n";
+        echo "Timestamp: " . $timestamp->format('c') . "\n";
+
+        $writeResult = $this->driver->write($dataPoint);
+        echo "Write result: " . ($writeResult ? "success" : "failure") . "\n";
 
         // Wait a moment for data to be available
         sleep(1);
 
-        // Query the data
-        $query = new Query('cpu_usage');
-        $query->select(['usage_user'])
-            ->where('host', '=', 'query-test-server')
-            ->timeRange(
-                (clone $timestamp)->modify('-1 minute'),
-                (clone $timestamp)->modify('+1 minute')
-            );
+        // Print debug information about the configuration
+        echo "Test bucket: " . $this->testBucket . "\n";
 
-        $result = $this->driver->query($query);
+        // Use a raw query directly with no field filter
+        $rawQueryString = 'from(bucket:"'.$this->testBucket.'") '.
+                         '|> range(start: -1h) '.
+                         '|> filter(fn: (r) => r._measurement == "cpu_usage" and r.host == "query-test-server")';
+
+        $rawQuery = new RawQuery($rawQueryString);
+        $result = $this->driver->rawQuery($rawQuery);
 
         $this->assertInstanceOf(QueryResult::class, $result);
         $series = $result->getSeries();

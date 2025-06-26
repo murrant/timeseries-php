@@ -152,10 +152,13 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
     {
         $result = new QueryResult;
 
+        $this->logger->debug('Raw response data from InfluxDB: ' . $responseData);
+
         try {
             $data = json_decode($responseData, true);
 
             if (! $data || ! is_array($data)) {
+                $this->logger->debug('No data or invalid data in response');
                 return $result;
             }
 

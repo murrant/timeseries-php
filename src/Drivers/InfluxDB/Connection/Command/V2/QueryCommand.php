@@ -24,7 +24,10 @@ class QueryCommand extends AbstractInfluxDBHttpCommand
     /** {@inheritDoc} */
     public function getHeaders(): array
     {
-        return ['Content-Type' => 'application/vnd.flux'];
+        return [
+            'Content-Type' => 'application/vnd.flux',
+            'Accept' => 'application/csv',
+        ];
     }
 
     /** {@inheritDoc} */
