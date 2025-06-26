@@ -34,13 +34,13 @@ docker-compose up -d
 2. Run the sample data generator:
 
 ```bash
-docker-compose exec php php /var/www/html/docker/generate_sample_data.php
+docker-compose exec php php /var/www/html/bin/generate_sample_data.php
 ```
 
 Or, if you're running PHP locally:
 
 ```bash
-php docker/generate_sample_data.php
+php bin/generate_sample_data.php
 ```
 
 ### Configuration

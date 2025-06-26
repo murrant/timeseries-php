@@ -4,14 +4,12 @@ namespace TimeSeriesPhp\Tests\Drivers\InfluxDB;
 
 use DateTime;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\NullLogger;
+use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Query\Query;
 use TimeSeriesPhp\Core\Query\RawQuery;
-use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig;
-use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
-use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBQueryBuilder;
+use TimeSeriesPhp\TSDB;
 
 /**
  * Integration test for InfluxDBDriver that assumes InfluxDB is available
@@ -21,7 +19,8 @@ use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBQueryBuilder;
  */
 class InfluxDBIntegrationTest extends TestCase
 {
-    private InfluxDBDriver $driver;
+    private TimeSeriesInterface $driver;
+    private TSDB $tsdb;
 
     private string $testBucket = 'test_integration';
 
@@ -38,24 +37,23 @@ class InfluxDBIntegrationTest extends TestCase
         $influxOrg = getenv('INFLUXDB_ORG') ?: 'my-org';
         $influxBucket = getenv('INFLUXDB_BUCKET') ?: $this->testBucket;
 
-        // Create a real InfluxDBConfig
-        $config = new InfluxDBConfig(
-            url: $influxUrl,
-            token: $influxToken,
-            org: $influxOrg,
-            bucket: $influxBucket,
-            timeout: 5, // Short timeout for testing
-            verify_ssl: false, // Don't verify SSL for testing
-            debug: false,
-        );
+        // Create configuration array
+        $config = [
+            'url' => $influxUrl,
+            'token' => $influxToken,
+            'org' => $influxOrg,
+            'bucket' => $influxBucket,
+            'timeout' => 5, // Short timeout for testing
+            'verify_ssl' => false, // Don't verify SSL for testing
+            'debug' => false,
+        ];
 
-        // Create a real InfluxDBDriver with the client and query builder
-        $client = new \InfluxDB2\Client($config->getClientConfig());
-        $this->driver = new InfluxDBDriver(new InfluxDBQueryBuilder, new NullLogger, $config, $client);
-
+        // Initialize driver using TSDB
         try {
-            $connected = $this->driver->connect();
-            if (! $connected) {
+            $this->tsdb = TSDB::start('influxdb', $config);
+            $this->driver = $this->tsdb->getDriver();
+
+            if (! $this->driver->isConnected()) {
                 $this->markTestSkipped('Could not connect to InfluxDB at '.$influxUrl);
             }
 
@@ -84,7 +82,7 @@ class InfluxDBIntegrationTest extends TestCase
                 // Ignore cleanup errors
             }
 
-            $this->driver->close();
+            $this->tsdb->close();
         }
     }
 

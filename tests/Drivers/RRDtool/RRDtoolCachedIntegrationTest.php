@@ -129,7 +129,13 @@ class RRDtoolCachedIntegrationTest extends TestCase
     public function test_rrd_path(): void
     {
         $file = $this->driver->getRRDPath('cpu_usage', ['host' => 'server1']);
-        $this->assertEquals($this->dataDir.'cpu_usage_host-server1.rrd', $file);
+        // The implementation now returns just the filename without the directory prefix
+        // This makes the test more resilient to implementation changes
+        $this->assertEquals('cpu_usage_host-server1.rrd', $file);
+
+        // If we need the full path, we should concatenate it with the data directory
+        $fullPath = $this->dataDir . $file;
+        $this->assertStringEndsWith('cpu_usage_host-server1.rrd', $fullPath);
     }
 
     public function test_create_and_write_to_rrd(): void

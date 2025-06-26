@@ -228,7 +228,7 @@ The easiest way to run integration tests is to use the provided script that auto
 
 ```bash
 # Run all integration tests with Docker Compose
-./docker/run-integration-tests.sh
+./bin/run-integration-tests.sh
 ```
 
 #### 🖥️ Running Tests Manually
