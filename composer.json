@@ -29,10 +29,14 @@
     "phpstan/phpstan-phpunit": "^2.0",
     "phpstan/phpstan-symfony": "^2.0",
     "symfony/process": "^7.3",
-    "rector/rector": "^2.0"
+    "rector/rector": "^2.0",
+    "symfony/runtime": "^7.3",
+    "symfony/framework-bundle": "^7.3",
+    "symfony/console": "^7.3"
   },
   "require": {
     "php": ">=8.2",
+    "ext-sockets": "*",
     "symfony/dependency-injection": "^7.2",
     "symfony/config": "^7.2",
     "symfony/yaml": "^7.2",
@@ -70,7 +74,8 @@
   },
   "config": {
     "allow-plugins": {
-      "php-http/discovery": true
+      "php-http/discovery": true,
+      "symfony/runtime": true
     }
   }
 }
