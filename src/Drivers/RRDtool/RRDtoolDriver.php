@@ -160,11 +160,6 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
             $this->persistentInput->write(implode(' ', $args)."\n");
             $timeout = time() + $this->commandTimeout;
             $this->persistentProcess->waitUntil(function (string $type, string $output) use ($command, $args, $timeout) {
-                // FIXME debug output?
-                if ($this->config->debug && function_exists('dump')) {
-                    dump("Type: $type  $output");
-                }
-
                 if (preg_match('/^OK/m', $output)) {
                     return true;
                 }
