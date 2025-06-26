@@ -28,7 +28,9 @@ class LineProtocolFormatter
         // Add fields
         $fields = [];
         foreach ($data->getFields() as $key => $value) {
-            $fields[] = $this->escapeFieldKey($key).'='.$this->formatFieldValue($value);
+            if ($value !== null) {
+                $fields[] = $this->escapeFieldKey($key).'='.$this->formatFieldValue($value);
+            }
         }
         $line .= ' '.implode(',', $fields);
 

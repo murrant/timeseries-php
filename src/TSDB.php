@@ -57,7 +57,11 @@ class TSDB
         }
 
         // Get the logger from the container
-        $this->logger = self::$container->get(LoggerInterface::class);
+        $logger = self::$container->get(LoggerInterface::class);
+        if (! $logger instanceof LoggerInterface) {
+            throw new DriverException('Logger is not available in the container');
+        }
+        $this->logger = $logger;
 
         // Create the driver
         $this->driver = $driverFactory->create($driver, $config ?? []);

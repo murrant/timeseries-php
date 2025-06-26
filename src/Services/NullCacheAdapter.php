@@ -35,6 +35,9 @@ class NullCacheAdapter implements \Psr\SimpleCache\CacheInterface
         return $result;
     }
 
+    /**
+     * @param  iterable<string, ?scalar>  $values
+     */
     public function setMultiple(iterable $values, \DateInterval|int|null $ttl = null): bool
     {
         return true;

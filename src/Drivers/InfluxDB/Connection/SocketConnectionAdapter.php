@@ -100,7 +100,9 @@ class SocketConnectionAdapter extends HttpConnectionAdapter
     private function executeSocketCommand(string $command, string $data): CommandResponse
     {
         try {
-
+            if ($this->socket === null) {
+                throw new ConnectionException('Socket is not connected');
+            }
 
             // Send the request
             $bytesSent = socket_write($this->socket, $data, strlen($data));
@@ -108,44 +110,9 @@ class SocketConnectionAdapter extends HttpConnectionAdapter
                 throw new ConnectionException('Failed to send data: '.socket_strerror(socket_last_error($this->socket)));
             }
 
-            // Read the response
-            $response = '';
-            $buffer = '';
+            // UDP is connectionless
 
-            while (socket_recv($this->socket, $buffer, 4096, 0) > 0) {
-                $response .= (string)$buffer;
-                if (str_ends_with((string)$buffer, "\n")) {
-                    break;
-                }
-            }
-
-            // Parse the response
-            /** @var array<string, mixed>|null $responseData */
-            $responseData = json_decode($response, true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                return CommandResponse::failure('Failed to parse response: '.json_last_error_msg());
-            }
-
-            if (! is_array($responseData)) {
-                return CommandResponse::failure('Invalid response format');
-            }
-
-            if (isset($responseData['error']) && is_string($responseData['error'])) {
-                $metadata = isset($responseData['metadata']) && is_array($responseData['metadata'])
-                    ? $responseData['metadata']
-                    : [];
-
-                return CommandResponse::failure($responseData['error'], $metadata);
-            }
-
-            $responseText = isset($responseData['data']) && is_string($responseData['data'])
-                ? $responseData['data']
-                : '';
-            $metadata = isset($responseData['metadata']) && is_array($responseData['metadata'])
-                ? $responseData['metadata']
-                : [];
-
-            return CommandResponse::success($responseText, $metadata);
+            return CommandResponse::success();
         } catch (\Throwable $e) {
             $this->logger->error('Socket command execution failed: '.$e->getMessage(), [
                 'exception' => $e::class,
