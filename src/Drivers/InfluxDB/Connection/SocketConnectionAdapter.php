@@ -2,49 +2,61 @@
 
 namespace TimeSeriesPhp\Drivers\InfluxDB\Connection;
 
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Log\LoggerInterface;
-use TimeSeriesPhp\Contracts\Connection\ConnectionAdapterInterface;
 use TimeSeriesPhp\Core\Connection\CommandResponse;
 use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 
-class SocketConnectionAdapter implements ConnectionAdapterInterface
+/**
+ * Socket connection adapter for InfluxDB
+ * Extends HttpConnectionAdapter because the InfluxDB UDP socket can only be used to write data
+ */
+class SocketConnectionAdapter extends HttpConnectionAdapter
 {
-    private bool $connected = false;
+    private bool $socketConnected = false;
 
     private ?\Socket $socket = null;
 
     public function __construct(
-        private readonly InfluxDBConfig $config,
-        private readonly LoggerInterface $logger
-    ) {}
+        InfluxDBConfig $config,
+        LoggerInterface $logger,
+        ClientInterface $httpClient,
+        RequestFactoryInterface $requestFactory,
+        StreamFactoryInterface $streamFactory
+    ) {
+        parent::__construct($config, $logger, $httpClient, $requestFactory, $streamFactory);
+    }
 
     public function connect(): bool
     {
         try {
-            // Parse socket path from config
+            // First connect via HTTP (parent method)
+            parent::connect();
+
+            // Then connect via socket
             $socketPath = $this->config->socket_path;
-            if (empty($socketPath) || ! is_string($socketPath)) {
+            if (empty($socketPath)) {
                 throw new ConnectionException('Socket path is not configured');
             }
 
             // Create and connect the socket
-            $this->socket = @socket_create(AF_UNIX, SOCK_STREAM, 0);
-            if ($this->socket === false) {
+            $socket = @socket_create(AF_UNIX, SOCK_STREAM, 0);
+            if ($socket === false) {
                 throw new ConnectionException('Failed to create socket: '.socket_strerror(socket_last_error()));
             }
 
-            // Ensure socket is valid
-            if (! $this->socket instanceof \Socket) {
-                throw new ConnectionException('Socket is not valid');
-            }
+            // Set the socket property
+            $this->socket = $socket;
 
             $result = @socket_connect($this->socket, $socketPath);
             if ($result === false) {
                 throw new ConnectionException('Failed to connect to socket: '.socket_strerror(socket_last_error($this->socket)));
             }
 
-            $this->connected = true;
+            $this->socketConnected = true;
 
             $this->logger->info('Connected to InfluxDB via socket successfully', [
                 'socket_path' => $socketPath,
@@ -56,7 +68,7 @@ class SocketConnectionAdapter implements ConnectionAdapterInterface
                 'exception' => $e::class,
                 'socket_path' => $this->config->socket_path ?? 'not set',
             ]);
-            $this->connected = false;
+            $this->socketConnected = false;
 
             throw new ConnectionException('Failed to connect to InfluxDB via socket: '.$e->getMessage(), 0, $e);
         }
@@ -64,7 +76,8 @@ class SocketConnectionAdapter implements ConnectionAdapterInterface
 
     public function isConnected(): bool
     {
-        return $this->connected && $this->socket !== null;
+        // Check both HTTP and socket connections
+        return parent::isConnected() && $this->socketConnected && $this->socket !== null;
     }
 
     public function executeCommand(string $command, string $data): CommandResponse
@@ -73,22 +86,24 @@ class SocketConnectionAdapter implements ConnectionAdapterInterface
             throw new ConnectionException('Not connected to InfluxDB');
         }
 
-        try {
-            // Format the command for socket communication
-            $request = json_encode([
-                'command' => $command,
-                'org' => $this->config->org,
-                'bucket' => $this->config->bucket,
-                'data' => $data,
-            ])."\n";
+        // For write commands, use socket; for other commands, use HTTP
+        if ($command === 'write') {
+            return $this->executeSocketCommand($command, $data);
+        }
 
-            // Ensure socket is valid
-            if (! $this->socket instanceof \Socket) {
-                throw new ConnectionException('Socket is not valid');
-            }
+        return parent::executeCommand($command, $data);
+    }
+
+    /**
+     * Execute a command via socket connection
+     */
+    private function executeSocketCommand(string $command, string $data): CommandResponse
+    {
+        try {
+
 
             // Send the request
-            $bytesSent = socket_write($this->socket, $request, strlen($request));
+            $bytesSent = socket_write($this->socket, $data, strlen($data));
             if ($bytesSent === false) {
                 throw new ConnectionException('Failed to send data: '.socket_strerror(socket_last_error($this->socket)));
             }
@@ -97,14 +112,9 @@ class SocketConnectionAdapter implements ConnectionAdapterInterface
             $response = '';
             $buffer = '';
 
-            // Ensure socket is valid
-            if (! $this->socket instanceof \Socket) {
-                throw new ConnectionException('Socket is not valid');
-            }
-
             while (socket_recv($this->socket, $buffer, 4096, 0) > 0) {
-                $response .= $buffer;
-                if (is_string($buffer) && str_ends_with($buffer, "\n")) {
+                $response .= (string)$buffer;
+                if (str_ends_with((string)$buffer, "\n")) {
                     break;
                 }
             }
@@ -128,25 +138,33 @@ class SocketConnectionAdapter implements ConnectionAdapterInterface
                 return CommandResponse::failure($responseData['error'], $metadata);
             }
 
-            $data = isset($responseData['data']) && is_string($responseData['data'])
+            $responseText = isset($responseData['data']) && is_string($responseData['data'])
                 ? $responseData['data']
                 : '';
             $metadata = isset($responseData['metadata']) && is_array($responseData['metadata'])
                 ? $responseData['metadata']
                 : [];
 
-            return CommandResponse::success($data, $metadata);
+            return CommandResponse::success($responseText, $metadata);
         } catch (\Throwable $e) {
-            return CommandResponse::failure("Command execution failed: {$e->getMessage()}");
+            $this->logger->error('Socket command execution failed: '.$e->getMessage(), [
+                'exception' => $e::class,
+                'command' => $command,
+            ]);
+            return CommandResponse::failure("Socket command execution failed: {$e->getMessage()}");
         }
     }
 
     public function close(): void
     {
+        // Close the socket connection
         if ($this->socket instanceof \Socket) {
             socket_close($this->socket);
             $this->socket = null;
         }
-        $this->connected = false;
+        $this->socketConnected = false;
+
+        // Close the HTTP connection (parent)
+        parent::close();
     }
 }

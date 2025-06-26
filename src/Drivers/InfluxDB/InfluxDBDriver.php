@@ -40,10 +40,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
         $this->config = $config;
         $this->influxQueryBuilder = $queryBuilder;
 
-        $this->connectionAdapter = $connectionAdapter ?? match ($this->config->connection_type) {
-            'socket' => new SocketConnectionAdapter($this->config, $this->logger),
-            default => $this->createHttpConnectionAdapter(),
-        };
+        $this->connectionAdapter = $connectionAdapter ?? $this->createConnectionAdapter();
     }
 
     /**
@@ -56,11 +53,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
         $this->config = $this->config->createFromArray($config);
 
         // Recreate the connection adapter with the updated config
-        if ($this->config->connection_type === 'http') {
-            $this->connectionAdapter = $this->createHttpConnectionAdapter();
-        } else {
-            $this->connectionAdapter = new SocketConnectionAdapter($this->config, $this->logger);
-        }
+        $this->connectionAdapter = $this->createConnectionAdapter();
     }
 
     protected function doConnect(): bool
@@ -322,15 +315,22 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
         }
     }
 
-    /**
-     * Create a new HttpConnectionAdapter with PSR HTTP client dependencies
-     */
-    private function createHttpConnectionAdapter(): HttpConnectionAdapter
+    private function createConnectionAdapter(): ConnectionAdapterInterface
     {
         // Use PHP-HTTP discovery to find implementations
         $httpClient = \Http\Discovery\Psr18ClientDiscovery::find();
         $requestFactory = \Http\Discovery\Psr17FactoryDiscovery::findRequestFactory();
         $streamFactory = \Http\Discovery\Psr17FactoryDiscovery::findStreamFactory();
+
+        if ($this->config->connection_type === 'socket') {
+            return new SocketConnectionAdapter(
+                $this->config,
+                $this->logger,
+                $httpClient,
+                $requestFactory,
+                $streamFactory
+            );
+        }
 
         return new HttpConnectionAdapter(
             $this->config,

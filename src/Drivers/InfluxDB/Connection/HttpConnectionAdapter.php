@@ -20,11 +20,11 @@ class HttpConnectionAdapter implements ConnectionAdapterInterface
     private ?string $orgId = null;
 
     public function __construct(
-        private readonly InfluxDBConfig $config,
-        private readonly LoggerInterface $logger,
-        private readonly ClientInterface $httpClient,
-        private readonly RequestFactoryInterface $requestFactory,
-        private readonly StreamFactoryInterface $streamFactory
+        protected readonly InfluxDBConfig $config,
+        protected readonly LoggerInterface $logger,
+        protected readonly ClientInterface $httpClient,
+        protected readonly RequestFactoryInterface $requestFactory,
+        protected readonly StreamFactoryInterface $streamFactory
     ) {}
 
     public function connect(): bool
