@@ -67,6 +67,7 @@ class HttpConnectionAdapter implements ConnectionAdapterInterface
 
             $endpoint = $commandObj->getEndpoint();
             $method = $commandObj->getMethod();
+            $headers = $commandObj->getHeaders();
             $queryParams = $commandObj->getQueryParams(
                 $this->getOrgId(),
                 $this->config->bucket,
@@ -75,7 +76,7 @@ class HttpConnectionAdapter implements ConnectionAdapterInterface
             $processedData = $commandObj->processData($data, $this->getOrgId());
 
             // Make the HTTP request
-            return $this->makeHttpRequest($method, $endpoint, $processedData, $queryParams);
+            return $this->makeHttpRequest($method, $endpoint, $processedData, $queryParams, $headers);
         } catch (\Throwable $e) {
             return CommandResponse::failure("Command execution failed: {$e->getMessage()}");
         }
@@ -93,22 +94,22 @@ class HttpConnectionAdapter implements ConnectionAdapterInterface
      * @param  string  $endpoint  API endpoint
      * @param  string  $body  Request body
      * @param  array<string, string>  $queryParams  Query parameters
+     * @param  array<string, string>  $headers  Additional headers
      * @return CommandResponse Response from the API
      */
     private function makeHttpRequest(
         string $method,
         string $endpoint,
         string $body = '',
-        array $queryParams = []
+        array $queryParams = [],
+        array $headers = []
     ): CommandResponse {
         try {
-            // Build the URL with query parameters
             $url = rtrim($this->config->url, '/').$endpoint;
             if (! empty($queryParams)) {
                 $url .= '?'.http_build_query($queryParams);
             }
 
-            // Create the request
             $request = $this->requestFactory->createRequest($method, $url);
 
             // Add headers
@@ -116,25 +117,21 @@ class HttpConnectionAdapter implements ConnectionAdapterInterface
                 ->withHeader('Authorization', 'Token '.$this->config->token)
                 ->withHeader('Content-Type', 'application/json');
 
-            // Add body if needed
+            // Add any other headers optionally override
+            foreach ($headers as $name => $value) {
+                $request = $request->withHeader($name, $value);
+            }
+
             if (! empty($body)) {
                 $stream = $this->streamFactory->createStream($body);
                 $request = $request->withBody($stream);
             }
 
-            // Send the request
             $response = $this->httpClient->sendRequest($request);
-
-            // Get status code
             $statusCode = $response->getStatusCode();
-
-            // Check for success
             $success = $statusCode >= 200 && $statusCode < 300;
-
-            // Get response body
             $responseBody = $response->getBody()->__toString();
 
-            // Create metadata
             $headers = [];
             foreach ($response->getHeaders() as $name => $values) {
                 $headers[] = $name.': '.implode(', ', $values);
