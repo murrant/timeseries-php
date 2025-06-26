@@ -1,11 +1,13 @@
 <?php
 
-namespace TimeSeriesPhp\Drivers\InfluxDB\Connection\Command;
+namespace TimeSeriesPhp\Drivers\InfluxDB\Connection\Command\V2;
+
+use TimeSeriesPhp\Drivers\InfluxDB\Connection\Command\AbstractInfluxDBHttpCommand;
 
 /**
- * Command for writing data to InfluxDB
+ * Command for getting buckets from InfluxDB (API v2)
  */
-class WriteCommand extends AbstractInfluxDBHttpCommand
+class GetBucketsCommand extends AbstractInfluxDBHttpCommand
 {
     /**
      * Get the HTTP endpoint for this command
@@ -14,7 +16,7 @@ class WriteCommand extends AbstractInfluxDBHttpCommand
      */
     public function getEndpoint(): string
     {
-        return '/api/v2/write';
+        return '/api/v2/buckets';
     }
 
     /**
@@ -24,7 +26,7 @@ class WriteCommand extends AbstractInfluxDBHttpCommand
      */
     public function getMethod(): string
     {
-        return 'POST';
+        return 'GET';
     }
 
     /**
@@ -39,8 +41,6 @@ class WriteCommand extends AbstractInfluxDBHttpCommand
     {
         return [
             'org' => $orgId,
-            'bucket' => $bucket,
-            'precision' => $precision,
         ];
     }
 }

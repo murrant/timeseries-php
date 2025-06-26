@@ -1,11 +1,13 @@
 <?php
 
-namespace TimeSeriesPhp\Drivers\InfluxDB\Connection\Command;
+namespace TimeSeriesPhp\Drivers\InfluxDB\Connection\Command\V1;
+
+use TimeSeriesPhp\Drivers\InfluxDB\Connection\Command\AbstractInfluxDBHttpCommand;
 
 /**
- * Command for deleting a measurement in InfluxDB
+ * Command for writing data to InfluxDB API v1
  */
-class DeleteMeasurementCommand extends AbstractInfluxDBHttpCommand
+class WriteCommand extends AbstractInfluxDBHttpCommand
 {
     /**
      * Get the HTTP endpoint for this command
@@ -14,7 +16,7 @@ class DeleteMeasurementCommand extends AbstractInfluxDBHttpCommand
      */
     public function getEndpoint(): string
     {
-        return '/api/v2/delete';
+        return '/write';
     }
 
     /**
@@ -30,16 +32,16 @@ class DeleteMeasurementCommand extends AbstractInfluxDBHttpCommand
     /**
      * Get the query parameters for this command
      *
-     * @param  string  $orgId  The organization ID
-     * @param  string  $bucket  The bucket name
+     * @param  string  $orgId  The organization ID (not used in v1)
+     * @param  string  $bucket  The bucket name (database in v1)
      * @param  string  $precision  The precision
      * @return array<string, string> The query parameters
      */
     public function getQueryParams(string $orgId, string $bucket, string $precision): array
     {
         return [
-            'org' => $orgId,
-            'bucket' => $bucket,
+            'db' => $bucket,
+            'precision' => $precision,
         ];
     }
 }

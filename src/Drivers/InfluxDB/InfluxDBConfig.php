@@ -24,6 +24,7 @@ class InfluxDBConfig extends AbstractDriverConfiguration
         public readonly string $precision = TimePrecision::NS->value,
         public readonly string $connection_type = 'http',
         public readonly int $udp_port = 8089,
+        public readonly int $api_version = 2,
     ) {}
 
     /**
@@ -82,6 +83,12 @@ class InfluxDBConfig extends AbstractDriverConfiguration
             ->info('The port for 1.x UDP write socket')
             ->defaultValue(8089)
             ->end()
+            ->integerNode('api_version')
+            ->info('The InfluxDB API version')
+            ->defaultValue(2)
+            ->min(1)
+            ->max(2)
+            ->end()
             ->end();
     }
 
@@ -99,6 +106,7 @@ class InfluxDBConfig extends AbstractDriverConfiguration
             'timeout' => $this->timeout,
             'verifySSL' => $this->verify_ssl,
             'debug' => $this->debug,
+            'api_version' => $this->api_version,
         ];
     }
 }

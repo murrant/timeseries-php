@@ -63,7 +63,7 @@ class HttpConnectionAdapter implements ConnectionAdapterInterface
         }
 
         try {
-            $commandObj = InfluxDBHttpCommandFactory::create($command);
+            $commandObj = InfluxDBHttpCommandFactory::create($command, $this->config->api_version);
 
             $endpoint = $commandObj->getEndpoint();
             $method = $commandObj->getMethod();
@@ -171,8 +171,15 @@ class HttpConnectionAdapter implements ConnectionAdapterInterface
             return $this->orgId;
         }
 
+        // For API v1, organization is not used, so we return the org name as is
+        if ($this->config->api_version === 1) {
+            $this->orgId = $this->config->org;
+
+            return $this->orgId;
+        }
+
         try {
-            // Fetch organization data from API
+            // Fetch organization data from API (v2 only)
             $response = $this->makeHttpRequest('GET', '/api/v2/orgs', '', ['org' => $this->config->org]);
 
             if (! $response->success) {

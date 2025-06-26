@@ -1,11 +1,13 @@
 <?php
 
-namespace TimeSeriesPhp\Drivers\InfluxDB\Connection\Command;
+namespace TimeSeriesPhp\Drivers\InfluxDB\Connection\Command\V2;
+
+use TimeSeriesPhp\Drivers\InfluxDB\Connection\Command\AbstractInfluxDBHttpCommand;
 
 /**
- * Command for pinging InfluxDB
+ * Command for querying data from InfluxDB API v2
  */
-class PingCommand extends AbstractInfluxDBHttpCommand
+class QueryCommand extends AbstractInfluxDBHttpCommand
 {
     /**
      * Get the HTTP endpoint for this command
@@ -14,7 +16,7 @@ class PingCommand extends AbstractInfluxDBHttpCommand
      */
     public function getEndpoint(): string
     {
-        return '/ping';
+        return '/api/v2/query';
     }
 
     /**
@@ -24,6 +26,6 @@ class PingCommand extends AbstractInfluxDBHttpCommand
      */
     public function getMethod(): string
     {
-        return 'GET';
+        return 'POST';
     }
 }

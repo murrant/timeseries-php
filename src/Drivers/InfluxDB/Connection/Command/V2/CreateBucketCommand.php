@@ -1,9 +1,11 @@
 <?php
 
-namespace TimeSeriesPhp\Drivers\InfluxDB\Connection\Command;
+namespace TimeSeriesPhp\Drivers\InfluxDB\Connection\Command\V2;
+
+use TimeSeriesPhp\Drivers\InfluxDB\Connection\Command\AbstractInfluxDBHttpCommand;
 
 /**
- * Command for creating a bucket in InfluxDB
+ * Command for creating a bucket in InfluxDB (API v2)
  */
 class CreateBucketCommand extends AbstractInfluxDBHttpCommand
 {

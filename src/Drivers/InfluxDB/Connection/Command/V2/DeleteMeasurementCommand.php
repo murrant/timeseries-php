@@ -1,11 +1,13 @@
 <?php
 
-namespace TimeSeriesPhp\Drivers\InfluxDB\Connection\Command;
+namespace TimeSeriesPhp\Drivers\InfluxDB\Connection\Command\V2;
+
+use TimeSeriesPhp\Drivers\InfluxDB\Connection\Command\AbstractInfluxDBHttpCommand;
 
 /**
- * Command for getting buckets from InfluxDB
+ * Command for deleting a measurement in InfluxDB (API v2)
  */
-class GetBucketsCommand extends AbstractInfluxDBHttpCommand
+class DeleteMeasurementCommand extends AbstractInfluxDBHttpCommand
 {
     /**
      * Get the HTTP endpoint for this command
@@ -14,7 +16,7 @@ class GetBucketsCommand extends AbstractInfluxDBHttpCommand
      */
     public function getEndpoint(): string
     {
-        return '/api/v2/buckets';
+        return '/api/v2/delete';
     }
 
     /**
@@ -24,7 +26,7 @@ class GetBucketsCommand extends AbstractInfluxDBHttpCommand
      */
     public function getMethod(): string
     {
-        return 'GET';
+        return 'POST';
     }
 
     /**
@@ -39,6 +41,7 @@ class GetBucketsCommand extends AbstractInfluxDBHttpCommand
     {
         return [
             'org' => $orgId,
+            'bucket' => $bucket,
         ];
     }
 }
