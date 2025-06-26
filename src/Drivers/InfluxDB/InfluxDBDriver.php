@@ -13,7 +13,7 @@ use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
 use TimeSeriesPhp\Core\Driver\Formatter\LineProtocolFormatter;
 use TimeSeriesPhp\Drivers\InfluxDB\Connection\HttpConnectionAdapter;
-use TimeSeriesPhp\Drivers\InfluxDB\Connection\SocketConnectionAdapter;
+use TimeSeriesPhp\Drivers\InfluxDB\Connection\UdpConnectionAdapter;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 use TimeSeriesPhp\Exceptions\Driver\DatabaseException;
 use TimeSeriesPhp\Exceptions\Driver\WriteException;
@@ -322,8 +322,8 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
         $requestFactory = \Http\Discovery\Psr17FactoryDiscovery::findRequestFactory();
         $streamFactory = \Http\Discovery\Psr17FactoryDiscovery::findStreamFactory();
 
-        if ($this->config->connection_type === 'socket') {
-            return new SocketConnectionAdapter(
+        if ($this->config->connection_type === 'udp') {
+            return new UdpConnectionAdapter(
                 $this->config,
                 $this->logger,
                 $httpClient,

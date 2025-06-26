@@ -13,16 +13,6 @@ use TimeSeriesPhp\Core\Enum\TimePrecision;
 #[Config('influxdb', InfluxDBDriver::class)]
 class InfluxDBConfig extends AbstractDriverConfiguration
 {
-    /**
-     * @param  string  $url  The InfluxDB server URL
-     * @param  string  $token  The InfluxDB API token
-     * @param  string  $org  The InfluxDB organization
-     * @param  string  $bucket  The InfluxDB bucket
-     * @param  int  $timeout  Connection timeout in seconds
-     * @param  bool  $verify_ssl  Whether to verify SSL certificates
-     * @param  bool  $debug  Enable debug mode
-     * @param  string  $precision  The timestamp precision
-     */
     public function __construct(
         public readonly string $url = 'http://localhost:8086',
         public readonly string $token = '',
@@ -33,7 +23,7 @@ class InfluxDBConfig extends AbstractDriverConfiguration
         public readonly bool $debug = false,
         public readonly string $precision = TimePrecision::NS->value,
         public readonly string $connection_type = 'http',
-        public readonly ?string $socket_path = null,
+        public readonly int $udp_port = 8089,
     ) {}
 
     /**
@@ -85,12 +75,12 @@ class InfluxDBConfig extends AbstractDriverConfiguration
             ->end()
             ->enumNode('connection_type')
             ->info('The connection type')
-            ->values(['http', 'socket'])
+            ->values(['http', 'udp'])
             ->defaultValue('http')
             ->end()
-            ->scalarNode('socket_path')
-            ->info('The path to the Unix socket for socket connections')
-            ->defaultNull()
+            ->integerNode('udp_port')
+            ->info('The port for 1.x UDP write socket')
+            ->defaultValue(8089)
             ->end()
             ->end();
     }

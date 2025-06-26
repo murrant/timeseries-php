@@ -11,10 +11,10 @@ use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 
 /**
- * Socket connection adapter for InfluxDB
+ * UDP Socket connection adapter for InfluxDB
  * Extends HttpConnectionAdapter because the InfluxDB UDP socket can only be used to write data
  */
-class SocketConnectionAdapter extends HttpConnectionAdapter
+class UdpConnectionAdapter extends HttpConnectionAdapter
 {
     private bool $socketConnected = false;
 
@@ -36,14 +36,13 @@ class SocketConnectionAdapter extends HttpConnectionAdapter
             // First connect via HTTP (parent method)
             parent::connect();
 
-            // Then connect via socket
-            $socketPath = $this->config->socket_path;
-            if (empty($socketPath)) {
-                throw new ConnectionException('Socket path is not configured');
-            }
+            // Extract host from URL
+            $url = parse_url($this->config->url);
+            $host = $url['host'] ?? 'localhost';
+            $port = 8089; // Default UDP port for InfluxDB 1.x
 
             // Create and connect the socket
-            $socket = @socket_create(AF_UNIX, SOCK_STREAM, 0);
+            $socket = @socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
             if ($socket === false) {
                 throw new ConnectionException('Failed to create socket: '.socket_strerror(socket_last_error()));
             }
@@ -51,26 +50,28 @@ class SocketConnectionAdapter extends HttpConnectionAdapter
             // Set the socket property
             $this->socket = $socket;
 
-            $result = @socket_connect($this->socket, $socketPath);
+            $result = @socket_connect($this->socket, $host, $port);
             if ($result === false) {
                 throw new ConnectionException('Failed to connect to socket: '.socket_strerror(socket_last_error($this->socket)));
             }
 
             $this->socketConnected = true;
 
-            $this->logger->info('Connected to InfluxDB via socket successfully', [
-                'socket_path' => $socketPath,
+            $this->logger->info('Connected to InfluxDB via UDP socket successfully', [
+                'host' => $host,
+                'port' => $port,
             ]);
 
             return true;
         } catch (\Throwable $e) {
-            $this->logger->error('InfluxDB socket connection failed: '.$e->getMessage(), [
+            $this->logger->error('InfluxDB UDP socket connection failed: '.$e->getMessage(), [
                 'exception' => $e::class,
-                'socket_path' => $this->config->socket_path ?? 'not set',
+                'url' => $this->config->url,
+                'port' => $this->config->udp_port,
             ]);
             $this->socketConnected = false;
 
-            throw new ConnectionException('Failed to connect to InfluxDB via socket: '.$e->getMessage(), 0, $e);
+            throw new ConnectionException('Failed to connect to InfluxDB via UDP socket: '.$e->getMessage(), 0, $e);
         }
     }
 
@@ -101,7 +102,7 @@ class SocketConnectionAdapter extends HttpConnectionAdapter
     {
         try {
             if ($this->socket === null) {
-                throw new ConnectionException('Socket is not connected');
+                throw new ConnectionException('UDP socket is not connected');
             }
 
             // Send the request
@@ -111,14 +112,14 @@ class SocketConnectionAdapter extends HttpConnectionAdapter
             }
 
             // UDP is connectionless
-
             return CommandResponse::success();
         } catch (\Throwable $e) {
-            $this->logger->error('Socket command execution failed: '.$e->getMessage(), [
+            $this->logger->error('UDP socket command execution failed: '.$e->getMessage(), [
                 'exception' => $e::class,
                 'command' => $command,
             ]);
-            return CommandResponse::failure("Socket command execution failed: {$e->getMessage()}");
+
+            return CommandResponse::failure("UDP socket command execution failed: {$e->getMessage()}");
         }
     }
 
