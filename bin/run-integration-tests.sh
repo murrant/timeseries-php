@@ -36,7 +36,7 @@ START_TIME=$(date +%s)
 
 # Start Docker Compose services
 echo "Starting Docker Compose services..."
-docker-compose -f docker/docker-compose.yml up -d
+docker-compose -f "$(dirname "$0")/../docker/docker-compose.yml" up -d
 
 # Wait for services to be ready
 check_service "InfluxDB" "http://localhost:8086/health" 12

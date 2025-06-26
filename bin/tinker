@@ -1,0 +1,126 @@
+#!/bin/bash
+# psy/psysh should be installed globally (# composer g require psy/psysh:@stable )
+# Add this script in a folder that can be found in your $PATH environment.
+# Make it executable with chmod +x symfony-tinker
+# Cd into your symfony project and run `symfony-tinker`
+# The $kernel, $container, $doctrine and $em variables should be available.
+
+
+if [[ -z $(composer global show -i 2>/dev/null | grep psy/psysh) ]]; then
+    echo "Could not find Psysh, please install first with:";
+    echo;
+    echo -e "\e[0;33mcomposer g require psy/psysh:@stable\e[0m"
+    exit 0; 
+fi
+
+cat << EOF > sf-tinker.php
+#!/usr/bin/env php
+<?php
+
+class ClassAliasAutoloader
+{
+    protected \$shell;
+    protected \$classes = [];
+    protected \$vendorPath;
+
+    public static function register(\Psy\Shell \$shell, string \$classMapPath)
+    {
+        \$loader = new static(\$shell, \$classMapPath);
+
+        spl_autoload_register([\$loader, 'aliasClass']);
+
+        return \$loader;
+    }
+
+    public function __construct(\Psy\Shell \$shell, string \$classMapPath)
+    {
+        \$this->shell = \$shell;
+        \$this->vendorPath = dirname(dirname(\$classMapPath));
+
+        if (file_exists(\$classMapPath)) {
+            \$classes = require \$classMapPath;
+
+            foreach (\$classes as \$class => \$path) {
+                if (!str_starts_with(\$path, \$this->vendorPath)) {
+                    \$refClass = new \ReflectionClass(\$class);
+
+                    \$name = \$refClass->getShortName();
+
+                    if (!isset(\$this->classes[\$name])) {
+                        \$this->classes[\$name] = \$class;
+                    }
+                }
+            }
+        }
+    }
+
+    public function aliasClass(\$class)
+    {
+        if (str_contains(\$class, '\\\\')) {
+            return;
+        }
+
+        \$fullName = \$this->classes[\$class] ?? false;
+
+        if (\$fullName) {
+            \$this->shell->writeStdout("[!] Aliasing '{\$class}' to '{\$fullName}' for this Tinker session.\\n");
+
+            class_alias(\$fullName, \$class);
+        }
+    }
+
+    public function unregister()
+    {
+        spl_autoload_unregister([\$this, 'aliasClass']);
+    }
+}
+
+\$root = getcwd();
+\$vendorPath = \$root . '/vendor';
+\$classMapPath = \$vendorPath . '/composer/autoload_classmap.php';
+
+\$require_once = function (array \$files) {
+    foreach (\$files as \$file) {
+        if (file_exists(\$file)) {
+            require_once \$file;
+        } else {
+            echo "Could not load file \$file\n";
+        }
+    }
+};
+
+\$require_once([
+    \$root . '/tests/bootstrap.php',
+    \$root . '/vendor/autoload.php',
+    \$root . '/src/Kernel.php',
+]);
+
+\$kernel = new \TimeSeriesPhp\Kernel((\$_SERVER['APP_ENV'] ?? 'dev'), (bool) (\$_SERVER['APP_DEBUG'] ?? false));
+\$kernel->boot();
+
+\$container = \$kernel->getContainer();
+
+\$require_once([
+    \$_SERVER['HOME'] . '/.config/composer/vendor/autoload.php',
+    // __DIR__ . '/../../../autoload.php',
+]);
+
+\$sh = new \Psy\Shell();
+\$sh->setScopeVariables(compact('kernel', 'container', 'em'));
+
+\$loader = ClassAliasAutoloader::register(\$sh, \$classMapPath);
+
+try {
+    \$sh->run();
+} finally {
+    \$loader->unregister();
+}
+
+
+exit();
+
+EOF
+
+symfony php sf-tinker.php
+
+rm sf-tinker.php;

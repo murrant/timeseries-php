@@ -8,7 +8,6 @@ use InfluxDB2\Model\Buckets;
 use InfluxDB2\Model\DeletePredicateRequest;
 use InfluxDB2\Model\Organizations;
 use InfluxDB2\Model\PostBucketRequest;
-use InfluxDB2\Point;
 use InfluxDB2\Service\BucketsService;
 use InfluxDB2\Service\DeleteService;
 use InfluxDB2\Service\OrganizationsService;
@@ -27,7 +26,6 @@ use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 use TimeSeriesPhp\Exceptions\Driver\DatabaseException;
 use TimeSeriesPhp\Exceptions\Driver\WriteException;
 use TimeSeriesPhp\Exceptions\Query\RawQueryException;
-use TimeSeriesPhp\Utils\Convert;
 
 #[Driver(name: 'influxdb', queryBuilderClass: InfluxDBQueryBuilder::class, configClass: InfluxDBConfig::class)]
 class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterface
@@ -83,28 +81,6 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
         }
     }
 
-    protected function formatDataPoint(DataPoint $dataPoint): Point
-    {
-        $point = Point::measurement($dataPoint->getMeasurement())
-            ->time($dataPoint->getTimestamp());
-
-        // Add tags
-        foreach ($dataPoint->getTags() as $key => $value) {
-            $point->addTag($key, $value);
-        }
-
-        // Add fields
-        foreach ($dataPoint->getFields() as $key => $value) {
-            if (is_numeric($value)) {
-                $point->addField($key, Convert::toNumber($value));
-            } else {
-                $point->addField($key, $value);
-            }
-        }
-
-        return $point;
-    }
-
     protected function doWrite(DataPoint $dataPoint): bool
     {
         if (! $this->isConnected()) {
@@ -112,10 +88,9 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
         }
 
         try {
-            $command = '/api/v2/write?'.http_build_query(['org' => $this->config->org, 'bucket' => $this->config->bucket, 'precision' => $this->config->precision]);
             $line = $this->writeFormatter->format($dataPoint);
 
-            $response = $this->connectionAdapter->executeCommand($command, $line);
+            $response = $this->connectionAdapter->executeCommand('write', $line);
 
             if (! $response->success) {
                 throw new WriteException('Failed to write data point: '.$response->error);

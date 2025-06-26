@@ -2,7 +2,6 @@
 
 namespace TimeSeriesPhp\Drivers\InfluxDB;
 
-use InfluxDB2\Model\WritePrecision;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use TimeSeriesPhp\Core\Attributes\Config;
 use TimeSeriesPhp\Core\Driver\AbstractDriverConfiguration;
@@ -32,7 +31,7 @@ class InfluxDBConfig extends AbstractDriverConfiguration
         public readonly int $timeout = 30,
         public readonly bool $verify_ssl = true,
         public readonly bool $debug = false,
-        public readonly string $precision = WritePrecision::NS,
+        public readonly string $precision = TimePrecision::NS->value,
         public readonly string $connection_type = 'http',
     ) {}
 
@@ -81,12 +80,12 @@ class InfluxDBConfig extends AbstractDriverConfiguration
             ->enumNode('precision')
             ->info('The timestamp precision')
             ->values(TimePrecision::values())
-            ->defaultValue(TimePrecision::NS)
+            ->defaultValue(TimePrecision::NS->value)
+            ->end()
             ->enumNode('connection_type')
             ->info('The connection type')
             ->values(['http', 'socket'])
             ->defaultValue('http')
-            ->end()
             ->end()
             ->end();
     }

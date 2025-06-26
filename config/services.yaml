@@ -9,10 +9,6 @@ parameters:
     # Default driver to use when none is specified
     default_driver: 'influxdb'
 
-framework:
-    cache:
-        app: cache.adapter.null
-
 services:
     # Default configuration for services in *this* file
     _defaults:
@@ -43,9 +39,7 @@ services:
         public: true
 
     Psr\SimpleCache\CacheInterface:
-        factory: ['Symfony\Component\Cache\Psr16Cache', 'create']
-        arguments:
-            - '@cache.app'
+        class: TimeSeriesPhp\Services\NullCacheAdapter
 
     # Add more service definitions when explicit configuration is needed
     # Please note that last definitions always *replace* previous ones

@@ -7,6 +7,7 @@ namespace TimeSeriesPhp\Core;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use TimeSeriesPhp\Core\DependencyInjection\DriverCompilerPass;
 use TimeSeriesPhp\Exceptions\TSDBException;
 
@@ -46,8 +47,32 @@ class ContainerFactory
             $container->setParameter('kernel.project_dir', $projectDir);
             $container->setParameter('kernel.cache_dir', $projectDir.'/var/cache');
 
+            // Set required parameters for FrameworkBundle
+            $container->setParameter('kernel.secret', 'timeseries-php-secret');
+            $container->setParameter('kernel.debug', true);
+            $container->setParameter('kernel.environment', 'dev');
+            $container->setParameter('kernel.container_class', 'TimeSeriesPhpContainer');
+
             // Add compiler passes
             $container->addCompilerPass(new DriverCompilerPass);
+
+            // Load bundles from bundles.php if it exists
+            $bundlesFile = $configDir.'/bundles.php';
+            if (file_exists($bundlesFile)) {
+                $bundles = require $bundlesFile;
+                foreach ($bundles as $bundleClass => $environments) {
+                    if (isset($environments['all']) && $environments['all'] === true || 
+                        isset($environments[$container->getParameter('kernel.environment')]) && 
+                        $environments[$container->getParameter('kernel.environment')] === true) {
+                        if (class_exists($bundleClass)) {
+                            $bundle = new $bundleClass();
+                            if ($bundle instanceof BundleInterface) {
+                                $bundle->build($container);
+                            }
+                        }
+                    }
+                }
+            }
 
             $loader = new YamlFileLoader($container, new FileLocator($configDir));
             $loader->load('services.yaml');
