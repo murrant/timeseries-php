@@ -273,7 +273,7 @@ class RRDtoolCachedIntegrationTest extends TestCase
         $tagStrategy = new $tag_strategy_class($noCacheConfig);
 
         // Create a real RRDtoolDriver
-        $noCacheDriver= new RRDtoolDriver($noCacheConfig, new ProcessFactory, $tagStrategy, new RRDtoolQueryBuilder($tagStrategy), new NullLogger);
+        $noCacheDriver = new RRDtoolDriver($noCacheConfig, new ProcessFactory, $tagStrategy, new RRDtoolQueryBuilder($tagStrategy), new NullLogger);
         $noCacheDriver->connect();
 
         $startNoCache = microtime(true);

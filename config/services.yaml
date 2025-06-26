@@ -9,6 +9,10 @@ parameters:
     # Default driver to use when none is specified
     default_driver: 'influxdb'
 
+framework:
+    cache:
+        app: cache.adapter.null
+
 services:
     # Default configuration for services in *this* file
     _defaults:
@@ -67,3 +71,7 @@ services:
 
     http_client:
         class: GuzzleHttp\Client
+
+    cache.adapter.null:
+        class: TimeSeriesPhp\Services\NullCacheAdapter
+        arguments: [~] # small trick to avoid arguments errors on compile-time.

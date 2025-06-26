@@ -42,9 +42,8 @@ services:
         public: true
 
     Psr\SimpleCache\CacheInterface:
-        factory: ['Symfony\Component\Cache\Psr16Cache', 'create']
-        arguments:
-            - '@cache.app'
+        class: TimeSeriesPhp\Services\NullCacheAdapter
+        arguments: [~]
 YAML;
 
         file_put_contents($this->configDir.'/services.yaml', $servicesContent);

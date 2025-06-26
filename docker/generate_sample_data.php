@@ -224,7 +224,7 @@ while ($iterations < $maxIterations || $maxIterations === 0) {
                     }
                 }
             }
-            printf("Successfully wrote data to $name in %.3fs.\n", microtime(true) - $last_timestamp );
+            printf("Successfully wrote data to $name in %.3fs.\n", microtime(true) - $last_timestamp);
         } catch (TSDBException $e) {
             echo "Error writing to $name: ".$e->getMessage()."\n";
         }
@@ -237,7 +237,7 @@ while ($iterations < $maxIterations || $maxIterations === 0) {
 
     // if operations took longer, sleep less to keep cadence
     $sleep_time = max(0, $interval - ($timestamp->getTimestamp() - time()));
-    printf("Sleeping for %d seconds%s...\n", $sleep_time, $sleep_time !== $interval ? "(remaining of {\$interval}s)" : '');
+    printf("Sleeping for %d seconds%s...\n", $sleep_time, $sleep_time !== $interval ? '(remaining of {$interval}s)' : '');
     sleep($sleep_time);
 }
 

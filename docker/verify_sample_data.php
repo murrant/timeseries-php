@@ -1,8 +1,8 @@
 #!/usr/bin/env php
 <?php
 
-use TimeSeriesPhp\Core\Query\Query;
 use TimeSeriesPhp\Core\Data\QueryResult;
+use TimeSeriesPhp\Core\Query\Query;
 use TimeSeriesPhp\Exceptions\TSDBException;
 use TimeSeriesPhp\TSDB;
 
@@ -110,7 +110,7 @@ foreach ($config as $name => $dbConfig) {
         $databases[$name] = TSDB::start($dbConfig['driver'], $dbConfig['config']);
         echo "✓ Connected to $name successfully.\n";
     } catch (TSDBException $e) {
-        echo "✗ Error connecting to $name: " . $e->getMessage() . "\n";
+        echo "✗ Error connecting to $name: ".$e->getMessage()."\n";
     }
 }
 
@@ -119,9 +119,9 @@ if (empty($databases)) {
     exit(1);
 }
 
-echo "\n" . str_repeat("=", 60) . "\n";
+echo "\n".str_repeat('=', 60)."\n";
 echo "VERIFYING SAMPLE DATA\n";
-echo str_repeat("=", 60) . "\n";
+echo str_repeat('=', 60)."\n";
 
 // Function to format numbers for display
 function formatNumber($value): string
@@ -129,7 +129,8 @@ function formatNumber($value): string
     if (is_null($value)) {
         return 'null';
     }
-    return is_float($value) ? number_format($value, 2) : (string)$value;
+
+    return is_float($value) ? number_format($value, 2) : (string) $value;
 }
 
 // Function to display query results
@@ -137,6 +138,7 @@ function displayResults(string $dbName, string $measurement, QueryResult $result
 {
     if ($result->isEmpty()) {
         echo "  └─ No data found\n";
+
         return;
     }
 
@@ -148,7 +150,7 @@ function displayResults(string $dbName, string $measurement, QueryResult $result
         $totalPoints += count($points);
     }
 
-    echo "  └─ Found $totalPoints data points across " . count($series) . " field(s)\n";
+    echo "  └─ Found $totalPoints data points across ".count($series)." field(s)\n";
 
     if ($verbose && $totalPoints > 0) {
         echo "     Recent data points:\n";
@@ -159,7 +161,7 @@ function displayResults(string $dbName, string $measurement, QueryResult $result
             $fieldName = $fieldNames[$i];
             $points = $series[$fieldName];
 
-            if (!empty($points)) {
+            if (! empty($points)) {
                 $recentPoints = array_slice($points, -3); // Get last 3 points
                 echo "     • Field '$fieldName':\n";
 
@@ -172,13 +174,13 @@ function displayResults(string $dbName, string $measurement, QueryResult $result
         }
 
         if (count($series) > $displayCount) {
-            echo "     ... and " . (count($series) - $displayCount) . " more fields\n";
+            echo '     ... and '.(count($series) - $displayCount)." more fields\n";
         }
 
         // Show metadata if available
         $metadata = $result->getMetadata();
-        if (!empty($metadata)) {
-            echo "     Metadata: " . json_encode($metadata) . "\n";
+        if (! empty($metadata)) {
+            echo '     Metadata: '.json_encode($metadata)."\n";
         }
     }
 }
@@ -207,7 +209,7 @@ function verifyMeasurement(string $dbName, $db, string $measurement, ?string $ho
         displayResults($dbName, $measurement, $data, $verbose);
 
         // Aggregation query - get average values per host
-        if (!$hostFilter) {
+        if (! $hostFilter) {
             $aggQuery = new Query($measurement);
             $aggQuery->latest($sinceFilter)
                 ->groupBy(['host'], '10m')
@@ -218,14 +220,14 @@ function verifyMeasurement(string $dbName, $db, string $measurement, ?string $ho
             $aggData = $db->query($aggQuery);
             $results['aggregated'] = $aggData;
 
-            if ($verbose && !$aggData->isEmpty()) {
+            if ($verbose && ! $aggData->isEmpty()) {
                 echo "  └─ Aggregated results:\n";
                 $series = $aggData->getSeries();
                 foreach ($series as $field => $points) {
-                    echo "     • Field '$field': " . count($points) . " aggregated points\n";
-                    if (!empty($points)) {
+                    echo "     • Field '$field': ".count($points)." aggregated points\n";
+                    if (! empty($points)) {
                         $latest = end($points);
-                        echo "       Latest value: " . formatNumber($latest['value']) . "\n";
+                        echo '       Latest value: '.formatNumber($latest['value'])."\n";
                     }
                 }
             }
@@ -262,19 +264,19 @@ function verifyMeasurement(string $dbName, $db, string $measurement, ?string $ho
         $statsData = $db->query($statsQuery);
         $results['statistics'] = $statsData;
 
-        if ($verbose && !$statsData->isEmpty()) {
+        if ($verbose && ! $statsData->isEmpty()) {
             echo "  └─ Statistics:\n";
             $series = $statsData->getSeries();
             foreach ($series as $field => $points) {
-                if (!empty($points)) {
+                if (! empty($points)) {
                     $value = $points[0]['value'] ?? null;
-                    echo "     • $field: " . formatNumber($value) . "\n";
+                    echo "     • $field: ".formatNumber($value)."\n";
                 }
             }
         }
 
     } catch (TSDBException $e) {
-        echo "  ✗ Error querying $measurement: " . $e->getMessage() . "\n";
+        echo "  ✗ Error querying $measurement: ".$e->getMessage()."\n";
         $results['error'] = $e->getMessage();
     }
 
@@ -285,9 +287,9 @@ function verifyMeasurement(string $dbName, $db, string $measurement, ?string $ho
 $overallResults = [];
 
 foreach ($databases as $dbName => $db) {
-    echo "\n" . str_repeat("-", 40) . "\n";
-    echo "VERIFYING: " . strtoupper($dbName) . "\n";
-    echo str_repeat("-", 40) . "\n";
+    echo "\n".str_repeat('-', 40)."\n";
+    echo 'VERIFYING: '.strtoupper($dbName)."\n";
+    echo str_repeat('-', 40)."\n";
 
     $dbResults = [];
 
@@ -321,7 +323,7 @@ foreach ($databases as $dbName => $db) {
             }
             echo "  • $measurement: $count data points\n";
         } elseif (isset($results['error'])) {
-            echo "  • $measurement: ERROR - " . $results['error'] . "\n";
+            echo "  • $measurement: ERROR - ".$results['error']."\n";
         }
     }
 
@@ -330,9 +332,9 @@ foreach ($databases as $dbName => $db) {
 }
 
 // Overall summary
-echo "\n" . str_repeat("=", 60) . "\n";
+echo "\n".str_repeat('=', 60)."\n";
 echo "OVERALL VERIFICATION SUMMARY\n";
-echo str_repeat("=", 60) . "\n";
+echo str_repeat('=', 60)."\n";
 
 $totalDatabases = count($overallResults);
 $successfulDatabases = 0;
@@ -365,10 +367,10 @@ foreach ($overallResults as $dbName => $dbResults) {
         }
     }
 
-    $status = $hasErrors ? "⚠️  PARTIAL" : ($dbTotal > 0 ? "✅ SUCCESS" : "❌ NO DATA");
+    $status = $hasErrors ? '⚠️  PARTIAL' : ($dbTotal > 0 ? '✅ SUCCESS' : '❌ NO DATA');
     echo "• $dbName: $status - $dbTotal points, $dbMeasurements measurements\n";
 
-    if (!$hasErrors && $dbTotal > 0) {
+    if (! $hasErrors && $dbTotal > 0) {
         $successfulDatabases++;
     }
     $grandTotalPoints += $dbTotal;
@@ -380,7 +382,7 @@ echo "• Successful databases: $successfulDatabases\n";
 echo "• Total data points found: $grandTotalPoints\n";
 
 $successRate = $totalDatabases > 0 ? ($successfulDatabases / $totalDatabases) * 100 : 0;
-echo "• Success rate: " . number_format($successRate, 1) . "%\n";
+echo '• Success rate: '.number_format($successRate, 1)."%\n";
 
 if ($successfulDatabases === $totalDatabases && $grandTotalPoints > 0) {
     echo "\n🎉 All databases verified successfully!\n";
@@ -397,7 +399,7 @@ foreach ($databases as $name => $db) {
         $db->close();
         echo "✓ Closed connection to $name\n";
     } catch (TSDBException $e) {
-        echo "⚠️  Warning: Could not properly close $name: " . $e->getMessage() . "\n";
+        echo "⚠️  Warning: Could not properly close $name: ".$e->getMessage()."\n";
     }
 }
 

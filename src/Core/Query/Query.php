@@ -65,9 +65,7 @@ class Query
 
     private ?string $timezone = null;
 
-    public function __construct(private readonly string $measurement)
-    {
-    }
+    public function __construct(private readonly string $measurement) {}
 
     // Enhanced field selection with aliases and calculations
 
@@ -416,7 +414,7 @@ class Query
      */
     public function getConditionsAsArray(): array
     {
-        return array_map(fn(QueryCondition $condition) => [
+        return array_map(fn (QueryCondition $condition) => [
             'field' => $condition->getField(),
             'operator' => $condition->getOperator()->value,
             'value' => $condition->getValue(),

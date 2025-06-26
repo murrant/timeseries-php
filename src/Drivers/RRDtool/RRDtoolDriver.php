@@ -16,7 +16,6 @@ use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolCommandTimeoutException;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolException;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolPrematureUpdateException;
 use TimeSeriesPhp\Drivers\RRDtool\Factory\ProcessFactoryInterface;
-use TimeSeriesPhp\Drivers\RRDtool\Factory\TagStrategyFactoryInterface;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 use TimeSeriesPhp\Exceptions\Driver\DriverException;
@@ -308,7 +307,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
     {
         // If we have legend data but no matches with requestedFields, use the legend as is
         // This handles the case where the xport command uses different field names than the ones requested
-        $legend = array_filter($json['meta']['legend'], fn($field) => in_array('*', $requestedFields)
+        $legend = array_filter($json['meta']['legend'], fn ($field) => in_array('*', $requestedFields)
             || in_array($field, $requestedFields));
 
         // If no fields matched, use all legend fields

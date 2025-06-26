@@ -41,7 +41,7 @@ class PrometheusIntegrationTest extends TestCase
             debug: false,
         );
 
-        $httpFactory = new HttpFactory();
+        $httpFactory = new HttpFactory;
 
         // Create a real Prometheus Driver
         $this->driver = new PrometheusDriver(new Client, $httpFactory, $httpFactory, $config, new PrometheusQueryBuilder, new NullLogger);

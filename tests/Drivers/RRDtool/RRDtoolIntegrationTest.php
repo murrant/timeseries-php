@@ -8,7 +8,6 @@ use Psr\Log\NullLogger;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Drivers\RRDtool\Factory\ProcessFactory;
-use TimeSeriesPhp\Drivers\RRDtool\Factory\TagStrategyFactory;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolQueryBuilder;

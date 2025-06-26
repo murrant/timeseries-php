@@ -111,7 +111,7 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
 
         // Filter by fields if specified
         if (! empty($fields) && ! in_array('*', $fields)) {
-            $fieldConditions = array_map(fn($field) => "r._field == \"{$field}\"", $fields);
+            $fieldConditions = array_map(fn ($field) => "r._field == \"{$field}\"", $fields);
             $fieldCondition = implode(' or ', $fieldConditions);
             $fluxQuery .= "  |> filter(fn: (r) => {$fieldCondition})\n";
         }
@@ -123,7 +123,7 @@ class InfluxDBQueryBuilder implements QueryBuilderInterface
 
         // Add grouping
         if (! empty($query->getGroupBy())) {
-            $groupCols = array_map(fn($col) => "\"{$col}\"", $query->getGroupBy());
+            $groupCols = array_map(fn ($col) => "\"{$col}\"", $query->getGroupBy());
             $fluxQuery .= '  |> group(columns: ['.implode(', ', $groupCols)."])\n";
         }
 

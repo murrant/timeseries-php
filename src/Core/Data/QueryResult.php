@@ -8,9 +8,7 @@ class QueryResult
      * @param  array<string, array<int, array{'date': int|string, 'value': ?scalar}>>  $series
      * @param  array<string, mixed>  $metadata
      */
-    public function __construct(private array $series = [], private readonly array $metadata = [])
-    {
-    }
+    public function __construct(private array $series = [], private readonly array $metadata = []) {}
 
     public function appendPoint(int|string $timestamp, string $field, float|int|string|bool|null $value): void
     {

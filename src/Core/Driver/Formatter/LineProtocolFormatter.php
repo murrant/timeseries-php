@@ -9,12 +9,12 @@ class LineProtocolFormatter
     /**
      * Convert data array to line protocol string
      *
-     * @param DataPoint $data Format: [
-     *   'measurement' => 'cpu_usage',
-     *   'tags' => ['host' => 'server01', 'region' => 'us-west'],
-     *   'fields' => ['value' => 85.2, 'count' => 10],
-     *   'timestamp' => 1640995200000000000 // nanoseconds
-     * ]
+     * @param  DataPoint  $data  Format: [
+     *                           'measurement' => 'cpu_usage',
+     *                           'tags' => ['host' => 'server01', 'region' => 'us-west'],
+     *                           'fields' => ['value' => 85.2, 'count' => 10],
+     *                           'timestamp' => 1640995200000000000 // nanoseconds
+     *                           ]
      */
     public function format(DataPoint $data): string
     {
@@ -22,29 +22,30 @@ class LineProtocolFormatter
 
         // Add tags
         foreach ($data->getTags() as $key => $value) {
-            $line .= ',' . $this->escapeTagKey($key) . '=' . $this->escapeTagValue($value);
+            $line .= ','.$this->escapeTagKey($key).'='.$this->escapeTagValue($value);
         }
 
         // Add fields
         $fields = [];
         foreach ($data->getFields() as $key => $value) {
-            $fields[] = $this->escapeFieldKey($key) . '=' . $this->formatFieldValue($value);
+            $fields[] = $this->escapeFieldKey($key).'='.$this->formatFieldValue($value);
         }
-        $line .= ' ' . implode(',', $fields);
+        $line .= ' '.implode(',', $fields);
 
         // Add timestamp
-        $line .= ' ' . $data->getTimestamp()->getTimestamp();
+        $line .= ' '.$data->getTimestamp()->getTimestamp();
 
         return $line;
     }
 
     /**
      * Format multiple data points
+     *
      * @param  DataPoint[]  $dataPoints
      */
     public function formatBatch(array $dataPoints): string
     {
-        return implode("\n", array_map(fn($dp) => $this->format($dp), $dataPoints));
+        return implode("\n", array_map(fn ($dp) => $this->format($dp), $dataPoints));
     }
 
     private function escapeMeasurement(string $measurement): string
@@ -70,7 +71,7 @@ class LineProtocolFormatter
     private function formatFieldValue($value): string
     {
         if (is_string($value)) {
-            return '"' . str_replace(['"', '\\'], ['\\"', '\\\\'], $value) . '"';
+            return '"'.str_replace(['"', '\\'], ['\\"', '\\\\'], $value).'"';
         }
 
         if (is_bool($value)) {
@@ -78,13 +79,13 @@ class LineProtocolFormatter
         }
 
         if (is_int($value)) {
-            return $value . 'i';
+            return $value.'i';
         }
 
         if (is_float($value)) {
             return (string) $value;
         }
 
-        throw new \InvalidArgumentException('Unsupported field value type: ' . gettype($value));
+        throw new \InvalidArgumentException('Unsupported field value type: '.gettype($value));
     }
 }
