@@ -146,7 +146,7 @@ function displayResults(string $dbName, string $measurement, QueryResult $result
     $totalPoints = 0;
 
     // Count total data points across all series
-    foreach ($series as $field => $points) {
+    foreach ($series as $points) {
         $totalPoints += count($points);
     }
 
@@ -345,7 +345,7 @@ foreach ($overallResults as $dbName => $dbResults) {
     $dbMeasurements = 0;
     $hasErrors = false;
 
-    foreach ($dbResults as $measurement => $results) {
+    foreach ($dbResults as $results) {
         if (isset($results['basic'])) {
             $queryResult = $results['basic'];
             $count = 0;

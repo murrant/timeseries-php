@@ -4,6 +4,7 @@ namespace TimeSeriesPhp\Tests\Drivers\RRDtool;
 
 use PHPUnit\Framework\TestCase;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolTagException;
+use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\NoTagsStrategy;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\TagCondition;
 
@@ -21,7 +22,8 @@ class NoTagsStrategyTest extends TestCase
         $this->tempDir = sys_get_temp_dir().'/rrdtool_test_'.uniqid();
         mkdir($this->tempDir, 0777, true);
         $this->baseDir = $this->tempDir.DIRECTORY_SEPARATOR;
-        $this->strategy = new NoTagsStrategy($this->baseDir);
+        $config = new RRDtoolConfig(rrd_dir: $this->baseDir);
+        $this->strategy = new NoTagsStrategy($config);
     }
 
     protected function tearDown(): void
@@ -39,7 +41,7 @@ class NoTagsStrategyTest extends TestCase
         $this->expectException(RRDtoolTagException::class);
         $this->expectExceptionMessage('Base directory must end with a slash');
 
-        new NoTagsStrategy($this->tempDir); // Missing trailing slash
+        new NoTagsStrategy(new RRDtoolConfig(rrd_dir: $this->tempDir)); // Missing trailing slash
     }
 
     public function test_get_base_dir(): void

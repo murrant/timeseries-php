@@ -4,6 +4,7 @@ namespace TimeSeriesPhp\Tests\Drivers\RRDtool;
 
 use PHPUnit\Framework\TestCase;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolTagException;
+use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FolderStrategy;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\TagCondition;
 
@@ -27,7 +28,8 @@ class FolderStrategyTest extends TestCase
         mkdir($this->tempDir, 0777, true);
         $this->baseDir = $this->tempDir.DIRECTORY_SEPARATOR;
         $this->folderTags = ['region', 'host'];
-        $this->strategy = new FolderStrategy($this->baseDir, $this->folderTags);
+        $config = new RRDtoolConfig(rrd_dir: $this->baseDir);
+        $this->strategy = new FolderStrategy($config, $this->folderTags);
     }
 
     protected function tearDown(): void
@@ -63,7 +65,7 @@ class FolderStrategyTest extends TestCase
         $this->expectException(RRDtoolTagException::class);
         $this->expectExceptionMessage('Base directory must end with a slash');
 
-        new FolderStrategy($this->tempDir, $this->folderTags); // Missing trailing slash
+        new FolderStrategy(new RRDtoolConfig(rrd_dir: $this->tempDir), $this->folderTags); // Missing trailing slash
     }
 
     public function test_get_base_dir(): void

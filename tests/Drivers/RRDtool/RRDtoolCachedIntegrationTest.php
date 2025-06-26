@@ -13,6 +13,7 @@ use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolQueryBuilder;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolRawQuery;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
+use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
 
 /**
  * Integration test for RRDtoolDriver with rrdcached support
@@ -23,8 +24,6 @@ use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
 class RRDtoolCachedIntegrationTest extends TestCase
 {
     private RRDtoolDriver $driver;
-
-    private RRDtoolConfig $config;
 
     private string $dataDir;
 
@@ -92,6 +91,10 @@ class RRDtoolCachedIntegrationTest extends TestCase
 
         $tag_strategy_class = $config->tag_strategy;
         $tagStrategy = new $tag_strategy_class($config);
+        if (! $tagStrategy instanceof RRDTagStrategyInterface) {
+            $this->fail('RRDtoolDriver does not support RRDTagStrategyInterface');
+
+        }
 
         // Create a real RRDtoolDriver
         $this->driver = new RRDtoolDriver($config, new ProcessFactory, $tagStrategy, new RRDtoolQueryBuilder($tagStrategy), new NullLogger);
@@ -271,6 +274,10 @@ class RRDtoolCachedIntegrationTest extends TestCase
 
         $tag_strategy_class = $noCacheConfig->tag_strategy;
         $tagStrategy = new $tag_strategy_class($noCacheConfig);
+        if (! $tagStrategy instanceof RRDTagStrategyInterface) {
+            $this->fail('RRDtoolDriver does not support RRDTagStrategyInterface');
+
+        }
 
         // Create a real RRDtoolDriver
         $noCacheDriver = new RRDtoolDriver($noCacheConfig, new ProcessFactory, $tagStrategy, new RRDtoolQueryBuilder($tagStrategy), new NullLogger);

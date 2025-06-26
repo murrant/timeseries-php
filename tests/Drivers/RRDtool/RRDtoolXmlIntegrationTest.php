@@ -13,6 +13,7 @@ use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolQueryBuilder;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolRawQuery;
 use TimeSeriesPhp\Drivers\RRDtool\Tags\FileNameStrategy;
+use TimeSeriesPhp\Drivers\RRDtool\Tags\RRDTagStrategyInterface;
 
 /**
  * Integration test for RRDtool driver using XML data and rrdrestore
@@ -75,7 +76,10 @@ class RRDtoolXmlIntegrationTest extends TestCase
 
         $tag_strategy_class = $config->tag_strategy;
         $tagStrategy = new $tag_strategy_class($config);
+        if (! $tagStrategy instanceof RRDTagStrategyInterface) {
+            $this->fail('RRDtoolDriver does not support RRDTagStrategyInterface');
 
+        }
         // Create a real RRDtoolDriver
         $this->driver = new RRDtoolDriver($config, new ProcessFactory, $tagStrategy, new RRDtoolQueryBuilder($tagStrategy), new NullLogger);
         $this->driver->connect();
