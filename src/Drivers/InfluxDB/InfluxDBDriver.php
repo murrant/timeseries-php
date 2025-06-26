@@ -183,7 +183,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
             $response = $this->connectionAdapter->executeCommand('create_bucket', $payload);
 
             if (! $response->success) {
-                throw new DatabaseException('Failed to create bucket: ' . $response->error);
+                throw new DatabaseException('Failed to create bucket: '.$response->error);
             }
 
             return true;
@@ -210,7 +210,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
             $response = $this->connectionAdapter->executeCommand('get_buckets', '');
 
             if (! $response->success) {
-                throw new DatabaseException('Failed to list buckets: ' . $response->error);
+                throw new DatabaseException('Failed to list buckets: '.$response->error);
             }
 
             $data = json_decode($response->data, true);
@@ -247,7 +247,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
         try {
             // Create the delete request payload
             $startTime = $start ?? new DateTime('1970-01-01T00:00:00Z');
-            $stopTime = $stop ?? new DateTime();
+            $stopTime = $stop ?? new DateTime;
 
             $payload = json_encode([
                 'start' => $startTime->format('Y-m-d\TH:i:s\Z'),
@@ -262,7 +262,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
             $response = $this->connectionAdapter->executeCommand('delete_measurement', $payload);
 
             if (! $response->success) {
-                throw new DatabaseException('Failed to delete measurement: ' . $response->error);
+                throw new DatabaseException('Failed to delete measurement: '.$response->error);
             }
 
             return true;
@@ -291,7 +291,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
             $response = $this->connectionAdapter->executeCommand('ping', '');
 
             if (! $response->success) {
-                throw new ConnectionException('Failed to ping InfluxDB: ' . $response->error);
+                throw new ConnectionException('Failed to ping InfluxDB: '.$response->error);
             }
 
             // Extract build and version from response metadata

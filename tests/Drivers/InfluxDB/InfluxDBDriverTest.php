@@ -140,16 +140,17 @@ class InfluxDBDriverTest extends TestCase
         $mockConnectionAdapter->method('executeCommand')->willReturnCallback(function ($command, $data) {
             if ($command === 'ping') {
                 return new CommandResponse(
-                    true, 
-                    '', 
+                    true,
+                    '',
                     [
                         'headers' => [
                             'X-Influxdb-Build: test_build',
-                            'X-Influxdb-Version: test_version'
-                        ]
+                            'X-Influxdb-Version: test_version',
+                        ],
                     ]
                 );
             }
+
             return new CommandResponse(true, '');
         });
 

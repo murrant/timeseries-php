@@ -9,6 +9,7 @@ use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Log\LoggerInterface;
 use TimeSeriesPhp\Contracts\Connection\ConnectionAdapterInterface;
 use TimeSeriesPhp\Core\Connection\CommandResponse;
+use TimeSeriesPhp\Drivers\InfluxDB\Connection\Command\InfluxDBHttpCommandFactory;
 use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBConfig;
 use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 
@@ -62,48 +63,19 @@ class HttpConnectionAdapter implements ConnectionAdapterInterface
         }
 
         try {
-            // Map commands to HTTP endpoints and methods
-            $endpoint = match ($command) {
-                'query' => '/api/v2/query',
-                'write' => '/api/v2/write',
-                'health' => '/health',
-                'ping' => '/ping',
-                'get_buckets', 'create_bucket' => '/api/v2/buckets',
-                'delete_measurement' => '/api/v2/delete',
-                default => throw new ConnectionException("Unknown command: $command")
-            };
+            $commandObj = InfluxDBHttpCommandFactory::create($command);
 
-            $method = match ($command) {
-                'query', 'write', 'create_bucket', 'delete_measurement' => 'POST',
-                'health', 'ping', 'get_buckets' => 'GET',
-                default => 'GET'
-            };
-
-            // Add query parameters for specific commands
-            $queryParams = [];
-            if ($command === 'write') {
-                $queryParams = [
-                    'org' => $this->getOrgId(),
-                    'bucket' => $this->config->bucket,
-                    'precision' => $this->config->precision,
-                ];
-            } elseif ($command === 'get_buckets') {
-                $queryParams = [
-                    'org' => $this->getOrgId(),
-                ];
-            } elseif ($command === 'delete_measurement') {
-                $queryParams = [
-                    'org' => $this->getOrgId(),
-                    'bucket' => $this->config->bucket,
-                ];
-            } elseif ($command === 'create_bucket') {
-                $data = json_decode($data, true);
-                $data['orgID'] = $this->getOrgId();
-                $data = json_encode($data);
-            }
+            $endpoint = $commandObj->getEndpoint();
+            $method = $commandObj->getMethod();
+            $queryParams = $commandObj->getQueryParams(
+                $this->getOrgId(),
+                $this->config->bucket,
+                $this->config->precision
+            );
+            $processedData = $commandObj->processData($data, $this->getOrgId());
 
             // Make the HTTP request
-            return $this->makeHttpRequest($method, $endpoint, $data, $queryParams);
+            return $this->makeHttpRequest($method, $endpoint, $processedData, $queryParams);
         } catch (\Throwable $e) {
             return CommandResponse::failure("Command execution failed: {$e->getMessage()}");
         }

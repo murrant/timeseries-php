@@ -24,7 +24,7 @@ class SocketConnectionAdapter implements ConnectionAdapterInterface
         try {
             // Parse socket path from config
             $socketPath = $this->config->socket_path;
-            if (empty($socketPath) || !is_string($socketPath)) {
+            if (empty($socketPath) || ! is_string($socketPath)) {
                 throw new ConnectionException('Socket path is not configured');
             }
 
@@ -35,7 +35,7 @@ class SocketConnectionAdapter implements ConnectionAdapterInterface
             }
 
             // Ensure socket is valid
-            if (!$this->socket instanceof \Socket) {
+            if (! $this->socket instanceof \Socket) {
                 throw new ConnectionException('Socket is not valid');
             }
 
@@ -83,7 +83,7 @@ class SocketConnectionAdapter implements ConnectionAdapterInterface
             ])."\n";
 
             // Ensure socket is valid
-            if (!$this->socket instanceof \Socket) {
+            if (! $this->socket instanceof \Socket) {
                 throw new ConnectionException('Socket is not valid');
             }
 
@@ -98,7 +98,7 @@ class SocketConnectionAdapter implements ConnectionAdapterInterface
             $buffer = '';
 
             // Ensure socket is valid
-            if (!$this->socket instanceof \Socket) {
+            if (! $this->socket instanceof \Socket) {
                 throw new ConnectionException('Socket is not valid');
             }
 
@@ -116,23 +116,25 @@ class SocketConnectionAdapter implements ConnectionAdapterInterface
                 return CommandResponse::failure('Failed to parse response: '.json_last_error_msg());
             }
 
-            if (!is_array($responseData)) {
+            if (! is_array($responseData)) {
                 return CommandResponse::failure('Invalid response format');
             }
 
             if (isset($responseData['error']) && is_string($responseData['error'])) {
-                $metadata = isset($responseData['metadata']) && is_array($responseData['metadata']) 
-                    ? $responseData['metadata'] 
+                $metadata = isset($responseData['metadata']) && is_array($responseData['metadata'])
+                    ? $responseData['metadata']
                     : [];
+
                 return CommandResponse::failure($responseData['error'], $metadata);
             }
 
-            $data = isset($responseData['data']) && is_string($responseData['data']) 
-                ? $responseData['data'] 
+            $data = isset($responseData['data']) && is_string($responseData['data'])
+                ? $responseData['data']
                 : '';
-            $metadata = isset($responseData['metadata']) && is_array($responseData['metadata']) 
-                ? $responseData['metadata'] 
+            $metadata = isset($responseData['metadata']) && is_array($responseData['metadata'])
+                ? $responseData['metadata']
                 : [];
+
             return CommandResponse::success($data, $metadata);
         } catch (\Throwable $e) {
             return CommandResponse::failure("Command execution failed: {$e->getMessage()}");
