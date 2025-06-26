@@ -31,9 +31,27 @@ class AbstractDriverConfigurationTest extends TestCase
             {
                 $rootNode
                     ->children()
-                    ->booleanNode('test_option')
-                    ->defaultTrue()
-                    ->end()
+                        ->scalarNode('database')
+                            ->defaultValue('test_db')
+                        ->end()
+                        ->scalarNode('host')
+                            ->defaultValue('localhost')
+                        ->end()
+                        ->integerNode('port')
+                            ->defaultNull()
+                        ->end()
+                        ->scalarNode('username')
+                            ->defaultNull()
+                        ->end()
+                        ->scalarNode('password')
+                            ->defaultNull()
+                        ->end()
+                        ->booleanNode('test_option')
+                            ->defaultTrue()
+                        ->end()
+                        ->arrayNode('options')
+                            ->defaultValue([])
+                        ->end()
                     ->end();
             }
         };

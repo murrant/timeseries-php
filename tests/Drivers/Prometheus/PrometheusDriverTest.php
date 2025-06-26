@@ -106,8 +106,11 @@ class PrometheusDriverTest extends TestCase
         // Create a mock logger
         $mockLogger = $this->createMock(\Psr\Log\LoggerInterface::class);
 
+        // Create a query builder
+        $queryBuilder = new \TimeSeriesPhp\Drivers\Prometheus\PrometheusQueryBuilder;
+
         // Create a custom subclass of PrometheusDriver that bypasses the parent constructor
-        $this->driver = new class($mockClient, $mockRequestFactory, $mockUriFactory, $mockStreamFactory, $mockLogger) extends PrometheusDriver
+        $this->driver = new class($mockClient, $mockRequestFactory, $mockUriFactory, $this->config, $queryBuilder, $mockLogger) extends PrometheusDriver
         {
             /**
              * @var bool Whether the driver is connected
@@ -118,17 +121,20 @@ class PrometheusDriverTest extends TestCase
                 ClientInterface $mockClient,
                 RequestFactoryInterface $mockRequestFactory,
                 UriFactoryInterface $mockUriFactory,
+                PrometheusConfig $config,
+                \TimeSeriesPhp\Drivers\Prometheus\PrometheusQueryBuilder $queryBuilder,
                 \Psr\Log\LoggerInterface $mockLogger
             ) {
                 // Bypass the parent constructor to avoid the inconsistency
                 // Set required properties directly
-                $this->queryBuilder = new \TimeSeriesPhp\Drivers\Prometheus\PrometheusQueryBuilder;
+                $this->queryBuilder = $queryBuilder;
                 $this->logger = $mockLogger;
 
                 // Set up the mocked properties
                 $this->client = $mockClient;
                 $this->requestFactory = $mockRequestFactory;
                 $this->uriFactory = $mockUriFactory;
+                $this->config = $config;
                 $this->connected = true;
             }
 

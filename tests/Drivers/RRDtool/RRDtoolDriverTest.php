@@ -7,13 +7,10 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use Symfony\Component\Process\InputStream;
 use Symfony\Component\Process\Process;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
-use TimeSeriesPhp\Drivers\RRDtool\Factory\InputStreamFactoryInterface;
 use TimeSeriesPhp\Drivers\RRDtool\Factory\ProcessFactoryInterface;
-use TimeSeriesPhp\Drivers\RRDtool\Factory\TagStrategyFactoryInterface;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolConfig;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolDriver;
 use TimeSeriesPhp\Drivers\RRDtool\RRDtoolQueryBuilder;
@@ -32,10 +29,6 @@ class RRDtoolDriverTest extends TestCase
     private RRDtoolConfig $config;
 
     private MockObject&ProcessFactoryInterface $processFactory;
-
-    private MockObject&InputStreamFactoryInterface $inputStreamFactory;
-
-    private MockObject&TagStrategyFactoryInterface $tagStrategyFactory;
 
     private MockObject&RRDTagStrategyInterface $tagStrategy;
 
@@ -94,20 +87,9 @@ class RRDtoolDriverTest extends TestCase
         $mockProcess->expects($this->any())->method('start');
         $mockProcess->expects($this->any())->method('run');
 
-        // Create mock input stream
-        $mockInputStream = $this->createMock(InputStream::class);
-        // For void methods, we don't set a return value
-        $mockInputStream->expects($this->any())->method('write');
-
         // Create mock factories
         $this->processFactory = $this->createMock(ProcessFactoryInterface::class);
         $this->processFactory->method('create')->willReturn($mockProcess);
-
-        $this->inputStreamFactory = $this->createMock(InputStreamFactoryInterface::class);
-        $this->inputStreamFactory->method('create')->willReturn($mockInputStream);
-
-        $this->tagStrategyFactory = $this->createMock(TagStrategyFactoryInterface::class);
-        $this->tagStrategyFactory->method('create')->willReturn($this->tagStrategy);
 
         // Create query builder
         $this->queryBuilder = new RRDtoolQueryBuilder($this->tagStrategy);
@@ -120,8 +102,7 @@ class RRDtoolDriverTest extends TestCase
             ->setConstructorArgs([
                 $this->config,
                 $this->processFactory,
-                $this->inputStreamFactory,
-                $this->tagStrategyFactory,
+                $this->tagStrategy,
                 $this->queryBuilder,
                 $this->logger,
             ])

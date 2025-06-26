@@ -9,7 +9,6 @@ use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Query\Query;
 use TimeSeriesPhp\Core\Query\RawQuery;
-use TimeSeriesPhp\Drivers\Graphite\Factory\QueryBuilderFactory;
 use TimeSeriesPhp\Drivers\Graphite\GraphiteConfig;
 use TimeSeriesPhp\Drivers\Graphite\GraphiteDriver;
 use TimeSeriesPhp\Drivers\Graphite\GraphiteQueryBuilder;
@@ -44,9 +43,6 @@ class GraphiteDriverTest extends TestCase
 
         // Create a mock logger
         $this->logger = $this->createMock(LoggerInterface::class);
-
-        // Create a query builder factory
-        $queryBuilderFactory = new QueryBuilderFactory;
 
         // Create a query builder
         $queryBuilder = new GraphiteQueryBuilder;
