@@ -2,10 +2,17 @@
 
 namespace TimeSeriesPhp\Core\Driver\Formatter;
 
+use Symfony\Component\DependencyInjection\Attribute\Exclude;
 use TimeSeriesPhp\Core\Data\DataPoint;
+use TimeSeriesPhp\Core\Enum\TimePrecision;
 
+#[Exclude]
 class LineProtocolFormatter
 {
+    public function __construct(
+        private readonly TimePrecision $precision = TimePrecision::NS
+    ) {}
+
     /**
      * Convert data array to line protocol string
      *
@@ -34,10 +41,25 @@ class LineProtocolFormatter
         }
         $line .= ' '.implode(',', $fields);
 
-        // Add timestamp
-        $line .= ' '.$data->getTimestamp()->getTimestamp();
+        // Add timestamp with the correct precision
+        $line .= ' '.$this->formatTimestamp($data->getTimestamp());
 
-        return $line;
+        return $line . "\n";
+    }
+
+    /**
+     * Format timestamp according to the configured precision
+     */
+    private function formatTimestamp(\DateTime $timestamp): string
+    {
+        $seconds = $timestamp->getTimestamp();
+
+        return (string) match($this->precision) {
+            TimePrecision::S => $seconds,
+            TimePrecision::MS => ($seconds * 1000 + intdiv((int) $timestamp->format('u'), 1000)),
+            TimePrecision::US => ($seconds * 1000000 + ((int) $timestamp->format('u'))),
+            TimePrecision::NS => ($seconds * 1000000000 + ((int) $timestamp->format('u')) * 1000),
+        };
     }
 
     /**
