@@ -134,14 +134,13 @@ class InfluxDBDriverTest extends TestCase
         $mockQueryBuilder->method('build')
             ->willReturn(new RawQuery('from(bucket:"test_bucket") |> range(start: -1h) |> filter(fn: (r) => r._measurement == "cpu_usage")'));
 
-
         // Create a mock connection adapter
         $mockConnectionAdapter = $this->createMock(ConnectionAdapterInterface::class);
         $mockConnectionAdapter->method('connect')->willReturn(true);
         $mockConnectionAdapter->method('executeCommand')->willReturn(new CommandResponse(true, ''));
 
         // Create a formatter
-        $writeFormatter = new LineProtocolFormatter();
+        $writeFormatter = new LineProtocolFormatter;
 
         // Create a mock logger
         $mockLogger = $this->createMock(\Psr\Log\LoggerInterface::class);

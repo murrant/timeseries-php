@@ -39,11 +39,7 @@ class NullDriverTest extends TestCase
     {
         // Configure the driver
         $this->driver->configure([
-            'database' => 'test_db',
-            'host' => 'example.com',
-            'port' => 8086,
-            'username' => 'user',
-            'password' => 'pass',
+            'debug' => true,
         ]);
 
         // No assertion needed, just testing that it doesn't throw an exception

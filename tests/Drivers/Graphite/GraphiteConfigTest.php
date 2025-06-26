@@ -56,7 +56,6 @@ class GraphiteConfigTest extends TestCase
     {
         // Process a valid configuration
         $config = $this->configuration->processConfiguration([
-            'database' => 'test_db',
             'host' => 'graphite.example.com',
             'port' => 2004,
             'protocol' => 'udp',
@@ -70,7 +69,6 @@ class GraphiteConfigTest extends TestCase
         ]);
 
         // Assert that the processed configuration has the expected values
-        $this->assertEquals('test_db', $config['database']);
         $this->assertEquals('graphite.example.com', $config['host']);
         $this->assertEquals(2004, $config['port']);
         $this->assertEquals('udp', $config['protocol']);
@@ -86,12 +84,9 @@ class GraphiteConfigTest extends TestCase
     public function test_process_configuration_with_defaults(): void
     {
         // Process a minimal configuration
-        $config = $this->configuration->processConfiguration([
-            'database' => 'test_db',
-        ]);
+        $config = $this->configuration->processConfiguration([]);
 
         // Assert that the processed configuration has the expected default values
-        $this->assertEquals('test_db', $config['database']);
         $this->assertEquals('localhost', $config['host']);
         $this->assertEquals(2003, $config['port']);
         $this->assertEquals('tcp', $config['protocol']);
@@ -110,7 +105,6 @@ class GraphiteConfigTest extends TestCase
         $this->expectException(InvalidConfigurationException::class);
 
         $this->configuration->processConfiguration([
-            'database' => 'test_db',
             'protocol' => 'invalid',
         ]);
     }
@@ -121,7 +115,6 @@ class GraphiteConfigTest extends TestCase
         $this->expectException(InvalidConfigurationException::class);
 
         $this->configuration->processConfiguration([
-            'database' => 'test_db',
             'web_protocol' => 'invalid',
         ]);
     }
