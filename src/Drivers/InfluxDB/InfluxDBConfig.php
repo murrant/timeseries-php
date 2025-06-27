@@ -25,6 +25,7 @@ class InfluxDBConfig extends AbstractDriverConfiguration
         public readonly string $connection_type = 'http',
         public readonly int $udp_port = 8089,
         public readonly int $api_version = 2,
+        public readonly bool $persistent_connection = true,
     ) {}
 
     /**
@@ -89,6 +90,10 @@ class InfluxDBConfig extends AbstractDriverConfiguration
             ->min(1)
             ->max(2)
             ->end()
+            ->booleanNode('persistent_connection')
+            ->info('Whether to use persistent HTTP connections')
+            ->defaultTrue()
+            ->end()
             ->end();
     }
 
@@ -107,6 +112,7 @@ class InfluxDBConfig extends AbstractDriverConfiguration
             'verifySSL' => $this->verify_ssl,
             'debug' => $this->debug,
             'api_version' => $this->api_version,
+            'persistent_connection' => $this->persistent_connection,
         ];
     }
 }

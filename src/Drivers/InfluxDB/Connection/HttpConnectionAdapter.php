@@ -32,6 +32,11 @@ class HttpConnectionAdapter implements ConnectionAdapterInterface
         try {
             // Test connection by making a simple request
             $response = $this->makeHttpRequest('GET', '/ping');
+
+            if (! $response->success) {
+                throw new ConnectionException($response->error ?? 'Unknown error');
+            }
+
             $this->connected = $response->success;
 
             $this->logger->info('Connected to InfluxDB via HTTP successfully', [

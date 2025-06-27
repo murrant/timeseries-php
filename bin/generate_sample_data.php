@@ -39,13 +39,14 @@ $config = [
     'influxdb' => [
         'driver' => 'influxdb',
         'config' => [
-            'url' => 'http://influxdb:8086',
+            'url' => 'http://localhost:8086',
             'token' => 'my-token',
             'org' => 'my-org',
             'bucket' => 'example_bucket',
             'timeout' => 30,
             'verify_ssl' => false,
             'debug' => false,
+            'persistent_connection' => true,
         ],
     ],
     'prometheus' => [

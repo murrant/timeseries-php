@@ -3,6 +3,8 @@
 namespace TimeSeriesPhp\Drivers\InfluxDB;
 
 use DateTime;
+use GuzzleHttp\Client as GuzzleClient;
+use Http\Adapter\Guzzle7\Client as GuzzleAdapter;
 use Psr\Log\LoggerInterface;
 use TimeSeriesPhp\Contracts\Connection\ConnectionAdapterInterface;
 use TimeSeriesPhp\Contracts\Driver\ConfigurableInterface;
@@ -527,10 +529,32 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
 
     private function createConnectionAdapter(): ConnectionAdapterInterface
     {
-        // Use PHP-HTTP discovery to find implementations
-        $httpClient = \Http\Discovery\Psr18ClientDiscovery::find();
+        // Use PHP-HTTP discovery to find implementations for factories
         $requestFactory = \Http\Discovery\Psr17FactoryDiscovery::findRequestFactory();
         $streamFactory = \Http\Discovery\Psr17FactoryDiscovery::findStreamFactory();
+
+        // Create HTTP client with persistent connections if configured
+        if (class_exists(GuzzleClient::class) && class_exists(GuzzleAdapter::class)) {
+            // Create Guzzle client with persistent connection option
+            $guzzleConfig = [
+                'timeout' => $this->config->timeout,
+                'verify' => $this->config->verify_ssl,
+                'debug' => $this->config->debug,
+            ];
+
+            // Add persistent connection option if enabled
+            if ($this->config->persistent_connection) {
+                $guzzleConfig['http_persistent'] = true;
+                $this->logger->debug('Using persistent HTTP connections for InfluxDB');
+            }
+
+            $guzzleClient = new GuzzleClient($guzzleConfig);
+            $httpClient = new GuzzleAdapter($guzzleClient);
+        } else {
+            // Fallback to discovery if Guzzle is not available
+            $httpClient = \Http\Discovery\Psr18ClientDiscovery::find();
+            $this->logger->debug('Using discovered HTTP client for InfluxDB (persistent connections may not be supported)');
+        }
 
         if ($this->config->connection_type === 'udp') {
             return new UdpConnectionAdapter(
