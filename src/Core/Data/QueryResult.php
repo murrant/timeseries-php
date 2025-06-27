@@ -5,6 +5,11 @@ namespace TimeSeriesPhp\Core\Data;
 class QueryResult
 {
     /**
+     * @var array<string, Series> Series objects by name
+     */
+    private array $seriesObjects = [];
+
+    /**
      * @param  array<string, array<int, array{'date': int|string, 'value': ?scalar}>>  $series
      * @param  array<string, mixed>  $metadata
      */
@@ -13,13 +18,33 @@ class QueryResult
     /**
      * Add a series to the result
      *
-     * @param  string  $name  The name of the series
-     * @param  array<int, string>  $columns  The column names
-     * @param  array<int, array<int, mixed>>  $values  The values for each row
-     * @param  array<string, mixed>  $tags  The tags for the series
+     * @param  string|Series  $nameOrSeries  The name of the series or a Series object
+     * @param  array<int, string>|null  $columns  The column names (if $nameOrSeries is a string)
+     * @param  array<int, array<int, mixed>>|null  $values  The values for each row (if $nameOrSeries is a string)
+     * @param  array<string, mixed>  $tags  The tags for the series (if $nameOrSeries is a string)
      */
-    public function addSeries(string $name, array $columns, array $values, array $tags = []): void
+    public function addSeries(string|Series $nameOrSeries, ?array $columns = null, ?array $values = null, array $tags = []): void
     {
+        if ($nameOrSeries instanceof Series) {
+            $series = $nameOrSeries;
+            $name = $series->getName();
+            $columns = $series->getColumns();
+            $values = $series->getValues();
+            $tags = $series->getTags();
+
+            // Store the Series object
+            $this->seriesObjects[$name] = $series;
+        } else {
+            $name = $nameOrSeries;
+            if ($columns === null || $values === null) {
+                throw new \InvalidArgumentException('Columns and values must be provided when adding a series by name');
+            }
+
+            // Create and store a Series object
+            $series = new Series($name, $columns, $values, $tags);
+            $this->seriesObjects[$name] = $series;
+        }
+
         foreach ($values as $row) {
             $timestamp = null;
             $timeIndex = array_search('time', $columns);
@@ -58,9 +83,21 @@ class QueryResult
     }
 
     /**
-     * @return array<string, array<int, array{'date': int|string, 'value': ?scalar}>>
+     * Get all series objects
+     *
+     * @return array<string, Series> Series objects by name
      */
     public function getSeries(): array
+    {
+        return $this->seriesObjects;
+    }
+
+    /**
+     * Get the raw series data
+     *
+     * @return array<string, array<int, array{'date': int|string, 'value': ?scalar}>>
+     */
+    public function getSeriesData(): array
     {
         return $this->series;
     }
@@ -85,12 +122,12 @@ class QueryResult
 
     public function isEmpty(): bool
     {
-        return empty($this->series);
+        return empty($this->series) && empty($this->seriesObjects);
     }
 
     public function count(): int
     {
-        return count($this->series);
+        return count($this->seriesObjects);
     }
 
     /**

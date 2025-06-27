@@ -41,7 +41,7 @@ class InfluxDBSchemaManagerTest extends TestCase
         $this->mockDriver->expects($this->once())
             ->method('rawQuery')
             ->with($this->callback(function (InfluxDBRawQuery $query) {
-                return $query->getQuery() === 'SHOW MEASUREMENTS';
+                return $query->getRawQuery() === 'SHOW MEASUREMENTS';
             }))
             ->willReturn($queryResult);
 
@@ -63,7 +63,7 @@ class InfluxDBSchemaManagerTest extends TestCase
         $this->mockDriver->expects($this->once())
             ->method('rawQuery')
             ->with($this->callback(function (InfluxDBRawQuery $query) {
-                return $query->getQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'";
+                return $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'";
             }))
             ->willReturn($queryResult);
 
@@ -81,7 +81,7 @@ class InfluxDBSchemaManagerTest extends TestCase
         $this->mockDriver->expects($this->once())
             ->method('rawQuery')
             ->with($this->callback(function (InfluxDBRawQuery $query) {
-                return $query->getQuery() === "SHOW MEASUREMENTS WHERE name = 'nonexistent'";
+                return $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'nonexistent'";
             }))
             ->willReturn($queryResult);
 
@@ -102,10 +102,10 @@ class InfluxDBSchemaManagerTest extends TestCase
             ->method('rawQuery')
             ->withConsecutive(
                 [$this->callback(function (InfluxDBRawQuery $query) {
-                    return $query->getQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'";
+                    return $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'";
                 })],
                 [$this->callback(function (InfluxDBRawQuery $query) {
-                    return strpos($query->getQuery(), 'INSERT schema_registry,measurement_name="cpu"') === 0;
+                    return strpos($query->getRawQuery(), 'INSERT schema_registry,measurement_name="cpu"') === 0;
                 })]
             )
             ->willReturnOnConsecutiveCalls(
@@ -137,10 +137,10 @@ class InfluxDBSchemaManagerTest extends TestCase
             ->method('rawQuery')
             ->withConsecutive(
                 [$this->callback(function (InfluxDBRawQuery $query) {
-                    return $query->getQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'";
+                    return $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'";
                 })],
                 [$this->callback(function (InfluxDBRawQuery $query) {
-                    return strpos($query->getQuery(), 'INSERT schema_registry,measurement_name="cpu"') === 0;
+                    return strpos($query->getRawQuery(), 'INSERT schema_registry,measurement_name="cpu"') === 0;
                 })]
             )
             ->willReturnOnConsecutiveCalls(
@@ -187,13 +187,13 @@ class InfluxDBSchemaManagerTest extends TestCase
             ->method('rawQuery')
             ->withConsecutive(
                 [$this->callback(function (InfluxDBRawQuery $query) {
-                    return $query->getQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'";
+                    return $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'";
                 })],
                 [$this->callback(function (InfluxDBRawQuery $query) {
-                    return $query->getQuery() === "SHOW MEASUREMENTS WHERE name = 'schema_registry'";
+                    return $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'schema_registry'";
                 })],
                 [$this->callback(function (InfluxDBRawQuery $query) {
-                    return strpos($query->getQuery(), "SELECT schema FROM schema_registry WHERE measurement_name = 'cpu'") === 0;
+                    return strpos($query->getRawQuery(), "SELECT schema FROM schema_registry WHERE measurement_name = 'cpu'") === 0;
                 })]
             )
             ->willReturnOnConsecutiveCalls(
@@ -243,13 +243,13 @@ class InfluxDBSchemaManagerTest extends TestCase
             ->method('rawQuery')
             ->withConsecutive(
                 [$this->callback(function (InfluxDBRawQuery $query) {
-                    return $query->getQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'";
+                    return $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'";
                 })],
                 [$this->callback(function (InfluxDBRawQuery $query) {
-                    return $query->getQuery() === "SHOW MEASUREMENTS WHERE name = 'schema_registry'";
+                    return $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'schema_registry'";
                 })],
                 [$this->callback(function (InfluxDBRawQuery $query) {
-                    return strpos($query->getQuery(), "SELECT schema FROM schema_registry WHERE measurement_name = 'cpu'") === 0;
+                    return strpos($query->getRawQuery(), "SELECT schema FROM schema_registry WHERE measurement_name = 'cpu'") === 0;
                 })]
             )
             ->willReturnOnConsecutiveCalls(
@@ -300,13 +300,13 @@ class InfluxDBSchemaManagerTest extends TestCase
             ->method('rawQuery')
             ->withConsecutive(
                 [$this->callback(function (InfluxDBRawQuery $query) {
-                    return $query->getQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'";
+                    return $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'";
                 })],
                 [$this->callback(function (InfluxDBRawQuery $query) {
-                    return $query->getQuery() === "SHOW MEASUREMENTS WHERE name = 'schema_registry'";
+                    return $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'schema_registry'";
                 })],
                 [$this->callback(function (InfluxDBRawQuery $query) {
-                    return strpos($query->getQuery(), "SELECT schema FROM schema_registry WHERE measurement_name = 'cpu'") === 0;
+                    return strpos($query->getRawQuery(), "SELECT schema FROM schema_registry WHERE measurement_name = 'cpu'") === 0;
                 })]
             )
             ->willReturnOnConsecutiveCalls(
