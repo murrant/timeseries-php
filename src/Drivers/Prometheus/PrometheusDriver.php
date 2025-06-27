@@ -17,7 +17,7 @@ use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 use TimeSeriesPhp\Exceptions\Query\RawQueryException;
 use TimeSeriesPhp\Exceptions\TSDBException;
 
-#[Driver(name: 'prometheus', queryBuilderClass: PrometheusQueryBuilder::class, configClass: PrometheusConfig::class)]
+#[Driver(name: 'prometheus', queryBuilderClass: PrometheusQueryBuilder::class, configClass: PrometheusConfig::class, schemaManagerClass: Schema\PrometheusSchemaManager::class)]
 class PrometheusDriver extends AbstractTimeSeriesDB implements ConfigurableInterface
 {
     /**

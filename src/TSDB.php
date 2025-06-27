@@ -6,6 +6,7 @@ use DateTime;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
+use TimeSeriesPhp\Contracts\Schema\SchemaManagerInterface;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\DriverFactory;
@@ -13,6 +14,7 @@ use TimeSeriesPhp\Core\Query\Query;
 use TimeSeriesPhp\Exceptions\Driver\DriverException;
 use TimeSeriesPhp\Exceptions\Driver\WriteException;
 use TimeSeriesPhp\Exceptions\Query\QueryException;
+use TimeSeriesPhp\Exceptions\Schema\SchemaException;
 
 /**
  * Simplified entry point for TimeSeriesPhp
@@ -355,6 +357,24 @@ class TSDB
 
             return false;
         }
+    }
+
+    /**
+     * Get the schema manager for the current driver
+     *
+     * @return SchemaManagerInterface The schema manager
+     * @throws SchemaException If the schema manager is not available
+     */
+    public function getSchemaManager(): SchemaManagerInterface
+    {
+        $driverName = $this->driver->getName();
+        $schemaManagerId = sprintf('timeseries.%s.schema_manager', $driverName);
+
+        if (!self::$container->has($schemaManagerId)) {
+            throw new SchemaException(sprintf('Schema manager for driver "%s" is not available', $driverName));
+        }
+
+        return self::$container->get($schemaManagerId);
     }
 
     /**

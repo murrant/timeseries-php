@@ -14,10 +14,10 @@ class Series
      * @param array<string, mixed> $tags The tags for the series
      */
     public function __construct(
-        private string $name,
-        private array $columns,
-        private array $values,
-        private array $tags = []
+        private readonly string $name,
+        private readonly array $columns,
+        private readonly array $values,
+        private readonly array $tags = []
     ) {
     }
 

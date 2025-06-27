@@ -31,7 +31,7 @@ class MeasurementSchema
      * @param array<string, mixed>|null $options Additional options
      */
     public function __construct(
-        private string $name,
+        private readonly string $name,
         ?array $fields = null,
         ?array $tags = null,
         ?array $options = null

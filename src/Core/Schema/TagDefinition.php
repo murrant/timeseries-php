@@ -20,7 +20,7 @@ class TagDefinition
      * @param array<string, mixed>|null $validationRules Validation rules
      */
     public function __construct(
-        private bool $required = false,
+        private readonly bool $required = false,
         private ?array $allowedValues = null,
         ?array $validationRules = null
     ) {

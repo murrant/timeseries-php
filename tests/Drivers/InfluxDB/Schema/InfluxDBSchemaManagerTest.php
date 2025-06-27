@@ -40,9 +40,7 @@ class InfluxDBSchemaManagerTest extends TestCase
         // Set up the mock driver to return the query result
         $this->mockDriver->expects($this->once())
             ->method('rawQuery')
-            ->with($this->callback(function (InfluxDBRawQuery $query) {
-                return $query->getRawQuery() === 'SHOW MEASUREMENTS';
-            }))
+            ->with($this->callback(fn(InfluxDBRawQuery $query) => $query->getRawQuery() === 'SHOW MEASUREMENTS'))
             ->willReturn($queryResult);
 
         // Call the method and assert the result
@@ -62,9 +60,7 @@ class InfluxDBSchemaManagerTest extends TestCase
         // Set up the mock driver to return the query result
         $this->mockDriver->expects($this->once())
             ->method('rawQuery')
-            ->with($this->callback(function (InfluxDBRawQuery $query) {
-                return $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'";
-            }))
+            ->with($this->callback(fn(InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'"))
             ->willReturn($queryResult);
 
         // Call the method and assert the result
@@ -80,9 +76,7 @@ class InfluxDBSchemaManagerTest extends TestCase
         // Set up the mock driver to return the query result
         $this->mockDriver->expects($this->once())
             ->method('rawQuery')
-            ->with($this->callback(function (InfluxDBRawQuery $query) {
-                return $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'nonexistent'";
-            }))
+            ->with($this->callback(fn(InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'nonexistent'"))
             ->willReturn($queryResult);
 
         // Call the method and assert the result
@@ -101,12 +95,8 @@ class InfluxDBSchemaManagerTest extends TestCase
         $this->mockDriver->expects($this->exactly(2))
             ->method('rawQuery')
             ->withConsecutive(
-                [$this->callback(function (InfluxDBRawQuery $query) {
-                    return $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'";
-                })],
-                [$this->callback(function (InfluxDBRawQuery $query) {
-                    return strpos($query->getRawQuery(), 'INSERT schema_registry,measurement_name="cpu"') === 0;
-                })]
+                [$this->callback(fn(InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'")],
+                [$this->callback(fn(InfluxDBRawQuery $query) => str_starts_with($query->getRawQuery(), 'INSERT schema_registry,measurement_name="cpu"'))]
             )
             ->willReturnOnConsecutiveCalls(
                 new QueryResult(), // Empty result for measurementExists
@@ -136,12 +126,8 @@ class InfluxDBSchemaManagerTest extends TestCase
         $this->mockDriver->expects($this->exactly(2))
             ->method('rawQuery')
             ->withConsecutive(
-                [$this->callback(function (InfluxDBRawQuery $query) {
-                    return $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'";
-                })],
-                [$this->callback(function (InfluxDBRawQuery $query) {
-                    return strpos($query->getRawQuery(), 'INSERT schema_registry,measurement_name="cpu"') === 0;
-                })]
+                [$this->callback(fn(InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'")],
+                [$this->callback(fn(InfluxDBRawQuery $query) => str_starts_with($query->getRawQuery(), 'INSERT schema_registry,measurement_name="cpu"'))]
             )
             ->willReturnOnConsecutiveCalls(
                 $existsQueryResult, // Result with the measurement for measurementExists
@@ -186,15 +172,9 @@ class InfluxDBSchemaManagerTest extends TestCase
         $this->mockDriver->expects($this->exactly(3))
             ->method('rawQuery')
             ->withConsecutive(
-                [$this->callback(function (InfluxDBRawQuery $query) {
-                    return $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'";
-                })],
-                [$this->callback(function (InfluxDBRawQuery $query) {
-                    return $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'schema_registry'";
-                })],
-                [$this->callback(function (InfluxDBRawQuery $query) {
-                    return strpos($query->getRawQuery(), "SELECT schema FROM schema_registry WHERE measurement_name = 'cpu'") === 0;
-                })]
+                [$this->callback(fn(InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'")],
+                [$this->callback(fn(InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'schema_registry'")],
+                [$this->callback(fn(InfluxDBRawQuery $query) => str_starts_with($query->getRawQuery(), "SELECT schema FROM schema_registry WHERE measurement_name = 'cpu'"))]
             )
             ->willReturnOnConsecutiveCalls(
                 $cpuQueryResult,
@@ -242,15 +222,9 @@ class InfluxDBSchemaManagerTest extends TestCase
         $this->mockDriver->expects($this->exactly(3))
             ->method('rawQuery')
             ->withConsecutive(
-                [$this->callback(function (InfluxDBRawQuery $query) {
-                    return $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'";
-                })],
-                [$this->callback(function (InfluxDBRawQuery $query) {
-                    return $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'schema_registry'";
-                })],
-                [$this->callback(function (InfluxDBRawQuery $query) {
-                    return strpos($query->getRawQuery(), "SELECT schema FROM schema_registry WHERE measurement_name = 'cpu'") === 0;
-                })]
+                [$this->callback(fn(InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'")],
+                [$this->callback(fn(InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'schema_registry'")],
+                [$this->callback(fn(InfluxDBRawQuery $query) => str_starts_with($query->getRawQuery(), "SELECT schema FROM schema_registry WHERE measurement_name = 'cpu'"))]
             )
             ->willReturnOnConsecutiveCalls(
                 $cpuQueryResult,
@@ -299,15 +273,9 @@ class InfluxDBSchemaManagerTest extends TestCase
         $this->mockDriver->expects($this->exactly(3))
             ->method('rawQuery')
             ->withConsecutive(
-                [$this->callback(function (InfluxDBRawQuery $query) {
-                    return $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'";
-                })],
-                [$this->callback(function (InfluxDBRawQuery $query) {
-                    return $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'schema_registry'";
-                })],
-                [$this->callback(function (InfluxDBRawQuery $query) {
-                    return strpos($query->getRawQuery(), "SELECT schema FROM schema_registry WHERE measurement_name = 'cpu'") === 0;
-                })]
+                [$this->callback(fn(InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'")],
+                [$this->callback(fn(InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'schema_registry'")],
+                [$this->callback(fn(InfluxDBRawQuery $query) => str_starts_with($query->getRawQuery(), "SELECT schema FROM schema_registry WHERE measurement_name = 'cpu'"))]
             )
             ->willReturnOnConsecutiveCalls(
                 $cpuQueryResult,

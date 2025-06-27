@@ -110,6 +110,26 @@ class DriverCompilerPass implements CompilerPassInterface
                     // Set the query builder as a constructor argument for the driver
                     $definition->setArgument('$queryBuilder', $container->getDefinition($driver->queryBuilderClass));
                 }
+
+                // If the driver has a schema manager class, register it as a service
+                if ($driver->schemaManagerClass && class_exists($driver->schemaManagerClass)) {
+                    // Register the schema manager class as a service if it's not already registered
+                    if (! $container->has($driver->schemaManagerClass)) {
+                        $container->register($driver->schemaManagerClass, $driver->schemaManagerClass)
+                            ->setAutoconfigured(true)
+                            ->setAutowired(true)
+                            ->setPublic(true);
+                    } else {
+                        // Make sure the existing schema manager class is public
+                        $container->getDefinition($driver->schemaManagerClass)
+                            ->setPublic(true);
+                    }
+
+                    // Create an alias from SchemaManagerInterface to the schema manager class for this driver
+                    $aliasId = sprintf('%s.%s.schema_manager', 'timeseries', $driver->name);
+                    $container->setAlias($aliasId, $driver->schemaManagerClass)
+                        ->setPublic(true);
+                }
             }
         }
 

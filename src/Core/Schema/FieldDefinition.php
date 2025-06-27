@@ -21,9 +21,9 @@ class FieldDefinition
      * @param array<string, mixed>|null $validationRules Validation rules
      */
     public function __construct(
-        private string $type,
-        private bool $required = false,
-        private mixed $defaultValue = null,
+        private readonly string $type,
+        private readonly bool $required = false,
+        private readonly mixed $defaultValue = null,
         ?array $validationRules = null
     ) {
         $this->validateType($type);
@@ -221,15 +221,15 @@ class FieldDefinition
         return match ($rule) {
             'min' => match ($this->type) {
                 'float', 'integer' => $value >= $ruleValue,
-                'string' => strlen($value) >= $ruleValue,
+                'string' => strlen((string) $value) >= $ruleValue,
                 default => true,
             },
             'max' => match ($this->type) {
                 'float', 'integer' => $value <= $ruleValue,
-                'string' => strlen($value) <= $ruleValue,
+                'string' => strlen((string) $value) <= $ruleValue,
                 default => true,
             },
-            'pattern' => $this->type === 'string' && preg_match($ruleValue, $value) === 1,
+            'pattern' => $this->type === 'string' && preg_match($ruleValue, (string) $value) === 1,
             'enum' => is_array($ruleValue) && in_array($value, $ruleValue, true),
             default => true,
         };

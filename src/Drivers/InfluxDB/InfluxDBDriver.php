@@ -22,7 +22,7 @@ use TimeSeriesPhp\Exceptions\Driver\DatabaseException;
 use TimeSeriesPhp\Exceptions\Driver\WriteException;
 use TimeSeriesPhp\Exceptions\Query\RawQueryException;
 
-#[Driver(name: 'influxdb', queryBuilderClass: InfluxDBQueryBuilder::class, configClass: InfluxDBConfig::class)]
+#[Driver(name: 'influxdb', queryBuilderClass: InfluxDBQueryBuilder::class, configClass: InfluxDBConfig::class, schemaManagerClass: Schema\InfluxDBSchemaManager::class)]
 class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterface
 {
     protected InfluxDBQueryBuilder $influxQueryBuilder;

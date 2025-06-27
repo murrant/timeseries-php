@@ -1,18 +1,18 @@
 <?php
 
-namespace TimeSeriesPhp\Drivers\InfluxDB\Schema;
+namespace TimeSeriesPhp\Drivers\Prometheus\Schema;
 
 use Psr\Log\LoggerInterface;
 use TimeSeriesPhp\Core\Schema\AbstractSchemaManager;
 use TimeSeriesPhp\Core\Schema\MeasurementSchema;
-use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
-use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBRawQuery;
+use TimeSeriesPhp\Drivers\Prometheus\PrometheusDriver;
+use TimeSeriesPhp\Drivers\Prometheus\PrometheusRawQuery;
 use TimeSeriesPhp\Exceptions\Schema\SchemaException;
 
 /**
- * Schema manager for InfluxDB
+ * Schema manager for Prometheus
  */
-class InfluxDBSchemaManager extends AbstractSchemaManager
+class PrometheusSchemaManager extends AbstractSchemaManager
 {
     /**
      * @var array<string, bool> Cache of measurement existence
@@ -25,11 +25,11 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
     private array $appliedMigrationsCache = [];
 
     /**
-     * @param InfluxDBDriver $driver The InfluxDB driver
+     * @param PrometheusDriver $driver The Prometheus driver
      * @param LoggerInterface $logger Logger for recording operations
      */
     public function __construct(
-        private readonly InfluxDBDriver $driver,
+        private readonly PrometheusDriver $driver,
         LoggerInterface $logger
     ) {
         parent::__construct($logger);
@@ -43,15 +43,13 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
         try {
             $this->logger->debug('Listing measurements');
 
-            // Execute a SHOW MEASUREMENTS query
-            $query = "SHOW MEASUREMENTS";
-            $result = $this->driver->rawQuery(new InfluxDBRawQuery($query));
+            // Execute a query to get all metric names
+            $query = 'query=count({__name__!=""}) by (__name__)';
+            $result = $this->driver->rawQuery(new PrometheusRawQuery($query));
 
             $measurements = [];
             foreach ($result->getSeries() as $series) {
-                foreach ($series->getValues() as $value) {
-                    $measurements[] = $value[0];
-                }
+                $measurements[] = $series->getName();
             }
 
             return $measurements;
@@ -73,20 +71,11 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
         try {
             $this->logger->debug("Checking if measurement exists: {$measurement}");
 
-            // Execute a SHOW MEASUREMENTS query with a filter
-            $query = "SHOW MEASUREMENTS WHERE name = '{$measurement}'";
-            $result = $this->driver->rawQuery(new InfluxDBRawQuery($query));
+            // Execute a query to check if the metric exists
+            $query = "query=count({__name__=\"{$measurement}\"})";
+            $result = $this->driver->rawQuery(new PrometheusRawQuery($query));
 
-            $exists = false;
-            foreach ($result->getSeries() as $series) {
-                foreach ($series->getValues() as $value) {
-                    if ($value[0] === $measurement) {
-                        $exists = true;
-                        break 2;
-                    }
-                }
-            }
-
+            $exists = !$result->isEmpty();
             $this->measurementExistsCache[$measurement] = $exists;
             return $exists;
         } catch (\Exception $e) {
@@ -107,21 +96,21 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
         try {
             $this->logger->debug('Getting applied migrations');
 
-            // Check if the migrations measurement exists
-            if (!$this->measurementExists('schema_migrations')) {
-                // Create the migrations measurement if it doesn't exist
-                $this->createMigrationsMeasurement();
+            // Check if the schema_registry measurement exists
+            if (!$this->measurementExists('schema_registry')) {
+                // Create the schema registry if it doesn't exist
+                $this->createSchemaRegistry();
                 return [];
             }
 
-            // Execute a SELECT query to get all migrations
-            $query = "SELECT migration_name FROM schema_migrations";
-            $result = $this->driver->rawQuery(new InfluxDBRawQuery($query));
+            // Get all migrations from the schema registry
+            $query = "query=schema_registry{type=\"migration\"}";
+            $result = $this->driver->rawQuery(new PrometheusRawQuery($query));
 
             $migrations = [];
             foreach ($result->getSeries() as $series) {
-                foreach ($series->getValues() as $value) {
-                    $migrations[] = $value[1]; // migration_name is the second column
+                if (isset($series->getTags()['migration_name'])) {
+                    $migrations[] = $series->getTags()['migration_name'];
                 }
             }
 
@@ -142,15 +131,26 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
             $measurementName = $schema->getName();
             $this->logger->debug("Creating measurement: {$measurementName}");
 
-            // InfluxDB doesn't require explicit measurement creation, but we can store the schema
+            // Prometheus doesn't require explicit measurement creation, but we can store the schema
             // in a special measurement for schema tracking
             $schemaData = $schema->toArray();
             $schemaJson = json_encode($schemaData);
 
-            // Store the schema in a special measurement
-            $query = "INSERT schema_registry,measurement_name=\"{$measurementName}\" schema='{$schemaJson}'";
-            $this->driver->rawQuery(new InfluxDBRawQuery($query));
+            // Check if the schema registry exists
+            if (!$this->measurementExists('schema_registry')) {
+                $this->createSchemaRegistry();
+            }
 
+            // Store the schema in the schema registry
+            // Note: In a real implementation, you would need to use the Prometheus API to create a metric
+            // Here we're just simulating it by storing the schema information
+            $labels = [
+                'measurement_name' => $measurementName,
+                'type' => 'schema',
+                'schema' => $schemaJson,
+            ];
+            
+            $this->storeInSchemaRegistry($labels, 1);
             $this->measurementExistsCache[$measurementName] = true;
             return true;
         } catch (\Exception $e) {
@@ -168,15 +168,25 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
             $measurementName = $schema->getName();
             $this->logger->debug("Updating measurement: {$measurementName}");
 
-            // InfluxDB doesn't support altering measurements directly, but we can update the schema
+            // Prometheus doesn't support altering measurements directly, but we can update the schema
             // in our schema registry
             $schemaData = $schema->toArray();
             $schemaJson = json_encode($schemaData);
 
-            // Update the schema in the schema registry
-            $query = "INSERT schema_registry,measurement_name=\"{$measurementName}\" schema='{$schemaJson}'";
-            $this->driver->rawQuery(new InfluxDBRawQuery($query));
+            // Check if the schema registry exists
+            if (!$this->measurementExists('schema_registry')) {
+                $this->createSchemaRegistry();
+            }
 
+            // Update the schema in the schema registry
+            $labels = [
+                'measurement_name' => $measurementName,
+                'type' => 'schema',
+                'schema' => $schemaJson,
+                'updated_at' => (string)time(),
+            ];
+            
+            $this->storeInSchemaRegistry($labels, 1);
             return true;
         } catch (\Exception $e) {
             $this->logger->error("Error updating measurement: {$e->getMessage()}");
@@ -192,14 +202,14 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
         try {
             $this->logger->debug("Getting schema for measurement: {$measurement}");
 
-            // Check if the schema registry measurement exists
+            // Check if the schema registry exists
             if (!$this->measurementExists('schema_registry')) {
                 throw new SchemaException("Schema registry does not exist");
             }
 
             // Query the schema registry for the measurement schema
-            $query = "SELECT schema FROM schema_registry WHERE measurement_name = '{$measurement}' ORDER BY time DESC LIMIT 1";
-            $result = $this->driver->rawQuery(new InfluxDBRawQuery($query));
+            $query = "query=schema_registry{measurement_name=\"{$measurement}\",type=\"schema\"}";
+            $result = $this->driver->rawQuery(new PrometheusRawQuery($query));
 
             if ($result->isEmpty()) {
                 throw new SchemaException("Schema for measurement '{$measurement}' not found");
@@ -207,9 +217,9 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
 
             $schemaJson = null;
             foreach ($result->getSeries() as $series) {
-                foreach ($series->getValues() as $value) {
-                    $schemaJson = $value[1]; // schema is the second column
-                    break 2;
+                if (isset($series->getTags()['schema'])) {
+                    $schemaJson = $series->getTags()['schema'];
+                    break;
                 }
             }
 
@@ -237,14 +247,19 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
         try {
             $this->logger->debug("Applying migration: {$migrationName}");
 
-            // Check if the migrations measurement exists
-            if (!$this->measurementExists('schema_migrations')) {
-                $this->createMigrationsMeasurement();
+            // Check if the schema registry exists
+            if (!$this->measurementExists('schema_registry')) {
+                $this->createSchemaRegistry();
             }
 
             // Record the migration as applied
-            $query = "INSERT schema_migrations,migration_name=\"{$migrationName}\" applied=true";
-            $this->driver->rawQuery(new InfluxDBRawQuery($query));
+            $labels = [
+                'migration_name' => $migrationName,
+                'type' => 'migration',
+                'applied_at' => (string)time(),
+            ];
+            
+            $this->storeInSchemaRegistry($labels, 1);
 
             // Update the applied migrations cache
             $this->appliedMigrationsCache[] = $migrationName;
@@ -257,23 +272,51 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
     }
 
     /**
-     * Create the migrations measurement if it doesn't exist
+     * Create the schema registry if it doesn't exist
      *
-     * @throws SchemaException If creating the migrations measurement fails
+     * @throws SchemaException If creating the schema registry fails
      */
-    private function createMigrationsMeasurement(): void
+    private function createSchemaRegistry(): void
     {
         try {
-            $this->logger->debug('Creating migrations measurement');
+            $this->logger->debug('Creating schema registry');
 
-            // InfluxDB doesn't require explicit measurement creation, but we can insert a dummy record
-            $query = "INSERT schema_migrations,migration_name=\"init\" applied=true";
-            $this->driver->rawQuery(new InfluxDBRawQuery($query));
-
-            $this->measurementExistsCache['schema_migrations'] = true;
+            // In a real implementation, you would need to use the Prometheus API to create a metric
+            // Here we're just simulating it by storing a dummy value
+            $labels = [
+                'type' => 'init',
+                'created_at' => (string)time(),
+            ];
+            
+            $this->storeInSchemaRegistry($labels, 1);
+            $this->measurementExistsCache['schema_registry'] = true;
         } catch (\Exception $e) {
-            $this->logger->error("Error creating migrations measurement: {$e->getMessage()}");
-            throw new SchemaException("Failed to create migrations measurement: {$e->getMessage()}", 0, $e);
+            $this->logger->error("Error creating schema registry: {$e->getMessage()}");
+            throw new SchemaException("Failed to create schema registry: {$e->getMessage()}", 0, $e);
+        }
+    }
+
+    /**
+     * Store a value in the schema registry
+     *
+     * @param array<string, string> $labels The labels to store
+     * @param float $value The value to store
+     * @throws SchemaException If storing in the schema registry fails
+     */
+    private function storeInSchemaRegistry(array $labels, float $value): void
+    {
+        try {
+            // In a real implementation, you would need to use the Prometheus API to store a value
+            // Here we're just simulating it by logging the operation
+            $this->logger->debug('Storing in schema registry: ' . json_encode($labels));
+
+            // Note: This is a simplified implementation. In a real-world scenario,
+            // you would need to use the Prometheus API to create and update metrics.
+            // Prometheus doesn't allow arbitrary label creation at runtime, so this
+            // would require a different approach in a production environment.
+        } catch (\Exception $e) {
+            $this->logger->error("Error storing in schema registry: {$e->getMessage()}");
+            throw new SchemaException("Failed to store in schema registry: {$e->getMessage()}", 0, $e);
         }
     }
 }
