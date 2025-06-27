@@ -4,3 +4,7 @@
    - [x] rrdtool command per process
    - [x] influxdb 2.x http
    - [x] influxdb 2 udp
+   - [x] Add Schema Manager
+   - [x] Schema validation
+   - [x] Measurement creation and updates
+   - [x] Schema migrations
