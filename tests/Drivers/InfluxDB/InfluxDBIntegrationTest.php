@@ -144,16 +144,16 @@ class InfluxDBIntegrationTest extends TestCase
         echo "Measurement: cpu_usage\n";
         echo "Fields: value = 42.5\n";
         echo "Tags: host = query-test-server\n";
-        echo "Timestamp: " . $timestamp->format('c') . "\n";
+        echo 'Timestamp: '.$timestamp->format('c')."\n";
 
         $writeResult = $this->driver->write($dataPoint);
-        echo "Write result: " . ($writeResult ? "success" : "failure") . "\n";
+        echo 'Write result: '.($writeResult ? 'success' : 'failure')."\n";
 
         // Wait a moment for data to be available
         sleep(1);
 
         // Print debug information about the configuration
-        echo "Test bucket: " . $this->testBucket . "\n";
+        echo 'Test bucket: '.$this->testBucket."\n";
 
         // Use a raw query directly with no field filter
         $rawQueryString = 'from(bucket:"'.$this->testBucket.'") '.

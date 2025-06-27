@@ -44,7 +44,7 @@ class LineProtocolFormatter
         // Add timestamp with the correct precision
         $line .= ' '.$this->formatTimestamp($data->getTimestamp());
 
-        return $line . "\n";
+        return $line."\n";
     }
 
     /**
@@ -54,7 +54,7 @@ class LineProtocolFormatter
     {
         $seconds = $timestamp->getTimestamp();
 
-        return (string) match($this->precision) {
+        return (string) match ($this->precision) {
             TimePrecision::S => $seconds,
             TimePrecision::MS => ($seconds * 1000 + intdiv((int) $timestamp->format('u'), 1000)),
             TimePrecision::US => ($seconds * 1000000 + ((int) $timestamp->format('u'))),

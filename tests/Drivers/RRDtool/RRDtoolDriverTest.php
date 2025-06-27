@@ -8,6 +8,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\Process\Process;
+use TimeSeriesPhp\Contracts\Connection\ConnectionAdapterInterface;
+use TimeSeriesPhp\Core\Connection\CommandResponse;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Drivers\RRDtool\Factory\ProcessFactoryInterface;
@@ -35,6 +37,8 @@ class RRDtoolDriverTest extends TestCase
     private RRDtoolQueryBuilder $queryBuilder;
 
     private LoggerInterface $logger;
+
+    private MockObject&ConnectionAdapterInterface $connectionAdapter;
 
     protected function setUp(): void
     {
@@ -97,6 +101,12 @@ class RRDtoolDriverTest extends TestCase
         // Create logger
         $this->logger = new NullLogger;
 
+        // Create mock connection adapter
+        $this->connectionAdapter = $this->createMock(ConnectionAdapterInterface::class);
+        $this->connectionAdapter->method('connect')->willReturn(true);
+        $this->connectionAdapter->method('isConnected')->willReturn(true);
+        $this->connectionAdapter->method('executeCommand')->willReturnCallback(fn(string $command, string $data) => CommandResponse::success('OK'));
+
         // Create driver with mocked dependencies
         $this->driver = $this->getMockBuilder(RRDtoolDriver::class)
             ->setConstructorArgs([
@@ -105,13 +115,12 @@ class RRDtoolDriverTest extends TestCase
                 $this->tagStrategy,
                 $this->queryBuilder,
                 $this->logger,
+                $this->connectionAdapter,
             ])
-            ->onlyMethods(['doConnect', 'doWrite', 'rawQuery', 'createRRDWithCustomConfig', 'getRRDGraph', 'createDatabase', 'getDatabases'])
+            ->onlyMethods(['doWrite', 'rawQuery', 'createRRDWithCustomConfig', 'getRRDGraph', 'createDatabase', 'getDatabases'])
             ->getMock();
 
         // Mock methods to avoid executing real commands
-        $this->driver->method('doConnect')->willReturn(true);
-
         $this->driver->method('doWrite')->willReturnCallback(function (DataPoint $dataPoint) {
             $rrdPath = $this->tagStrategy->getFilePath($dataPoint->getMeasurement(), $dataPoint->getTags());
 

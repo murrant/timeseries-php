@@ -29,19 +29,20 @@ class LocalConnectionAdapter implements ConnectionAdapterInterface
      * Connect to the database
      *
      * @return bool True if connection was successful, false otherwise
+     *
      * @throws ConnectionException
      */
     public function connect(): bool
     {
         try {
             // Verify RRD directory exists and is writable
-            if (!is_dir($this->config->rrd_dir)) {
-                if (!mkdir($this->config->rrd_dir, 0755, true)) {
+            if (! is_dir($this->config->rrd_dir)) {
+                if (! mkdir($this->config->rrd_dir, 0755, true)) {
                     throw new ConnectionException("Cannot create RRD directory: {$this->config->rrd_dir}");
                 }
             }
 
-            if (!is_writable($this->config->rrd_dir)) {
+            if (! is_writable($this->config->rrd_dir)) {
                 throw new ConnectionException("RRD directory is not writable: {$this->config->rrd_dir}");
             }
 
@@ -50,7 +51,7 @@ class LocalConnectionAdapter implements ConnectionAdapterInterface
             $process->setTimeout($this->config->command_timeout);
             $process->run();
 
-            if (!$process->isSuccessful()) {
+            if (! $process->isSuccessful()) {
                 throw new ConnectionException("RRDtool executable not found or not executable: {$this->config->rrdtool_path}");
             }
 
@@ -64,13 +65,13 @@ class LocalConnectionAdapter implements ConnectionAdapterInterface
 
             return true;
         } catch (\Throwable $e) {
-            $this->logger->error('Failed to connect to RRDtool: ' . $e->getMessage(), [
+            $this->logger->error('Failed to connect to RRDtool: '.$e->getMessage(), [
                 'exception' => $e::class,
                 'rrdtool_path' => $this->config->rrdtool_path,
                 'rrd_dir' => $this->config->rrd_dir,
             ]);
 
-            throw new ConnectionException('Failed to connect to RRDtool: ' . $e->getMessage(), 0, $e);
+            throw new ConnectionException('Failed to connect to RRDtool: '.$e->getMessage(), 0, $e);
         }
     }
 
@@ -87,21 +88,22 @@ class LocalConnectionAdapter implements ConnectionAdapterInterface
     /**
      * Execute a command on the database
      *
-     * @param string $command The command to execute (e.g., 'create', 'update', 'fetch')
-     * @param string $data The data to send with the command (arguments as a JSON string)
+     * @param  string  $command  The command to execute (e.g., 'create', 'update', 'fetch')
+     * @param  string  $data  The data to send with the command (arguments as a JSON string)
      * @return CommandResponse The response from the database
+     *
      * @throws ConnectionException If not connected
      */
     public function executeCommand(string $command, string $data): CommandResponse
     {
-        if (!$this->isConnected()) {
+        if (! $this->isConnected()) {
             throw new ConnectionException('Not connected to RRDtool');
         }
 
         try {
             // Parse the arguments from JSON
             $args = json_decode($data, true);
-            if (!is_array($args)) {
+            if (! is_array($args)) {
                 return CommandResponse::failure('Invalid command arguments: expected JSON array');
             }
 
@@ -110,7 +112,16 @@ class LocalConnectionAdapter implements ConnectionAdapterInterface
             array_unshift($args, $this->config->rrdtool_path);
 
             // Execute the command
-            $process = $this->processFactory->create($args);
+            $stringArgs = [];
+            foreach ($args as $arg) {
+                // Ensure $arg can be safely cast to string
+                if (is_scalar($arg) || is_null($arg) || (is_object($arg) && method_exists($arg, '__toString'))) {
+                    $stringArgs[] = (string) $arg;
+                } else {
+                    $stringArgs[] = '';
+                }
+            }
+            $process = $this->processFactory->create($stringArgs);
             $process->setTimeout($this->config->command_timeout);
 
             if ($this->config->debug) {
@@ -124,8 +135,9 @@ class LocalConnectionAdapter implements ConnectionAdapterInterface
             try {
                 $process->run();
 
-                if (!$process->isSuccessful()) {
+                if (! $process->isSuccessful()) {
                     $errorOutput = $process->getErrorOutput();
+
                     return CommandResponse::failure($errorOutput ?: 'Command execution failed', [
                         'exit_code' => $process->getExitCode(),
                         'command' => $command,
@@ -138,7 +150,16 @@ class LocalConnectionAdapter implements ConnectionAdapterInterface
                     'command' => $command,
                 ]);
             } catch (ProcessTimedOutException) {
-                throw new RRDtoolCommandTimeoutException($command, $args);
+                $stringArgs = [];
+                foreach ($args as $arg) {
+                    // Ensure $arg can be safely cast to string
+                    if (is_scalar($arg) || is_null($arg) || (is_object($arg) && method_exists($arg, '__toString'))) {
+                        $stringArgs[] = (string) $arg;
+                    } else {
+                        $stringArgs[] = '';
+                    }
+                }
+                throw new RRDtoolCommandTimeoutException($command, $stringArgs);
             }
         } catch (RRDtoolException $e) {
             return CommandResponse::failure($e->getDebugMessage($this->config->debug), [

@@ -25,27 +25,24 @@ use TimeSeriesPhp\Exceptions\Query\RawQueryException;
 #[Driver(name: 'influxdb', queryBuilderClass: InfluxDBQueryBuilder::class, configClass: InfluxDBConfig::class)]
 class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterface
 {
-    protected InfluxDBConfig $config;
-
     protected InfluxDBQueryBuilder $influxQueryBuilder;
 
     protected ConnectionAdapterInterface $connectionAdapter;
+
     protected LineProtocolFormatter $writeFormatter;
 
     public function __construct(
         InfluxDBQueryBuilder $queryBuilder,
         LoggerInterface $logger,
-        InfluxDBConfig $config,
+        protected InfluxDBConfig $config,
         ?ConnectionAdapterInterface $connectionAdapter,
         ?LineProtocolFormatter $writeFormatter,
     ) {
         parent::__construct($queryBuilder, $logger);
-
-        $this->config = $config;
         $this->influxQueryBuilder = $queryBuilder;
 
         // Initialize the write formatter with the configured precision
-        $this->writeFormatter = $writeFormatter ?? new LineProtocolFormatter(TimePrecision::from($config->precision));
+        $this->writeFormatter = $writeFormatter ?? new LineProtocolFormatter(TimePrecision::from($this->config->precision));
 
         $this->connectionAdapter = $connectionAdapter ?? $this->createConnectionAdapter();
     }
@@ -159,7 +156,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
     {
         $result = new QueryResult;
 
-        $this->logger->debug('Raw response data from InfluxDB: ' . $responseData);
+        $this->logger->debug('Raw response data from InfluxDB: '.$responseData);
 
         try {
             // First try to parse as JSON
@@ -173,6 +170,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
                 }
 
                 $this->logger->debug('No data or invalid data in response');
+
                 return $result;
             }
 
@@ -254,7 +252,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
 
                             // Extract tags
                             foreach ($row as $key => $value) {
-                                if (is_string($key) && strpos($key, '_') !== 0 && $key !== 'result' && $key !== 'table') {
+                                if (is_string($key) && !str_starts_with($key, '_') && $key !== 'result' && $key !== 'table') {
                                     $tags[$key] = $value;
                                 }
                             }
@@ -319,7 +317,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
 
                         // Extract tags
                         foreach ($record as $key => $value) {
-                            if (is_string($key) && strpos($key, '_') !== 0 && $key !== 'result' && $key !== 'table') {
+                            if (is_string($key) && !str_starts_with($key, '_') && $key !== 'result' && $key !== 'table') {
                                 $tags[$key] = $value;
                             }
                         }
@@ -598,6 +596,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
         // Skip empty responses
         if (empty(trim($responseData))) {
             $this->logger->debug('Empty CSV response from InfluxDB');
+
             return $result;
         }
 
@@ -606,10 +605,11 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
             $lines = explode("\n", $responseData);
 
             // Skip empty lines
-            $lines = array_filter($lines, fn($line) => !empty(trim($line)));
+            $lines = array_filter($lines, fn ($line) => ! empty(trim($line)));
 
             if (empty($lines)) {
                 $this->logger->debug('No data lines in CSV response');
+
                 return $result;
             }
 
@@ -618,7 +618,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
             $headers = str_getcsv($headerLine);
 
             // Skip the second line which contains data types
-            if (!empty($lines)) {
+            if (! empty($lines)) {
                 array_shift($lines);
             }
 
@@ -646,36 +646,36 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
                 }
 
                 // Get the measurement name
-                $measurement = ($measurementIndex !== false && isset($row[$measurementIndex])) 
-                    ? $row[$measurementIndex] 
+                $measurement = ($measurementIndex !== false && isset($row[$measurementIndex]))
+                    ? $row[$measurementIndex]
                     : 'unknown';
 
                 // Get the field name
-                $field = ($fieldIndex !== false && isset($row[$fieldIndex])) 
-                    ? $row[$fieldIndex] 
+                $field = ($fieldIndex !== false && isset($row[$fieldIndex]))
+                    ? $row[$fieldIndex]
                     : 'value';
 
                 // Get the value
-                $value = ($valueIndex !== false && isset($row[$valueIndex])) 
-                    ? $row[$valueIndex] 
+                $value = ($valueIndex !== false && isset($row[$valueIndex]))
+                    ? $row[$valueIndex]
                     : null;
 
                 // Get the timestamp
-                $timestamp = ($timeIndex !== false && isset($row[$timeIndex])) 
-                    ? $row[$timeIndex] 
+                $timestamp = ($timeIndex !== false && isset($row[$timeIndex]))
+                    ? $row[$timeIndex]
                     : (string) time();
 
                 // Extract tags
                 foreach ($headers as $i => $header) {
-                    if ($header !== '_measurement' && $header !== '_field' && $header !== '_value' && $header !== '_time' 
-                        && !str_starts_with($header, 'result') && !str_starts_with($header, 'table')
+                    if ($header !== '_measurement' && $header !== '_field' && $header !== '_value' && $header !== '_time'
+                        && ! str_starts_with((string) $header, 'result') && ! str_starts_with((string) $header, 'table')
                         && isset($row[$i])) {
                         $tags[$header] = $row[$i];
                     }
                 }
 
                 // Add the data point to the result
-                $fieldName = $measurement . '.' . $field;
+                $fieldName = $measurement.'.'.$field;
                 $result->appendPoint($timestamp, $fieldName, $value);
             }
 
@@ -684,7 +684,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
             ]);
         } catch (\Throwable $e) {
             // Log the error but return an empty result
-            $this->logger->error('Failed to parse Flux CSV response: ' . $e->getMessage(), [
+            $this->logger->error('Failed to parse Flux CSV response: '.$e->getMessage(), [
                 'exception' => $e::class,
                 'response' => $responseData,
             ]);

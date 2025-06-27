@@ -101,8 +101,6 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
         return $this->config->rrdcached_address;
     }
 
-    private int $commandTimeout = 180;
-
     /**
      * @throws ConnectionException
      */
@@ -149,14 +147,18 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
             $this->logger->debug('Running rrdtool command', [
                 'command' => $command,
                 'args' => $args,
-                'full_command' => $command . ' ' . implode(' ', $args),
+                'full_command' => $command.' '.implode(' ', $args),
             ]);
         }
 
         // Execute the command using the connection adapter
-        $response = $this->connectionAdapter->executeCommand($command, json_encode($args));
+        $jsonArgs = json_encode($args);
+        if ($jsonArgs === false) {
+            throw new RRDtoolException($command, $args, 'Failed to encode command arguments as JSON');
+        }
+        $response = $this->connectionAdapter->executeCommand($command, $jsonArgs);
 
-        if (!$response->success) {
+        if (! $response->success) {
             if (preg_match('/illegal attempt to update using time \d+ when last update time is/', $response->error ?? '')) {
                 throw new RRDtoolPrematureUpdateException($command, $args, $response->error ?? '');
             }
