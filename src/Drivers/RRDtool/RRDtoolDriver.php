@@ -3,16 +3,16 @@
 namespace TimeSeriesPhp\Drivers\RRDtool;
 
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Process\Exception\ProcessTimedOutException;
-use Symfony\Component\Process\InputStream;
-use Symfony\Component\Process\Process;
+use TimeSeriesPhp\Contracts\Connection\ConnectionAdapterInterface;
 use TimeSeriesPhp\Contracts\Driver\ConfigurableInterface;
 use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
 use TimeSeriesPhp\Core\Attributes\Driver;
 use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Data\QueryResult;
 use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
-use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolCommandTimeoutException;
+use TimeSeriesPhp\Drivers\RRDtool\Connection\LocalConnectionAdapter;
+use TimeSeriesPhp\Drivers\RRDtool\Connection\PersistentProcessConnectionAdapter;
+use TimeSeriesPhp\Drivers\RRDtool\Connection\RRDCachedConnectionAdapter;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolException;
 use TimeSeriesPhp\Drivers\RRDtool\Exception\RRDtoolPrematureUpdateException;
 use TimeSeriesPhp\Drivers\RRDtool\Factory\ProcessFactoryInterface;
@@ -29,16 +29,58 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
 
     protected RRDtoolQueryBuilder $rrdQueryBuilder;
 
+    protected ConnectionAdapterInterface $connectionAdapter;
+
     public function __construct(
         protected RRDtoolConfig $config,
         protected ProcessFactoryInterface $processFactory,
         protected RRDTagStrategyInterface $tagStrategy,
         RRDtoolQueryBuilder $queryBuilder,
         LoggerInterface $logger,
+        ?ConnectionAdapterInterface $connectionAdapter = null,
     ) {
         parent::__construct($queryBuilder, $logger);
 
         $this->rrdQueryBuilder = $queryBuilder;
+
+        // Create the appropriate connection adapter if not provided
+        if ($connectionAdapter === null) {
+            $this->connectionAdapter = $this->createConnectionAdapter();
+        } else {
+            $this->connectionAdapter = $connectionAdapter;
+        }
+    }
+
+    /**
+     * Create a connection adapter based on the configuration
+     */
+    protected function createConnectionAdapter(): ConnectionAdapterInterface
+    {
+        // If rrdcached is enabled, use the appropriate adapter
+        if ($this->config->rrdcached_enabled) {
+            if ($this->config->persistent_process) {
+                // Use persistent process adapter with rrdcached
+                return new PersistentProcessConnectionAdapter(
+                    $this->config,
+                    $this->processFactory,
+                    $this->logger
+                );
+            } else {
+                // Use direct connection to rrdcached
+                return new RRDCachedConnectionAdapter(
+                    $this->config,
+                    $this->processFactory,
+                    $this->logger
+                );
+            }
+        }
+
+        // Default to local connection adapter
+        return new LocalConnectionAdapter(
+            $this->config,
+            $this->processFactory,
+            $this->logger
+        );
     }
 
     /**
@@ -59,10 +101,6 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
         return $this->config->rrdcached_address;
     }
 
-    private ?Process $persistentProcess = null;
-
-    private ?InputStream $persistentInput = null;
-
     private int $commandTimeout = 180;
 
     /**
@@ -70,44 +108,12 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
      */
     protected function doConnect(): bool
     {
-
-        if ($this->config->rrdcached_enabled) {
-            if (empty($this->config->rrdcached_address)) {
-                throw new ConnectionException('rrdcached address must be specified when rrdcached_enabled is true');
-            }
-        }
-
-        if (! is_dir($this->config->rrd_dir)) {
-            if (! mkdir($this->config->rrd_dir, 0755, true)) {
-                throw new ConnectionException("Cannot create RRD directory: {$this->config->rrd_dir}");
-            }
-        }
-
-        if (! is_writable($this->config->rrd_dir)) {
-            throw new ConnectionException("RRD directory is not writable: {$this->config->rrd_dir}");
-        }
-
         $this->rrdQueryBuilder->tagStrategy = $this->tagStrategy;
 
-        if ($this->config->persistent_process) {
-            $this->persistentProcess = $this->processFactory->create([$this->config->rrdtool_path, '-']);
-            $this->persistentInput = new InputStream;
-            $this->persistentProcess->setInput($this->persistentInput);
-            $this->persistentProcess->setTimeout(null);
-            $this->persistentProcess->start();
-        }
+        // Connect using the adapter
+        $this->connected = $this->connectionAdapter->connect();
 
-        $this->connected = true;
-
-        $this->logger->info('Connected to RRDtool successfully', [
-            'rrd_dir' => $this->config->rrd_dir,
-            'rrdtool_path' => $this->config->rrdtool_path,
-            'rrdcached_enabled' => $this->config->rrdcached_enabled && ! empty($this->config->rrdcached_address),
-            'persistent_process' => $this->persistentProcess !== null,
-            'tag_strategy' => $this->tagStrategy::class,
-        ]);
-
-        return true;
+        return $this->connected;
     }
 
     /**
@@ -139,76 +145,26 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
      */
     private function runRrdtoolCommand(string $command, array $args): string
     {
-        array_unshift($args, $command);
-        if ($this->config->rrdcached_address) {
-            array_push($args, '--daemon', $this->config->rrdcached_address);
-        }
-
         if ($this->config->debug) {
             $this->logger->debug('Running rrdtool command', [
                 'command' => $command,
                 'args' => $args,
-                'full_command' => implode(' ', $args),
+                'full_command' => $command . ' ' . implode(' ', $args),
             ]);
         }
 
-        if ($this->persistentProcess) {
-            if ($this->persistentInput == null) {
-                throw new RRDtoolException('Persistent process is not started, input stream missing');
+        // Execute the command using the connection adapter
+        $response = $this->connectionAdapter->executeCommand($command, json_encode($args));
+
+        if (!$response->success) {
+            if (preg_match('/illegal attempt to update using time \d+ when last update time is/', $response->error ?? '')) {
+                throw new RRDtoolPrematureUpdateException($command, $args, $response->error ?? '');
             }
 
-            $this->persistentInput->write(implode(' ', $args)."\n");
-            $timeout = time() + $this->commandTimeout;
-            $this->persistentProcess->waitUntil(function (string $type, string $output) use ($command, $args, $timeout) {
-                if (preg_match('/^OK/m', $output)) {
-                    return true;
-                }
-
-                if ($type == Process::OUT && str_starts_with($output, 'ERROR:')) {
-                    if (preg_match('/illegal attempt to update using time \d+ when last update time is/', $output)) {
-                        throw new RRDtoolPrematureUpdateException($command, $args, $output);
-                    }
-
-                    throw new RRDtoolException($command, $args, $output);
-                }
-
-                if (time() > $timeout) {
-                    throw new RRDtoolCommandTimeoutException($command, $args, $output);
-                }
-
-                return false;
-            });
-
-            $output = $this->persistentProcess->getOutput();
-
-            // trim ok line
-            $lastLinePos = strrpos($output, "\n", -2);
-            if ($lastLinePos !== false) {
-                $output = substr($output, 0, $lastLinePos);
-            }
-
-            $this->persistentProcess->clearOutput();
-
-            return $output;
+            throw new RRDtoolException($command, $args, $response->error ?? 'Unknown error');
         }
 
-        array_unshift($args, $this->config->rrdtool_path);
-        $process = new Process($args);
-        $process->setTimeout($this->commandTimeout);
-
-        try {
-            $process->run();
-
-            if ($process->getExitCode() !== 0) {
-                throw (new RRDtoolException($command, $args))
-                    ->setOutput($process->getOutput())
-                    ->setErrorOutput($process->getErrorOutput());
-            }
-
-            return $process->getOutput();
-        } catch (ProcessTimedOutException) {
-            throw new RRDtoolCommandTimeoutException($command, $args);
-        }
+        return $response->data;
     }
 
     private function guessDataSourceType(mixed $value): string
@@ -387,7 +343,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
 
     public function close(): void
     {
-        $this->persistentProcess?->stop();
+        $this->connectionAdapter->close();
         $this->connected = false;
     }
 
@@ -398,7 +354,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
      */
     public function isConnected(): bool
     {
-        return $this->connected;
+        return $this->connected && $this->connectionAdapter->isConnected();
     }
 
     /**
