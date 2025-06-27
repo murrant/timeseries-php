@@ -41,8 +41,8 @@ class RRDtoolSchemaManagerIntegrationTest extends TestCase
 
         // Create configuration array
         $config = [
-            'binary' => 'rrdtool',
-            'data_dir' => $this->dataDir,
+            'rrdtool_path' => 'rrdtool',
+            'rrd_dir' => $this->dataDir,
         ];
 
         // Initialize driver using TSDB

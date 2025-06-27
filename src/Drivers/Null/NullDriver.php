@@ -18,7 +18,7 @@ use TimeSeriesPhp\Core\Driver\AbstractTimeSeriesDB;
  * Null driver implementation that does nothing
  * Useful for testing or when you need a placeholder driver
  */
-#[Driver(name: 'null', queryBuilderClass: NullQueryBuilder::class, configClass: NullConfig::class)]
+#[Driver(name: 'null', queryBuilderClass: NullQueryBuilder::class, configClass: NullConfig::class, schemaManagerClass: Schema\NullSchemaManager::class)]
 class NullDriver extends AbstractTimeSeriesDB implements ConfigurableInterface
 {
     public function __construct(

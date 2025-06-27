@@ -26,13 +26,16 @@ class GraphiteSchemaManagerIntegrationTest extends TestCase
     protected function setUp(): void
     {
         // Try to connect to Graphite
-        $graphiteUrl = getenv('GRAPHITE_URL') ?: 'http://localhost:8080';
-        $graphitePort = getenv('GRAPHITE_PORT') ?: '2003';
+        $graphiteHost = getenv('GRAPHITE_HOST') ?: 'localhost';
+        $graphitePort = (int) (getenv('GRAPHITE_PORT') ?: 2003);
+        $graphiteWebPort = (int) (getenv('GRAPHITE_WEB_PORT') ?: 8080);
 
         // Create configuration array
         $config = [
-            'url' => $graphiteUrl,
+            'host' => $graphiteHost,
             'port' => $graphitePort,
+            'web_host' => $graphiteHost,
+            'web_port' => $graphiteWebPort,
             'timeout' => 5, // Short timeout for testing
         ];
 
@@ -42,7 +45,7 @@ class GraphiteSchemaManagerIntegrationTest extends TestCase
             $driver = $this->tsdb->getDriver();
 
             if (! $driver->isConnected()) {
-                $this->markTestSkipped('Could not connect to Graphite at '.$graphiteUrl);
+                $this->markTestSkipped('Could not connect to Graphite at '.$graphiteHost.':'.$graphitePort);
             }
 
             // Get the schema manager

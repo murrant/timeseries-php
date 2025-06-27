@@ -22,7 +22,7 @@ use TimeSeriesPhp\Exceptions\Driver\DriverException;
 use TimeSeriesPhp\Exceptions\Driver\WriteException;
 use TimeSeriesPhp\Exceptions\Query\RawQueryException;
 
-#[Driver(name: 'rrdtool', queryBuilderClass: RRDtoolQueryBuilder::class, configClass: RRDtoolConfig::class)]
+#[Driver(name: 'rrdtool', queryBuilderClass: RRDtoolQueryBuilder::class, configClass: RRDtoolConfig::class, schemaManagerClass: Schema\RRDtoolSchemaManager::class)]
 class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterface
 {
     protected bool $connected = false;
