@@ -34,19 +34,19 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
     private readonly string $migrationsRegistryPath;
 
     /**
-     * @param RRDtoolDriver $driver The RRDtool driver
-     * @param LoggerInterface $logger Logger for recording operations
+     * @param  RRDtoolDriver  $driver  The RRDtool driver
+     * @param  LoggerInterface  $logger  Logger for recording operations
      */
     public function __construct(
         private readonly RRDtoolDriver $driver,
         LoggerInterface $logger
     ) {
         parent::__construct($logger);
-        
+
         // Set up paths for schema and migrations registries
         $dataDir = $this->driver->getDataDir();
-        $this->schemaRegistryPath = $dataDir . '/schema_registry.json';
-        $this->migrationsRegistryPath = $dataDir . '/migrations_registry.json';
+        $this->schemaRegistryPath = $dataDir.'/schema_registry.json';
+        $this->migrationsRegistryPath = $dataDir.'/migrations_registry.json';
     }
 
     /**
@@ -59,8 +59,8 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
 
             // Get all RRD files in the data directory
             $dataDir = $this->driver->getDataDir();
-            $files = glob($dataDir . '/*.rrd');
-            
+            $files = glob($dataDir.'/*.rrd');
+
             $measurements = [];
             foreach ($files as $file) {
                 // Extract the measurement name from the file path
@@ -91,10 +91,11 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
 
             // Check if the RRD file exists
             $dataDir = $this->driver->getDataDir();
-            $rrdFile = $dataDir . '/' . $measurement . '.rrd';
-            
+            $rrdFile = $dataDir.'/'.$measurement.'.rrd';
+
             $exists = file_exists($rrdFile);
             $this->measurementExistsCache[$measurement] = $exists;
+
             return $exists;
         } catch (\Exception $e) {
             $this->logger->error("Error checking if measurement exists: {$e->getMessage()}");
@@ -107,7 +108,7 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
      */
     public function getAppliedMigrations(): array
     {
-        if (!empty($this->appliedMigrationsCache)) {
+        if (! empty($this->appliedMigrationsCache)) {
             return $this->appliedMigrationsCache;
         }
 
@@ -115,24 +116,26 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
             $this->logger->debug('Getting applied migrations');
 
             // Check if the migrations registry file exists
-            if (!file_exists($this->migrationsRegistryPath)) {
+            if (! file_exists($this->migrationsRegistryPath)) {
                 // Create the migrations registry if it doesn't exist
                 $this->createMigrationsRegistry();
+
                 return [];
             }
 
             // Read the migrations registry
             $migrationsJson = file_get_contents($this->migrationsRegistryPath);
             if ($migrationsJson === false) {
-                throw new SchemaException("Failed to read migrations registry");
+                throw new SchemaException('Failed to read migrations registry');
             }
 
             $migrations = json_decode($migrationsJson, true);
             if ($migrations === null) {
-                throw new SchemaException("Invalid migrations registry JSON");
+                throw new SchemaException('Invalid migrations registry JSON');
             }
 
             $this->appliedMigrationsCache = $migrations;
+
             return $migrations;
         } catch (\Exception $e) {
             $this->logger->error("Error getting applied migrations: {$e->getMessage()}");
@@ -154,7 +157,7 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
 
             // For RRDtool, we need to create an RRD file with the appropriate data sources and archives
             $dataDir = $this->driver->getDataDir();
-            $rrdFile = $dataDir . '/' . $measurementName . '.rrd';
+            $rrdFile = $dataDir.'/'.$measurementName.'.rrd';
 
             // Build the create command
             $createOptions = $this->buildCreateOptions($schema);
@@ -164,6 +167,7 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
             $this->driver->executeRrdtoolCommand($command);
 
             $this->measurementExistsCache[$measurementName] = true;
+
             return true;
         } catch (\Exception $e) {
             $this->logger->error("Error creating measurement: {$e->getMessage()}");
@@ -201,27 +205,28 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
             $this->logger->debug("Getting schema for measurement: {$measurement}");
 
             // Check if the schema registry file exists
-            if (!file_exists($this->schemaRegistryPath)) {
-                throw new SchemaException("Schema registry does not exist");
+            if (! file_exists($this->schemaRegistryPath)) {
+                throw new SchemaException('Schema registry does not exist');
             }
 
             // Read the schema registry
             $schemasJson = file_get_contents($this->schemaRegistryPath);
             if ($schemasJson === false) {
-                throw new SchemaException("Failed to read schema registry");
+                throw new SchemaException('Failed to read schema registry');
             }
 
             $schemas = json_decode($schemasJson, true);
             if ($schemas === null) {
-                throw new SchemaException("Invalid schema registry JSON");
+                throw new SchemaException('Invalid schema registry JSON');
             }
 
             // Find the schema for the measurement
-            if (!isset($schemas[$measurement])) {
+            if (! isset($schemas[$measurement])) {
                 throw new SchemaException("Schema for measurement '{$measurement}' not found");
             }
 
             $schemaData = $schemas[$measurement];
+
             return MeasurementSchema::fromArray($schemaData);
         } catch (\Exception $e) {
             $this->logger->error("Error getting measurement schema: {$e->getMessage()}");
@@ -247,7 +252,7 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
             $migrationsJson = json_encode($migrations);
             $result = file_put_contents($this->migrationsRegistryPath, $migrationsJson);
             if ($result === false) {
-                throw new SchemaException("Failed to write migrations registry");
+                throw new SchemaException('Failed to write migrations registry');
             }
 
             // Update the applied migrations cache
@@ -263,7 +268,8 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
     /**
      * Store a schema in the schema registry
      *
-     * @param MeasurementSchema $schema The schema to store
+     * @param  MeasurementSchema  $schema  The schema to store
+     *
      * @throws SchemaException If storing the schema fails
      */
     private function storeSchema(MeasurementSchema $schema): void
@@ -273,19 +279,19 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
             $schemaData = $schema->toArray();
 
             // Check if the schema registry file exists
-            if (!file_exists($this->schemaRegistryPath)) {
+            if (! file_exists($this->schemaRegistryPath)) {
                 // Create the schema registry if it doesn't exist
                 $schemas = [];
             } else {
                 // Read the existing schema registry
                 $schemasJson = file_get_contents($this->schemaRegistryPath);
                 if ($schemasJson === false) {
-                    throw new SchemaException("Failed to read schema registry");
+                    throw new SchemaException('Failed to read schema registry');
                 }
 
                 $schemas = json_decode($schemasJson, true);
                 if ($schemas === null) {
-                    throw new SchemaException("Invalid schema registry JSON");
+                    throw new SchemaException('Invalid schema registry JSON');
                 }
             }
 
@@ -296,7 +302,7 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
             $schemasJson = json_encode($schemas);
             $result = file_put_contents($this->schemaRegistryPath, $schemasJson);
             if ($result === false) {
-                throw new SchemaException("Failed to write schema registry");
+                throw new SchemaException('Failed to write schema registry');
             }
         } catch (\Exception $e) {
             $this->logger->error("Error storing schema: {$e->getMessage()}");
@@ -319,7 +325,7 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
             $migrationsJson = json_encode($migrations);
             $result = file_put_contents($this->migrationsRegistryPath, $migrationsJson);
             if ($result === false) {
-                throw new SchemaException("Failed to create migrations registry");
+                throw new SchemaException('Failed to create migrations registry');
             }
         } catch (\Exception $e) {
             $this->logger->error("Error creating migrations registry: {$e->getMessage()}");
@@ -330,7 +336,7 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
     /**
      * Build the create options for an RRD file based on a schema
      *
-     * @param MeasurementSchema $schema The schema to use
+     * @param  MeasurementSchema  $schema  The schema to use
      * @return string The create options
      */
     private function buildCreateOptions(MeasurementSchema $schema): string
@@ -368,13 +374,13 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
 
         // Add default RRAs (Round Robin Archives)
         // 1 minute averages for 1 day (1440 points)
-        $options .= " RRA:AVERAGE:0.5:1:1440";
+        $options .= ' RRA:AVERAGE:0.5:1:1440';
         // 5 minute averages for 1 week (2016 points)
-        $options .= " RRA:AVERAGE:0.5:5:2016";
+        $options .= ' RRA:AVERAGE:0.5:5:2016';
         // 1 hour averages for 1 month (744 points)
-        $options .= " RRA:AVERAGE:0.5:60:744";
+        $options .= ' RRA:AVERAGE:0.5:60:744';
         // 1 day averages for 1 year (365 points)
-        $options .= " RRA:AVERAGE:0.5:1440:365";
+        $options .= ' RRA:AVERAGE:0.5:1440:365';
 
         return $options;
     }

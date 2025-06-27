@@ -25,8 +25,8 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
     private array $appliedMigrationsCache = [];
 
     /**
-     * @param InfluxDBDriver $driver The InfluxDB driver
-     * @param LoggerInterface $logger Logger for recording operations
+     * @param  InfluxDBDriver  $driver  The InfluxDB driver
+     * @param  LoggerInterface  $logger  Logger for recording operations
      */
     public function __construct(
         private readonly InfluxDBDriver $driver,
@@ -44,7 +44,7 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
             $this->logger->debug('Listing measurements');
 
             // Execute a SHOW MEASUREMENTS query
-            $query = "SHOW MEASUREMENTS";
+            $query = 'SHOW MEASUREMENTS';
             $result = $this->driver->rawQuery(new InfluxDBRawQuery($query));
 
             $measurements = [];
@@ -88,6 +88,7 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
             }
 
             $this->measurementExistsCache[$measurement] = $exists;
+
             return $exists;
         } catch (\Exception $e) {
             $this->logger->error("Error checking if measurement exists: {$e->getMessage()}");
@@ -100,7 +101,7 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
      */
     public function getAppliedMigrations(): array
     {
-        if (!empty($this->appliedMigrationsCache)) {
+        if (! empty($this->appliedMigrationsCache)) {
             return $this->appliedMigrationsCache;
         }
 
@@ -108,14 +109,15 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
             $this->logger->debug('Getting applied migrations');
 
             // Check if the migrations measurement exists
-            if (!$this->measurementExists('schema_migrations')) {
+            if (! $this->measurementExists('schema_migrations')) {
                 // Create the migrations measurement if it doesn't exist
                 $this->createMigrationsMeasurement();
+
                 return [];
             }
 
             // Execute a SELECT query to get all migrations
-            $query = "SELECT migration_name FROM schema_migrations";
+            $query = 'SELECT migration_name FROM schema_migrations';
             $result = $this->driver->rawQuery(new InfluxDBRawQuery($query));
 
             $migrations = [];
@@ -126,6 +128,7 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
             }
 
             $this->appliedMigrationsCache = $migrations;
+
             return $migrations;
         } catch (\Exception $e) {
             $this->logger->error("Error getting applied migrations: {$e->getMessage()}");
@@ -152,6 +155,7 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
             $this->driver->rawQuery(new InfluxDBRawQuery($query));
 
             $this->measurementExistsCache[$measurementName] = true;
+
             return true;
         } catch (\Exception $e) {
             $this->logger->error("Error creating measurement: {$e->getMessage()}");
@@ -193,8 +197,8 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
             $this->logger->debug("Getting schema for measurement: {$measurement}");
 
             // Check if the schema registry measurement exists
-            if (!$this->measurementExists('schema_registry')) {
-                throw new SchemaException("Schema registry does not exist");
+            if (! $this->measurementExists('schema_registry')) {
+                throw new SchemaException('Schema registry does not exist');
             }
 
             // Query the schema registry for the measurement schema
@@ -238,7 +242,7 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
             $this->logger->debug("Applying migration: {$migrationName}");
 
             // Check if the migrations measurement exists
-            if (!$this->measurementExists('schema_migrations')) {
+            if (! $this->measurementExists('schema_migrations')) {
                 $this->createMigrationsMeasurement();
             }
 
@@ -267,7 +271,7 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
             $this->logger->debug('Creating migrations measurement');
 
             // InfluxDB doesn't require explicit measurement creation, but we can insert a dummy record
-            $query = "INSERT schema_migrations,migration_name=\"init\" applied=true";
+            $query = 'INSERT schema_migrations,migration_name="init" applied=true';
             $this->driver->rawQuery(new InfluxDBRawQuery($query));
 
             $this->measurementExistsCache['schema_migrations'] = true;

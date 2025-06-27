@@ -10,9 +10,9 @@ use TimeSeriesPhp\Exceptions\TSDBException;
 class SchemaException extends TSDBException
 {
     /**
-     * @param string $message The exception message
-     * @param int $code The exception code
-     * @param \Throwable|null $previous The previous throwable
+     * @param  string  $message  The exception message
+     * @param  int  $code  The exception code
+     * @param  \Throwable|null  $previous  The previous throwable
      */
     public function __construct(string $message = 'Schema error', int $code = 0, ?\Throwable $previous = null)
     {

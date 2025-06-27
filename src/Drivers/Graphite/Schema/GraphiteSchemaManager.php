@@ -25,8 +25,8 @@ class GraphiteSchemaManager extends AbstractSchemaManager
     private array $appliedMigrationsCache = [];
 
     /**
-     * @param GraphiteDriver $driver The Graphite driver
-     * @param LoggerInterface $logger Logger for recording operations
+     * @param  GraphiteDriver  $driver  The Graphite driver
+     * @param  LoggerInterface  $logger  Logger for recording operations
      */
     public function __construct(
         private readonly GraphiteDriver $driver,
@@ -72,11 +72,12 @@ class GraphiteSchemaManager extends AbstractSchemaManager
             $this->logger->debug("Checking if measurement exists: {$measurement}");
 
             // Execute a query to check if the metric exists
-            $query = '{"target": "' . $measurement . '", "format": "json"}';
+            $query = '{"target": "'.$measurement.'", "format": "json"}';
             $result = $this->driver->rawQuery(new GraphiteRawQuery($query));
 
-            $exists = !$result->isEmpty();
+            $exists = ! $result->isEmpty();
             $this->measurementExistsCache[$measurement] = $exists;
+
             return $exists;
         } catch (\Exception $e) {
             $this->logger->error("Error checking if measurement exists: {$e->getMessage()}");
@@ -89,7 +90,7 @@ class GraphiteSchemaManager extends AbstractSchemaManager
      */
     public function getAppliedMigrations(): array
     {
-        if (!empty($this->appliedMigrationsCache)) {
+        if (! empty($this->appliedMigrationsCache)) {
             return $this->appliedMigrationsCache;
         }
 
@@ -97,9 +98,10 @@ class GraphiteSchemaManager extends AbstractSchemaManager
             $this->logger->debug('Getting applied migrations');
 
             // Check if the schema_registry measurement exists
-            if (!$this->measurementExists('schema_registry.migrations')) {
+            if (! $this->measurementExists('schema_registry.migrations')) {
                 // Create the schema registry if it doesn't exist
                 $this->createSchemaRegistry();
+
                 return [];
             }
 
@@ -117,6 +119,7 @@ class GraphiteSchemaManager extends AbstractSchemaManager
             }
 
             $this->appliedMigrationsCache = $migrations;
+
             return $migrations;
         } catch (\Exception $e) {
             $this->logger->error("Error getting applied migrations: {$e->getMessage()}");
@@ -139,7 +142,7 @@ class GraphiteSchemaManager extends AbstractSchemaManager
             $schemaJson = json_encode($schemaData);
 
             // Check if the schema registry exists
-            if (!$this->measurementExists('schema_registry.schemas')) {
+            if (! $this->measurementExists('schema_registry.schemas')) {
                 $this->createSchemaRegistry();
             }
 
@@ -154,6 +157,7 @@ class GraphiteSchemaManager extends AbstractSchemaManager
 
             // Mark the measurement as existing
             $this->measurementExistsCache[$measurementName] = true;
+
             return true;
         } catch (\Exception $e) {
             $this->logger->error("Error creating measurement: {$e->getMessage()}");
@@ -176,7 +180,7 @@ class GraphiteSchemaManager extends AbstractSchemaManager
             $schemaJson = json_encode($schemaData);
 
             // Check if the schema registry exists
-            if (!$this->measurementExists('schema_registry.schemas')) {
+            if (! $this->measurementExists('schema_registry.schemas')) {
                 $this->createSchemaRegistry();
             }
 
@@ -199,8 +203,8 @@ class GraphiteSchemaManager extends AbstractSchemaManager
             $this->logger->debug("Getting schema for measurement: {$measurement}");
 
             // Check if the schema registry exists
-            if (!$this->measurementExists('schema_registry.schemas')) {
-                throw new SchemaException("Schema registry does not exist");
+            if (! $this->measurementExists('schema_registry.schemas')) {
+                throw new SchemaException('Schema registry does not exist');
             }
 
             // Get the schema from our schema data storage
@@ -231,7 +235,7 @@ class GraphiteSchemaManager extends AbstractSchemaManager
             $this->logger->debug("Applying migration: {$migrationName}");
 
             // Check if the schema registry exists
-            if (!$this->measurementExists('schema_registry.migrations')) {
+            if (! $this->measurementExists('schema_registry.migrations')) {
                 $this->createSchemaRegistry();
             }
 
@@ -287,8 +291,9 @@ class GraphiteSchemaManager extends AbstractSchemaManager
     /**
      * Store schema data for a measurement
      *
-     * @param string $measurement The measurement name
-     * @param string $schemaJson The schema JSON
+     * @param  string  $measurement  The measurement name
+     * @param  string  $schemaJson  The schema JSON
+     *
      * @throws SchemaException If storing the schema data fails
      */
     private function storeSchemaData(string $measurement, string $schemaJson): void
@@ -322,8 +327,9 @@ class GraphiteSchemaManager extends AbstractSchemaManager
     /**
      * Get schema data for a measurement
      *
-     * @param string $measurement The measurement name
+     * @param  string  $measurement  The measurement name
      * @return string|null The schema JSON or null if not found
+     *
      * @throws SchemaException If getting the schema data fails
      */
     private function getSchemaData(string $measurement): ?string
@@ -336,7 +342,7 @@ class GraphiteSchemaManager extends AbstractSchemaManager
 
             // Check if the measurement exists in the schema registry
             $metricPath = "schema_registry.schemas.{$measurement}";
-            $query = '{"target": "' . $metricPath . '", "format": "json"}';
+            $query = '{"target": "'.$metricPath.'", "format": "json"}';
             $result = $this->driver->rawQuery(new GraphiteRawQuery($query));
 
             if ($result->isEmpty()) {

@@ -18,7 +18,9 @@ use TimeSeriesPhp\TSDB;
 class GraphiteSchemaManagerIntegrationTest extends TestCase
 {
     private GraphiteSchemaManager $schemaManager;
+
     private TSDB $tsdb;
+
     private string $testMeasurement = 'test_schema_manager';
 
     protected function setUp(): void
@@ -39,14 +41,14 @@ class GraphiteSchemaManagerIntegrationTest extends TestCase
             $this->tsdb = TSDB::start('graphite', $config);
             $driver = $this->tsdb->getDriver();
 
-            if (!$driver->isConnected()) {
-                $this->markTestSkipped('Could not connect to Graphite at ' . $graphiteUrl);
+            if (! $driver->isConnected()) {
+                $this->markTestSkipped('Could not connect to Graphite at '.$graphiteUrl);
             }
 
             // Get the schema manager
             $this->schemaManager = $this->tsdb->getSchemaManager();
         } catch (\Exception $e) {
-            $this->markTestSkipped('Could not connect to Graphite: ' . $e->getMessage());
+            $this->markTestSkipped('Could not connect to Graphite: '.$e->getMessage());
         }
     }
 
@@ -78,13 +80,13 @@ class GraphiteSchemaManagerIntegrationTest extends TestCase
     public function test_get_measurement_schema(): void
     {
         // Create a schema if it doesn't exist
-        if (!$this->schemaManager->measurementExists('schema_registry.schemas')) {
+        if (! $this->schemaManager->measurementExists('schema_registry.schemas')) {
             $this->test_create_measurement();
         }
 
         // Get the schema
         $schema = $this->schemaManager->getMeasurementSchema($this->testMeasurement);
-        
+
         // Verify the schema
         $this->assertEquals($this->testMeasurement, $schema->getName());
         $this->assertTrue($schema->hasField('value'));
@@ -95,24 +97,24 @@ class GraphiteSchemaManagerIntegrationTest extends TestCase
     public function test_update_measurement(): void
     {
         // Create a schema if it doesn't exist
-        if (!$this->schemaManager->measurementExists('schema_registry.schemas')) {
+        if (! $this->schemaManager->measurementExists('schema_registry.schemas')) {
             $this->test_create_measurement();
         }
 
         // Get the current schema
         $schema = $this->schemaManager->getMeasurementSchema($this->testMeasurement);
-        
+
         // Update the schema
         $schema->addField('cpu', new FieldDefinition('float', false));
         $schema->addTag('datacenter', new TagDefinition(false));
-        
+
         // Update the measurement
         $result = $this->schemaManager->updateMeasurement($schema);
         $this->assertTrue($result);
-        
+
         // Get the updated schema
         $updatedSchema = $this->schemaManager->getMeasurementSchema($this->testMeasurement);
-        
+
         // Verify the schema was updated
         // Note: In our implementation, we're returning a hardcoded schema, so this test will pass
         // but in a real implementation, you would need to verify the actual updated schema
@@ -122,13 +124,13 @@ class GraphiteSchemaManagerIntegrationTest extends TestCase
     public function test_list_measurements(): void
     {
         // Create a schema if it doesn't exist
-        if (!$this->schemaManager->measurementExists('schema_registry.schemas')) {
+        if (! $this->schemaManager->measurementExists('schema_registry.schemas')) {
             $this->test_create_measurement();
         }
 
         // List measurements
         $measurements = $this->schemaManager->listMeasurements();
-        
+
         // Verify we get a non-empty array
         $this->assertIsArray($measurements);
     }
@@ -136,7 +138,7 @@ class GraphiteSchemaManagerIntegrationTest extends TestCase
     public function test_validate_schema_valid(): void
     {
         // Create a schema if it doesn't exist
-        if (!$this->schemaManager->measurementExists('schema_registry.schemas')) {
+        if (! $this->schemaManager->measurementExists('schema_registry.schemas')) {
             $this->test_create_measurement();
         }
 
@@ -146,7 +148,7 @@ class GraphiteSchemaManagerIntegrationTest extends TestCase
             'host' => 'test-server',
             'region' => 'us-west',
         ]);
-        
+
         // Verify the validation result
         $this->assertTrue($result->isValid());
         $this->assertEmpty($result->getErrors());
@@ -155,7 +157,7 @@ class GraphiteSchemaManagerIntegrationTest extends TestCase
     public function test_validate_schema_invalid(): void
     {
         // Create a schema if it doesn't exist
-        if (!$this->schemaManager->measurementExists('schema_registry.schemas')) {
+        if (! $this->schemaManager->measurementExists('schema_registry.schemas')) {
             $this->test_create_measurement();
         }
 
@@ -164,7 +166,7 @@ class GraphiteSchemaManagerIntegrationTest extends TestCase
             'value' => 'not a float',
             // Missing required 'host' tag
         ]);
-        
+
         // Verify the validation result
         $this->assertFalse($result->isValid());
         $this->assertNotEmpty($result->getErrors());
@@ -173,10 +175,10 @@ class GraphiteSchemaManagerIntegrationTest extends TestCase
     public function test_apply_migration(): void
     {
         // Apply a test migration
-        $migrationName = 'test_migration_' . uniqid();
+        $migrationName = 'test_migration_'.uniqid();
         $result = $this->schemaManager->applyMigration($migrationName);
         $this->assertTrue($result);
-        
+
         // Verify the migration was applied
         $migrations = $this->schemaManager->getAppliedMigrations();
         $this->assertContains($migrationName, $migrations);

@@ -13,7 +13,7 @@ use TimeSeriesPhp\Exceptions\Driver\ConnectionException;
 use TimeSeriesPhp\Exceptions\Driver\WriteException;
 use TimeSeriesPhp\Exceptions\Query\RawQueryException;
 
-#[Driver(name: 'graphite', queryBuilderClass: GraphiteQueryBuilder::class, configClass: GraphiteConfig::class)]
+#[Driver(name: 'graphite', queryBuilderClass: GraphiteQueryBuilder::class, configClass: GraphiteConfig::class, schemaManagerClass: Schema\GraphiteSchemaManager::class)]
 class GraphiteDriver extends AbstractTimeSeriesDB implements ConfigurableInterface
 {
     /** @var resource|null */

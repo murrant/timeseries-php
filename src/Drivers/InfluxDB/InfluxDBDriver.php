@@ -252,7 +252,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
 
                             // Extract tags
                             foreach ($row as $key => $value) {
-                                if (is_string($key) && !str_starts_with($key, '_') && $key !== 'result' && $key !== 'table') {
+                                if (is_string($key) && ! str_starts_with($key, '_') && $key !== 'result' && $key !== 'table') {
                                     $tags[$key] = $value;
                                 }
                             }
@@ -317,7 +317,7 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
 
                         // Extract tags
                         foreach ($record as $key => $value) {
-                            if (is_string($key) && !str_starts_with($key, '_') && $key !== 'result' && $key !== 'table') {
+                            if (is_string($key) && ! str_starts_with($key, '_') && $key !== 'result' && $key !== 'table') {
                                 $tags[$key] = $value;
                             }
                         }

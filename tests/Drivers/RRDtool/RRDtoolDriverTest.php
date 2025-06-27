@@ -105,7 +105,7 @@ class RRDtoolDriverTest extends TestCase
         $this->connectionAdapter = $this->createMock(ConnectionAdapterInterface::class);
         $this->connectionAdapter->method('connect')->willReturn(true);
         $this->connectionAdapter->method('isConnected')->willReturn(true);
-        $this->connectionAdapter->method('executeCommand')->willReturnCallback(fn(string $command, string $data) => CommandResponse::success('OK'));
+        $this->connectionAdapter->method('executeCommand')->willReturnCallback(fn (string $command, string $data) => CommandResponse::success('OK'));
 
         // Create driver with mocked dependencies
         $this->driver = $this->getMockBuilder(RRDtoolDriver::class)

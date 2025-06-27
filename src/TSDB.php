@@ -363,6 +363,7 @@ class TSDB
      * Get the schema manager for the current driver
      *
      * @return SchemaManagerInterface The schema manager
+     *
      * @throws SchemaException If the schema manager is not available
      */
     public function getSchemaManager(): SchemaManagerInterface
@@ -370,7 +371,7 @@ class TSDB
         $driverName = $this->driver->getName();
         $schemaManagerId = sprintf('timeseries.%s.schema_manager', $driverName);
 
-        if (!self::$container->has($schemaManagerId)) {
+        if (! self::$container->has($schemaManagerId)) {
             throw new SchemaException(sprintf('Schema manager for driver "%s" is not available', $driverName));
         }
 

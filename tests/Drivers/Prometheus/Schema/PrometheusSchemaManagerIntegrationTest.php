@@ -18,7 +18,9 @@ use TimeSeriesPhp\TSDB;
 class PrometheusSchemaManagerIntegrationTest extends TestCase
 {
     private PrometheusSchemaManager $schemaManager;
+
     private TSDB $tsdb;
+
     private string $testMeasurement = 'test_schema_manager';
 
     protected function setUp(): void
@@ -38,14 +40,14 @@ class PrometheusSchemaManagerIntegrationTest extends TestCase
             $this->tsdb = TSDB::start('prometheus', $config);
             $driver = $this->tsdb->getDriver();
 
-            if (!$driver->isConnected()) {
-                $this->markTestSkipped('Could not connect to Prometheus at ' . $prometheusUrl);
+            if (! $driver->isConnected()) {
+                $this->markTestSkipped('Could not connect to Prometheus at '.$prometheusUrl);
             }
 
             // Get the schema manager
             $this->schemaManager = $this->tsdb->getSchemaManager();
         } catch (\Exception $e) {
-            $this->markTestSkipped('Could not connect to Prometheus: ' . $e->getMessage());
+            $this->markTestSkipped('Could not connect to Prometheus: '.$e->getMessage());
         }
     }
 
@@ -78,13 +80,13 @@ class PrometheusSchemaManagerIntegrationTest extends TestCase
     public function test_get_measurement_schema(): void
     {
         // Create a schema if it doesn't exist
-        if (!$this->schemaManager->measurementExists('schema_registry')) {
+        if (! $this->schemaManager->measurementExists('schema_registry')) {
             $this->test_create_measurement();
         }
 
         // Get the schema
         $schema = $this->schemaManager->getMeasurementSchema($this->testMeasurement);
-        
+
         // Verify the schema
         $this->assertEquals($this->testMeasurement, $schema->getName());
         $this->assertTrue($schema->hasField('value'));
@@ -95,24 +97,24 @@ class PrometheusSchemaManagerIntegrationTest extends TestCase
     public function test_update_measurement(): void
     {
         // Create a schema if it doesn't exist
-        if (!$this->schemaManager->measurementExists('schema_registry')) {
+        if (! $this->schemaManager->measurementExists('schema_registry')) {
             $this->test_create_measurement();
         }
 
         // Get the current schema
         $schema = $this->schemaManager->getMeasurementSchema($this->testMeasurement);
-        
+
         // Update the schema
         $schema->addField('cpu', new FieldDefinition('float', false));
         $schema->addTag('datacenter', new TagDefinition(false));
-        
+
         // Update the measurement
         $result = $this->schemaManager->updateMeasurement($schema);
         $this->assertTrue($result);
-        
+
         // Get the updated schema
         $updatedSchema = $this->schemaManager->getMeasurementSchema($this->testMeasurement);
-        
+
         // Verify the schema was updated
         $this->assertTrue($updatedSchema->hasField('cpu'));
         $this->assertTrue($updatedSchema->hasTag('datacenter'));
@@ -122,7 +124,7 @@ class PrometheusSchemaManagerIntegrationTest extends TestCase
     {
         // List measurements
         $measurements = $this->schemaManager->listMeasurements();
-        
+
         // Verify we get a non-empty array
         $this->assertIsArray($measurements);
     }
@@ -130,7 +132,7 @@ class PrometheusSchemaManagerIntegrationTest extends TestCase
     public function test_validate_schema_valid(): void
     {
         // Create a schema if it doesn't exist
-        if (!$this->schemaManager->measurementExists('schema_registry')) {
+        if (! $this->schemaManager->measurementExists('schema_registry')) {
             $this->test_create_measurement();
         }
 
@@ -140,7 +142,7 @@ class PrometheusSchemaManagerIntegrationTest extends TestCase
             'host' => 'test-server',
             'region' => 'us-west',
         ]);
-        
+
         // Verify the validation result
         $this->assertTrue($result->isValid());
         $this->assertEmpty($result->getErrors());
@@ -149,7 +151,7 @@ class PrometheusSchemaManagerIntegrationTest extends TestCase
     public function test_validate_schema_invalid(): void
     {
         // Create a schema if it doesn't exist
-        if (!$this->schemaManager->measurementExists('schema_registry')) {
+        if (! $this->schemaManager->measurementExists('schema_registry')) {
             $this->test_create_measurement();
         }
 
@@ -158,7 +160,7 @@ class PrometheusSchemaManagerIntegrationTest extends TestCase
             'value' => 'not a float',
             // Missing required 'host' tag
         ]);
-        
+
         // Verify the validation result
         $this->assertFalse($result->isValid());
         $this->assertNotEmpty($result->getErrors());
@@ -167,10 +169,10 @@ class PrometheusSchemaManagerIntegrationTest extends TestCase
     public function test_apply_migration(): void
     {
         // Apply a test migration
-        $migrationName = 'test_migration_' . uniqid();
+        $migrationName = 'test_migration_'.uniqid();
         $result = $this->schemaManager->applyMigration($migrationName);
         $this->assertTrue($result);
-        
+
         // Verify the migration was applied
         $migrations = $this->schemaManager->getAppliedMigrations();
         $this->assertContains($migrationName, $migrations);

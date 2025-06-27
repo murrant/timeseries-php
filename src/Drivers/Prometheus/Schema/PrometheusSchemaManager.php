@@ -25,8 +25,8 @@ class PrometheusSchemaManager extends AbstractSchemaManager
     private array $appliedMigrationsCache = [];
 
     /**
-     * @param PrometheusDriver $driver The Prometheus driver
-     * @param LoggerInterface $logger Logger for recording operations
+     * @param  PrometheusDriver  $driver  The Prometheus driver
+     * @param  LoggerInterface  $logger  Logger for recording operations
      */
     public function __construct(
         private readonly PrometheusDriver $driver,
@@ -75,8 +75,9 @@ class PrometheusSchemaManager extends AbstractSchemaManager
             $query = "query=count({__name__=\"{$measurement}\"})";
             $result = $this->driver->rawQuery(new PrometheusRawQuery($query));
 
-            $exists = !$result->isEmpty();
+            $exists = ! $result->isEmpty();
             $this->measurementExistsCache[$measurement] = $exists;
+
             return $exists;
         } catch (\Exception $e) {
             $this->logger->error("Error checking if measurement exists: {$e->getMessage()}");
@@ -89,7 +90,7 @@ class PrometheusSchemaManager extends AbstractSchemaManager
      */
     public function getAppliedMigrations(): array
     {
-        if (!empty($this->appliedMigrationsCache)) {
+        if (! empty($this->appliedMigrationsCache)) {
             return $this->appliedMigrationsCache;
         }
 
@@ -97,14 +98,15 @@ class PrometheusSchemaManager extends AbstractSchemaManager
             $this->logger->debug('Getting applied migrations');
 
             // Check if the schema_registry measurement exists
-            if (!$this->measurementExists('schema_registry')) {
+            if (! $this->measurementExists('schema_registry')) {
                 // Create the schema registry if it doesn't exist
                 $this->createSchemaRegistry();
+
                 return [];
             }
 
             // Get all migrations from the schema registry
-            $query = "query=schema_registry{type=\"migration\"}";
+            $query = 'query=schema_registry{type="migration"}';
             $result = $this->driver->rawQuery(new PrometheusRawQuery($query));
 
             $migrations = [];
@@ -115,6 +117,7 @@ class PrometheusSchemaManager extends AbstractSchemaManager
             }
 
             $this->appliedMigrationsCache = $migrations;
+
             return $migrations;
         } catch (\Exception $e) {
             $this->logger->error("Error getting applied migrations: {$e->getMessage()}");
@@ -137,7 +140,7 @@ class PrometheusSchemaManager extends AbstractSchemaManager
             $schemaJson = json_encode($schemaData);
 
             // Check if the schema registry exists
-            if (!$this->measurementExists('schema_registry')) {
+            if (! $this->measurementExists('schema_registry')) {
                 $this->createSchemaRegistry();
             }
 
@@ -149,9 +152,10 @@ class PrometheusSchemaManager extends AbstractSchemaManager
                 'type' => 'schema',
                 'schema' => $schemaJson,
             ];
-            
+
             $this->storeInSchemaRegistry($labels, 1);
             $this->measurementExistsCache[$measurementName] = true;
+
             return true;
         } catch (\Exception $e) {
             $this->logger->error("Error creating measurement: {$e->getMessage()}");
@@ -174,7 +178,7 @@ class PrometheusSchemaManager extends AbstractSchemaManager
             $schemaJson = json_encode($schemaData);
 
             // Check if the schema registry exists
-            if (!$this->measurementExists('schema_registry')) {
+            if (! $this->measurementExists('schema_registry')) {
                 $this->createSchemaRegistry();
             }
 
@@ -183,10 +187,11 @@ class PrometheusSchemaManager extends AbstractSchemaManager
                 'measurement_name' => $measurementName,
                 'type' => 'schema',
                 'schema' => $schemaJson,
-                'updated_at' => (string)time(),
+                'updated_at' => (string) time(),
             ];
-            
+
             $this->storeInSchemaRegistry($labels, 1);
+
             return true;
         } catch (\Exception $e) {
             $this->logger->error("Error updating measurement: {$e->getMessage()}");
@@ -203,8 +208,8 @@ class PrometheusSchemaManager extends AbstractSchemaManager
             $this->logger->debug("Getting schema for measurement: {$measurement}");
 
             // Check if the schema registry exists
-            if (!$this->measurementExists('schema_registry')) {
-                throw new SchemaException("Schema registry does not exist");
+            if (! $this->measurementExists('schema_registry')) {
+                throw new SchemaException('Schema registry does not exist');
             }
 
             // Query the schema registry for the measurement schema
@@ -248,7 +253,7 @@ class PrometheusSchemaManager extends AbstractSchemaManager
             $this->logger->debug("Applying migration: {$migrationName}");
 
             // Check if the schema registry exists
-            if (!$this->measurementExists('schema_registry')) {
+            if (! $this->measurementExists('schema_registry')) {
                 $this->createSchemaRegistry();
             }
 
@@ -256,9 +261,9 @@ class PrometheusSchemaManager extends AbstractSchemaManager
             $labels = [
                 'migration_name' => $migrationName,
                 'type' => 'migration',
-                'applied_at' => (string)time(),
+                'applied_at' => (string) time(),
             ];
-            
+
             $this->storeInSchemaRegistry($labels, 1);
 
             // Update the applied migrations cache
@@ -285,9 +290,9 @@ class PrometheusSchemaManager extends AbstractSchemaManager
             // Here we're just simulating it by storing a dummy value
             $labels = [
                 'type' => 'init',
-                'created_at' => (string)time(),
+                'created_at' => (string) time(),
             ];
-            
+
             $this->storeInSchemaRegistry($labels, 1);
             $this->measurementExistsCache['schema_registry'] = true;
         } catch (\Exception $e) {
@@ -299,8 +304,9 @@ class PrometheusSchemaManager extends AbstractSchemaManager
     /**
      * Store a value in the schema registry
      *
-     * @param array<string, string> $labels The labels to store
-     * @param float $value The value to store
+     * @param  array<string, string>  $labels  The labels to store
+     * @param  float  $value  The value to store
+     *
      * @throws SchemaException If storing in the schema registry fails
      */
     private function storeInSchemaRegistry(array $labels, float $value): void
@@ -308,7 +314,7 @@ class PrometheusSchemaManager extends AbstractSchemaManager
         try {
             // In a real implementation, you would need to use the Prometheus API to store a value
             // Here we're just simulating it by logging the operation
-            $this->logger->debug('Storing in schema registry: ' . json_encode($labels));
+            $this->logger->debug('Storing in schema registry: '.json_encode($labels));
 
             // Note: This is a simplified implementation. In a real-world scenario,
             // you would need to use the Prometheus API to create and update metrics.

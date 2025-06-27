@@ -8,18 +8,17 @@ namespace TimeSeriesPhp\Core\Data;
 class Series
 {
     /**
-     * @param string $name The name of the series
-     * @param array<int, string> $columns The column names
-     * @param array<int, array<int, mixed>> $values The values for each row
-     * @param array<string, mixed> $tags The tags for the series
+     * @param  string  $name  The name of the series
+     * @param  array<int, string>  $columns  The column names
+     * @param  array<int, array<int, mixed>>  $values  The values for each row
+     * @param  array<string, mixed>  $tags  The tags for the series
      */
     public function __construct(
         private readonly string $name,
         private readonly array $columns,
         private readonly array $values,
         private readonly array $tags = []
-    ) {
-    }
+    ) {}
 
     /**
      * Get the name of the series

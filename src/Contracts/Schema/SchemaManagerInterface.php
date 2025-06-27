@@ -14,7 +14,7 @@ interface SchemaManagerInterface
     /**
      * Create a new measurement with the specified schema
      *
-     * @param MeasurementSchema $schema The schema definition for the measurement
+     * @param  MeasurementSchema  $schema  The schema definition for the measurement
      * @return bool True if the measurement was created successfully
      *
      * @throws SchemaException If measurement creation fails
@@ -24,7 +24,7 @@ interface SchemaManagerInterface
     /**
      * Update an existing measurement schema
      *
-     * @param MeasurementSchema $schema The updated schema definition
+     * @param  MeasurementSchema  $schema  The updated schema definition
      * @return bool True if the measurement was updated successfully
      *
      * @throws SchemaException If measurement update fails
@@ -34,7 +34,7 @@ interface SchemaManagerInterface
     /**
      * Get the schema for an existing measurement
      *
-     * @param string $measurement The name of the measurement
+     * @param  string  $measurement  The name of the measurement
      * @return MeasurementSchema The measurement schema
      *
      * @throws SchemaException If getting the schema fails
@@ -53,8 +53,8 @@ interface SchemaManagerInterface
     /**
      * Validate data against a measurement schema
      *
-     * @param string $measurement The name of the measurement
-     * @param array $data The data to validate
+     * @param  string  $measurement  The name of the measurement
+     * @param  array  $data  The data to validate
      * @return SchemaValidationResult The validation result
      *
      * @throws SchemaException If validation fails
@@ -64,7 +64,7 @@ interface SchemaManagerInterface
     /**
      * Apply a migration to update the database schema
      *
-     * @param string $migrationName The name of the migration to apply
+     * @param  string  $migrationName  The name of the migration to apply
      * @return bool True if the migration was applied successfully
      *
      * @throws SchemaException If applying the migration fails
@@ -83,7 +83,7 @@ interface SchemaManagerInterface
     /**
      * Check if a measurement exists
      *
-     * @param string $measurement The name of the measurement to check
+     * @param  string  $measurement  The name of the measurement to check
      * @return bool True if the measurement exists
      *
      * @throws SchemaException If checking measurement existence fails

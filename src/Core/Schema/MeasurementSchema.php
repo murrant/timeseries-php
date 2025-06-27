@@ -25,10 +25,10 @@ class MeasurementSchema
     private array $options = [];
 
     /**
-     * @param string $name The name of the measurement
-     * @param array<string, FieldDefinition>|null $fields Field definitions
-     * @param array<string, TagDefinition>|null $tags Tag definitions
-     * @param array<string, mixed>|null $options Additional options
+     * @param  string  $name  The name of the measurement
+     * @param  array<string, FieldDefinition>|null  $fields  Field definitions
+     * @param  array<string, TagDefinition>|null  $tags  Tag definitions
+     * @param  array<string, mixed>|null  $options  Additional options
      */
     public function __construct(
         private readonly string $name,
@@ -62,13 +62,13 @@ class MeasurementSchema
     /**
      * Add a field to the schema
      *
-     * @param string $name The field name
-     * @param FieldDefinition $definition The field definition
-     * @return self
+     * @param  string  $name  The field name
+     * @param  FieldDefinition  $definition  The field definition
      */
     public function addField(string $name, FieldDefinition $definition): self
     {
         $this->fields[$name] = $definition;
+
         return $this;
     }
 
@@ -85,13 +85,14 @@ class MeasurementSchema
     /**
      * Get a specific field definition
      *
-     * @param string $name The field name
+     * @param  string  $name  The field name
      * @return FieldDefinition The field definition
+     *
      * @throws SchemaException If the field does not exist
      */
     public function getField(string $name): FieldDefinition
     {
-        if (!isset($this->fields[$name])) {
+        if (! isset($this->fields[$name])) {
             throw new SchemaException("Field '{$name}' does not exist in measurement '{$this->name}'");
         }
 
@@ -101,7 +102,7 @@ class MeasurementSchema
     /**
      * Check if a field exists
      *
-     * @param string $name The field name
+     * @param  string  $name  The field name
      * @return bool True if the field exists
      */
     public function hasField(string $name): bool
@@ -112,13 +113,13 @@ class MeasurementSchema
     /**
      * Add a tag to the schema
      *
-     * @param string $name The tag name
-     * @param TagDefinition $definition The tag definition
-     * @return self
+     * @param  string  $name  The tag name
+     * @param  TagDefinition  $definition  The tag definition
      */
     public function addTag(string $name, TagDefinition $definition): self
     {
         $this->tags[$name] = $definition;
+
         return $this;
     }
 
@@ -135,13 +136,14 @@ class MeasurementSchema
     /**
      * Get a specific tag definition
      *
-     * @param string $name The tag name
+     * @param  string  $name  The tag name
      * @return TagDefinition The tag definition
+     *
      * @throws SchemaException If the tag does not exist
      */
     public function getTag(string $name): TagDefinition
     {
-        if (!isset($this->tags[$name])) {
+        if (! isset($this->tags[$name])) {
             throw new SchemaException("Tag '{$name}' does not exist in measurement '{$this->name}'");
         }
 
@@ -151,7 +153,7 @@ class MeasurementSchema
     /**
      * Check if a tag exists
      *
-     * @param string $name The tag name
+     * @param  string  $name  The tag name
      * @return bool True if the tag exists
      */
     public function hasTag(string $name): bool
@@ -162,13 +164,13 @@ class MeasurementSchema
     /**
      * Set an option for the measurement
      *
-     * @param string $name The option name
-     * @param mixed $value The option value
-     * @return self
+     * @param  string  $name  The option name
+     * @param  mixed  $value  The option value
      */
     public function setOption(string $name, mixed $value): self
     {
         $this->options[$name] = $value;
+
         return $this;
     }
 
@@ -185,8 +187,8 @@ class MeasurementSchema
     /**
      * Get a specific option
      *
-     * @param string $name The option name
-     * @param mixed $default Default value if option doesn't exist
+     * @param  string  $name  The option name
+     * @param  mixed  $default  Default value if option doesn't exist
      * @return mixed The option value
      */
     public function getOption(string $name, mixed $default = null): mixed
@@ -197,7 +199,7 @@ class MeasurementSchema
     /**
      * Check if an option exists
      *
-     * @param string $name The option name
+     * @param  string  $name  The option name
      * @return bool True if the option exists
      */
     public function hasOption(string $name): bool
@@ -233,13 +235,14 @@ class MeasurementSchema
     /**
      * Create a schema from an array
      *
-     * @param array<string, mixed> $data The schema data
+     * @param  array<string, mixed>  $data  The schema data
      * @return self The created schema
+     *
      * @throws SchemaException If the schema data is invalid
      */
     public static function fromArray(array $data): self
     {
-        if (!isset($data['name']) || !is_string($data['name'])) {
+        if (! isset($data['name']) || ! is_string($data['name'])) {
             throw new SchemaException('Schema must have a name');
         }
 

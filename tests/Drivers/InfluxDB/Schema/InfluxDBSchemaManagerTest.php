@@ -16,7 +16,9 @@ use TimeSeriesPhp\Drivers\InfluxDB\Schema\InfluxDBSchemaManager;
 class InfluxDBSchemaManagerTest extends TestCase
 {
     private InfluxDBDriver $mockDriver;
+
     private LoggerInterface $mockLogger;
+
     private InfluxDBSchemaManager $schemaManager;
 
     protected function setUp(): void
@@ -34,13 +36,13 @@ class InfluxDBSchemaManagerTest extends TestCase
             ['memory'],
             ['disk'],
         ]);
-        $queryResult = new QueryResult();
+        $queryResult = new QueryResult;
         $queryResult->addSeries($series);
 
         // Set up the mock driver to return the query result
         $this->mockDriver->expects($this->once())
             ->method('rawQuery')
-            ->with($this->callback(fn(InfluxDBRawQuery $query) => $query->getRawQuery() === 'SHOW MEASUREMENTS'))
+            ->with($this->callback(fn (InfluxDBRawQuery $query) => $query->getRawQuery() === 'SHOW MEASUREMENTS'))
             ->willReturn($queryResult);
 
         // Call the method and assert the result
@@ -54,13 +56,13 @@ class InfluxDBSchemaManagerTest extends TestCase
         $series = new Series('measurements', ['name'], [
             ['cpu'],
         ]);
-        $queryResult = new QueryResult();
+        $queryResult = new QueryResult;
         $queryResult->addSeries($series);
 
         // Set up the mock driver to return the query result
         $this->mockDriver->expects($this->once())
             ->method('rawQuery')
-            ->with($this->callback(fn(InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'"))
+            ->with($this->callback(fn (InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'"))
             ->willReturn($queryResult);
 
         // Call the method and assert the result
@@ -71,12 +73,12 @@ class InfluxDBSchemaManagerTest extends TestCase
     public function test_measurement_exists_false(): void
     {
         // Create a mock query result with no measurements
-        $queryResult = new QueryResult();
+        $queryResult = new QueryResult;
 
         // Set up the mock driver to return the query result
         $this->mockDriver->expects($this->once())
             ->method('rawQuery')
-            ->with($this->callback(fn(InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'nonexistent'"))
+            ->with($this->callback(fn (InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'nonexistent'"))
             ->willReturn($queryResult);
 
         // Call the method and assert the result
@@ -95,12 +97,12 @@ class InfluxDBSchemaManagerTest extends TestCase
         $this->mockDriver->expects($this->exactly(2))
             ->method('rawQuery')
             ->withConsecutive(
-                [$this->callback(fn(InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'")],
-                [$this->callback(fn(InfluxDBRawQuery $query) => str_starts_with($query->getRawQuery(), 'INSERT schema_registry,measurement_name="cpu"'))]
+                [$this->callback(fn (InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'")],
+                [$this->callback(fn (InfluxDBRawQuery $query) => str_starts_with($query->getRawQuery(), 'INSERT schema_registry,measurement_name="cpu"'))]
             )
             ->willReturnOnConsecutiveCalls(
-                new QueryResult(), // Empty result for measurementExists
-                new QueryResult()  // Result for the insert
+                new QueryResult, // Empty result for measurementExists
+                new QueryResult  // Result for the insert
             );
 
         // Call the method and assert the result
@@ -119,19 +121,19 @@ class InfluxDBSchemaManagerTest extends TestCase
         $series = new Series('measurements', ['name'], [
             ['cpu'],
         ]);
-        $existsQueryResult = new QueryResult();
+        $existsQueryResult = new QueryResult;
         $existsQueryResult->addSeries($series);
 
         // Set up the mock driver to handle both the existence check and the update
         $this->mockDriver->expects($this->exactly(2))
             ->method('rawQuery')
             ->withConsecutive(
-                [$this->callback(fn(InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'")],
-                [$this->callback(fn(InfluxDBRawQuery $query) => str_starts_with($query->getRawQuery(), 'INSERT schema_registry,measurement_name="cpu"'))]
+                [$this->callback(fn (InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'")],
+                [$this->callback(fn (InfluxDBRawQuery $query) => str_starts_with($query->getRawQuery(), 'INSERT schema_registry,measurement_name="cpu"'))]
             )
             ->willReturnOnConsecutiveCalls(
                 $existsQueryResult, // Result with the measurement for measurementExists
-                new QueryResult()   // Result for the update
+                new QueryResult   // Result for the update
             );
 
         // Call the method and assert the result
@@ -151,30 +153,30 @@ class InfluxDBSchemaManagerTest extends TestCase
         $series = new Series('schema_registry', ['time', 'schema'], [
             ['2023-01-01T00:00:00Z', $schemaJson],
         ]);
-        $schemaQueryResult = new QueryResult();
+        $schemaQueryResult = new QueryResult;
         $schemaQueryResult->addSeries($series);
 
         // Create a mock query result for schema_registry existence
         $registrySeries = new Series('measurements', ['name'], [
             ['schema_registry'],
         ]);
-        $registryQueryResult = new QueryResult();
+        $registryQueryResult = new QueryResult;
         $registryQueryResult->addSeries($registrySeries);
 
         // Create a mock query result for cpu measurement existence
         $cpuSeries = new Series('measurements', ['name'], [
             ['cpu'],
         ]);
-        $cpuQueryResult = new QueryResult();
+        $cpuQueryResult = new QueryResult;
         $cpuQueryResult->addSeries($cpuSeries);
 
         // Set up the mock driver to handle all the necessary queries
         $this->mockDriver->expects($this->exactly(3))
             ->method('rawQuery')
             ->withConsecutive(
-                [$this->callback(fn(InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'")],
-                [$this->callback(fn(InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'schema_registry'")],
-                [$this->callback(fn(InfluxDBRawQuery $query) => str_starts_with($query->getRawQuery(), "SELECT schema FROM schema_registry WHERE measurement_name = 'cpu'"))]
+                [$this->callback(fn (InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'")],
+                [$this->callback(fn (InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'schema_registry'")],
+                [$this->callback(fn (InfluxDBRawQuery $query) => str_starts_with($query->getRawQuery(), "SELECT schema FROM schema_registry WHERE measurement_name = 'cpu'"))]
             )
             ->willReturnOnConsecutiveCalls(
                 $cpuQueryResult,
@@ -201,30 +203,30 @@ class InfluxDBSchemaManagerTest extends TestCase
         $series = new Series('schema_registry', ['time', 'schema'], [
             ['2023-01-01T00:00:00Z', $schemaJson],
         ]);
-        $schemaQueryResult = new QueryResult();
+        $schemaQueryResult = new QueryResult;
         $schemaQueryResult->addSeries($series);
 
         // Create a mock query result for schema_registry existence
         $registrySeries = new Series('measurements', ['name'], [
             ['schema_registry'],
         ]);
-        $registryQueryResult = new QueryResult();
+        $registryQueryResult = new QueryResult;
         $registryQueryResult->addSeries($registrySeries);
 
         // Create a mock query result for cpu measurement existence
         $cpuSeries = new Series('measurements', ['name'], [
             ['cpu'],
         ]);
-        $cpuQueryResult = new QueryResult();
+        $cpuQueryResult = new QueryResult;
         $cpuQueryResult->addSeries($cpuSeries);
 
         // Set up the mock driver to handle all the necessary queries
         $this->mockDriver->expects($this->exactly(3))
             ->method('rawQuery')
             ->withConsecutive(
-                [$this->callback(fn(InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'")],
-                [$this->callback(fn(InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'schema_registry'")],
-                [$this->callback(fn(InfluxDBRawQuery $query) => str_starts_with($query->getRawQuery(), "SELECT schema FROM schema_registry WHERE measurement_name = 'cpu'"))]
+                [$this->callback(fn (InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'")],
+                [$this->callback(fn (InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'schema_registry'")],
+                [$this->callback(fn (InfluxDBRawQuery $query) => str_starts_with($query->getRawQuery(), "SELECT schema FROM schema_registry WHERE measurement_name = 'cpu'"))]
             )
             ->willReturnOnConsecutiveCalls(
                 $cpuQueryResult,
@@ -252,30 +254,30 @@ class InfluxDBSchemaManagerTest extends TestCase
         $series = new Series('schema_registry', ['time', 'schema'], [
             ['2023-01-01T00:00:00Z', $schemaJson],
         ]);
-        $schemaQueryResult = new QueryResult();
+        $schemaQueryResult = new QueryResult;
         $schemaQueryResult->addSeries($series);
 
         // Create a mock query result for schema_registry existence
         $registrySeries = new Series('measurements', ['name'], [
             ['schema_registry'],
         ]);
-        $registryQueryResult = new QueryResult();
+        $registryQueryResult = new QueryResult;
         $registryQueryResult->addSeries($registrySeries);
 
         // Create a mock query result for cpu measurement existence
         $cpuSeries = new Series('measurements', ['name'], [
             ['cpu'],
         ]);
-        $cpuQueryResult = new QueryResult();
+        $cpuQueryResult = new QueryResult;
         $cpuQueryResult->addSeries($cpuSeries);
 
         // Set up the mock driver to handle all the necessary queries
         $this->mockDriver->expects($this->exactly(3))
             ->method('rawQuery')
             ->withConsecutive(
-                [$this->callback(fn(InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'")],
-                [$this->callback(fn(InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'schema_registry'")],
-                [$this->callback(fn(InfluxDBRawQuery $query) => str_starts_with($query->getRawQuery(), "SELECT schema FROM schema_registry WHERE measurement_name = 'cpu'"))]
+                [$this->callback(fn (InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'cpu'")],
+                [$this->callback(fn (InfluxDBRawQuery $query) => $query->getRawQuery() === "SHOW MEASUREMENTS WHERE name = 'schema_registry'")],
+                [$this->callback(fn (InfluxDBRawQuery $query) => str_starts_with($query->getRawQuery(), "SELECT schema FROM schema_registry WHERE measurement_name = 'cpu'"))]
             )
             ->willReturnOnConsecutiveCalls(
                 $cpuQueryResult,
