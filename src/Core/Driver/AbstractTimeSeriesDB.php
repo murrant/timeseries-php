@@ -75,6 +75,20 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
             'fields_count' => count($dataPoint->getFields()),
         ]);
 
+        // Check if connected and try to reconnect if not
+        if (!$this->isConnected()) {
+            $this->logger->info('Not connected to database, attempting to reconnect', [
+                'driver' => $this->getDriverName(),
+            ]);
+
+            if (!$this->connect()) {
+                $this->logger->error('Failed to reconnect to database', [
+                    'driver' => $this->getDriverName(),
+                ]);
+                throw new WriteException('Not connected to ' . $this->getDriverName());
+            }
+        }
+
         try {
             $result = $this->doWrite($dataPoint);
 
@@ -120,6 +134,20 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
             'conditions' => $query->getConditions(),
         ]);
 
+        // Check if connected and try to reconnect if not
+        if (!$this->isConnected()) {
+            $this->logger->info('Not connected to database, attempting to reconnect', [
+                'driver' => $this->getDriverName(),
+            ]);
+
+            if (!$this->connect()) {
+                $this->logger->error('Failed to reconnect to database', [
+                    'driver' => $this->getDriverName(),
+                ]);
+                throw new DatabaseException('Not connected to ' . $this->getDriverName());
+            }
+        }
+
         $rawQuery = $this->queryBuilder->build($query);
 
         $this->logger->debug('Built raw query', [
@@ -159,6 +187,20 @@ abstract class AbstractTimeSeriesDB implements TimeSeriesInterface
             'count' => count($dataPoints),
             'measurements' => array_unique(array_map(fn ($dp) => $dp->getMeasurement(), $dataPoints)),
         ]);
+
+        // Check if connected and try to reconnect if not
+        if (!$this->isConnected()) {
+            $this->logger->info('Not connected to database, attempting to reconnect', [
+                'driver' => $this->getDriverName(),
+            ]);
+
+            if (!$this->connect()) {
+                $this->logger->error('Failed to reconnect to database', [
+                    'driver' => $this->getDriverName(),
+                ]);
+                throw new WriteException('Not connected to ' . $this->getDriverName());
+            }
+        }
 
         try {
             $result = $this->doWriteBatch($dataPoints);
