@@ -27,6 +27,8 @@ class TSDB
 {
     protected TimeSeriesInterface $driver;
 
+    private string $driverName;
+
     private static ?ContainerInterface $container = null;
 
     private readonly LoggerInterface $logger;
@@ -66,6 +68,7 @@ class TSDB
         $this->logger = $logger;
 
         // Create the driver
+        $this->driverName = $driver;
         $this->driver = $driverFactory->create($driver, $config ?? []);
 
         // Connect to the database if autoConnect is true
@@ -368,11 +371,10 @@ class TSDB
      */
     public function getSchemaManager(): SchemaManagerInterface
     {
-        $driverName = $this->driver->getName();
-        $schemaManagerId = sprintf('timeseries.%s.schema_manager', $driverName);
+        $schemaManagerId = sprintf('timeseries.%s.schema_manager', $this->driverName);
 
         if (! self::$container->has($schemaManagerId)) {
-            throw new SchemaException(sprintf('Schema manager for driver "%s" is not available', $driverName));
+            throw new SchemaException(sprintf('Schema manager for driver "%s" is not available', $this->driverName));
         }
 
         return self::$container->get($schemaManagerId);

@@ -415,7 +415,7 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
         }
 
         /** @var string[] $archives */
-        $args = [$filename, '--step', (string) $step];
+        $args = [$filename, '-s', (string) $step];
         $args = array_merge($args, $data_sources, $archives);
 
         try {
