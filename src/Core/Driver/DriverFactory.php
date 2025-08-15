@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TimeSeriesPhp\Core\Driver;
 
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Psr\Container\ContainerInterface;
 use TimeSeriesPhp\Contracts\Driver\ConfigurableInterface;
 use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
 use TimeSeriesPhp\Exceptions\Driver\DriverNotFoundException;
@@ -35,7 +35,11 @@ class DriverFactory
     public function create(string $name, array $config = []): TimeSeriesInterface
     {
         // Get all tagged driver services
-        $drivers = $this->container->getParameter('timeseries.drivers');
+        if (! $this->container->has('timeseries.drivers')) {
+            throw new DriverNotFoundException('No drivers registered in the container');
+        }
+
+        $drivers = $this->container->get('timeseries.drivers');
 
         if (! is_array($drivers) || ! isset($drivers[$name])) {
             throw new DriverNotFoundException(sprintf('Driver "%s" not found', $name));

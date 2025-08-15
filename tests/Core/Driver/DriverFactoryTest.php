@@ -5,47 +5,74 @@ declare(strict_types=1);
 namespace TimeSeriesPhp\Tests\Core\Driver;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
 use TimeSeriesPhp\Contracts\Driver\ConfigurableInterface;
 use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
-use TimeSeriesPhp\Core\DependencyInjection\DriverCompilerPass;
 use TimeSeriesPhp\Core\Driver\DriverFactory;
-use TimeSeriesPhp\Drivers\Null\NullConfig;
 use TimeSeriesPhp\Drivers\Null\NullDriver;
 use TimeSeriesPhp\Exceptions\Driver\DriverNotFoundException;
 
 class DriverFactoryTest extends TestCase
 {
-    private ContainerBuilder $container;
+    private ContainerInterface $container;
 
     private DriverFactory $factory;
 
     protected function setUp(): void
     {
-        $this->container = new ContainerBuilder;
+        // Create a mock container that implements PSR-11 ContainerInterface
+        $this->container = new class implements ContainerInterface
+        {
+            private array $services = [];
 
-        // Register the example driver
-        $this->container->register(NullDriver::class, NullDriver::class)
-            ->setAutoconfigured(true)
-            ->setAutowired(true);
+            public function get(string $id): mixed
+            {
+                if (! $this->has($id)) {
+                    throw new \Exception("Service $id not found");
+                }
 
-        // Register the example driver configuration
-        $this->container->register(NullConfig::class, NullConfig::class)
-            ->setAutoconfigured(true)
-            ->setAutowired(true);
+                if ($id === 'timeseries.drivers') {
+                    return ['null' => NullDriver::class];
+                }
+
+                if ($id === NullDriver::class) {
+                    return new NullDriver(
+                        new \TimeSeriesPhp\Drivers\Null\NullQueryBuilder,
+                        new NullLogger,
+                        new \TimeSeriesPhp\Drivers\Null\NullConfig
+                    );
+                }
+
+                if ($id === \TimeSeriesPhp\Drivers\Null\NullQueryBuilder::class) {
+                    return new \TimeSeriesPhp\Drivers\Null\NullQueryBuilder;
+                }
+
+                if ($id === \TimeSeriesPhp\Drivers\Null\NullConfig::class) {
+                    return new \TimeSeriesPhp\Drivers\Null\NullConfig;
+                }
+
+                return $this->services[$id];
+            }
+
+            public function has(string $id): bool
+            {
+                return $id === 'timeseries.drivers'
+                    || $id === NullDriver::class
+                    || $id === \TimeSeriesPhp\Drivers\Null\NullQueryBuilder::class
+                    || $id === \TimeSeriesPhp\Drivers\Null\NullConfig::class
+                    || isset($this->services[$id]);
+            }
+
+            public function set(string $id, mixed $service): void
+            {
+                $this->services[$id] = $service;
+            }
+        };
 
         // Register a logger
-        $this->container->register(LoggerInterface::class, NullLogger::class)
-            ->setAutoconfigured(true)
-            ->setAutowired(true);
-
-        // Add the driver compiler pass
-        $this->container->addCompilerPass(new DriverCompilerPass);
-
-        // Compile the container
-        $this->container->compile();
+        $this->container->set(LoggerInterface::class, new NullLogger);
 
         // Create the factory
         $this->factory = new DriverFactory($this->container);

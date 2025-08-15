@@ -3,8 +3,8 @@
 namespace TimeSeriesPhp;
 
 use DateTime;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use TimeSeriesPhp\Contracts\Driver\TimeSeriesInterface;
 use TimeSeriesPhp\Contracts\Schema\SchemaManagerInterface;
 use TimeSeriesPhp\Core\Data\DataPoint;
