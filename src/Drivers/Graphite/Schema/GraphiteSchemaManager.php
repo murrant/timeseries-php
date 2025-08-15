@@ -3,6 +3,7 @@
 namespace TimeSeriesPhp\Drivers\Graphite\Schema;
 
 use Psr\Log\LoggerInterface;
+use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Schema\AbstractSchemaManager;
 use TimeSeriesPhp\Core\Schema\MeasurementSchema;
 use TimeSeriesPhp\Drivers\Graphite\GraphiteDriver;
@@ -245,7 +246,7 @@ class GraphiteSchemaManager extends AbstractSchemaManager
             $value = 1; // Just a placeholder value
 
             // Send the metric to Graphite
-            $this->driver->write($metricPath);
+            $this->driver->write(new DataPoint($metricPath, ['value' => $value], [], new \DateTime('@'.$timestamp)));
 
             // Update the applied migrations cache
             $this->appliedMigrationsCache[] = $migrationName;
@@ -273,11 +274,11 @@ class GraphiteSchemaManager extends AbstractSchemaManager
             $value = 1; // Just a placeholder value
 
             // Send the metric to Graphite
-            $this->driver->write($metricPath);
+            $this->driver->write(new DataPoint($metricPath, ['value' => $value], [], new \DateTime('@'.$timestamp)));
 
             // Create the migrations registry
             $metricPath = 'schema_registry.migrations.init';
-            $this->driver->write($metricPath);
+            $this->driver->write(new DataPoint($metricPath, ['value' => 1], [], new \DateTime('@'.time())));
 
             // Mark the registries as existing
             $this->measurementExistsCache['schema_registry.schemas'] = true;
@@ -317,7 +318,7 @@ class GraphiteSchemaManager extends AbstractSchemaManager
             $value = 1; // Just a placeholder value
 
             // Send the metric to Graphite
-            $this->driver->write($metricPath);
+            $this->driver->write(new DataPoint($metricPath, ['value' => $value], [], new \DateTime('@'.$timestamp)));
         } catch (\Exception $e) {
             $this->logger->error("Error storing schema data: {$e->getMessage()}");
             throw new SchemaException("Failed to store schema data: {$e->getMessage()}", 0, $e);

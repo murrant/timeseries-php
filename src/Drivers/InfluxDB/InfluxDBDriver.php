@@ -77,6 +77,16 @@ class InfluxDBDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
         }
     }
 
+    public function getBucket(): string
+    {
+        return $this->influxQueryBuilder->bucket;
+    }
+
+    public function getApiVersion(): int
+    {
+        return $this->config->api_version;
+    }
+
     protected function doWrite(DataPoint $dataPoint): bool
     {
         if (! $this->isConnected()) {

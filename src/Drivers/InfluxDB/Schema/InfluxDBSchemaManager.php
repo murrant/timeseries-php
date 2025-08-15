@@ -3,6 +3,7 @@
 namespace TimeSeriesPhp\Drivers\InfluxDB\Schema;
 
 use Psr\Log\LoggerInterface;
+use TimeSeriesPhp\Core\Data\DataPoint;
 use TimeSeriesPhp\Core\Schema\AbstractSchemaManager;
 use TimeSeriesPhp\Core\Schema\MeasurementSchema;
 use TimeSeriesPhp\Drivers\InfluxDB\InfluxDBDriver;
@@ -43,14 +44,33 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
         try {
             $this->logger->debug('Listing measurements');
 
-            // Execute a SHOW MEASUREMENTS query
-            $query = 'SHOW MEASUREMENTS';
-            $result = $this->driver->rawQuery(new InfluxDBRawQuery($query));
-
             $measurements = [];
-            foreach ($result->getSeries() as $series) {
-                foreach ($series->getValues() as $value) {
-                    $measurements[] = $value[0];
+            if ($this->driver->getApiVersion() === 2) {
+                // Use Flux to list measurements in the configured bucket
+                $bucket = $this->driver->getBucket();
+                $flux = 'import "influxdata/influxdb/schema"\n'.
+                    'schema.measurements(bucket: "'.$bucket.'")';
+                $result = $this->driver->rawQuery(new InfluxDBRawQuery($flux));
+
+                foreach ($result->getSeries() as $field => $points) {
+                    foreach ($points as $point) {
+                        $val = $point['value'] ?? null;
+                        if (is_string($val)) {
+                            $measurements[] = $val;
+                        }
+                    }
+                }
+                // Deduplicate
+                $measurements = array_values(array_unique($measurements));
+            } else {
+                // Execute a SHOW MEASUREMENTS query (InfluxQL)
+                $query = 'SHOW MEASUREMENTS';
+                $result = $this->driver->rawQuery(new InfluxDBRawQuery($query));
+
+                foreach ($result->getSeries() as $series) {
+                    foreach ($series->getValues() as $value) {
+                        $measurements[] = $value[0];
+                    }
                 }
             }
 
@@ -73,16 +93,35 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
         try {
             $this->logger->debug("Checking if measurement exists: {$measurement}");
 
-            // Execute a SHOW MEASUREMENTS query with a filter
-            $query = "SHOW MEASUREMENTS WHERE name = '{$measurement}'";
-            $result = $this->driver->rawQuery(new InfluxDBRawQuery($query));
-
             $exists = false;
-            foreach ($result->getSeries() as $series) {
-                foreach ($series->getValues() as $value) {
-                    if ($value[0] === $measurement) {
-                        $exists = true;
-                        break 2;
+            if ($this->driver->getApiVersion() === 2) {
+                // Use Flux to check if a measurement exists
+                $bucket = $this->driver->getBucket();
+                $flux = 'import "influxdata/influxdb/schema"\n'.
+                    'schema.measurements(bucket: "'.$bucket.'")\n'.
+                    '  |> filter(fn: (r) => r._value == "'.$measurement.'")\n'.
+                    '  |> limit(n:1)';
+                $result = $this->driver->rawQuery(new InfluxDBRawQuery($flux));
+
+                foreach ($result->getSeries() as $field => $points) {
+                    foreach ($points as $point) {
+                        if (($point['value'] ?? null) === $measurement) {
+                            $exists = true;
+                            break 2;
+                        }
+                    }
+                }
+            } else {
+                // Execute a SHOW MEASUREMENTS query with a filter (InfluxQL)
+                $query = "SHOW MEASUREMENTS WHERE name = '{$measurement}'";
+                $result = $this->driver->rawQuery(new InfluxDBRawQuery($query));
+
+                foreach ($result->getSeries() as $series) {
+                    foreach ($series->getValues() as $value) {
+                        if ($value[0] === $measurement) {
+                            $exists = true;
+                            break 2;
+                        }
                     }
                 }
             }
@@ -145,14 +184,17 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
             $measurementName = $schema->getName();
             $this->logger->debug("Creating measurement: {$measurementName}");
 
-            // InfluxDB doesn't require explicit measurement creation, but we can store the schema
-            // in a special measurement for schema tracking
+            // Store the schema in a special measurement for schema tracking using a DataPoint
             $schemaData = $schema->toArray();
-            $schemaJson = json_encode($schemaData);
+            $schemaJson = json_encode($schemaData) ?: '{}';
 
-            // Store the schema in a special measurement
-            $query = "INSERT schema_registry,measurement_name=\"{$measurementName}\" schema='{$schemaJson}'";
-            $this->driver->rawQuery(new InfluxDBRawQuery($query));
+            $point = new DataPoint(
+                'schema_registry',
+                ['schema' => $schemaJson],
+                ['measurement_name' => $measurementName],
+                new \DateTime()
+            );
+            $this->driver->write($point);
 
             $this->measurementExistsCache[$measurementName] = true;
 
@@ -172,14 +214,18 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
             $measurementName = $schema->getName();
             $this->logger->debug("Updating measurement: {$measurementName}");
 
-            // InfluxDB doesn't support altering measurements directly, but we can update the schema
-            // in our schema registry
+            // InfluxDB doesn't support altering measurements directly, but we can update the schema in our schema registry
             $schemaData = $schema->toArray();
-            $schemaJson = json_encode($schemaData);
+            $schemaJson = json_encode($schemaData) ?: '{}';
 
-            // Update the schema in the schema registry
-            $query = "INSERT schema_registry,measurement_name=\"{$measurementName}\" schema='{$schemaJson}'";
-            $this->driver->rawQuery(new InfluxDBRawQuery($query));
+            // Update the schema in the schema registry using a DataPoint
+            $point = new DataPoint(
+                'schema_registry',
+                ['schema' => $schemaJson],
+                ['measurement_name' => $measurementName],
+                new \DateTime()
+            );
+            $this->driver->write($point);
 
             return true;
         } catch (\Exception $e) {

@@ -201,6 +201,10 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
         // Get RRD info to determine field order
         $info = $this->getRRDInfo($rrdPath);
         $dataSourceOrder = $this->getDataSourceOrder($info);
+        if (empty($dataSourceOrder)) {
+            // Fallback: use fields order when RRD info is unavailable (e.g., rrdcached lazily creates files)
+            $dataSourceOrder = array_keys($dataPoint->getFields());
+        }
 
         foreach ($dataSourceOrder as $dsName) {
             $fields = $dataPoint->getFields();
@@ -216,6 +220,16 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
 
         try {
             $this->runRrdtoolCommand('update', $args);
+
+            return true;
+        } catch (RRDtoolPrematureUpdateException $e) {
+            // Treat premature update (same or older timestamp) as a non-fatal, idempotent success
+            $this->logger->debug('Ignoring premature update (idempotent write) for RRD', [
+                'measurement' => $dataPoint->getMeasurement(),
+                'tags' => $dataPoint->getTags(),
+                'timestamp' => $timestamp,
+                'message' => $e->getMessage(),
+            ]);
 
             return true;
         } catch (RRDtoolException $e) {

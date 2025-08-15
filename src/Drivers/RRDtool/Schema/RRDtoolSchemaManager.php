@@ -75,6 +75,20 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
                 }
             }
 
+            // Also include any measurements present in the schema registry JSON (in case files are not directly visible)
+            if (file_exists($this->schemaRegistryPath)) {
+                $schemasJson = file_get_contents($this->schemaRegistryPath);
+                if ($schemasJson !== false) {
+                    $schemas = json_decode($schemasJson, true);
+                    if (is_array($schemas)) {
+                        $measurements = array_merge($measurements, array_keys($schemas));
+                    }
+                }
+            }
+
+            // Deduplicate the list
+            $measurements = array_values(array_unique($measurements));
+
             return $measurements;
         } catch (\Exception $e) {
             $this->logger->error("Error listing measurements: {$e->getMessage()}");
