@@ -83,24 +83,25 @@ class QueryResult
     }
 
     /**
-     * Get all series objects
+     * Get the series data as an associative array where keys are series names and values are points
+     *
+     * @return array<string, array<int, array{'date': int|string, 'value': ?scalar}>>
+     */
+    public function getSeries(): array
+    {
+        return $this->series;
+    }
+
+    /**
+     * Get all Series objects (if the result was populated with Series instances)
      *
      * @return array<string, Series> Series objects by name
      */
-    public function getSeries(): array
+    public function getSeriesObjects(): array
     {
         return $this->seriesObjects;
     }
 
-    /**
-     * Get the raw series data
-     *
-     * @return array<string, array<int, array{'date': int|string, 'value': ?scalar}>>
-     */
-    public function getSeriesData(): array
-    {
-        return $this->series;
-    }
 
     /**
      * @return array<int, int|string>
@@ -127,7 +128,7 @@ class QueryResult
 
     public function count(): int
     {
-        return count($this->seriesObjects);
+        return !empty($this->series) ? count($this->series) : count($this->seriesObjects);
     }
 
     /**

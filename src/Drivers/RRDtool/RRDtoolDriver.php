@@ -102,6 +102,14 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
     }
 
     /**
+     * Get the base directory used to store RRD files
+     */
+    public function getDataDir(): string
+    {
+        return $this->config->rrd_dir;
+    }
+
+    /**
      * @throws ConnectionException
      */
     protected function doConnect(): bool
@@ -167,6 +175,14 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
         }
 
         return $response->data;
+    }
+
+    /**
+     * Execute a raw rrdtool command. Exposed for schema manager utilities.
+     */
+    public function executeRrdtoolCommand(string $command, array $args): string
+    {
+        return $this->runRrdtoolCommand($command, $args);
     }
 
     private function guessDataSourceType(mixed $value): string
