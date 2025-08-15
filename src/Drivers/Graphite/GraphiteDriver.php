@@ -198,6 +198,14 @@ class GraphiteDriver extends AbstractTimeSeriesDB implements ConfigurableInterfa
 
         try {
             $queryString = $query->getRawQuery();
+            // Support JSON-style raw queries by converting to query parameters
+            $firstChar = $queryString[0] ?? '';
+            if ($firstChar === '{') {
+                $decoded = json_decode($queryString, true);
+                if (is_array($decoded)) {
+                    $queryString = http_build_query($decoded);
+                }
+            }
             $url = $this->config->getWebUrl().'?'.$queryString;
 
             $context = stream_context_create([

@@ -44,7 +44,7 @@ class PrometheusSchemaManager extends AbstractSchemaManager
             $this->logger->debug('Listing measurements');
 
             // Execute a query to get all metric names
-            $query = 'query=count({__name__!=""}) by (__name__)';
+            $query = 'count({__name__!=""}) by (__name__)';
             $result = $this->driver->rawQuery(new PrometheusRawQuery($query));
 
             $measurements = [];
@@ -72,7 +72,7 @@ class PrometheusSchemaManager extends AbstractSchemaManager
             $this->logger->debug("Checking if measurement exists: {$measurement}");
 
             // Execute a query to check if the metric exists
-            $query = "query=count({__name__=\"{$measurement}\"})";
+            $query = "count({__name__=\"{$measurement}\"})";
             $result = $this->driver->rawQuery(new PrometheusRawQuery($query));
 
             $exists = ! $result->isEmpty();
@@ -106,7 +106,7 @@ class PrometheusSchemaManager extends AbstractSchemaManager
             }
 
             // Get all migrations from the schema registry
-            $query = 'query=schema_registry{type="migration"}';
+            $query = 'schema_registry{type="migration"}';
             $result = $this->driver->rawQuery(new PrometheusRawQuery($query));
 
             $migrations = [];
@@ -213,7 +213,7 @@ class PrometheusSchemaManager extends AbstractSchemaManager
             }
 
             // Query the schema registry for the measurement schema
-            $query = "query=schema_registry{measurement_name=\"{$measurement}\",type=\"schema\"}";
+            $query = "schema_registry{measurement_name=\"{$measurement}\",type=\"schema\"}";
             $result = $this->driver->rawQuery(new PrometheusRawQuery($query));
 
             if ($result->isEmpty()) {

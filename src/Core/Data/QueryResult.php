@@ -102,7 +102,6 @@ class QueryResult
         return $this->seriesObjects;
     }
 
-
     /**
      * @return array<int, int|string>
      */
@@ -128,7 +127,7 @@ class QueryResult
 
     public function count(): int
     {
-        return !empty($this->series) ? count($this->series) : count($this->seriesObjects);
+        return ! empty($this->series) ? count($this->series) : count($this->seriesObjects);
     }
 
     /**

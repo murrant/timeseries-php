@@ -177,14 +177,6 @@ class RRDtoolDriver extends AbstractTimeSeriesDB implements ConfigurableInterfac
         return $response->data;
     }
 
-    /**
-     * Execute a raw rrdtool command. Exposed for schema manager utilities.
-     */
-    public function executeRrdtoolCommand(string $command, array $args): string
-    {
-        return $this->runRrdtoolCommand($command, $args);
-    }
-
     private function guessDataSourceType(mixed $value): string
     {
         if (is_int($value)) {

@@ -15,9 +15,7 @@ use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
  */
 class GraphiteRawQuery implements RawQueryInterface
 {
-    public function __construct(private string $rawQuery)
-    {
-    }
+    public function __construct(private string $rawQuery) {}
 
     public function getRawQuery(): string
     {

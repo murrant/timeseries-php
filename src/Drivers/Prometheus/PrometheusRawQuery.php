@@ -14,9 +14,7 @@ use TimeSeriesPhp\Contracts\Query\RawQueryInterface;
  */
 class PrometheusRawQuery implements RawQueryInterface
 {
-    public function __construct(private string $rawQuery)
-    {
-    }
+    public function __construct(private string $rawQuery) {}
 
     public function getRawQuery(): string
     {

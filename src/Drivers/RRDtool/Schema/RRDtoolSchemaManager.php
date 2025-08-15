@@ -36,6 +36,7 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
     /**
      * @param  RRDtoolDriver  $driver  The RRDtool driver
      * @param  LoggerInterface  $logger  Logger for recording operations
+     * @throws SchemaException
      */
     public function __construct(
         private readonly RRDtoolDriver $driver,
@@ -45,6 +46,7 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
 
         // Set up paths for schema and migrations registries
         $dataDir = $this->driver->getDataDir();
+        $this->ensureDirectoryFor($dataDir, 'data directory');
         $this->schemaRegistryPath = $dataDir.'/schema_registry.json';
         $this->migrationsRegistryPath = $dataDir.'/migrations_registry.json';
     }
@@ -59,7 +61,10 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
 
             // Get all RRD files in the data directory
             $dataDir = $this->driver->getDataDir();
-            $files = glob($dataDir.'/*.rrd');
+            if (! is_dir($dataDir)) {
+                return [];
+            }
+            $files = glob($dataDir.'/*.rrd') ?: [];
 
             $measurements = [];
             foreach ($files as $file) {
@@ -159,12 +164,8 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
             $dataDir = $this->driver->getDataDir();
             $rrdFile = $dataDir.'/'.$measurementName.'.rrd';
 
-            // Build the create command
-            $createOptions = $this->buildCreateOptions($schema);
-            $command = "create {$rrdFile} {$createOptions}";
-
-            // Execute the command
-            $this->driver->executeRrdtoolCommand($command);
+            $dataSources = $this->buildCreateOptions($schema);
+            $this->driver->createRRDWithCustomConfig($rrdFile, $dataSources);
 
             $this->measurementExistsCache[$measurementName] = true;
 
@@ -300,6 +301,7 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
 
             // Write the updated schema registry
             $schemasJson = json_encode($schemas);
+            $this->ensureDirectoryFor($this->schemaRegistryPath, 'schema registry');
             $result = file_put_contents($this->schemaRegistryPath, $schemasJson);
             if ($result === false) {
                 throw new SchemaException('Failed to write schema registry');
@@ -323,6 +325,7 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
             // Create an empty migrations registry
             $migrations = [];
             $migrationsJson = json_encode($migrations);
+            $this->ensureDirectoryFor($this->migrationsRegistryPath, 'migrations registry');
             $result = file_put_contents($this->migrationsRegistryPath, $migrationsJson);
             if ($result === false) {
                 throw new SchemaException('Failed to create migrations registry');
@@ -334,22 +337,20 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
     }
 
     /**
-     * Build the create options for an RRD file based on a schema
+     * Build the create data source options for an RRD file based on a schema
      *
      * @param  MeasurementSchema  $schema  The schema to use
-     * @return string The create options
+     * @return array<string> The data source definitions (DS:... strings)
      */
-    private function buildCreateOptions(MeasurementSchema $schema): string
+    private function buildCreateOptions(MeasurementSchema $schema): array
     {
-        // Set a default step of 60 seconds
-        $step = 60;
-        $options = "--step {$step}";
+        $dataSources = [];
 
         // Add data sources for each field
         foreach ($schema->getFields() as $fieldName => $fieldDefinition) {
-            $type = 'GAUGE'; // Default type
-            $min = 'U'; // Unknown min
-            $max = 'U'; // Unknown max
+            $type = 'GAUGE';
+            $min = 'U';
+            $max = 'U';
 
             // Map field types to RRDtool data source types
             switch ($fieldDefinition->getType()) {
@@ -369,19 +370,30 @@ class RRDtoolSchemaManager extends AbstractSchemaManager
             }
 
             // Add the data source
-            $options .= " DS:{$fieldName}:{$type}:120:{$min}:{$max}";
+            $dataSources[] = "DS:{$fieldName}:{$type}:120:{$min}:{$max}";
         }
 
-        // Add default RRAs (Round Robin Archives)
-        // 1 minute averages for 1 day (1440 points)
-        $options .= ' RRA:AVERAGE:0.5:1:1440';
-        // 5 minute averages for 1 week (2016 points)
-        $options .= ' RRA:AVERAGE:0.5:5:2016';
-        // 1 hour averages for 1 month (744 points)
-        $options .= ' RRA:AVERAGE:0.5:60:744';
-        // 1 day averages for 1 year (365 points)
-        $options .= ' RRA:AVERAGE:0.5:1440:365';
+        // Note: Archives (RRA) and step are intentionally not specified here to
+        // leverage driver defaults and allow sanitization at the driver level.
 
-        return $options;
+        return $dataSources;
+    }
+
+    /**
+     * Ensure the parent directory for a target file path exists.
+     *
+     * @param  string  $filePath  The full path to the target file whose directory must exist
+     * @param  string  $context  A short context used in error messages (e.g., 'schema registry')
+     *
+     * @throws SchemaException If the directory cannot be created
+     */
+    private function ensureDirectoryFor(string $filePath, string $context): void
+    {
+        $dir = dirname($filePath);
+        if (! is_dir($dir)) {
+            if (! @mkdir($dir, 0777, true) && ! is_dir($dir)) {
+                throw new SchemaException(sprintf('Failed to create %s directory: %s', $context, $dir));
+            }
+        }
     }
 }
