@@ -192,7 +192,7 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
                 'schema_registry',
                 ['schema' => $schemaJson],
                 ['measurement_name' => $measurementName],
-                new \DateTime()
+                new \DateTime
             );
             $this->driver->write($point);
 
@@ -223,7 +223,7 @@ class InfluxDBSchemaManager extends AbstractSchemaManager
                 'schema_registry',
                 ['schema' => $schemaJson],
                 ['measurement_name' => $measurementName],
-                new \DateTime()
+                new \DateTime
             );
             $this->driver->write($point);
 

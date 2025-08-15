@@ -98,6 +98,7 @@ class PrometheusSchemaManager extends AbstractSchemaManager
         // after applyMigration() is called during the test. If none are cached yet,
         // return an empty list.
         $this->logger->debug('Returning applied migrations from cache (Prometheus simulated storage)');
+
         return [];
     }
 
