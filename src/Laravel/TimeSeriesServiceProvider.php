@@ -204,6 +204,11 @@ class TimeSeriesServiceProvider extends ServiceProvider
             // Add the driver to the drivers array
             $drivers[$driverName] = $driverClass;
 
+            // Register a PSR-11 friendly alias for the driver so factories can resolve it
+            // Example: timeseries.driver.influxdb -> InfluxDBDriver::class
+            $driverAliasId = sprintf('timeseries.driver.%s', $driverName);
+            $this->app->alias($driverClass, $driverAliasId);
+
             // Register the config class if specified
             if ($driverAttribute->configClass && class_exists($driverAttribute->configClass)) {
                 $this->app->singleton($driverAttribute->configClass);

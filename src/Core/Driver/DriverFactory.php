@@ -34,25 +34,12 @@ class DriverFactory
      */
     public function create(string $name, array $config = []): TimeSeriesInterface
     {
-        // Get all tagged driver services
-        if (! $this->container->has('timeseries.drivers')) {
-            throw new DriverNotFoundException('No drivers registered in the container');
-        }
-
-        $drivers = $this->container->get('timeseries.drivers');
-
-        if (! is_array($drivers) || ! isset($drivers[$name])) {
-            throw new DriverNotFoundException(sprintf('Driver "%s" not found', $name));
-        }
-
-        $serviceId = $drivers[$name];
-
-        if (! is_string($serviceId)) {
-            throw new DriverNotFoundException(sprintf('Invalid driver service ID for "%s"', $name));
-        }
+        // Resolve strictly via PSR-11 alias created by DriverCompilerPass:
+        // timeseries.driver.<name> -> <driver service id>
+        $serviceId = sprintf('timeseries.driver.%s', $name);
 
         if (! $this->container->has($serviceId)) {
-            throw new DriverNotFoundException(sprintf('Driver service "%s" not found', $serviceId));
+            throw new DriverNotFoundException(sprintf('Driver "%s" not found (missing service alias %s)', $name, $serviceId));
         }
 
         try {

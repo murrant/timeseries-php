@@ -54,6 +54,11 @@ class DriverCompilerPass implements CompilerPassInterface
                 $definition->addTag('timeseries.driver', ['name' => $driver->name])
                     ->setPublic(true);
 
+                // Also register a PSR-11 friendly alias so factories can resolve drivers without
+                // accessing parameters. Example: timeseries.driver.influxdb -> <service id>
+                $driverAliasId = sprintf('%s.%s.%s', 'timeseries', 'driver', $driver->name);
+                $container->setAlias($driverAliasId, $id)->setPublic(true);
+
                 // If the driver has a config class, register it as a service
                 if ($driver->configClass && class_exists($driver->configClass)) {
                     // Register the config class as a service if it's not already registered

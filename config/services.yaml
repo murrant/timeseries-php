@@ -49,6 +49,7 @@ services:
         public: true
 
     Symfony\Component\DependencyInjection\ContainerInterface: '@service_container'
+    Psr\Container\ContainerInterface: '@service_container'
     Namespace\ImportService:
         arguments:
             - '@service_container'
