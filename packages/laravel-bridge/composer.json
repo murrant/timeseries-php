@@ -1,0 +1,11 @@
+{
+  "name": "timeseries-php/laravel-bridge",
+  "require": {
+    "php": "^8.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "\\TimeseriesPhp\\Bridge\\Laravel\\": "src"
+    }
+  }
+}
