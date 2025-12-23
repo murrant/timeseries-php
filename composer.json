@@ -9,27 +9,33 @@
         "rector/rector": "^2.2",
         "symplify/monorepo-builder": "^11.2"
     },
+    "replace": {
+        "timeseries-php/core": "self.version",
+        "timeseries-php/influxdb2-driver": "self.version",
+        "timeseries-php/laravel-bridge": "self.version",
+        "timeseries-php/rrd-driver": "self.version"
+    },
     "autoload": {
         "psr-4": {
             "\\TimeseriesPhp\\Bridge\\Laravel\\": "packages/laravel-bridge/src",
             "\\TimeseriesPhp\\Core\\": "packages/core/src",
+            "\\TimeseriesPhp\\Driver\\InfluxDB2\\": "packages/influxdb2-driver/src",
             "\\TimeseriesPhp\\Driver\\RRD\\": "packages/rrd-driver/src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "packages/core/tests/"
+            "Tests\\": [
+                "packages/core/tests/",
+                "packages/influxdb2-driver/tests/",
+                "packages/laravel-bridge/tests/",
+                "packages/rrd-driver/tests/"
+            ]
         }
     },
     "config": {
         "allow-plugins": {
             "pestphp/pest-plugin": true
         }
-    },
-    "replace": {
-        "timeseries-php/core": "self.version",
-        "timeseries-php/influxdb2-driver": "self.version",
-        "timeseries-php/laravel-bridge": "self.version",
-        "timeseries-php/rrd-driver": "self.version"
     }
 }
