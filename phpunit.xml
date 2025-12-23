@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="Core">
+            <directory suffix="Test.php">packages/core/tests</directory>
+        </testsuite>
+        <testsuite name="InfluxDB 2">
+            <directory suffix="Test.php">packages/influxdb2-driver/tests</directory>
+        </testsuite>
+        <testsuite name="Laravel">
+            <directory suffix="Test.php">packages/laravel-bridge/tests</directory>
+        </testsuite>
+        <testsuite name="RRD">
+            <directory suffix="Test.php">packages/rrd-driver/tests</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>packages/core/src</directory>
+            <directory>packages/influxdb2-driver/src</directory>
+            <directory>packages/laravel-bridge/src</directory>
+            <directory>packages/rrd-driver/src</directory>
+        </include>
+    </source>
+</phpunit>

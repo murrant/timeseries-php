@@ -7,5 +7,10 @@
         "psr-4": {
             "\\TimeseriesPhp\\Driver\\RRD\\": "src"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
     }
 }

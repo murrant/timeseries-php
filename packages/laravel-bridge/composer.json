@@ -7,5 +7,10 @@
     "psr-4": {
       "\\TimeseriesPhp\\Bridge\\Laravel\\": "src"
     }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
   }
 }

@@ -8,7 +8,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use JsonSerializable;
 
-readonly class DataPoint implements JsonSerializable
+final readonly class DataPoint implements JsonSerializable
 {
     /**
      * @param string $measurement The measurement/metric name

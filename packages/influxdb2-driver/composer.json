@@ -5,7 +5,12 @@
   },
   "autoload": {
     "psr-4": {
-      "\\TimeseriesPhp\\Driver\\RRD\\": "src"
+      "\\TimeseriesPhp\\Driver\\InfluxDB2\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
     }
   }
 }
