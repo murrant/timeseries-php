@@ -12,8 +12,7 @@ final readonly class TimeRange
         public ?DateTimeInterface $start = null,
         public ?DateTimeInterface $end = null,
         public ?DateInterval $duration = null,
-    ) {
-    }
+    ) {}
 
     public function getStart(): DateTimeImmutable
     {

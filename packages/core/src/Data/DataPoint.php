@@ -11,12 +11,12 @@ use JsonSerializable;
 final readonly class DataPoint implements JsonSerializable
 {
     /**
-     * @param string $measurement The measurement/metric name
-     * @param float|int|string|bool|null $value The value to store
-     * @param DateTimeImmutable $timestamp The timestamp for this data point
-     * @param array<string, string> $tags Indexed dimensions (e.g., host, region, environment)
-     * @param array<string, float|int|string|bool|null> $fields Additional fields/values
-     * @param array<string, mixed> $metadata Extra metadata for specific database implementations
+     * @param  string  $measurement  The measurement/metric name
+     * @param  float|int|string|bool|null  $value  The value to store
+     * @param  DateTimeImmutable  $timestamp  The timestamp for this data point
+     * @param  array<string, string>  $tags  Indexed dimensions (e.g., host, region, environment)
+     * @param  array<string, float|int|string|bool|null>  $fields  Additional fields/values
+     * @param  array<string, mixed>  $metadata  Extra metadata for specific database implementations
      */
     public function __construct(
         public string $measurement,
@@ -40,7 +40,7 @@ final readonly class DataPoint implements JsonSerializable
         return new self(
             measurement: $measurement,
             value: $value,
-            timestamp: new DateTimeImmutable(),
+            timestamp: new DateTimeImmutable,
             tags: $tags,
             fields: $fields,
             metadata: $metadata,

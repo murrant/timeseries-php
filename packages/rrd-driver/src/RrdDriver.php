@@ -7,9 +7,8 @@ use TimeseriesPhp\Core\Contracts\Driver;
 
 class RrdDriver implements Driver
 {
-
     public function getCapabilities(): Capabilities
     {
-        return new RrdCapabilities();
+        return new RrdCapabilities;
     }
 }

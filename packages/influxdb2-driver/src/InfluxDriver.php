@@ -7,9 +7,8 @@ use TimeseriesPhp\Core\Contracts\Driver;
 
 class InfluxDriver implements Driver
 {
-
     public function getCapabilities(): Capabilities
     {
-        return new InfluxCapabilities();
+        return new InfluxCapabilities;
     }
 }
