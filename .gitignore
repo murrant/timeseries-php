@@ -1,7 +1,7 @@
 .idea
 .junie
-/composer.lock
-/vendor/
+composer.lock
+vendor/
 /.phpunit.result.cache
 /.output.txt
 /var/

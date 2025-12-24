@@ -1,8 +1,8 @@
 <?php
 
-namespace TimeseriesPhp\Core\Time;
+namespace TimeseriesPhp\Core\Enum;
 
-enum Resolution
+enum TimestampResolution
 {
     case S; // second
     case MS; // millisecond

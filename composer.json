@@ -1,5 +1,7 @@
 {
     "require": {
+        "illuminate/contracts": "^11.0||^12.0",
+        "illuminate/support": "^11.0||^12.0",
         "php": "^8.3"
     },
     "require-dev": {
@@ -37,5 +39,37 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true
         }
+    },
+    "extra": {
+        "laravel": {
+            "aliases": {
+                "TSDB": "TimeseriesPhp\\Bridge\\Laravel\\Facade"
+            },
+            "providers": [
+                "TimeseriesPhp\\Bridge\\Laravel\\ServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "lint": "pint",
+        "refactor": "rector",
+        "test:type-coverage": "pest --type-coverage --exactly=100",
+        "test:typos": "peck",
+        "test:lint": "pint --test",
+        "test:unit": "pest --coverage --exactly=100",
+        "test:types": "phpstan",
+        "test:refactor": "rector --dry-run",
+        "test": [
+            "@test:lint",
+            "@test:type-coverage",
+            "@test:typos",
+            "@test:unit",
+            "@test:types",
+            "@test:refactor"
+        ],
+        "cleanup": [
+            "@refactor",
+            "@lint"
+        ]
     }
 }

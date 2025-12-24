@@ -6,7 +6,7 @@ namespace TimeseriesPhp\Bridge\Laravel;
 
 class TimeseriesServiceProvider
 {
-    public function boot() {}
+    public function boot(): void {}
 
-    public function register() {}
+    public function register(): void {}
 }
