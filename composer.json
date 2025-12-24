@@ -1,27 +1,64 @@
 {
+    "name": "timseries-php/monorepo",
     "require": {
         "illuminate/contracts": "^11.0||^12.0",
         "illuminate/support": "^11.0||^12.0",
+        "laravel/fortify": "^1.30",
+        "laravel/framework": "^12.0",
+        "laravel/tinker": "^2.10.1",
+        "livewire/flux": "^2.9.0",
+        "livewire/volt": "^1.7.0",
         "php": "^8.3"
     },
     "require-dev": {
-        "laravel/pint": "^1.26",
+        "fakerphp/faker": "^1.23",
+        "laravel/pail": "^1.2.2",
+        "laravel/pint": "^1.24",
+        "laravel/sail": "^1.41",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.6",
         "pestphp/pest": "^4.2",
+        "pestphp/pest-plugin-laravel": "^4.0",
         "phpstan/phpstan": "^2.1",
         "rector/rector": "^2.2",
         "symplify/monorepo-builder": "^11.2"
     },
     "replace": {
+        "laravel/livewire-starter-kit": "self.version",
         "timeseries-php/core": "self.version",
         "timeseries-php/influxdb2-driver": "self.version",
+        "timeseries-php/laravel": "self.version",
         "timeseries-php/laravel-bridge": "self.version",
+        "timeseries-php/null-driver": "self.version",
         "timeseries-php/rrd-driver": "self.version"
     },
+    "repositories": [
+        {
+            "options": {
+                "symlink": true
+            },
+            "type": "path",
+            "url": "*"
+        },
+        {
+            "options": {
+                "symlink": true
+            },
+            "type": "path",
+            "url": "packages/*"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "autoload": {
         "psr-4": {
+            "App\\": "packages/web/app/",
+            "Database\\Factories\\": "packages/web/database/factories/",
+            "Database\\Seeders\\": "packages/web/database/seeders/",
             "\\TimeseriesPhp\\Bridge\\Laravel\\": "packages/laravel-bridge/src",
             "\\TimeseriesPhp\\Core\\": "packages/core/src",
             "\\TimeseriesPhp\\Driver\\InfluxDB2\\": "packages/influxdb2-driver/src",
+            "\\TimeseriesPhp\\Driver\\Null\\": "packages/null-driver/src",
             "\\TimeseriesPhp\\Driver\\RRD\\": "packages/rrd-driver/src"
         }
     },
@@ -31,7 +68,9 @@
                 "packages/core/tests/",
                 "packages/influxdb2-driver/tests/",
                 "packages/laravel-bridge/tests/",
-                "packages/rrd-driver/tests/"
+                "packages/null-driver/tests/",
+                "packages/rrd-driver/tests/",
+                "packages/web/tests/"
             ]
         }
     },
@@ -53,6 +92,7 @@
     "scripts": {
         "lint": "pint",
         "refactor": "rector",
+        "merge": "monorepo-builder merge",
         "test:type-coverage": "pest --type-coverage --exactly=100",
         "test:typos": "peck",
         "test:lint": "pint --test",

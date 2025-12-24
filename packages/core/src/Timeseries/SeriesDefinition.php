@@ -3,18 +3,26 @@
 namespace TimeseriesPhp\Core\Timeseries;
 
 use TimeseriesPhp\Core\Enum\Aggregation;
-use TimeseriesPhp\Core\Metrics\MetricIdentifier;
+use TimeseriesPhp\Core\Timeseries\Labels\LabelFilter;
 
 final readonly class SeriesDefinition
 {
-    /**
-     * @param  array<string, string>  $labels
-     * @param  array<string, mixed>  $transformations
-     */
     public function __construct(
-        public MetricIdentifier $metric,
-        public array $labels = [],
+        public string $metric,
+        public LabelFilter $filter,
+        public ?string $legend = null,
         public Aggregation $aggregation = Aggregation::AVG,
-        public array $transformations = [], // TODO
+        public ?SeriesStyle $style = null,
     ) {}
+
+    public static function fromArray(array $raw): self
+    {
+        return new SeriesDefinition(
+            metric: $raw['metric'],
+            filter: LabelFilter::fromArray($raw['filter'] ?? []),
+            legend: $raw['legend'] ?? null,
+            aggregation: isset($raw['aggregation']) ? Aggregation::from($raw['aggregation']) : Aggregation::AVG,
+            style: $raw['style'] ?? null,
+        );
+    }
 }

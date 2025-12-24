@@ -14,6 +14,10 @@ return RectorConfig::configure()
         __DIR__.'/packages/laravel-bridge/tests',
         __DIR__.'/packages/rrd-driver/src',
         __DIR__.'/packages/rrd-driver/tests',
+        __DIR__.'/packages/web/app',
+        __DIR__.'/packages/web/config',
+        __DIR__.'/packages/web/database',
+        __DIR__.'/packages/web/tests',
         __DIR__.'/tests',
     ])
     ->withPhpSets()

@@ -4,7 +4,7 @@ namespace TimeseriesPhp\Core\Timeseries;
 
 use TimeseriesPhp\Core\Time\TimeRange;
 
-final readonly class TimeSeriesResult
+final readonly class TimeSeriesResult implements \JsonSerializable
 {
     /**
      * @param  TimeSeries[]  $series
@@ -15,16 +15,17 @@ final readonly class TimeSeriesResult
         public Resolution $resolution,
     ) {}
 
-    /**
-     * @return string[] FIXME is this type correct?
-     */
-    public function allLabels(): array
-    {
-        return []; // TODO
-    }
-
     public function hasData(): bool
     {
         return ! empty($this->series);
+    }
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'series' => array_map(fn (TimeSeries $series) => $series->jsonSerialize(), $this->series),
+            'range' => ['start' => $this->range->start->getTimestamp(), 'end' => $this->range->end->getTimestamp()],
+            'resolution' => $this->resolution->seconds,
+        ];
     }
 }

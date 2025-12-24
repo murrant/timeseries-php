@@ -1,0 +1,21 @@
+network.port:
+  bits.in:
+    type: counter
+    unit: bps
+    labels:
+      - host
+      - ifName
+      - ifIndex
+    aggregations:
+      - rate
+      - sum
+  bits.out:
+    type: counter
+    unit: bps
+    labels:
+      - host
+      - ifName
+      - ifIndex
+    aggregations:
+      - rate
+      - sum

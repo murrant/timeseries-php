@@ -1,0 +1,26 @@
+id: host_port_bandwidth
+title: Port Bandwidth
+description: Ingress and egress bitrate per interface
+unit: bps
+
+variables:
+    host:
+        type: string
+        required: true
+
+series:
+    - metric: network.port.bits.in
+      aggregation: rate
+      label_filter:
+          host: "{{ host }}"
+      legend: "{{ ifName }} In"
+
+    - metric: network.port.bits.out
+      aggregation: rate
+      label_filter:
+          host: "{{ host }}"
+      legend: "{{ ifName }} Out"
+
+options:
+    stack: false
+    min: 0

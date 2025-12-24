@@ -2,8 +2,8 @@
 
 namespace TimeseriesPhp\Driver\RRD;
 
-use TimeseriesPhp\Core\Contracts\Capabilities;
 use TimeseriesPhp\Core\Contracts\CompiledQuery;
+use TimeseriesPhp\Core\Contracts\TsdbCapabilities;
 use TimeseriesPhp\Core\Contracts\TsdbClient;
 use TimeseriesPhp\Core\Time\TimeRange;
 use TimeseriesPhp\Core\Timeseries\Resolution;
@@ -11,9 +11,9 @@ use TimeseriesPhp\Core\Timeseries\TimeSeriesResult;
 
 class RrdTsdbClient implements TsdbClient
 {
-    public function getCapabilities(): Capabilities
+    public function getCapabilities(): TsdbCapabilities
     {
-        return new RrdCapabilities;
+        return new RrdTsdbCapabilities;
     }
 
     public function query(CompiledQuery $query): TimeSeriesResult

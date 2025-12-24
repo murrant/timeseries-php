@@ -5,3 +5,7 @@ parameters:
         - packages/influxdb2-driver/src
         - packages/laravel-bridge/src
         - packages/rrd-driver/src
+        - packages/web/app
+        - packages/web/config
+        - packages/web/database
+

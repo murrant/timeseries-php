@@ -62,4 +62,16 @@ final readonly class TimeRange
         $this->start = $start;
         $this->end = $end;
     }
+
+    public static function lastMinutes(int $minutes): self
+    {
+        return new self(
+            duration: new DateInterval("PT{$minutes}M")
+        );
+    }
+
+    public function equals(TimeRange $range): bool
+    {
+        return $this->start === $range->start && $this->end === $range->end;
+    }
 }

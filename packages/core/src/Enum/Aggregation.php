@@ -2,12 +2,12 @@
 
 namespace TimeseriesPhp\Core\Enum;
 
-enum Aggregation
+enum Aggregation: string
 {
-    case AVG;
-    case SUM;
-    case MIN;
-    case MAX;
-    case RATE;
-    case NONE;
+    case AVG = 'avg';
+    case SUM = 'sum';
+    case MIN = 'min';
+    case MAX = 'max';
+    case RATE = 'rate';
+    case NONE = 'none';
 }

@@ -2,13 +2,13 @@
 
 namespace TimeseriesPhp\Driver\InfluxDB2;
 
-use TimeseriesPhp\Core\Contracts\Capabilities;
 use TimeseriesPhp\Core\Contracts\Driver;
+use TimeseriesPhp\Core\Contracts\TsdbCapabilities;
 
 class InfluxDriver implements Driver
 {
-    public function getCapabilities(): Capabilities
+    public function getCapabilities(): TsdbCapabilities
     {
-        return new InfluxCapabilities;
+        return new InfluxTsdbCapabilities;
     }
 }

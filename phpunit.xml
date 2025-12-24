@@ -17,6 +17,9 @@
         <testsuite name="RRD">
             <directory suffix="Test.php">packages/rrd-driver/tests</directory>
         </testsuite>
+        <testsuite name="Web">
+            <directory suffix="Test.php">packages/web/tests</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>
@@ -24,6 +27,7 @@
             <directory>packages/influxdb2-driver/src</directory>
             <directory>packages/laravel-bridge/src</directory>
             <directory>packages/rrd-driver/src</directory>
+            <directory>packages/web/app</directory>
         </include>
     </source>
 </phpunit>

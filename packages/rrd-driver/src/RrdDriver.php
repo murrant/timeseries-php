@@ -2,13 +2,13 @@
 
 namespace TimeseriesPhp\Driver\RRD;
 
-use TimeseriesPhp\Core\Contracts\Capabilities;
 use TimeseriesPhp\Core\Contracts\Driver;
+use TimeseriesPhp\Core\Contracts\TsdbCapabilities;
 
 class RrdDriver implements Driver
 {
-    public function getCapabilities(): Capabilities
+    public function getCapabilities(): TsdbCapabilities
     {
-        return new RrdCapabilities;
+        return new RrdTsdbCapabilities;
     }
 }
