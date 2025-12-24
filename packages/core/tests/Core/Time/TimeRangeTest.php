@@ -1,99 +1,152 @@
 <?php
 
-declare(strict_types=1);
-
 use TimeseriesPhp\Core\Time\TimeRange;
 
-test('it can be instantiated with start and end', function (DateTimeInterface $start, DateTimeInterface $end): void {
-    $range = new TimeRange(start: $start, end: $end);
+test('throws exception when no parameters provided', function (): void {
+    new TimeRange;
+})->throws(InvalidArgumentException::class, 'Provide at least one parameter.');
 
-    expect($range->getStart())->toEqual(DateTimeImmutable::createFromInterface($start))
-        ->and($range->getEnd())->toEqual(DateTimeImmutable::createFromInterface($end));
-})->with([
-    'immutable' => [new DateTimeImmutable('2023-01-01 00:00:00'), new DateTimeImmutable('2023-01-01 01:00:00')],
-    'mutable' => [new DateTime('2023-01-01 00:00:00'), new DateTime('2023-01-01 01:00:00')],
-    'mixed' => [new DateTimeImmutable('2023-01-01 00:00:00'), new DateTime('2023-01-01 01:00:00')],
-]);
+test('creates range from start and end', function (): void {
+    $start = new DateTimeImmutable('2024-01-01 00:00:00');
+    $end = new DateTimeImmutable('2024-01-31 23:59:59');
 
-test('it can calculate start from end and duration', function (string $endStr, string $durationStr, string $expectedStartStr): void {
-    $end = new DateTimeImmutable($endStr);
-    $duration = new DateInterval($durationStr);
+    $range = new TimeRange($start, $end);
+
+    expect($range->start)->toEqual($start)
+        ->and($range->end)->toEqual($end)
+        ->and($range->startWasProvided)->toBeTrue()
+        ->and($range->endWasProvided)->toBeTrue();
+});
+
+test('creates range from start and duration', function (): void {
+    $start = new DateTimeImmutable('2024-01-01 00:00:00');
+    $duration = new DateInterval('P7D');
+
+    $range = new TimeRange($start, duration: $duration);
+
+    expect($range->start)->toEqual($start)
+        ->and($range->end)->toEqual($start->add($duration))
+        ->and($range->startWasProvided)->toBeTrue()
+        ->and($range->endWasProvided)->toBeFalse();
+});
+
+test('creates range from end and duration', function (): void {
+    $end = new DateTimeImmutable('2024-01-31 23:59:59');
+    $duration = new DateInterval('P7D');
+
     $range = new TimeRange(end: $end, duration: $duration);
 
-    expect($range->getStart())->toEqual(new DateTimeImmutable($expectedStartStr))
-        ->and($range->getEnd())->toEqual($end);
-})->with([
-    ['2023-01-01 01:00:00', 'PT1H', '2023-01-01 00:00:00'],
-    ['2023-01-02 00:00:00', 'P1D', '2023-01-01 00:00:00'],
-    ['2023-02-01 00:00:00', 'P1M', '2023-01-01 00:00:00'],
-]);
+    expect($range->start)->toEqual($end->sub($duration))
+        ->and($range->end)->toEqual($end)
+        ->and($range->startWasProvided)->toBeFalse()
+        ->and($range->endWasProvided)->toBeTrue();
+});
 
-test('it can calculate end from start and duration', function (string $startStr, string $durationStr, string $expectedEndStr): void {
-    $start = new DateTimeImmutable($startStr);
-    $duration = new DateInterval($durationStr);
-    $range = new TimeRange(start: $start, duration: $duration);
+test('creates range from start only (end is now)', function (): void {
+    $start = new DateTimeImmutable('2024-01-01 00:00:00');
+    $beforeCreation = new DateTimeImmutable;
 
-    expect($range->getStart())->toEqual($start)
-        ->and($range->getEnd())->toEqual(new DateTimeImmutable($expectedEndStr));
-})->with([
-    ['2023-01-01 00:00:00', 'PT1H', '2023-01-01 01:00:00'],
-    ['2023-01-01 00:00:00', 'P1D', '2023-01-02 00:00:00'],
-    ['2023-01-01 00:00:00', 'P1M', '2023-02-01 00:00:00'],
-]);
+    $range = new TimeRange($start);
 
-test('it returns current time if end and duration are null', function (): void {
-    $start = new DateTimeImmutable('2023-01-01 00:00:00');
-    $range = new TimeRange(start: $start);
+    $afterCreation = new DateTimeImmutable;
+
+    expect($range->start)->toEqual($start)
+        ->and($range->end->getTimestamp())->toBeGreaterThanOrEqual($beforeCreation->getTimestamp())
+        ->and($range->end->getTimestamp())->toBeLessThanOrEqual($afterCreation->getTimestamp())
+        ->and($range->startWasProvided)->toBeTrue()
+        ->and($range->endWasProvided)->toBeFalse();
+});
+
+test('creates range from end only (start is now)', function (): void {
+    $end = new DateTimeImmutable('2025-12-31 23:59:59');
+    $beforeCreation = new DateTimeImmutable;
+
+    $range = new TimeRange(end: $end);
+
+    $afterCreation = new DateTimeImmutable;
+
+    expect($range->end)->toEqual($end)
+        ->and($range->start->getTimestamp())->toBeGreaterThanOrEqual($beforeCreation->getTimestamp())
+        ->and($range->start->getTimestamp())->toBeLessThanOrEqual($afterCreation->getTimestamp())
+        ->and($range->startWasProvided)->toBeFalse()
+        ->and($range->endWasProvided)->toBeTrue();
+});
+
+test('creates range from duration only (last X period)', function (): void {
+    $duration = new DateInterval('P1D');
+    $beforeCreation = new DateTimeImmutable;
+
+    $range = new TimeRange(duration: $duration);
+
+    $afterCreation = new DateTimeImmutable;
+    $expectedStart = $afterCreation->sub($duration);
+
+    expect($range->end->getTimestamp())->toBeGreaterThanOrEqual($beforeCreation->getTimestamp())
+        ->and($range->end->getTimestamp())->toBeLessThanOrEqual($afterCreation->getTimestamp())
+        ->and($range->start->getTimestamp())->toBeGreaterThanOrEqual($expectedStart->getTimestamp() - 1)
+        ->and($range->startWasProvided)->toBeFalse()
+        ->and($range->endWasProvided)->toBeFalse();
+});
+
+test('validates start is not after end', function (): void {
+    $start = new DateTimeImmutable('2024-01-31 23:59:59');
+    $end = new DateTimeImmutable('2024-01-01 00:00:00');
+
+    new TimeRange($start, $end);
+})->throws(InvalidArgumentException::class, 'Start cannot be after end.');
+
+test('validates duration matches start and end when all provided', function (): void {
+    $start = new DateTimeImmutable('2024-01-01 00:00:00');
+    $end = new DateTimeImmutable('2024-01-31 23:59:59');
+    $wrongDuration = new DateInterval('P1D');
+
+    new TimeRange($start, $end, $wrongDuration);
+})->throws(InvalidArgumentException::class, 'Duration does not match start and end.');
+
+test('accepts matching duration with start and end', function (): void {
+    $start = new DateTimeImmutable('2024-01-01 00:00:00');
+    $duration = new DateInterval('P7D');
+    $end = $start->add($duration);
+
+    $range = new TimeRange($start, $end, $duration);
+
+    expect($range->start)->toEqual($start)
+        ->and($range->end)->toEqual($end);
+});
+
+test('handles DateTime interface conversion', function (): void {
+    $start = new DateTime('2024-01-01 00:00:00');
+    $end = new DateTime('2024-01-31 23:59:59');
+
+    $range = new TimeRange($start, $end);
+
+    expect($range->start)->toBeInstanceOf(DateTimeImmutable::class)
+        ->and($range->end)->toBeInstanceOf(DateTimeImmutable::class);
+});
+
+test('duration only creates relative range ending now', function (): void {
+    $duration = new DateInterval('PT1H'); // 1 hour
+
+    $range = new TimeRange(duration: $duration);
 
     $now = new DateTimeImmutable;
-    $end = $range->getEnd();
+    $diff = $now->getTimestamp() - $range->end->getTimestamp();
 
-    // Allow a small difference in time
-    expect($end->getTimestamp())->toBeGreaterThanOrEqual($now->getTimestamp());
-    expect($end->getTimestamp())->toBeLessThanOrEqual($now->getTimestamp() + 1);
+    expect($diff)->toBeLessThanOrEqual(1) // Within 1 second
+        ->and($range->startWasProvided)->toBeFalse()
+        ->and($range->endWasProvided)->toBeFalse();
 });
 
-test('getStart returns start if provided even if end and duration are also provided', function (): void {
-    $start = new DateTimeImmutable('2023-01-01 00:00:00');
-    $end = new DateTimeImmutable('2023-01-01 02:00:00');
-    $duration = new DateInterval('PT1H');
-    $range = new TimeRange(start: $start, end: $end, duration: $duration);
+test('immutability of start and end', function (): void {
+    $start = new DateTime('2024-01-01');
+    $end = new DateTime('2024-01-31');
 
-    expect($range->getStart())->toEqual($start);
-});
+    $range = new TimeRange($start, $end);
 
-test('getEnd returns end if provided even if duration is also provided', function (): void {
-    $start = new DateTimeImmutable('2023-01-01 00:00:00');
-    $end = new DateTimeImmutable('2023-01-01 02:00:00');
-    $duration = new DateInterval('PT1H');
-    $range = new TimeRange(start: $start, end: $end, duration: $duration);
+    // This should not affect the range
+    $start = $start->modify('+1 year');
+    $end = $end->modify('+1 year');
 
-    expect($range->getEnd())->toEqual($end);
-});
-
-test('it handles timezones correctly', function (): void {
-    $tz = new DateTimeZone('America/New_York');
-    $start = new DateTimeImmutable('2023-01-01 00:00:00', $tz);
-    $duration = new DateInterval('PT1H');
-    $range = new TimeRange(start: $start, duration: $duration);
-
-    expect($range->getStart()->getTimezone()->getName())->toBe('America/New_York')
-        ->and($range->getEnd()->getTimezone()->getName())->toBe('America/New_York')
-        ->and($range->getEnd())->toEqual(new DateTimeImmutable('2023-01-01 01:00:00', $tz));
-});
-
-test('getStart throws TypeError if start and end are null', function (): void {
-    $range = new TimeRange(duration: new DateInterval('PT1H'));
-    $range->getStart();
-})->throws(TypeError::class);
-
-test('it returns new instances of DateTimeImmutable', function (): void {
-    $start = new DateTimeImmutable('2023-01-01 00:00:00');
-    $range = new TimeRange(start: $start);
-
-    $start1 = $range->getStart();
-    $start2 = $range->getStart();
-
-    expect($start1)->not->toBe($start); // createFromInterface returns new instance
-    expect($start1)->not->toBe($start2);
+    expect($range->start->format('Y-m-d'))->toBe('2024-01-01')
+        ->and($range->end->format('Y-m-d'))->toBe('2024-01-31');
 });

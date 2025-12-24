@@ -1,36 +1,9 @@
+# timeseries-php
+
+A lightweight, efficient PHP library for working with time series data.
 
 
-## Boundaries
+## Installation
 
-### What Goes Above Drivers
- * Metric registry
- * Graph definitions
- * Label semantics
- * Aggregation enums
- * Validation rules
- * UI logic
-
-### What Goes Inside Drivers
- * Naming conventions
- * Schema layout
- * Query syntax
- * Path resolution
- * Backend quirks
- * Performance tuning
-
-### What Must Never Cross the Boundary
- * PromQL
- * Flux
- * RRD arguments
- * Backend errors
- * Backend data structures
-
-Drivers translate those into generic failures or results.
-
-
-## What we want to avoid
- * Mega-driver interfaces
- * Backend conditionals in services
- * Stringly-typed queries
- * Implicit feature support
- * Accidental coupling between ingestion and graphing
+```bash
+composer require timeseries-php/laravel
