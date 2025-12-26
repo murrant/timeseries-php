@@ -10,21 +10,21 @@ final class NullCapabilities implements TsdbCapabilities
 {
     public function supportsRate(): bool
     {
-        return true;
+        return false;
     }
 
     public function supportsHistogram(): bool
     {
-        return true;
+        return false;
     }
 
     public function supportsLabelJoin(): bool
     {
-        return true;
+        return false;
     }
 
     public function supports(string $capability): bool
     {
-        return true;
+        return false;
     }
 }

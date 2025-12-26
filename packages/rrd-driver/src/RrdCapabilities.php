@@ -1,10 +1,10 @@
 <?php
 
-namespace TimeseriesPhp\Driver\InfluxDB2;
+namespace TimeseriesPhp\Driver\RRD;
 
 use TimeseriesPhp\Core\Contracts\TsdbCapabilities;
 
-class InfluxTsdbCapabilities implements TsdbCapabilities
+class RrdCapabilities implements TsdbCapabilities
 {
     public function supportsRate(): bool
     {

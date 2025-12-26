@@ -38,7 +38,7 @@ This is the seam.
 
 **Interfaces**
 
-* `TsdbIngestor`
+* `TsdbWriter`
 * `GraphCompiler`
 * `TsdbClient`
 * `TsdbCapabilities`
@@ -84,7 +84,7 @@ Poller / Collector
         ↓
  MetricSample (generic)
         ↓
- TsdbIngestor (driver)
+ TsdbWriter (driver)
         ↓
  Backend storage
 ```
@@ -205,7 +205,7 @@ Never via conditionals in core logic.
 | Concern            | Lives Where         |
 | ------------------ | ------------------- |
 | Metric meaning     | Registry            |
-| Validation         | Compiler / Ingestor |
+| Validation         | Compiler / Writer |
 | Naming conventions | Driver              |
 | Query syntax       | Driver              |
 | Rate math          | Compiler            |
@@ -222,7 +222,7 @@ To add a backend you:
 
 1. Implement:
 
-   * `TsdbIngestor`
+   * `TsdbWriter`
    * `GraphCompiler`
    * `TsdbClient`
    * `TsdbCapabilities`

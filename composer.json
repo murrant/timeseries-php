@@ -1,6 +1,7 @@
 {
     "name": "timseries-php/monorepo",
     "require": {
+        "composer-runtime-api": "^2.0",
         "illuminate/contracts": "^11.0||^12.0",
         "illuminate/support": "^11.0||^12.0",
         "laravel/fortify": "^1.30",
@@ -8,7 +9,10 @@
         "laravel/tinker": "^2.10.1",
         "livewire/flux": "^2.9.0",
         "livewire/volt": "^1.7.0",
-        "php": "^8.3"
+        "php": "^8.3",
+        "psr-discovery/http-client-implementations": "^1.0",
+        "psr-discovery/http-factory-implementations": "^1.0",
+        "psr/http-client": "^1.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -86,6 +90,13 @@
             },
             "providers": [
                 "TimeseriesPhp\\Bridge\\Laravel\\ServiceProvider"
+            ]
+        },
+        "timeseries-php": {
+            "driver-class": [
+                "\\TimeseriesPhp\\Driver\\InfluxDB2\\InfluxDriver",
+                "\\TimeseriesPhp\\Driver\\Null\\NullDriver",
+                "\\TimeseriesPhp\\Driver\\RRD\\RrdDriver"
             ]
         }
     },

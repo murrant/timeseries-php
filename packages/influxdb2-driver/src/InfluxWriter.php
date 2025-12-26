@@ -1,0 +1,91 @@
+<?php
+
+declare(strict_types=1);
+
+namespace TimeseriesPhp\Driver\InfluxDB2;
+
+use Psr\Http\Client\ClientExceptionInterface;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\StreamFactoryInterface;
+use PsrDiscovery\Discover;
+use TimeseriesPhp\Core\Contracts\TsdbWriter;
+use TimeseriesPhp\Core\Exceptions\TimeseriesException;
+use TimeseriesPhp\Core\Metrics\MetricSample;
+
+class InfluxWriter implements TsdbWriter
+{
+    private readonly ClientInterface $httpClient;
+    private readonly RequestFactoryInterface $requestFactory;
+    private readonly StreamFactoryInterface $streamFactory;
+
+    public function __construct(
+        private readonly InfluxConfig $config,
+        ?ClientInterface $httpClient = null,
+        ?RequestFactoryInterface $requestFactory = null,
+        ?StreamFactoryInterface $streamFactory = null,
+    ) {
+        $this->httpClient = $httpClient ?? Discover::httpClient();
+        $this->requestFactory = $requestFactory ?? Discover::httpRequestFactory();
+        $this->streamFactory = $streamFactory ?? Discover::httpStreamFactory();
+    }
+
+    /**
+     * @throws TimeseriesException
+     */
+    public function write(MetricSample $sample): void
+    {
+        $line = $this->formatLineProtocol($sample);
+
+        $url = $this->config->host.':'.$this->config->port.'/api/v2/write?'.http_build_query([
+            'org' => $this->config->org,
+            'bucket' => $this->config->bucket,
+            'precision' => 's',
+        ]);
+
+        $request = $this->requestFactory->createRequest('POST', $url)
+            ->withHeader('Authorization', 'Token '.$this->config->token)
+            ->withHeader('Content-Type', 'text/plain; charset=utf-8')
+            ->withBody($this->streamFactory->createStream($line));
+
+        try {
+            $response = $this->httpClient->sendRequest($request);
+
+            if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 300) {
+                throw new TimeseriesException(
+                    sprintf(
+                        'Failed to write to InfluxDB2. Status code: %d. Response: %s',
+                        $response->getStatusCode(),
+                        $response->getBody()->getContents()
+                    )
+                );
+            }
+        } catch (ClientExceptionInterface $e) {
+            throw new TimeseriesException('HTTP error while writing to InfluxDB2: '.$e->getMessage(), 0, $e);
+        }
+    }
+
+    private function formatLineProtocol(MetricSample $sample): string
+    {
+        $measurement = $sample->metric->namespace.'_'.$sample->metric->name;
+
+        $tags = [];
+        foreach ($sample->labels as $key => $value) {
+            $tags[] = "{$this->escape($key)}={$this->escape($value)}";
+        }
+
+        $tagStr = $tags !== [] ? ','.implode(',', $tags) : '';
+
+        $value = $sample->value;
+        $fieldValue = is_float($value) ? sprintf('%F', $value) : "{$value}i";
+
+        $timestamp = $sample->timestamp->getTimestamp();
+
+        return "{$this->escape($measurement)}{$tagStr} value={$fieldValue} {$timestamp}";
+    }
+
+    private function escape(string $value): string
+    {
+        return str_replace([' ', ',', '='], ['\ ', '\,', '\='], $value);
+    }
+}

@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'driver' => 'null',
+    'driver' => 'influxdb2',
     'graphs' => [
         'repository' => 'yaml',
         'path' => 'database/graphs',
@@ -14,9 +14,9 @@ return [
         'influxdb2' => [
             'host' => 'localhost',
             'port' => 8086,
-            'token' => '',
-            'org' => '',
-            'bucket' => '',
+            'token' => 'my-token',
+            'org' => 'my-org',
+            'bucket' => 'example_bucket',
         ],
     ],
 ];

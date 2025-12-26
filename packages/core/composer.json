@@ -1,7 +1,8 @@
 {
   "name": "timeseries-php/core",
   "require": {
-    "php": "^8.3"
+    "php": "^8.3",
+    "composer-runtime-api": "^2.0"
   },
   "autoload": {
     "psr-4": {

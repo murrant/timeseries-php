@@ -5,10 +5,18 @@ namespace TimeseriesPhp\Driver\RRD;
 use TimeseriesPhp\Core\Contracts\Driver;
 use TimeseriesPhp\Core\Contracts\TsdbCapabilities;
 
+#[TsdbDriver(
+    name: 'rrd',
+    config: RrdConfig::class,
+    writer: RrdWriter::class,
+    compiler: RrdCompiler::class,
+    client: RrdClient::class,
+    capabilities: RrdCapabilities::class,
+)]
 class RrdDriver implements Driver
 {
     public function getCapabilities(): TsdbCapabilities
     {
-        return new RrdTsdbCapabilities;
+        return new RrdCapabilities;
     }
 }

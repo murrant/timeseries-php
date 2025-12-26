@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use TimeseriesPhp\Core\Contracts\CompiledQuery;
 use TimeseriesPhp\Driver\Null\NullCapabilities;
+use TimeseriesPhp\Driver\Null\NullClient;
 use TimeseriesPhp\Driver\Null\NullDriver;
-use TimeseriesPhp\Driver\Null\NullTsdbClient;
 
 test('null driver returns null capabilities', function () {
     $driver = new NullDriver;
@@ -18,7 +18,7 @@ test('null driver returns null capabilities', function () {
 });
 
 test('null tsdb client returns empty result', function () {
-    $client = new NullTsdbClient;
+    $client = new NullClient;
     $query = new class implements CompiledQuery {};
 
     $result = $client->query($query);

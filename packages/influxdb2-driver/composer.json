@@ -1,7 +1,11 @@
 {
   "name": "timeseries-php/influxdb2-driver",
+  "type": "timeseries-php-driver",
   "require": {
-    "php": "^8.3"
+    "php": "^8.3",
+    "psr/http-client": "^1.0",
+    "psr-discovery/http-client-implementations": "^1.0",
+    "psr-discovery/http-factory-implementations": "^1.0"
   },
   "autoload": {
     "psr-4": {
@@ -11,6 +15,11 @@
   "autoload-dev": {
     "psr-4": {
       "Tests\\": "tests/"
+    }
+  },
+  "extra": {
+    "timeseries-php": {
+      "driver-class": "\\TimeseriesPhp\\Driver\\InfluxDB2\\InfluxDriver"
     }
   }
 }

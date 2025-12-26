@@ -138,7 +138,7 @@ Deliverables:
 Deliverables:
 
 ```php
-TsdbIngestor
+TsdbWriter
 - write(MetricSample)
 
 GraphCompiler
@@ -181,13 +181,13 @@ Choose **one** backend first to validate architecture.
 Drivers/<Backend>/
   <Backend>Compiler.php
   <Backend>Client.php
-  <Backend>Ingestor.php
+  <Backend>Writer.php
   <Backend>Capabilities.php
 ```
 
 ---
 
-### 3.2 Ingestor Implementation
+### 3.2 Writer Implementation
 
 Deliverables:
 
@@ -231,7 +231,7 @@ Deliverables:
 * Config-based driver selection
 * Bindings for:
 
-    * `TsdbIngestor`
+    * `TsdbWriter`
     * `GraphCompiler`
     * `TsdbClient`
     * `TsdbCapabilities`
@@ -320,7 +320,7 @@ Deliverables:
 
 * Registry validation
 * Compiler output
-* Ingestor mapping
+* Writer mapping
 * Capability enforcement
 
 ---

@@ -10,7 +10,8 @@ use TimeseriesPhp\Core\Contracts\GraphRepository;
 use TimeseriesPhp\Core\Contracts\MetricRepository;
 use TimeseriesPhp\Core\Contracts\TsdbCapabilities;
 use TimeseriesPhp\Core\Contracts\TsdbClient;
-use TimeseriesPhp\Core\Contracts\TsdbIngestor;
+use TimeseriesPhp\Core\Contracts\TsdbWriter;
+use TimeseriesPhp\Core\DriverResolver;
 use TimeseriesPhp\Core\Graph\Repository\RuntimeGraphRepository;
 use TimeseriesPhp\Core\Graph\Repository\YamlGraphRepository;
 use TimeseriesPhp\Core\Metrics\Repository\RuntimeMetricRepository;
@@ -39,11 +40,24 @@ class ServiceProvider extends BaseServiceProvider
             };
         });
 
-        $driver = config('tsdb.driver', 'Null');
-        $this->app->bind(TsdbIngestor::class, "\\TimeseriesPhp\\Driver\\{$driver}\\{$driver}Ingestor");
-        $this->app->bind(GraphCompiler::class, "\\TimeseriesPhp\\Driver\\{$driver}\\{$driver}Compiler");
-        $this->app->bind(TsdbClient::class, "\\TimeseriesPhp\\Driver\\{$driver}\\{$driver}Client");
-        $this->app->bind(TsdbCapabilities::class, "\\TimeseriesPhp\\Driver\\{$driver}\\{$driver}Capabilities");
+        $driver = config('tsdb.driver', 'null');
+        $discoverDrivers = DriverResolver::discoverDrivers();
+
+        foreach ($discoverDrivers as $driverClass) {
+            $definition = DriverResolver::resolve($driverClass);
+            $this->app->bind($definition->config, function () use ($definition) {
+                $configClass = $definition->config;
+
+                return $configClass::fromArray(config("tsdb.drivers.$definition->name", []));
+            });
+
+            if ($definition->name == $driver) {
+                $this->app->bind(TsdbWriter::class, $definition->writer);
+                $this->app->bind(GraphCompiler::class, $definition->compiler);
+                $this->app->bind(TsdbClient::class, $definition->client);
+                $this->app->bind(TsdbCapabilities::class, $definition->capabilities);
+            }
+        }
     }
 
     public function boot(): void
