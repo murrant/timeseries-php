@@ -33,8 +33,9 @@ final readonly class GraphService
     public function render(
         string|GraphDefinition $graph,
         TimeRange $range,
+        /** @var VariableBinding[] */
+        array $bindings = [],
         ?Resolution $resolution = null,
-        array $variables = [],
     ): TimeSeriesResult {
 
         // 1. Load graph definition
@@ -43,17 +44,17 @@ final readonly class GraphService
             : $graph;
 
         // 2. Bind template variables
-        $definition = $definition->withVariables($variables);
+        $graph = $this->bindVariables($definition, $bindings);
 
         // 3. Validate graph semantics
-        $this->validateGraph($definition);
+        $this->validateGraph($graph);
 
         // 4. Enforce driver capabilities
-        $this->enforceCapabilities($definition);
+        $this->enforceCapabilities($graph);
 
         // 5. Compile graph to backend query
         $compiled = $this->compiler->compile(
-            graph: $definition,
+            graph: $graph,
             range: $range,
             resolution: $resolution,
         );
@@ -69,9 +70,9 @@ final readonly class GraphService
 
     // -------------------------------------------------------------
 
-    private function validateGraph(GraphDefinition $graph): void
+    private function validateGraph(BoundGraph $graph): void
     {
-        foreach ($graph->series as $series) {
+        foreach ($graph->definition->series as $series) {
             $metric = $this->metrics->get($series->metric);
 
             // Metric exists
@@ -98,9 +99,9 @@ final readonly class GraphService
         }
     }
 
-    private function enforceCapabilities(GraphDefinition $graph): void
+    private function enforceCapabilities(BoundGraph $graph): void
     {
-        foreach ($graph->requiredCapabilities() as $capability) {
+        foreach ($graph->definition->requiredCapabilities() as $capability) {
             if (! $this->capabilities->supports($capability)) {
                 throw new UnsupportedFeatureException(
                     "Driver does not support '{$capability}'"
@@ -114,5 +115,35 @@ final readonly class GraphService
         GraphDefinition $graph
     ): void {
         // FIXME validate something I guess...
+    }
+
+    private function bindVariables(GraphDefinition $graph, array $bindings): BoundGraph
+    {
+        $variables = [];
+        $bindings = array_column($bindings, null, 'label');
+
+        foreach ($graph->variables as $var) {
+            $binding = $bindings[$var->name] ?? null;
+
+            if (!$binding && $var->required) {
+                throw new InvalidGraphException(
+                    "Missing required variable '{$var->name}'"
+                );
+            }
+
+            if ($binding) {
+                if (!in_array($binding->operator, $var->allowedOperators, true)) {
+                    throw new InvalidGraphException(
+                        "Operator not allowed for '{$var->name}'"
+                    );
+                }
+
+                if ($binding->value !== null) {
+                    $variables[$var->name] = $binding;
+                }
+            }
+        }
+
+        return new BoundGraph($graph, $variables);
     }
 }

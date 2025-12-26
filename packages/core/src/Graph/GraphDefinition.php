@@ -47,22 +47,6 @@ final readonly class GraphDefinition
         );
     }
 
-    public function withVariables(array $variables): self
-    {
-        return new GraphDefinition(
-            id: $this->id,
-            title: $this->title,
-            description: $this->description,
-            variables: array_map(fn ($v) => $v->withValue($variables[$v->name] ?? null), $this->variables),
-            series: $this->series,
-            defaultRange: $this->defaultRange,
-            defaultResolution: $this->defaultResolution,
-            style: $this->style,
-            requiredCapabilities: $this->requiredCapabilities,
-            metadata: $this->metadata,
-        );
-    }
-
     public function requiredCapabilities(): array
     {
         return $this->requiredCapabilities; // FIXME empty

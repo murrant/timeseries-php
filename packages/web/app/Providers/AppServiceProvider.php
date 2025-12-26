@@ -13,7 +13,6 @@ use TimeseriesPhp\Core\Graph\GraphDefinition;
 use TimeseriesPhp\Core\Graph\GraphStyle;
 use TimeseriesPhp\Core\Graph\GraphVariable;
 use TimeseriesPhp\Core\Metrics\MetricIdentifier;
-use TimeseriesPhp\Core\Timeseries\Labels\LabelFilter;
 use TimeseriesPhp\Core\Timeseries\SeriesDefinition;
 
 class AppServiceProvider extends ServiceProvider
@@ -69,8 +68,8 @@ class AppServiceProvider extends ServiceProvider
                 new GraphVariable('ifIndex', VariableType::INTEGER),
             ],
             series: [
-                new SeriesDefinition($bytesInMetric->key(), LabelFilter::match('ifName', 'enp10s0'), aggregation: Aggregation::RATE),
-                new SeriesDefinition($bytesOutMetric->key(), LabelFilter::match('ifName', 'enp10s0'), aggregation: Aggregation::RATE),
+                new SeriesDefinition($bytesInMetric->key(), aggregation: Aggregation::RATE),
+                new SeriesDefinition($bytesOutMetric->key(), aggregation: Aggregation::RATE),
             ],
             style: new GraphStyle(GraphType::LINE),
         ));

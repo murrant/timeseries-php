@@ -14,7 +14,7 @@ final readonly class LabelFilter
     public static function match(string $label, mixed $value): self
     {
         return new self([
-            $label => new LabelMatcher(MatchType::EXACT, $value),
+            $label => new LabelMatcher(MatchType::EQUALS, $value),
         ]);
     }
 

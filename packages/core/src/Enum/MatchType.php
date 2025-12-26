@@ -4,7 +4,7 @@ namespace TimeseriesPhp\Core\Enum;
 
 enum MatchType: string
 {
-    case EXACT = 'exact';
+    case EQUALS = 'equals';
     case REGEX = 'regex';
-    case NOT = 'not';
+    case NOT_EQUALS = 'not_equals';
 }

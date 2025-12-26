@@ -2,6 +2,7 @@
 
 namespace TimeseriesPhp\Core\Graph;
 
+use TimeseriesPhp\Core\Enum\MatchType;
 use TimeseriesPhp\Core\Enum\VariableType;
 
 final readonly class GraphVariable
@@ -11,8 +12,8 @@ final readonly class GraphVariable
         public VariableType $type,
         public bool $required = false,
         public mixed $default = null,
-        public array $constraints = [],
-        public mixed $value = null,
+        /** @var MatchType[] */
+        public array $allowedOperators = [MatchType::EQUALS],
     ) {}
 
     public static function fromArray(array $variable): self
@@ -22,19 +23,7 @@ final readonly class GraphVariable
             type: VariableType::from($variable['type']),
             required: $variable['required'],
             default: $variable['default'],
-            constraints: $variable['constraints'],
-        );
-    }
-
-    public function withValue(mixed $value): self
-    {
-        return new GraphVariable(
-            name: $this->name,
-            type: $this->type,
-            required: $this->required,
-            default: $this->default,
-            constraints: $this->constraints,
-            value: $value,
+            allowedOperators: array_map(MatchType::from(...), $variable['allowedOperators'] ?? [MatchType::EQUALS]),
         );
     }
 }
