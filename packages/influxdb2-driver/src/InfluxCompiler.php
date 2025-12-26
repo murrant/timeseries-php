@@ -10,8 +10,8 @@ use TimeseriesPhp\Core\Timeseries\Resolution;
 class InfluxCompiler implements GraphCompiler
 {
 
-    public function compile(GraphDefinition $graph, TimeRange $range, ?Resolution $resolution = null,): InfluxQuery
+    public function compile(GraphDefinition $graph, TimeRange $range, ?Resolution $resolution = null): InfluxQuery
     {
-        return new InfluxQuery();
+        return new InfluxQuery($range, $resolution ?? Resolution::auto());
     }
 }

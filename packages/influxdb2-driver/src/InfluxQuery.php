@@ -3,8 +3,16 @@
 namespace TimeseriesPhp\Driver\InfluxDB2;
 
 use TimeseriesPhp\Core\Contracts\CompiledQuery;
+use TimeseriesPhp\Core\Time\TimeRange;
+use TimeseriesPhp\Core\Timeseries\Resolution;
 
 class InfluxQuery implements CompiledQuery
 {
+    public function __construct(
+        public readonly TimeRange $range,
+        public readonly Resolution $resolution,
+    )
+    {
 
+    }
 }
