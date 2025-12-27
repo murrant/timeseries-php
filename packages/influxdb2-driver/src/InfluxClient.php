@@ -18,7 +18,9 @@ use TimeseriesPhp\Core\Timeseries\TimeSeriesResult;
 class InfluxClient implements TsdbClient
 {
     private readonly ClientInterface $httpClient;
+
     private readonly RequestFactoryInterface $requestFactory;
+
     private readonly StreamFactoryInterface $streamFactory;
 
     public function __construct(
@@ -80,7 +82,7 @@ class InfluxClient implements TsdbClient
         // We need to group by series (table).
         // In Flux, each table result corresponds to a unique combination of tags.
         // The 'result' column (usually _result) or 'table' column helps identify groups.
-        
+
         // We need to find the header line to map columns.
         $headers = [];
 
@@ -89,7 +91,7 @@ class InfluxClient implements TsdbClient
             if ($line === '') {
                 continue;
             }
-            
+
             // Skip annotation lines (start with #)
             if (str_starts_with($line, '#')) {
                 continue;
@@ -99,14 +101,15 @@ class InfluxClient implements TsdbClient
 
             // If it's the header line
             if (empty($headers) || (isset($parts[1]) && $parts[1] === 'result' && $parts[2] === 'table')) {
-                 // This looks like a header line.
-                 // Note: InfluxDB CSV can have multiple tables concatenated, each with its own header if the schema differs?
-                 // Usually for a single query, the schema is consistent or we handle multiple tables.
-                 // Let's assume we might encounter headers again.
-                 $headers = $parts;
-                 continue;
+                // This looks like a header line.
+                // Note: InfluxDB CSV can have multiple tables concatenated, each with its own header if the schema differs?
+                // Usually for a single query, the schema is consistent or we handle multiple tables.
+                // Let's assume we might encounter headers again.
+                $headers = $parts;
+
+                continue;
             }
-            
+
             // It's a data line
             $row = [];
             foreach ($parts as $index => $value) {
@@ -114,8 +117,10 @@ class InfluxClient implements TsdbClient
                     $row[$headers[$index]] = $value;
                 }
             }
-            
-            if (empty($row)) continue;
+
+            if (empty($row)) {
+                continue;
+            }
 
             // Group by table ID
             $tableId = $row['table'] ?? '0';
@@ -125,30 +130,32 @@ class InfluxClient implements TsdbClient
         $resultSeries = [];
 
         foreach ($seriesData as $rows) {
-            if (empty($rows)) continue;
+            if (empty($rows)) {
+                continue;
+            }
 
             // Extract metric name and labels from the first row
             $firstRow = $rows[0];
             $metric = $firstRow['_measurement'] ?? 'unknown';
-            
+
             // Labels are all columns that are not internal fields
             $labels = [];
             $exclude = ['result', 'table', '_start', '_stop', '_time', '_value', '_field', '_measurement', ''];
             foreach ($firstRow as $key => $value) {
-                if (!in_array($key, $exclude)) {
+                if (! in_array($key, $exclude)) {
                     $labels[$key] = $value;
                 }
             }
 
             $points = [];
             foreach ($rows as $row) {
-                if (!isset($row['_time']) || !isset($row['_value'])) {
+                if (! isset($row['_time']) || ! isset($row['_value'])) {
                     continue;
                 }
-                
+
                 $timestamp = strtotime($row['_time']);
-                $value = is_numeric($row['_value']) ? (float)$row['_value'] : $row['_value'];
-                
+                $value = is_numeric($row['_value']) ? (float) $row['_value'] : $row['_value'];
+
                 $points[] = new DataPoint($timestamp, $value);
             }
 

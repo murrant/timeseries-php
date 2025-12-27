@@ -22,7 +22,7 @@ final readonly class SeriesDefinition
             variables: array_map(GraphVariable::fromArray(...), $raw['variables'] ?? []),
             legend: $raw['legend'] ?? null,
             aggregation: isset($raw['aggregation']) ? Aggregation::from($raw['aggregation']) : Aggregation::AVG,
-            style: $raw['style'] ?? null,
+            style: isset($raw['style']) ? SeriesStyle::fromArray($raw['style']) : null,
         );
     }
 }

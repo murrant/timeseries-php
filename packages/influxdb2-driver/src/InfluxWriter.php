@@ -16,7 +16,9 @@ use TimeseriesPhp\Core\Metrics\MetricSample;
 class InfluxWriter implements TsdbWriter
 {
     private readonly ClientInterface $httpClient;
+
     private readonly RequestFactoryInterface $requestFactory;
+
     private readonly StreamFactoryInterface $streamFactory;
 
     public function __construct(

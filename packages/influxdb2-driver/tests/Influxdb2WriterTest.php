@@ -15,7 +15,7 @@ use TimeseriesPhp\Core\Metrics\MetricSample;
 use TimeseriesPhp\Driver\InfluxDB2\InfluxConfig;
 use TimeseriesPhp\Driver\InfluxDB2\InfluxWriter;
 
-it('writes a metric sample to influxdb2', function () {
+it('writes a metric sample to influxdb2', function (): void {
     $httpClient = mock(ClientInterface::class);
     $requestFactory = mock(RequestFactoryInterface::class);
     $streamFactory = mock(StreamFactoryInterface::class);
@@ -79,7 +79,7 @@ it('writes a metric sample to influxdb2', function () {
     $writer->write($sample);
 });
 
-it('escapes special characters in line protocol', function () {
+it('escapes special characters in line protocol', function (): void {
     $httpClient = mock(ClientInterface::class);
     $requestFactory = mock(RequestFactoryInterface::class);
     $streamFactory = mock(StreamFactoryInterface::class);

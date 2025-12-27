@@ -38,15 +38,18 @@ final readonly class GraphDefinition
             title: $raw['title'],
             description: $raw['description'] ?? null,
             variables: array_map(GraphVariable::fromArray(...), $raw['variables'] ?? []),
-            series: $raw['series'] ?? [],
-            defaultRange: isset($raw['defaultRange']) && is_array($raw['defaultRange']) ? new TimeRange(...$raw['defaultRange']) : null,
-            defaultResolution: new Resolution($raw['defaultResolution'] ?? []),
-            style: isset($raw['style']) ? GraphStyle::fromArray($raw['style']) : null,
+            series: array_map(SeriesDefinition::fromArray(...), $raw['series'] ?? []),
+            style: isset($raw['style']) ? GraphStyle::fromArray($raw['style']) : new GraphStyle(GraphType::LINE),
+            defaultRange: isset($raw['defaultRange']) && is_array($raw['defaultRange']) ? new TimeRange(...$raw['defaultRange']) : null, // @phpstan-ignore-line
+            defaultResolution: isset($raw['defaultResolution']) && is_array($raw['defaultResolution']) ? Resolution::fromArray($raw['defaultResolution']) : null,
             requiredCapabilities: $raw['requiredCapabilities'] ?? [],
             metadata: $raw['metadata'] ?? [],
         );
     }
 
+    /**
+     * @return string[]
+     */
     public function requiredCapabilities(): array
     {
         return $this->requiredCapabilities; // FIXME empty

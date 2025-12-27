@@ -37,6 +37,9 @@ final class DriverResolver
         return $newInstance;
     }
 
+    /**
+     * @return array<string, string>
+     */
     public static function discoverDrivers(): array
     {
         $packageNames = InstalledVersions::getInstalledPackagesByType('timeseries-php-driver');
@@ -48,13 +51,15 @@ final class DriverResolver
         $drivers = [];
 
         // FIXME maybe not parsing composer.json files every boot
-        foreach($packageNames as $packageName) {
+        foreach ($packageNames as $packageName) {
             $packagePath = InstalledVersions::getInstallPath($packageName);
-            $composerJsonPath = $packagePath . '/composer.json';
+            $composerJsonPath = $packagePath.'/composer.json';
             if (file_exists($composerJsonPath)) {
-                $packageJson = json_decode(file_get_contents($composerJsonPath), true);
-                $driverClass = $packageJson['extra']['timeseries-php']['driver-class'] ?? [];
-                $drivers[$packageName] = $driverClass;
+                $packageJson = json_decode((string) file_get_contents($composerJsonPath), true);
+                $driverClass = $packageJson['extra']['timeseries-php']['driver-class'] ?? null;
+                if ($driverClass) {
+                    $drivers[$packageName] = $driverClass;
+                }
             }
         }
 

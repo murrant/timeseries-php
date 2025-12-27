@@ -17,4 +17,9 @@ final readonly class Resolution
     {
         return new self($minutes * 60);
     }
+
+    public static function fromArray(array $raw): self
+    {
+        return new self($raw['seconds'] ?? null);
+    }
 }

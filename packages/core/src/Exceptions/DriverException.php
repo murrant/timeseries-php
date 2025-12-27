@@ -2,6 +2,4 @@
 
 namespace TimeseriesPhp\Core\Exceptions;
 
-class DriverException extends TimeseriesException
-{
-}
+class DriverException extends TimeseriesException {}

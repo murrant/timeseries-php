@@ -2,11 +2,11 @@
 
 namespace TimeseriesPhp\Core\Graph;
 
-final class BoundGraph
+final readonly class BoundGraph
 {
     public function __construct(
-        public readonly GraphDefinition $definition,
+        public GraphDefinition $definition,
         /** @var array<string, VariableBinding> */
-        public readonly array $bindings,
+        public array $bindings,
     ) {}
 }

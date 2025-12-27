@@ -30,10 +30,12 @@ final readonly class GraphService
         return $this->graphs->load($name);
     }
 
+    /**
+     * @param  VariableBinding[]  $bindings
+     */
     public function render(
         string|GraphDefinition $graph,
         TimeRange $range,
-        /** @var VariableBinding[] */
         array $bindings = [],
         ?Resolution $resolution = null,
     ): TimeSeriesResult {
@@ -44,17 +46,17 @@ final readonly class GraphService
             : $graph;
 
         // 2. Bind template variables
-        $graph = $this->bindVariables($definition, $bindings);
+        $boundGraph = $this->bindVariables($definition, $bindings);
 
         // 3. Validate graph semantics
-        $this->validateGraph($graph);
+        $this->validateGraph($boundGraph);
 
         // 4. Enforce driver capabilities
-        $this->enforceCapabilities($graph);
+        $this->enforceCapabilities($boundGraph);
 
         // 5. Compile graph to backend query
         $compiled = $this->compiler->compile(
-            graph: $graph,
+            graph: $boundGraph,
             range: $range,
             resolution: $resolution,
         );
@@ -117,6 +119,9 @@ final readonly class GraphService
         // FIXME validate something I guess...
     }
 
+    /**
+     * @param  VariableBinding[]  $bindings
+     */
     private function bindVariables(GraphDefinition $graph, array $bindings): BoundGraph
     {
         $variables = [];
@@ -125,14 +130,14 @@ final readonly class GraphService
         foreach ($graph->variables as $var) {
             $binding = $bindings[$var->name] ?? null;
 
-            if (!$binding && $var->required) {
+            if (! $binding && $var->required) {
                 throw new InvalidGraphException(
                     "Missing required variable '{$var->name}'"
                 );
             }
 
             if ($binding) {
-                if (!in_array($binding->operator, $var->allowedOperators, true)) {
+                if (! in_array($binding->operator, $var->allowedOperators, true)) {
                     throw new InvalidGraphException(
                         "Operator not allowed for '{$var->name}'"
                     );

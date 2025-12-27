@@ -20,12 +20,12 @@ final readonly class InfluxCompiler implements GraphCompiler
 
     public function compile(BoundGraph $graph, TimeRange $range, ?Resolution $resolution = null): InfluxQuery
     {
-        $resolution = $resolution ?? Resolution::auto();
-        
+        $resolution ??= Resolution::auto();
+
         // Define range variables for Flux
         $start = $range->start->format(DateTimeInterface::RFC3339);
         $end = $range->end->format(DateTimeInterface::RFC3339);
-        
+
         $flux = [
             sprintf('rangeStart = time(v: "%s")', $start),
             sprintf('rangeStop = time(v: "%s")', $end),
@@ -39,7 +39,7 @@ final readonly class InfluxCompiler implements GraphCompiler
     }
 
     /**
-     * @param VariableBinding[] $bindings
+     * @param  VariableBinding[]  $bindings
      * @return string[]
      */
     private function compileSeries(SeriesDefinition $series, Resolution $resolution, array $bindings): array
@@ -56,13 +56,13 @@ final readonly class InfluxCompiler implements GraphCompiler
             };
             // Escape double quotes in value if needed
             $val = $binding->value;
-            if ($binding->operator !== MatchType::REGEX) {
-                 $val = '"' . str_replace('"', '\\"', $val) . '"';
+            if ($binding->operator !== MatchType::REGEX && is_string($val)) {
+                $val = '"'.str_replace('"', '\\"', $val).'"';
             }
-            
+
             $filters[] = sprintf('r["%s"] %s %s', $binding->label, $op, $val);
         }
-        
+
         // Also filter by _field if necessary, but usually we just want the value.
         // In InfluxWriter we write 'value=...'. So _field is 'value'.
         $filters[] = 'r["_field"] == "value"';
@@ -72,18 +72,18 @@ final readonly class InfluxCompiler implements GraphCompiler
         $flux = [
             sprintf('from(bucket: "%s")', $this->config->bucket),
             ' |> range(start: rangeStart, stop: rangeStop)',
-            ' |> filter(fn: (r) => ' . $filterString . ')',
+            ' |> filter(fn: (r) => '.$filterString.')',
         ];
 
         // Aggregation
         if ($series->aggregation !== Aggregation::NONE) {
-            $window = $resolution->seconds ? $resolution->seconds . 's' : '1m'; // Default window if not specified
-            
+            $window = $resolution->seconds ? $resolution->seconds.'s' : '1m'; // Default window if not specified
+
             if ($series->aggregation === Aggregation::RATE) {
-                 // Rate usually implies derivative.
-                 // Calculate rate per second, then downsample
-                 $flux[] = ' |> derivative(unit: 1s, nonNegative: true)';
-                 $flux[] = sprintf(' |> aggregateWindow(every: %s, fn: mean, createEmpty: false)', $window);
+                // Rate usually implies derivative.
+                // Calculate rate per second, then downsample
+                $flux[] = ' |> derivative(unit: 1s, nonNegative: true)';
+                $flux[] = sprintf(' |> aggregateWindow(every: %s, fn: mean, createEmpty: false)', $window);
             } else {
                 $aggFunc = match ($series->aggregation) {
                     Aggregation::SUM => 'sum',
@@ -94,7 +94,7 @@ final readonly class InfluxCompiler implements GraphCompiler
                 $flux[] = sprintf(' |> aggregateWindow(every: %s, fn: %s, createEmpty: false)', $window, $aggFunc);
             }
         }
-        
+
         // Yield to separate series
         $flux[] = sprintf(' |> yield(name: "%s")', $series->legend ?? $series->metric);
 

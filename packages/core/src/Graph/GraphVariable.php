@@ -21,9 +21,9 @@ final readonly class GraphVariable
         return new self(
             name: $variable['name'],
             type: VariableType::from($variable['type']),
-            required: $variable['required'],
-            default: $variable['default'],
-            allowedOperators: array_map(MatchType::from(...), $variable['allowedOperators'] ?? [MatchType::EQUALS]),
+            required: $variable['required'] ?? false,
+            default: $variable['default'] ?? null,
+            allowedOperators: array_map(MatchType::from(...), $variable['allowedOperators'] ?? ['=']), // @phpstan-ignore-line
         );
     }
 }

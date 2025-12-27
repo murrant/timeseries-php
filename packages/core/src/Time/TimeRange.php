@@ -72,6 +72,6 @@ final readonly class TimeRange
 
     public function equals(TimeRange $range): bool
     {
-        return $this->start === $range->start && $this->end === $range->end;
+        return $this->start->getTimestamp() === $range->start->getTimestamp() && $this->end->getTimestamp() === $range->end->getTimestamp();
     }
 }
