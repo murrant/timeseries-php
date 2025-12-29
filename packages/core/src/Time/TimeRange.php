@@ -70,6 +70,20 @@ final readonly class TimeRange
         );
     }
 
+    public static function lastHours(int $hours): self
+    {
+        return new self(
+            duration: new DateInterval("PT{$hours}H")
+        );
+    }
+
+    public static function lastDays(int $days): self
+    {
+        return new self(
+            duration: new DateInterval("P{$days}D")
+        );
+    }
+
     public function equals(TimeRange $range): bool
     {
         return $this->start->getTimestamp() === $range->start->getTimestamp() && $this->end->getTimestamp() === $range->end->getTimestamp();

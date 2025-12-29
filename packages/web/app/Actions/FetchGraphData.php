@@ -13,11 +13,11 @@ class FetchGraphData
         private readonly GraphService $graphService,
     ) {}
 
-    public function execute(string $graph_id, ?string $host, ?string $ifName): TimeSeriesResult
+    public function execute(string $graph_id, ?string $host = null, ?string $ifName = null, ?TimeRange $range = null): TimeSeriesResult
     {
         return $this->graphService->render(
             $graph_id,
-            TimeRange::lastMinutes(60),
+            $range ?? TimeRange::lastMinutes(60),
             [
                 new VariableBinding('host', $host),
                 new VariableBinding('ifName', $ifName),
