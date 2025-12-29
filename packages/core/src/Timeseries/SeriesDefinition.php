@@ -25,4 +25,15 @@ final readonly class SeriesDefinition
             style: isset($raw['style']) ? SeriesStyle::fromArray($raw['style']) : null,
         );
     }
+
+    public function toArray(): array
+    {
+        return [
+            'metric' => $this->metric,
+            'variables' => array_map(fn (GraphVariable $var) => $var->toArray(), $this->variables),
+            'legend' => $this->legend,
+            'aggregation' => $this->aggregation->name,
+            'style' => $this->style?->toArray(),
+        ];
+    }
 }

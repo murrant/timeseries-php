@@ -26,4 +26,19 @@ final readonly class GraphStyle
             options: $style['options'] ?? [],
         );
     }
+
+    /**
+     * @return array{type: string, unit: null|string, stack: bool, min: float|null, max: float|null, options: array}
+     */
+    public function toArray(): array
+    {
+        return [
+            'type' => $this->type->name,
+            'unit' => $this->unit,
+            'stack' => $this->stack,
+            'min' => $this->min,
+            'max' => $this->max,
+            'options' => $this->options,
+        ];
+    }
 }

@@ -2,6 +2,7 @@
     "name": "timseries-php/monorepo",
     "require": {
         "composer-runtime-api": "^2.0",
+        "filament/filament": "^4.0",
         "illuminate/contracts": "^11.0||^12.0",
         "illuminate/support": "^11.0||^12.0",
         "laravel/fortify": "^1.30",
@@ -34,7 +35,8 @@
         "timeseries-php/laravel": "self.version",
         "timeseries-php/laravel-bridge": "self.version",
         "timeseries-php/null-driver": "self.version",
-        "timeseries-php/rrd-driver": "self.version"
+        "timeseries-php/rrd-driver": "self.version",
+        "timeseries-php/web": "self.version"
     },
     "repositories": [
         {

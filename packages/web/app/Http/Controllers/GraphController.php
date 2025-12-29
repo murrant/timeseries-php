@@ -2,25 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\FetchGraphData;
+use App\Actions\ListGraphs;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use TimeseriesPhp\Core\Graph\GraphService;
-use TimeseriesPhp\Core\Graph\VariableBinding;
-use TimeseriesPhp\Core\Time\TimeRange;
+use TimeseriesPhp\Core\Graph\GraphDefinition;
 
 class GraphController
 {
-    public function show(string $graph, Request $request, GraphService $graphs): JsonResponse
+    public function index(ListGraphs $graphListAction): JsonResponse
     {
-        $result = $graphs->render(
-            $graphs->load($graph),
-            TimeRange::lastMinutes(60),
-            [
-                new VariableBinding('host', $request->input('host')),
-                new VariableBinding('ifName', $request->input('ifName')),
-            ],
-        );
+        $defs = $graphListAction->execute();
 
-        return response()->json($result);
+        return response()->json(array_map(fn (GraphDefinition $def) => $def->toArray(), $defs));
+    }
+
+    public function show(string $graph, Request $request, FetchGraphData $graphDataAction): JsonResponse
+    {
+        $data = $graphDataAction->execute($graph, $request->input('host'), $request->input('ifName'));
+
+        return response()->json($data);
     }
 }

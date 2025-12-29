@@ -47,6 +47,22 @@ final readonly class GraphDefinition
         );
     }
 
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+            'description' => $this->description,
+            'variables' => array_map(fn (GraphVariable $var) => $var->toArray(), $this->variables),
+            'series' => array_map(fn (SeriesDefinition $series) => $series->toArray(), $this->series),
+            'style' => $this->style->toArray(),
+            'defaultRange' => $this->defaultRange,
+            'defaultResolution' => $this->defaultResolution,
+            'requiredCapabilities' => $this->requiredCapabilities,
+            'metadata' => $this->metadata,
+        ];
+    }
+
     /**
      * @return string[]
      */

@@ -42,6 +42,7 @@ class ServiceProvider extends BaseServiceProvider
 
         $driver = config('tsdb.driver', 'null');
         $discoverDrivers = DriverResolver::discoverDrivers();
+        // TODO throw non-existent driver exception
 
         foreach ($discoverDrivers as $driverClass) {
             $definition = DriverResolver::resolve($driverClass);

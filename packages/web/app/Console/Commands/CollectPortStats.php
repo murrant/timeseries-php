@@ -124,7 +124,7 @@ class CollectPortStats extends Command
      */
     private function convertToMetrics(array $interfaces, MetricRepository $metricRepository): array
     {
-        $host = gethostname();
+        $host = gethostname() ?: 'localhost';
         $metrics = [];
         $timestamp = new \DateTimeImmutable;
 

@@ -9,7 +9,7 @@ use TimeseriesPhp\Core\Contracts\Driver;
 use TimeseriesPhp\Core\Contracts\TsdbCapabilities;
 
 #[TsdbDriver(
-    name: 'Null',
+    name: 'null',
     config: NullConfig::class,
     writer: NullWriter::class,
     compiler: NullCompiler::class,

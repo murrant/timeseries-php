@@ -24,4 +24,18 @@ final readonly class SeriesStyle
             options: $raw['options'] ?? [],
         );
     }
+
+    /**
+     * @return array{type: string, axis: null|string, hidden: bool, color: null|string, options: array}
+     */
+    public function toArray(): array
+    {
+        return [
+            'type' => $this->type->name,
+            'axis' => $this->axis,
+            'hidden' => $this->hidden,
+            'color' => $this->color,
+            'options' => $this->options,
+        ];
+    }
 }

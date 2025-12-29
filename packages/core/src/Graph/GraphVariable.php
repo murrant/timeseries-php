@@ -23,7 +23,21 @@ final readonly class GraphVariable
             type: VariableType::from($variable['type']),
             required: $variable['required'] ?? false,
             default: $variable['default'] ?? null,
-            allowedOperators: array_map(MatchType::from(...), $variable['allowedOperators'] ?? ['=']), // @phpstan-ignore-line
+            allowedOperators: array_map(MatchType::from(...), $variable['allowedOperators'] ?? ['=']),
         );
+    }
+
+    /**
+     * @return array{name: string, type: string, required: bool, default: mixed|null, allowedOperators: mixed}
+     */
+    public function toArray(): array
+    {
+        return [
+            'name' => $this->name,
+            'type' => $this->type->name,
+            'required' => $this->required,
+            'default' => $this->default,
+            'allowedOperators' => array_map(fn (MatchType $op) => $op->name, $this->allowedOperators),
+        ];
     }
 }
