@@ -3,7 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Actions\FetchGraphData;
-use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Schemas\Schema;
 use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
@@ -11,7 +11,7 @@ use Filament\Widgets\ChartWidget\Concerns\HasFiltersSchema;
 use TimeseriesPhp\Core\Time\TimeRange;
 use TimeseriesPhp\Core\Timeseries\TimeSeriesResult;
 
-class PortTraffic extends ChartWidget
+class PortTrafficChart extends ChartWidget
 {
     use HasFiltersSchema;
 
@@ -19,7 +19,6 @@ class PortTraffic extends ChartWidget
     protected static ?int $sort = 2;
     protected ?string $pollingInterval = '60s';
     protected int | string | array $columnSpan = 'full';
-    public ?string $filter = '24h';
 
     protected function getData(): array
     {
@@ -39,7 +38,7 @@ class PortTraffic extends ChartWidget
         if (!empty($timeSeriesResult->series)) {
             $firstSeries = $timeSeriesResult->series[0];
             foreach ($firstSeries->points as $point) {
-                $labels[] = $point->timestamp * 1000;
+                $labels[] = $point->timestamp * 1000; // Convert seconds to milliseconds
             }
         }
 
@@ -171,23 +170,12 @@ class PortTraffic extends ChartWidget
         JS);
     }
 
-    protected function getFilters(): ?array
-    {
-        return [
-            '1h' => 'Last hour',
-            '6h' => 'Last 6 hours',
-            '24h' => 'Last 24 hours',
-            '7d' => 'Last 7 days',
-            '30d' => 'Last 30 days',
-        ];
-    }
-
     /**
      * Get the time series data based on the selected filter
      */
     protected function getTimeSeriesData(): TimeSeriesResult
     {
-        $range = match($this->filter) {
+        $range = match($this->filters['timeRange'] ?? null) {
             '1h' => TimeRange::lastHours(1),
             '6h' => TimeRange::lastHours(6),
             '24h' => TimeRange::lastDays(1),
@@ -196,7 +184,40 @@ class PortTraffic extends ChartWidget
             default => TimeRange::lastHours(6),
         };
 
-        return $timeSeriesResult = app(FetchGraphData::class)->execute('host_port_bandwidth', range: $range);
+        return app(FetchGraphData::class)->execute(
+            'host_port_bandwidth',
+            $this->filters['hostname'] ?? null,
+            $this->filters['ifName'] ?? null,
+            range: $range
+        );
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getFilters(): ?array
+    {
+        return null;
+    }
+
+    /**
+     * Get available hostnames from data source
+     */
+    protected function getAvailableHostnames(): array
+    {
+        // Implement this to return hostname options
+        // Example: return ['host1' => 'Server 1', 'host2' => 'Server 2'];
+        return [];
+    }
+
+    /**
+     * Get available interface names from data source
+     */
+    protected function getAvailableIfNames(): array
+    {
+        // Implement this to return interface name options
+        // Example: return ['eth0' => 'eth0', 'eth1' => 'eth1'];
+        return [];
     }
 
     /**
@@ -217,10 +238,24 @@ class PortTraffic extends ChartWidget
     public function filtersSchema(Schema $schema): Schema
     {
         return $schema->components([
-            DatePicker::make('startDate')
-                ->default(now()->subDays(30)),
-            DatePicker::make('endDate')
-                ->default(now()),
+            Select::make('timeRange')
+                ->label('Time Range')
+                ->options([
+                    '1h' => 'Last hour',
+                    '6h' => 'Last 6 hours',
+                    '24h' => 'Last 24 hours',
+                    '7d' => 'Last 7 days',
+                    '30d' => 'Last 30 days',
+                ])
+                ->default('6h'),
+            Select::make('hostname')
+                ->label('Hostname')
+                ->options(fn() => ['all' => 'All Hosts'] + $this->getAvailableHostnames())
+                ->default('all'),
+            Select::make('ifName')
+                ->label('Interface')
+                ->options(fn() => ['all' => 'All Interfaces'] + $this->getAvailableIfNames())
+                ->default('all'),
         ]);
     }
 }

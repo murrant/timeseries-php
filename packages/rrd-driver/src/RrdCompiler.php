@@ -3,14 +3,12 @@
 namespace TimeseriesPhp\Driver\RRD;
 
 use TimeseriesPhp\Core\Contracts\CompiledQuery;
-use TimeseriesPhp\Core\Contracts\GraphCompiler;
-use TimeseriesPhp\Core\Graph\BoundGraph;
-use TimeseriesPhp\Core\Time\TimeRange;
-use TimeseriesPhp\Core\Timeseries\Resolution;
+use TimeseriesPhp\Core\Contracts\Query;
+use TimeseriesPhp\Core\Contracts\QueryCompiler;
 
-class RrdCompiler implements GraphCompiler
+class RrdCompiler implements QueryCompiler
 {
-    public function compile(BoundGraph $graph, TimeRange $range, ?Resolution $resolution = null): CompiledQuery
+    public function compile(Query $query): CompiledQuery
     {
         return new RrdQuery;
     }

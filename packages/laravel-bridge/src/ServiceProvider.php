@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace TimeseriesPhp\Bridge\Laravel;
 
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-use TimeseriesPhp\Core\Contracts\GraphCompiler;
 use TimeseriesPhp\Core\Contracts\GraphRepository;
 use TimeseriesPhp\Core\Contracts\MetricRepository;
+use TimeseriesPhp\Core\Contracts\QueryCompiler;
 use TimeseriesPhp\Core\Contracts\TsdbCapabilities;
 use TimeseriesPhp\Core\Contracts\TsdbClient;
 use TimeseriesPhp\Core\Contracts\TsdbWriter;
@@ -54,7 +54,7 @@ class ServiceProvider extends BaseServiceProvider
 
             if ($definition->name == $driver) {
                 $this->app->bind(TsdbWriter::class, $definition->writer);
-                $this->app->bind(GraphCompiler::class, $definition->compiler);
+                $this->app->bind(QueryCompiler::class, $definition->compiler);
                 $this->app->bind(TsdbClient::class, $definition->client);
                 $this->app->bind(TsdbCapabilities::class, $definition->capabilities);
             }

@@ -3,7 +3,7 @@
 namespace TimeseriesPhp\Driver\InfluxDB2;
 
 use DateTimeInterface;
-use TimeseriesPhp\Core\Contracts\GraphCompiler;
+use TimeseriesPhp\Core\Contracts\QueryCompiler;
 use TimeseriesPhp\Core\Enum\Aggregation;
 use TimeseriesPhp\Core\Enum\MatchType;
 use TimeseriesPhp\Core\Graph\BoundGraph;
@@ -12,7 +12,7 @@ use TimeseriesPhp\Core\Time\TimeRange;
 use TimeseriesPhp\Core\Timeseries\Resolution;
 use TimeseriesPhp\Core\Timeseries\SeriesDefinition;
 
-final readonly class InfluxCompiler implements GraphCompiler
+final readonly class InfluxCompiler implements QueryCompiler
 {
     public function __construct(
         private InfluxConfig $config

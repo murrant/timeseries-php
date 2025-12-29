@@ -3,7 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Widgets\GraphListWidget;
-use App\Filament\Widgets\PortTraffic;
+use App\Filament\Widgets\PortTrafficChart;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -41,7 +41,7 @@ class TimeseriesPhpPanelProvider extends PanelProvider
                 //                AccountWidget::class,
                 FilamentInfoWidget::class,
                 GraphListWidget::class,
-                PortTraffic::class,
+                PortTrafficChart::class,
             ])
             ->middleware([
                 EncryptCookies::class,
