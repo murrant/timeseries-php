@@ -11,4 +11,11 @@ class RrdWriter implements TsdbWriter
     {
         // TODO: Implement write() method.
     }
+
+    public function writeBatch(array $samples): void
+    {
+        foreach ($samples as $sample) {
+            $this->write($sample);
+        }
+    }
 }

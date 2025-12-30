@@ -39,6 +39,23 @@ class InfluxWriter implements TsdbWriter
     {
         $line = $this->formatLineProtocol($sample);
 
+        $this->sendWrite($line);
+    }
+
+    /**
+     * @param  MetricSample[]  $samples
+     *
+     * @throws TimeseriesException
+     */
+    public function writeBatch(array $samples): void
+    {
+        $lines = array_reduce($samples, fn ($prev, $sample) => $prev."\n".$this->formatLineProtocol($sample), '');
+
+        $this->sendWrite($lines);
+    }
+
+    private function sendWrite(string $body): void
+    {
         $url = $this->config->host.':'.$this->config->port.'/api/v2/write?'.http_build_query([
             'org' => $this->config->org,
             'bucket' => $this->config->bucket,
@@ -48,7 +65,7 @@ class InfluxWriter implements TsdbWriter
         $request = $this->requestFactory->createRequest('POST', $url)
             ->withHeader('Authorization', 'Token '.$this->config->token)
             ->withHeader('Content-Type', 'text/plain; charset=utf-8')
-            ->withBody($this->streamFactory->createStream($line));
+            ->withBody($this->streamFactory->createStream($body));
 
         try {
             $response = $this->httpClient->sendRequest($request);

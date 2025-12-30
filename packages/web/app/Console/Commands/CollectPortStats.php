@@ -28,13 +28,27 @@ class CollectPortStats extends Command
      */
     public function handle(TsdbWriter $writer, MetricRepository $metricRepository): void
     {
+        $durations = [];
+        $command_start = microtime(true);
         $output = $this->executeCommand();
+        $durations[] = ['op' => 'command', 'time' => microtime(true) - $command_start];
+
+        $start = microtime(true);
         $interfaces = $this->parseOutput($output);
+        $durations[] = ['op' => 'parse', 'time' => microtime(true) - $start];
 
+        $start = microtime(true);
         $metrics = $this->convertToMetrics($interfaces, $metricRepository);
+        $durations[] = ['op' => 'convert', 'time' => microtime(true) - $start];
 
-        foreach ($metrics as $metric) {
-            $writer->write($metric);
+        $start = microtime(true);
+        $writer->writeBatch($metrics);
+        $durations[] = ['op' => 'write', 'time' => microtime(true) - $start];
+
+        if ($this->getOutput()->isVerbose()) {
+            $durations[] = ['op' => 'total', 'time' => microtime(true) - $command_start];
+
+            $this->table(['op', 'time'], $durations);
         }
     }
 

@@ -62,7 +62,7 @@ class PortTrafficChart extends ChartWidget
             $color = $colors[$index % count($colors)];
 
             $datasets[] = [
-                'label' => $portLabel . ' ' . ($series->alias ?? $series->metric),
+                'label' => $portLabel.' '.($series->alias ?? $series->metric),
                 'data' => array_map(fn ($point) => $point->value, $series->points),
                 'borderColor' => $color,
                 'backgroundColor' => str_replace('0.8', '0.1', $color),
