@@ -25,7 +25,7 @@ class TimeseriesPhpPanelProvider extends PanelProvider
             ->default()
             ->id('timeseries-php')
             ->path('')
-//            ->login(null)
+//            ->login()
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -38,7 +38,6 @@ class TimeseriesPhpPanelProvider extends PanelProvider
             ->widgets([
                 //                AccountWidget::class,
                 //                FilamentInfoWidget::class,
-                //                GraphListWidget::class,
                 PortTrafficChart::class,
             ])
             ->middleware([

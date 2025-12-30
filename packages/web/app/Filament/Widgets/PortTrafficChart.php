@@ -20,7 +20,7 @@ class PortTrafficChart extends ChartWidget
 
     protected static ?int $sort = 2;
 
-    protected ?string $pollingInterval = '60s';
+    protected ?string $pollingInterval = '30s';
 
     protected int|string|array $columnSpan = 'full';
 
@@ -62,8 +62,8 @@ class PortTrafficChart extends ChartWidget
             $color = $colors[$index % count($colors)];
 
             $datasets[] = [
-                'label' => $portLabel,
-                'data' => array_map(fn ($point) => $point->value * 8, $series->points),  // FIXME transform in backend
+                'label' => $portLabel . ' ' . ($series->alias ?? $series->metric),
+                'data' => array_map(fn ($point) => $point->value, $series->points),
                 'borderColor' => $color,
                 'backgroundColor' => str_replace('0.8', '0.1', $color),
                 'fill' => true,
@@ -182,6 +182,7 @@ class PortTrafficChart extends ChartWidget
     protected function getTimeSeriesData(): TimeSeriesResult
     {
         $range = match ($this->filters['timeRange'] ?? null) {
+            '10m' => TimeRange::lastMinutes(10),
             '1h' => TimeRange::lastHours(1),
             '6h' => TimeRange::lastHours(6),
             '24h' => TimeRange::lastDays(1),
@@ -210,10 +211,15 @@ class PortTrafficChart extends ChartWidget
      */
     protected function getAvailableHostnames(): array
     {
-        $values = app(SchemaManager::class)->labels()
+        $query = app(SchemaManager::class)->labels()
             ->from('network.port.bytes.in')
-            ->from('network.port.bytes.out')
-            ->values('host')->values;
+            ->from('network.port.bytes.out');
+
+        if (isset($this->filters['hostname'])) {
+            $query->where('host', $this->filters['hostname']);
+        }
+
+        $values = $query->values('host')->values;
 
         return array_combine($values, $values);
     }
@@ -259,13 +265,14 @@ class PortTrafficChart extends ChartWidget
             Select::make('timeRange')
                 ->label('Time Range')
                 ->options([
+                    '10m' => 'Last 10 minutes',
                     '1h' => 'Last hour',
                     '6h' => 'Last 6 hours',
                     '24h' => 'Last 24 hours',
                     '7d' => 'Last 7 days',
                     '30d' => 'Last 30 days',
                 ])
-                ->default('6h'),
+                ->default('1h'),
             Select::make('hostname')
                 ->label('Hostname')
                 ->options(fn () => $this->getAvailableHostnames()),

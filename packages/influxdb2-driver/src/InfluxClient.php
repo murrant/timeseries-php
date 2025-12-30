@@ -174,14 +174,16 @@ class InfluxClient implements TsdbClient
     {
         $seriesData = [];
         foreach ($data as $row) {
+            $resultId = $row['result'] ?? '_result';
             $tableId = $row['table'] ?? '0';
-            $seriesData[$tableId][] = $row;
+            $seriesData[$resultId.'|'.$tableId][] = $row;
         }
 
         $resultSeries = [];
         foreach ($seriesData as $rows) {
             $firstRow = $rows[0];
-            $metric = $firstRow['_measurement'] ?? 'unknown';
+            $alias = $firstRow['result'] ?? null;
+            $measurement = $firstRow['_measurement'] ?? 'unknown';
 
             $labels = [];
             $exclude = ['result', 'table', '_start', '_stop', '_time', '_value', '_field', '_measurement', ''];
@@ -197,13 +199,13 @@ class InfluxClient implements TsdbClient
                     continue;
                 }
 
-                $timestamp = strtotime($row['_time']);
-                $value = is_numeric($row['_value']) ? (float) $row['_value'] : $row['_value'];
+                $timestamp = (int) strtotime($row['_time']);
+                $value = is_numeric($row['_value']) ? (float) $row['_value'] : null;
 
                 $points[] = new DataPoint($timestamp, $value);
             }
 
-            $resultSeries[] = new TimeSeries($metric, $labels, $points);
+            $resultSeries[] = new TimeSeries($measurement, $alias, $labels, $points);
         }
 
         return new TimeSeriesResult($resultSeries, $query->range, $query->resolution);

@@ -15,6 +15,7 @@ final readonly class TimeSeries implements \JsonSerializable
      */
     public function __construct(
         public string $metric,
+        public ?string $alias,
         public array $labels,
         public array $points,
     ) {}

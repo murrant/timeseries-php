@@ -91,7 +91,7 @@
                 "TSDB": "TimeseriesPhp\\Bridge\\Laravel\\Facade"
             },
             "providers": [
-              "TsdbServiceProvider"
+                "TimeseriesPhp\\Bridge\\Laravel\\TsdbServiceProvider"
             ]
         },
         "timeseries-php": {
