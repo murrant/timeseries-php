@@ -2,7 +2,9 @@
 
 namespace TimeseriesPhp\Driver\InfluxDB2;
 
-final readonly class InfluxConfig
+use TimeseriesPhp\Core\Contracts\TsdbConfig;
+
+final readonly class InfluxConfig implements TsdbConfig
 {
     public function __construct(
         public string $host,
@@ -12,6 +14,9 @@ final readonly class InfluxConfig
         public string $bucket = '',
     ) {}
 
+    /**
+     * @param  array{host: string, port: int, token: string, org: string, bucket: string}  $config
+     */
     public static function fromArray(array $config): self
     {
         return new self(...$config);

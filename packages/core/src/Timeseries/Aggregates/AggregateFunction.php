@@ -2,7 +2,7 @@
 
 namespace TimeseriesPhp\Core\Timeseries\Aggregates;
 
-use TimeseriesPhp\Core\Timeseries\DataPoint;
+use TimeseriesPhp\Core\Results\DataPoint;
 
 /**
  * Only implement simple aggregates, avoid math heavy aggregates

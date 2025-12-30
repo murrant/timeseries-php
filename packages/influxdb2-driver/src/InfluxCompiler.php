@@ -3,101 +3,237 @@
 namespace TimeseriesPhp\Driver\InfluxDB2;
 
 use DateTimeInterface;
+use TimeseriesPhp\Core\Contracts\CompiledQuery;
+use TimeseriesPhp\Core\Contracts\Operation;
+use TimeseriesPhp\Core\Contracts\Query;
 use TimeseriesPhp\Core\Contracts\QueryCompiler;
+use TimeseriesPhp\Core\Contracts\Result;
 use TimeseriesPhp\Core\Enum\Aggregation;
-use TimeseriesPhp\Core\Enum\MatchType;
-use TimeseriesPhp\Core\Graph\BoundGraph;
-use TimeseriesPhp\Core\Graph\VariableBinding;
-use TimeseriesPhp\Core\Time\TimeRange;
-use TimeseriesPhp\Core\Timeseries\Resolution;
-use TimeseriesPhp\Core\Timeseries\SeriesDefinition;
+use TimeseriesPhp\Core\Enum\OperationType;
+use TimeseriesPhp\Core\Enum\Operator;
+use TimeseriesPhp\Core\Enum\QueryType;
+use TimeseriesPhp\Core\Query\AST\DataQuery;
+use TimeseriesPhp\Core\Query\AST\Filter;
+use TimeseriesPhp\Core\Query\AST\LabelQuery;
+use TimeseriesPhp\Core\Query\AST\Operations\MathOperation;
+use TimeseriesPhp\Core\Query\AST\Resolution;
+use TimeseriesPhp\Core\Query\AST\Stream;
+use TimeseriesPhp\Core\Query\AST\TimeRange;
+use TimeseriesPhp\Core\Results\LabelResult;
+use TimeseriesPhp\Core\Results\TimeSeriesResult;
 
+/** @template TResult of Result */
 final readonly class InfluxCompiler implements QueryCompiler
 {
     public function __construct(
         private InfluxConfig $config
     ) {}
 
-    public function compile(BoundGraph $graph, TimeRange $range, ?Resolution $resolution = null): InfluxQuery
+    /**
+     * @param  Query<TResult>  $query
+     * @return CompiledQuery<TResult>
+     */
+    public function compile(Query $query): CompiledQuery
     {
-        $resolution ??= Resolution::auto();
+        if ($query instanceof DataQuery) {
+            /** @var CompiledQuery<TResult> */
+            return $this->compileDataQuery($query);
+        }
+        if ($query instanceof LabelQuery) {
+            /** @var CompiledQuery<TResult> */
+            return $this->compileLabelQuery($query);
+        }
+        throw new \InvalidArgumentException('Unsupported query type');
+    }
 
+    /**
+     * @return CompiledQuery<TimeSeriesResult>
+     */
+    private function compileDataQuery(DataQuery $query): CompiledQuery
+    {
         // Define range variables for Flux
-        $start = $range->start->format(DateTimeInterface::RFC3339);
-        $end = $range->end->format(DateTimeInterface::RFC3339);
+        $start = $query->period->start->format(DateTimeInterface::RFC3339);
+        $end = $query->period->end->format(DateTimeInterface::RFC3339);
 
         $flux = [
             sprintf('rangeStart = time(v: "%s")', $start),
             sprintf('rangeStop = time(v: "%s")', $end),
         ];
 
-        foreach ($graph->definition->series as $series) {
-            $flux = [...$flux, ...$this->compileSeries($series, $resolution, $graph->bindings)];
+        foreach ($query->streams as $stream) {
+            $flux = [...$flux, ...$this->compileStream($stream, $query->resolution)];
         }
 
-        return new InfluxQuery($flux, $range, $resolution);
+        /** @var InfluxQuery<TimeSeriesResult> $compiled */
+        $compiled = new InfluxQuery($flux, $query->period, $query->resolution);
+
+        return $compiled;
     }
 
     /**
-     * @param  VariableBinding[]  $bindings
      * @return string[]
      */
-    private function compileSeries(SeriesDefinition $series, Resolution $resolution, array $bindings): array
+    private function compileStream(Stream $stream, Resolution $resolution): array
     {
-        $filters = [];
-        // Assuming metric name is stored in _measurement
-        $filters[] = sprintf('r["_measurement"] == "%s"', $series->metric);
+        $flux = [
+            sprintf('from(bucket: "%s")', $this->config->bucket),
+            '|> range(start: rangeStart, stop: rangeStop)',
+            sprintf('|> filter(fn: (r) => r._measurement == "%s")', $stream->metric),
+        ];
 
-        foreach ($bindings as $binding) {
-            $op = match ($binding->operator) {
-                MatchType::NOT_EQUALS => '!=',
-                MatchType::REGEX => '~=',
-                default => '==',
-            };
-            // Escape double quotes in value if needed
-            $val = $binding->value;
-            if ($binding->operator !== MatchType::REGEX && is_string($val)) {
-                $val = '"'.str_replace('"', '\\"', $val).'"';
+        $flux = $this->compileFluxFilters($stream->filters, $flux);
+
+        $flux = $this->compilePipeline($stream->pipeline, $flux);
+
+        if ($resolution->seconds !== null) {
+            foreach ($stream->aggregations as $aggregation) {
+                $flux[] = sprintf(
+                    '|> aggregateWindow(every: %ds, fn: %s, createEmpty: false)',
+                    $resolution->seconds,
+                    $this->mapAggregation($aggregation)
+                );
             }
-
-            $filters[] = sprintf('r["%s"] %s %s', $binding->label, $op, $val);
         }
 
-        // Also filter by _field if necessary, but usually we just want the value.
-        // In InfluxWriter we write 'value=...'. So _field is 'value'.
-        $filters[] = 'r["_field"] == "value"';
+        if ($stream->alias) {
+            $flux[] = sprintf('|> yield(name: "%s")', $stream->alias);
+        }
 
-        $filterString = implode(' and ', $filters);
+        return $flux;
+    }
+
+    private function mapOperator(Operator $operator): string
+    {
+        return match ($operator) {
+            Operator::Equals => '==',
+            Operator::NotEquals => '!=',
+            Operator::GreaterThan => '>',
+            Operator::GreaterThanOrEqual => '>=',
+            Operator::LessThan => '<',
+            Operator::LessThanOrEqual => '<=',
+            Operator::RegexMatch => '=~',
+            Operator::RegexNotMatch => '!~',
+            default => throw new \InvalidArgumentException('Unsupported operator'),
+        };
+    }
+
+    private function mapAggregation(Aggregation $agg): string
+    {
+        return match ($agg) {
+            Aggregation::AVG => 'mean',
+            Aggregation::LAST => 'last',
+            Aggregation::MAX => 'max',
+            Aggregation::MEDIAN => 'median',
+            Aggregation::MIN => 'min',
+            Aggregation::SUM => 'sum',
+            default => throw new \InvalidArgumentException('Unsupported aggregation'),
+        };
+    }
+
+    /**
+     * @return CompiledQuery<LabelResult>
+     */
+    private function compileLabelQuery(LabelQuery $query): CompiledQuery
+    {
+        if (empty($query->metrics) && empty($query->filters) && $query->period === null) {
+            $flux = ['import "influxdata/influxdb/schema"'];
+            if ($query->label === null) {
+                $flux[] = sprintf('schema.measurements(bucket: "%s")', $this->config->bucket);
+            } else {
+                $flux[] = sprintf('schema.tagValues(bucket: "%s", tag: "%s")', $this->config->bucket, $query->label);
+            }
+
+            /** @var InfluxQuery<LabelResult> $compiled */
+            $compiled = new InfluxQuery($flux, new TimeRange(end: new \DateTimeImmutable, duration: new \DateInterval('PT1H')), Resolution::auto(), QueryType::Label);
+
+            return $compiled;
+        }
+
+        $period = $query->period ?? new TimeRange(end: new \DateTimeImmutable, duration: new \DateInterval('PT1H'));
+        $start = $period->start->format(DateTimeInterface::RFC3339);
+        $end = $period->end->format(DateTimeInterface::RFC3339);
 
         $flux = [
             sprintf('from(bucket: "%s")', $this->config->bucket),
-            ' |> range(start: rangeStart, stop: rangeStop)',
-            ' |> filter(fn: (r) => '.$filterString.')',
+            sprintf('|> range(start: time(v: "%s"), stop: time(v: "%s"))', $start, $end),
         ];
 
-        // Aggregation
-        if ($series->aggregation !== Aggregation::NONE) {
-            $window = $resolution->seconds ? $resolution->seconds.'s' : '1m'; // Default window if not specified
+        if (! empty($query->metrics)) {
+            $metricFilters = array_map(fn ($m) => sprintf('r._measurement == "%s"', $m), $query->metrics);
+            $flux[] = sprintf('|> filter(fn: (r) => %s)', implode(' or ', $metricFilters));
+        }
 
-            if ($series->aggregation === Aggregation::RATE) {
-                // Rate usually implies derivative.
-                // Calculate rate per second, then downsample
-                $flux[] = ' |> derivative(unit: 1s, nonNegative: true)';
-                $flux[] = sprintf(' |> aggregateWindow(every: %s, fn: mean, createEmpty: false)', $window);
+        $flux = $this->compileFluxFilters($query->filters, $flux);
+
+        if ($query->label === null) {
+            $flux[] = '|> keep(columns: ["_measurement"])';
+            $flux[] = '|> group()';
+            $flux[] = '|> distinct(column: "_measurement")';
+        } else {
+            $flux[] = sprintf('|> keep(columns: ["%s"])', $query->label);
+            $flux[] = '|> group()';
+            $flux[] = sprintf('|> distinct(column: "%s")', $query->label);
+        }
+
+        /** @var InfluxQuery<LabelResult> $compiled */
+        $compiled = new InfluxQuery($flux, $period, Resolution::auto(), QueryType::Label);
+
+        return $compiled;
+    }
+
+    /**
+     * @param  Filter[]  $filters
+     * @param  string[]  $flux
+     * @return string[]
+     */
+    private function compileFluxFilters(array $filters, array $flux): array
+    {
+        foreach ($filters as $filter) {
+            if ($filter->operator === Operator::In) {
+                if (! is_array($filter->value)) {
+                    throw new \InvalidArgumentException('Operator IN requires an array value');
+                }
+                $set = implode(', ', array_map(fn ($v) => sprintf('"%s"', $v), $filter->value));
+                $flux[] = sprintf('|> filter(fn: (r) => contains(value: r["%s"], set: [%s]))', $filter->key, $set);
             } else {
-                $aggFunc = match ($series->aggregation) {
-                    Aggregation::SUM => 'sum',
-                    Aggregation::MIN => 'min',
-                    Aggregation::MAX => 'max',
-                    default => 'mean',
-                };
-                $flux[] = sprintf(' |> aggregateWindow(every: %s, fn: %s, createEmpty: false)', $window, $aggFunc);
+                $flux[] = sprintf('|> filter(fn: (r) => r["%s"] %s "%s")', $filter->key, $this->mapOperator($filter->operator), $filter->value);
             }
         }
 
-        // Yield to separate series
-        $flux[] = sprintf(' |> yield(name: "%s")', $series->legend ?? $series->metric);
+        return $flux;
+    }
+
+    /**
+     * @param  Operation[]  $pipeline
+     * @param  string[]  $flux
+     * @return string[]
+     */
+    private function compilePipeline(array $pipeline, array $flux): array
+    {
+        foreach ($pipeline as $operation) {
+            $flux[] = match ($operation->getType()) {
+                OperationType::Rate => '|> derivative(unit: 1s, nonNegative: true)',
+                OperationType::Delta => '|> difference(nonNegative: false)',
+                OperationType::Math => $this->compileMathOperation($operation),
+                default => throw new \InvalidArgumentException(sprintf('Unsupported operation type: %s', $operation->getType()->value)),
+            };
+        }
 
         return $flux;
+    }
+
+    private function compileMathOperation(Operation $operation): string
+    {
+        if (! $operation instanceof MathOperation) {
+            throw new \InvalidArgumentException('Operation type Math must be an instance of MathOperation');
+        }
+
+        $value = sprintf('%.1f', $operation->value);
+
+        return sprintf(
+            '|> map(fn: (r) => ({ r with _value: r._value %s %s }))',
+            $operation->operator->value,
+            $value
+        );
     }
 }

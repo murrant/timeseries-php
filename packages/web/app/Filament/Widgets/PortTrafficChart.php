@@ -8,23 +8,28 @@ use Filament\Schemas\Schema;
 use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\ChartWidget\Concerns\HasFiltersSchema;
-use TimeseriesPhp\Core\Time\TimeRange;
-use TimeseriesPhp\Core\Timeseries\TimeSeriesResult;
+use TimeseriesPhp\Core\Query\AST\TimeRange;
+use TimeseriesPhp\Core\Results\TimeSeriesResult;
+use TimeseriesPhp\Core\Schema\SchemaManager;
 
 class PortTrafficChart extends ChartWidget
 {
     use HasFiltersSchema;
 
     protected ?string $heading = 'Port Traffic';
-    protected static ?int $sort = 2;
-    protected ?string $pollingInterval = '60s';
-    protected int | string | array $columnSpan = 'full';
 
+    protected static ?int $sort = 2;
+
+    protected ?string $pollingInterval = '60s';
+
+    protected int|string|array $columnSpan = 'full';
+
+    #[\Override]
     protected function getData(): array
     {
         $timeSeriesResult = $this->getTimeSeriesData();
 
-        if (!$timeSeriesResult->hasData()) {
+        if (! $timeSeriesResult->hasData()) {
             return [
                 'datasets' => [],
                 'labels' => [],
@@ -35,7 +40,7 @@ class PortTrafficChart extends ChartWidget
         $labels = [];
 
         // Build labels from the first series (all series should have same timestamps)
-        if (!empty($timeSeriesResult->series)) {
+        if (! empty($timeSeriesResult->series)) {
             $firstSeries = $timeSeriesResult->series[0];
             foreach ($firstSeries->points as $point) {
                 $labels[] = $point->timestamp * 1000; // Convert seconds to milliseconds
@@ -58,7 +63,7 @@ class PortTrafficChart extends ChartWidget
 
             $datasets[] = [
                 'label' => $portLabel,
-                'data' => array_map(fn($point) => $point->value * 8, $series->points),  // FIXME transform in backend
+                'data' => array_map(fn ($point) => $point->value * 8, $series->points),  // FIXME transform in backend
                 'borderColor' => $color,
                 'backgroundColor' => str_replace('0.8', '0.1', $color),
                 'fill' => true,
@@ -82,6 +87,7 @@ class PortTrafficChart extends ChartWidget
         return 'line';
     }
 
+    #[\Override]
     protected function getOptions(): RawJs
     {
         return RawJs::make(<<<'JS'
@@ -175,7 +181,7 @@ class PortTrafficChart extends ChartWidget
      */
     protected function getTimeSeriesData(): TimeSeriesResult
     {
-        $range = match($this->filters['timeRange'] ?? null) {
+        $range = match ($this->filters['timeRange'] ?? null) {
             '1h' => TimeRange::lastHours(1),
             '6h' => TimeRange::lastHours(6),
             '24h' => TimeRange::lastDays(1),
@@ -192,32 +198,44 @@ class PortTrafficChart extends ChartWidget
         );
     }
 
-    /**
-     * @return array|null
-     */
-    public function getFilters(): ?array
+    public function getFilters(): null
     {
         return null;
     }
 
     /**
      * Get available hostnames from data source
+     *
+     * @return string[]
      */
     protected function getAvailableHostnames(): array
     {
-        // Implement this to return hostname options
-        // Example: return ['host1' => 'Server 1', 'host2' => 'Server 2'];
-        return [];
+        $values = app(SchemaManager::class)->labels()
+            ->from('network.port.bytes.in')
+            ->from('network.port.bytes.out')
+            ->values('host')->values;
+
+        return array_combine($values, $values);
     }
 
     /**
      * Get available interface names from data source
+     *
+     * @return string[]
      */
     protected function getAvailableIfNames(): array
     {
-        // Implement this to return interface name options
-        // Example: return ['eth0' => 'eth0', 'eth1' => 'eth1'];
-        return [];
+        $query = app(SchemaManager::class)->labels()
+            ->from('network.port.bytes.in')
+            ->from('network.port.bytes.out');
+
+        if (isset($this->filters['hostname'])) {
+            $query->where('host', $this->filters['hostname']);
+        }
+
+        $values = $query->values('ifName')->values;
+
+        return array_combine($values, $values);
     }
 
     /**
@@ -232,7 +250,7 @@ class PortTrafficChart extends ChartWidget
         }
 
         // Fallback to first label or join all labels
-        return !empty($labels) ? implode(' - ', $labels) : 'Unknown';
+        return ! empty($labels) ? implode(' - ', $labels) : 'Unknown';
     }
 
     public function filtersSchema(Schema $schema): Schema
@@ -250,12 +268,10 @@ class PortTrafficChart extends ChartWidget
                 ->default('6h'),
             Select::make('hostname')
                 ->label('Hostname')
-                ->options(fn() => ['all' => 'All Hosts'] + $this->getAvailableHostnames())
-                ->default('all'),
+                ->options(fn () => $this->getAvailableHostnames()),
             Select::make('ifName')
                 ->label('Interface')
-                ->options(fn() => ['all' => 'All Interfaces'] + $this->getAvailableIfNames())
-                ->default('all'),
+                ->options(fn () => $this->getAvailableIfNames()),
         ]);
     }
 }

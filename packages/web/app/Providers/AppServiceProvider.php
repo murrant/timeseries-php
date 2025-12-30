@@ -3,17 +3,14 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use TimeseriesPhp\Core\Contracts\GraphRepository;
 use TimeseriesPhp\Core\Contracts\MetricRepository;
 use TimeseriesPhp\Core\Enum\Aggregation;
 use TimeseriesPhp\Core\Enum\GraphType;
 use TimeseriesPhp\Core\Enum\MetricType;
-use TimeseriesPhp\Core\Enum\VariableType;
 use TimeseriesPhp\Core\Graph\GraphDefinition;
 use TimeseriesPhp\Core\Graph\GraphStyle;
 use TimeseriesPhp\Core\Graph\GraphVariable;
 use TimeseriesPhp\Core\Metrics\MetricIdentifier;
-use TimeseriesPhp\Core\Timeseries\SeriesDefinition;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,7 +23,7 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot(MetricRepository $metrics, GraphRepository $graphs): void
+    public function boot(MetricRepository $metrics): void
     {
         $bitsInMetric = new MetricIdentifier('network.port', 'bits.in', 'bps', MetricType::COUNTER, ['host', 'ifName', 'ifIndex'], [Aggregation::RATE, Aggregation::SUM]);
         $bitsOutMetric = new MetricIdentifier('network.port', 'bits.out', 'bps', MetricType::COUNTER, ['host', 'ifName', 'ifIndex'], [Aggregation::RATE, Aggregation::SUM]);
@@ -58,20 +55,20 @@ class AppServiceProvider extends ServiceProvider
         $metrics->register($carrierMetric);
         $metrics->register($collisionsMetric);
 
-        $graphs->register(new GraphDefinition(
-            id: 'host_port_bandwidth',
-            title: 'Network Port Bits',
-            description: null,
-            variables: [
-                new GraphVariable('host', VariableType::STRING),
-                new GraphVariable('ifName', VariableType::STRING),
-                new GraphVariable('ifIndex', VariableType::INTEGER),
-            ],
-            series: [
-                new SeriesDefinition($bytesInMetric->key(), aggregation: Aggregation::RATE),
-                new SeriesDefinition($bytesOutMetric->key(), aggregation: Aggregation::RATE),
-            ],
-            style: new GraphStyle(GraphType::LINE),
-        ));
+        //        $graphs->register(new GraphDefinition(
+        //            id: 'host_port_bandwidth',
+        //            title: 'Network Port Bits',
+        //            description: null,
+        //            variables: [
+        //                new GraphVariable('host', VariableType::STRING),
+        //                new GraphVariable('ifName', VariableType::STRING),
+        //                new GraphVariable('ifIndex', VariableType::INTEGER),
+        //            ],
+        //            series: [
+        //                new SeriesDefinition($bytesInMetric->key(), aggregation: Aggregation::RATE),
+        //                new SeriesDefinition($bytesOutMetric->key(), aggregation: Aggregation::RATE),
+        //            ],
+        //            style: new GraphStyle(GraphType::LINE),
+        //        ));
     }
 }

@@ -1,10 +1,17 @@
 <?php
 
-namespace TimeseriesPhp\Core\Timeseries;
+namespace TimeseriesPhp\Core\Results;
 
-use TimeseriesPhp\Core\Time\TimeRange;
+use TimeseriesPhp\Core\Contracts\Result;
+use TimeseriesPhp\Core\Query\AST\Resolution;
+use TimeseriesPhp\Core\Query\AST\TimeRange;
 
-final readonly class TimeSeriesResult implements \JsonSerializable
+/**
+ * @template TResult as Result
+ *
+ * @implements Result<TimeSeriesResult>
+ */
+final readonly class TimeSeriesResult implements \JsonSerializable, Result
 {
     /**
      * @param  TimeSeries[]  $series
@@ -20,6 +27,9 @@ final readonly class TimeSeriesResult implements \JsonSerializable
         return ! empty($this->series);
     }
 
+    /**
+     * @return array{series: array|array[], range: array{start: int, end: int}, resolution: int|null}
+     */
     public function jsonSerialize(): array
     {
         return [

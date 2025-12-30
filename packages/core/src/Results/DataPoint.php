@@ -1,6 +1,6 @@
 <?php
 
-namespace TimeseriesPhp\Core\Timeseries;
+namespace TimeseriesPhp\Core\Results;
 
 final readonly class DataPoint
 {

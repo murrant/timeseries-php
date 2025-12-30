@@ -28,7 +28,7 @@
   "extra": {
     "laravel": {
       "providers": [
-        "TimeseriesPhp\\Bridge\\Laravel\\ServiceProvider"
+        "TimeseriesPhp\\Bridge\\Laravel\\TsdbServiceProvider"
       ],
       "aliases": {
         "TSDB": "TimeseriesPhp\\Bridge\\Laravel\\Facade"

@@ -2,7 +2,7 @@
 
 namespace TimeseriesPhp\Core\Enum;
 
-enum TransformationType: string
+enum OperationType: string
 {
     case Rate = 'rate';
     case Delta = 'delta';

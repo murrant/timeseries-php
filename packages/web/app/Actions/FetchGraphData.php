@@ -2,26 +2,54 @@
 
 namespace App\Actions;
 
-use TimeseriesPhp\Core\Graph\GraphService;
-use TimeseriesPhp\Core\Graph\VariableBinding;
-use TimeseriesPhp\Core\Time\TimeRange;
-use TimeseriesPhp\Core\Timeseries\TimeSeriesResult;
+use TimeSeriesPhp\Core\Contracts\Result;
+use TimeseriesPhp\Core\Contracts\TsdbConnection;
+use TimeseriesPhp\Core\Enum\Aggregation;
+use TimeseriesPhp\Core\Query\AST\TimeRange;
+use TimeseriesPhp\Core\Query\Data\QueryBuilder;
+use TimeseriesPhp\Core\Query\Data\StreamBuilder;
+use TimeseriesPhp\Core\Results\TimeSeriesResult;
 
 class FetchGraphData
 {
     public function __construct(
-        private readonly GraphService $graphService,
+        private readonly TsdbConnection $tsdb,
     ) {}
 
+    /**
+     * @return Result<TimeSeriesResult>
+     */
     public function execute(string $graph_id, ?string $host = null, ?string $ifName = null, ?TimeRange $range = null): TimeSeriesResult
     {
-        return $this->graphService->render(
-            $graph_id,
-            $range ?? TimeRange::lastMinutes(60),
-            [
-                new VariableBinding('host', $host),
-                new VariableBinding('ifName', $ifName),
-            ],
+        return $this->tsdb->query(
+            (new QueryBuilder($range))
+                ->select('network.port.bytes.in', function (StreamBuilder $b) use ($host, $ifName): void {
+                    if ($host) {
+                        $b->where('host', $host);
+                    }
+                    if ($ifName) {
+                        $b->where('ifName', $ifName);
+                    }
+
+                    $b->rate()
+                        ->multiplyBy(8)
+                        ->aggregate(Aggregation::MAX, Aggregation::MIN, Aggregation::AVG)
+                        ->as('Inbound');
+                })
+                ->select('network.port.bytes.out', function (StreamBuilder $b) use ($host, $ifName): void {
+                    if ($host) {
+                        $b->where('host', $host);
+                    }
+                    if ($ifName) {
+                        $b->where('ifName', $ifName);
+                    }
+
+                    $b->rate()
+                        ->multiplyBy(8)
+                        ->aggregate(Aggregation::MAX, Aggregation::MIN, Aggregation::AVG)
+                        ->as('Outbound');
+                })
+                ->build()
         );
     }
 }

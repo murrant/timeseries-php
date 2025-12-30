@@ -23,7 +23,7 @@ it('writes a metric sample to influxdb2', function (): void {
     $response = mock(ResponseInterface::class);
     $stream = mock(StreamInterface::class);
 
-    $url = 'http://localhost:8086';
+    $url = 'http://localhost';
     $token = 'test-token';
     $org = 'test-org';
     $bucket = 'test-bucket';
@@ -35,7 +35,7 @@ it('writes a metric sample to influxdb2', function (): void {
         new \DateTimeImmutable('2023-10-27 12:00:00', new \DateTimeZone('UTC'))
     );
 
-    $expectedLine = 'app_cpu_usage,host=server01,region=us-west value=42.500000 1698408000';
+    $expectedLine = 'app.cpu_usage,host=server01,region=us-west value=42.500000 1698408000';
     $expectedUrl = 'http://localhost:8086/api/v2/write?org=test-org&bucket=test-bucket&precision=s';
 
     $requestFactory->shouldReceive('createRequest')
@@ -70,7 +70,7 @@ it('writes a metric sample to influxdb2', function (): void {
         ->andReturn(204);
 
     $writer = new InfluxWriter(
-        new InfluxConfig($url, $token, $org, $bucket),
+        new InfluxConfig($url, 8086, $token, $org, $bucket),
         $httpClient,
         $requestFactory,
         $streamFactory,
@@ -94,11 +94,11 @@ it('escapes special characters in line protocol', function (): void {
         new \DateTimeImmutable('2023-10-27 12:00:00', new \DateTimeZone('UTC'))
     );
 
-    // namespace and name are joined by _
+    // namespace and name are joined by .
     // 'my namespace' -> 'my\ namespace'
     // 'my,metric' -> 'my\,metric'
-    // Result: 'my\ namespace_my\,metric'
-    $expectedLine = 'my\ namespace_my\,metric,label\=name=label\ value value=100i 1698408000';
+    // Result: 'my\ namespace.my\,metric'
+    $expectedLine = 'my\ namespace.my\,metric,label\=name=label\ value value=100i 1698408000';
 
     $requestFactory->shouldReceive('createRequest')->andReturn($request);
     $request->shouldReceive('withHeader')->andReturnSelf();
@@ -107,7 +107,7 @@ it('escapes special characters in line protocol', function (): void {
     $httpClient->shouldReceive('sendRequest')->andReturn($response);
     $response->shouldReceive('getStatusCode')->andReturn(204);
 
-    $writer = new InfluxWriter(new InfluxConfig('url', 'token', 'org', 'bucket'), $httpClient, $requestFactory, $streamFactory);
+    $writer = new InfluxWriter(new InfluxConfig('url', 8086, 'token', 'org', 'bucket'), $httpClient, $requestFactory, $streamFactory);
     $writer->write($sample);
 
     expect(true)->toBeTrue();

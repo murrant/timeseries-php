@@ -3,15 +3,26 @@
 namespace TimeseriesPhp\Driver\InfluxDB2;
 
 use TimeseriesPhp\Core\Contracts\CompiledQuery;
-use TimeseriesPhp\Core\Time\TimeRange;
-use TimeseriesPhp\Core\Timeseries\Resolution;
+use TimeseriesPhp\Core\Contracts\Result;
+use TimeseriesPhp\Core\Enum\QueryType;
+use TimeseriesPhp\Core\Query\AST\Resolution;
+use TimeseriesPhp\Core\Query\AST\TimeRange;
 
-class InfluxQuery implements \Stringable, CompiledQuery
+/**
+ * @template TResult of Result
+ *
+ * @implements CompiledQuery<TResult>
+ */
+readonly class InfluxQuery implements \Stringable, CompiledQuery
 {
+    /**
+     * @param  string[]  $flux
+     */
     public function __construct(
-        public readonly array $flux,
-        public readonly TimeRange $range,
-        public readonly Resolution $resolution,
+        public array $flux,
+        public TimeRange $range,
+        public Resolution $resolution,
+        public QueryType $type = QueryType::Data,
     ) {}
 
     public function __toString(): string

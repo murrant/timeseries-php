@@ -14,6 +14,9 @@ final class DriverResolver
 {
     /**
      * @param  class-string  $driverClass
+     *
+     * @throws DriverException
+     * @throws DriverNotFoundException
      */
     public static function resolve(string $driverClass): TsdbDriver
     {
@@ -28,17 +31,14 @@ final class DriverResolver
             throw new DriverException("Driver $driverClass must have TsdbDriver attribute");
         }
 
+        /** @var TsdbDriver $newInstance */
         $newInstance = $attributes[0]->newInstance();
-
-        if (! $newInstance instanceof TsdbDriver) {
-            throw new DriverException("Driver $driverClass must implement TsdbDriver interface");
-        }
 
         return $newInstance;
     }
 
     /**
-     * @return array<string, string>
+     * @return array<string, class-string<TsdbDriver>>
      */
     public static function discoverDrivers(): array
     {
@@ -64,5 +64,23 @@ final class DriverResolver
         }
 
         return $drivers;
+    }
+
+    /**
+     * @return TsdbDriver[]
+     *
+     * @throws DriverException
+     * @throws DriverNotFoundException
+     */
+    public static function resolveAll(): array
+    {
+        $resolved = [];
+
+        foreach (self::discoverDrivers() as $class) {
+            $driver = self::resolve($class);
+            $resolved[$driver->name] = $driver;
+        }
+
+        return $resolved;
     }
 }

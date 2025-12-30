@@ -2,9 +2,14 @@
 
 namespace TimeseriesPhp\Core\Contracts;
 
-use TimeseriesPhp\Core\Timeseries\TimeSeriesResult;
-
+/**
+ * @template TResult of Result
+ */
 interface TsdbClient
 {
-    public function query(CompiledQuery $query): TimeSeriesResult;
+    /**
+     * @param  CompiledQuery<TResult>  $query
+     * @return TResult
+     */
+    public function execute(CompiledQuery $query): Result;
 }

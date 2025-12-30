@@ -2,8 +2,9 @@
 
 namespace TimeseriesPhp\Core\Enum;
 
-enum QueryType {
+enum QueryType
+{
     case Data;
-    case Labels;
-    case Metrics;
+    case Label;
+    case Metric;
 }

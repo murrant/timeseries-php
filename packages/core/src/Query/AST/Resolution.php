@@ -1,6 +1,6 @@
 <?php
 
-namespace TimeseriesPhp\Core\Timeseries;
+namespace TimeseriesPhp\Core\Query\AST;
 
 final readonly class Resolution
 {

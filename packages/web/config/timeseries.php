@@ -1,17 +1,14 @@
 <?php
 
 return [
-    'driver' => 'influxdb2',
-    'graphs' => [
-        'repository' => 'yaml',
-        'path' => 'database/graphs',
-    ],
+    'default' => 'test',
     'metrics' => [
         'repository' => 'yaml',
         'path' => 'database/metrics.yaml',
     ],
-    'drivers' => [
-        'influxdb2' => [
+    'connections' => [
+        'test' => [
+            'driver' => 'influxdb2',
             'host' => 'localhost',
             'port' => 8086,
             'token' => 'my-token',

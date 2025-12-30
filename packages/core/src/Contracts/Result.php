@@ -5,4 +5,4 @@ namespace TimeseriesPhp\Core\Contracts;
 /**
  * @template TResult of Result
  */
-interface CompiledQuery {}
+interface Result {}

@@ -1,6 +1,6 @@
 <?php
 
-namespace TimeseriesPhp\Core\Timeseries;
+namespace TimeseriesPhp\Core\Results;
 
 use TimeseriesPhp\Core\Timeseries\Aggregates\AggregateFunction;
 use TimeseriesPhp\Core\Timeseries\Aggregates\Avg;

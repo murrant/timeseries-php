@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TimeseriesPhp\Core\Time;
+namespace TimeseriesPhp\Core\Query\AST;
 
 use DateInterval;
 use DateTimeImmutable;

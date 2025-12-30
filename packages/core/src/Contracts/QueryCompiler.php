@@ -2,11 +2,12 @@
 
 namespace TimeseriesPhp\Core\Contracts;
 
+/** @template TResult of Result */
 interface QueryCompiler
 {
-    public function compile(
-        Query $query
-    ): CompiledQuery;
-
-
+    /**
+     * @param  Query<TResult>  $query
+     * @return CompiledQuery<TResult>
+     */
+    public function compile(Query $query): CompiledQuery;
 }

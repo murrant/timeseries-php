@@ -1,6 +1,6 @@
 <?php
 
-use TimeseriesPhp\Core\Time\TimeRange;
+use TimeseriesPhp\Core\Query\AST\TimeRange;
 
 test('throws exception when no parameters provided', function (): void {
     new TimeRange;

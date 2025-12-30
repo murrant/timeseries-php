@@ -1,22 +1,22 @@
 <?php
 
 return [
-    'driver' => 'null',
-    'graphs' => [
-        'repository' => 'yaml',
-        'path' => 'database/graphs',
-    ],
+    'default' => 'metrics',
     'metrics' => [
         'repository' => 'yaml',
         'path' => 'database/metrics.yaml',
     ],
-    'drivers' => [
-        'influxdb2' => [
+    'connections' => [
+        'metrics' => [
+            'driver' => 'influxdb2',
             'host' => 'localhost',
             'port' => 8086,
             'token' => '',
             'org' => '',
             'bucket' => '',
+        ],
+        'null' => [
+            'driver' => 'null',
         ],
     ],
 ];

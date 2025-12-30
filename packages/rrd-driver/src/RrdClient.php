@@ -5,9 +5,9 @@ namespace TimeseriesPhp\Driver\RRD;
 use DateTimeImmutable;
 use TimeseriesPhp\Core\Contracts\CompiledQuery;
 use TimeseriesPhp\Core\Contracts\TsdbClient;
-use TimeseriesPhp\Core\Time\TimeRange;
-use TimeseriesPhp\Core\Timeseries\Resolution;
-use TimeseriesPhp\Core\Timeseries\TimeSeriesResult;
+use TimeseriesPhp\Core\Query\AST\Resolution;
+use TimeseriesPhp\Core\Query\AST\TimeRange;
+use TimeseriesPhp\Core\Results\TimeSeriesResult;
 
 class RrdClient implements TsdbClient
 {
