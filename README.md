@@ -2,6 +2,8 @@
 
 A lightweight, efficient PHP library for working with time series data.
 
+WIP everything is subject to change
+
 
 ## Development
 In the root directory run `composer install` (for IDE completion).
