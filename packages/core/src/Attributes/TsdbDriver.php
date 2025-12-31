@@ -8,12 +8,14 @@ use Attribute;
 use TimeseriesPhp\Core\Contracts\QueryCompiler;
 use TimeseriesPhp\Core\Contracts\TsdbCapabilities;
 use TimeseriesPhp\Core\Contracts\TsdbClient;
+use TimeseriesPhp\Core\Contracts\TsdbConfig;
 use TimeseriesPhp\Core\Contracts\TsdbWriter;
 
 #[Attribute(Attribute::TARGET_CLASS)]
 class TsdbDriver
 {
     /**
+     * @param  class-string<TsdbConfig>  $config
      * @param  class-string<TsdbWriter>  $writer
      * @param  class-string<QueryCompiler>  $compiler
      * @param  class-string<TsdbClient>  $client

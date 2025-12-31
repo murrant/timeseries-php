@@ -10,6 +10,7 @@ final readonly class MetricIdentifier
     /**
      * @param  string[]  $labels  Allowed Labels
      * @param  Aggregation[]  $aggregations  Allowed Aggregations
+     * @param  RetentionPolicy[]  $retentionPolicies
      */
     public function __construct(
         public string $namespace,
@@ -18,8 +19,12 @@ final readonly class MetricIdentifier
         public ?MetricType $type = null,
         public array $labels = [],
         public array $aggregations = [],
+        public array $retentionPolicies = [],
     ) {}
 
+    /**
+     * @param  array<string, mixed>  $raw
+     */
     public static function fromArray(array $raw): self
     {
         return new MetricIdentifier(
@@ -29,6 +34,7 @@ final readonly class MetricIdentifier
             type: isset($raw['type']) ? MetricType::from($raw['type']) : null,
             labels: $raw['labels'] ?? [],
             aggregations: array_map(Aggregation::from(...), $raw['aggregations'] ?? []),
+            retentionPolicies: array_map(RetentionPolicy::fromArray(...), $raw['retention_policies'] ?? []),
         );
     }
 

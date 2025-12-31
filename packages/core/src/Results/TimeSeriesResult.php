@@ -7,8 +7,6 @@ use TimeseriesPhp\Core\Query\AST\Resolution;
 use TimeseriesPhp\Core\Query\AST\TimeRange;
 
 /**
- * @template TResult as Result
- *
  * @implements Result<TimeSeriesResult>
  */
 final readonly class TimeSeriesResult implements \JsonSerializable, Result
