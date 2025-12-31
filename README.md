@@ -6,11 +6,11 @@ WIP everything is subject to change
 
 
 ## Development
-In the root directory run `composer install` (for IDE completion).
 
-Go to `packages/web` and run `composer install`
-
-Then run `composer dev` to start development services.
+1. In the root directory run `composer install` (for IDE completion).
+2. Go to `packages/web` and run `composer install`
+3. Start docker tsdb containers `cd tests/docker` and `docker compose up -d`
+4. Then run `composer dev` to start development services.
 
 This will start a schedule job to collect network stats from your local ports so there is data to work with.
 
