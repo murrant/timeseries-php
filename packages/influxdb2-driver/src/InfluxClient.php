@@ -7,6 +7,8 @@ use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use PsrDiscovery\Discover;
 use TimeseriesPhp\Core\Contracts\CompiledQuery;
 use TimeseriesPhp\Core\Contracts\Result;
@@ -18,7 +20,11 @@ use TimeseriesPhp\Core\Results\LabelResult;
 use TimeseriesPhp\Core\Results\TimeSeries;
 use TimeseriesPhp\Core\Results\TimeSeriesResult;
 
-/** @template TResult of Result */
+/**
+ * @template TResult of Result
+ *
+ * @implements TsdbClient<TResult>
+ */
 class InfluxClient implements TsdbClient
 {
     private readonly ClientInterface $httpClient;
@@ -32,6 +38,7 @@ class InfluxClient implements TsdbClient
         ?ClientInterface $httpClient = null,
         ?RequestFactoryInterface $requestFactory = null,
         ?StreamFactoryInterface $streamFactory = null,
+        private readonly ?LoggerInterface $logger = new NullLogger,
     ) {
         $this->httpClient = $httpClient ?? Discover::httpClient();
         $this->requestFactory = $requestFactory ?? Discover::httpRequestFactory();
@@ -56,6 +63,11 @@ class InfluxClient implements TsdbClient
 
         $queryString = (string) $query;
 
+        $this->logger->debug('Executing InfluxDB2 query', [
+            'url' => $url,
+            'query' => $queryString,
+        ]);
+
         $request = $this->requestFactory->createRequest('POST', $url)
             ->withHeader('Authorization', 'Token '.$this->config->token)
             ->withHeader('Content-Type', 'application/vnd.flux')
@@ -65,11 +77,18 @@ class InfluxClient implements TsdbClient
             $response = $this->httpClient->sendRequest($request);
 
             if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 300) {
+                $errorBody = $response->getBody()->getContents();
+                $this->logger->error('InfluxDB2 query failed', [
+                    'status' => $response->getStatusCode(),
+                    'body' => $errorBody,
+                    'query' => $queryString,
+                ]);
+
                 throw new TimeseriesException(
                     sprintf(
                         "Failed to query InfluxDB2. Status code: %d. Response: %s\nQuery: %s",
                         $response->getStatusCode(),
-                        $response->getBody()->getContents(),
+                        $errorBody,
                         $queryString,
                     )
                 );
@@ -89,6 +108,10 @@ class InfluxClient implements TsdbClient
             /** @var TResult */
             return $this->parseResponse($csv, $query);
         } catch (ClientExceptionInterface $e) {
+            $this->logger->error('HTTP error while querying InfluxDB2', [
+                'error' => $e->getMessage(),
+                'query' => $queryString,
+            ]);
             throw new TimeseriesException('HTTP error while querying InfluxDB2: '.$e->getMessage(), 0, $e);
         }
     }

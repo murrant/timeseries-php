@@ -2,17 +2,23 @@
 
 namespace TimeseriesPhp\Core\Metrics\Repository;
 
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use TimeseriesPhp\Core\Contracts\MetricRepository;
 use TimeseriesPhp\Core\Exceptions\UnknownMetricException;
 use TimeseriesPhp\Core\Metrics\MetricIdentifier;
 
 final class YamlMetricRepository implements MetricRepository
 {
+    /** @var array<string, MetricIdentifier> */
     private array $metrics = [];
 
-    public function __construct(string $path)
-    {
-        foreach (glob("{$path}/*.yaml") as $file) {
+    public function __construct(
+        string $path,
+        private readonly LoggerInterface $logger = new NullLogger
+    ) {
+        $files = glob("{$path}/*.yaml") ?: [];
+        foreach ($files as $file) {
             $this->loadFile($file);
         }
     }
@@ -43,7 +49,14 @@ final class YamlMetricRepository implements MetricRepository
 
     private function loadFile(string $file): void
     {
+        $this->logger->debug('Loading metrics from YAML file', ['file' => $file]);
         $raw = yaml_parse_file($file);
+
+        if ($raw === false) {
+            $this->logger->error('Failed to parse YAML file', ['file' => $file]);
+
+            return;
+        }
 
         foreach ($raw as $key => $definition) {
             $this->metrics[$key] = $this->parseMetric(

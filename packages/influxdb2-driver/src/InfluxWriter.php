@@ -8,6 +8,8 @@ use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use PsrDiscovery\Discover;
 use TimeseriesPhp\Core\Contracts\TsdbWriter;
 use TimeseriesPhp\Core\Exceptions\TimeseriesException;
@@ -26,6 +28,7 @@ class InfluxWriter implements TsdbWriter
         ?ClientInterface $httpClient = null,
         ?RequestFactoryInterface $requestFactory = null,
         ?StreamFactoryInterface $streamFactory = null,
+        private readonly ?LoggerInterface $logger = new NullLogger,
     ) {
         $this->httpClient = $httpClient ?? Discover::httpClient();
         $this->requestFactory = $requestFactory ?? Discover::httpRequestFactory();
@@ -60,6 +63,11 @@ class InfluxWriter implements TsdbWriter
             'org' => $this->config->org,
             'bucket' => $this->config->bucket,
             'precision' => 's',
+        ]);
+
+        $this->logger->debug('Writing to InfluxDB2', [
+            'url' => $url,
+            'body' => $body,
         ]);
 
         $request = $this->requestFactory->createRequest('POST', $url)

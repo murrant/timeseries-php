@@ -13,7 +13,8 @@
         "php": "^8.3",
         "psr-discovery/http-client-implementations": "^1.0",
         "psr-discovery/http-factory-implementations": "^1.0",
-        "psr/http-client": "^1.0"
+        "psr/http-client": "^1.0",
+        "psr/log": "^3.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

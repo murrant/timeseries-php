@@ -4,6 +4,7 @@ namespace TimeseriesPhp\Bridge\Laravel;
 
 use Illuminate\Support\Manager;
 use InvalidArgumentException;
+use Psr\Log\LoggerInterface;
 use TimeseriesPhp\Core\Attributes\TsdbDriver;
 use TimeseriesPhp\Core\Connection;
 use TimeseriesPhp\Core\Contracts\TsdbConfig;
@@ -23,6 +24,10 @@ class TsdbManager extends Manager
     #[\Override]
     protected function createDriver($driver): TsdbConnection
     {
+        $logger = app()->bound(LoggerInterface::class) ? app(LoggerInterface::class) : null;
+        if ($logger) {
+            $logger->debug('Creating TSDB driver', ['driver' => $driver]);
+        }
         $configData = $this->config->get("timeseries.connections.{$driver}");
 
         if (! $configData) {
@@ -39,7 +44,7 @@ class TsdbManager extends Manager
         $client = app($metadata->client, ['config' => $config]);
 
         // Instantiate the Connection class
-        return new Connection($writer, $compiler, $client);
+        return new Connection($writer, $compiler, $client, $logger);
     }
 
     public function loadConfig(string $class, array $data): TsdbConfig
@@ -53,11 +58,12 @@ class TsdbManager extends Manager
     {
         if ($this->manifest === null) {
             $path = $this->container->bootstrapPath('cache/timeseries_drivers.php');
+            $logger = app()->bound(LoggerInterface::class) ? app(LoggerInterface::class) : null;
 
             // Load from bootstrap/cache if exists, otherwise live scan
             $this->manifest = file_exists($path)
                 ? require $path
-                : DriverResolver::resolveAll(); // live discovery
+                : DriverResolver::resolveAll($logger); // live discovery
         }
 
         if (! isset($this->manifest[$name])) {
