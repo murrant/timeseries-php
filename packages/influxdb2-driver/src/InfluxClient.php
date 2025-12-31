@@ -38,7 +38,7 @@ class InfluxClient implements TsdbClient
         ?ClientInterface $httpClient = null,
         ?RequestFactoryInterface $requestFactory = null,
         ?StreamFactoryInterface $streamFactory = null,
-        private readonly ?LoggerInterface $logger = new NullLogger,
+        private readonly LoggerInterface $logger = new NullLogger,
     ) {
         $this->httpClient = $httpClient ?? Discover::httpClient();
         $this->requestFactory = $requestFactory ?? Discover::httpRequestFactory();

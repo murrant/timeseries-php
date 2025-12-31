@@ -2,6 +2,8 @@
 
 namespace TimeseriesPhp\Driver\RRD;
 
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Symfony\Component\Process\InputStream;
 use Symfony\Component\Process\Process;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdException;
@@ -22,6 +24,7 @@ class RrdProcess
 
     public function __construct(
         private readonly RrdConfig $config,
+        private readonly LoggerInterface $logger = new NullLogger,
     ) {
         $this->input = new InputStream;
 
@@ -101,7 +104,7 @@ class RrdProcess
             $command = str_replace($this->config->dir, '', $command);
         }
 
-//        echo "$command\n"; // FIXME debug only
+        $this->logger->debug('Running RRD command', ['command' => $command]);
 
         $this->input->write("$command\n");
     }

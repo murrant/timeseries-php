@@ -21,7 +21,12 @@ class Connection implements TsdbConnection
      * @param  QueryCompiler<TResult>  $compiler
      * @param  TsdbClient<TResult>  $client
      */
-    public function __construct(private readonly TsdbWriter $writer, private readonly QueryCompiler $compiler, private readonly TsdbClient $client, private readonly ?LoggerInterface $logger = new NullLogger) {}
+    public function __construct(
+        private readonly TsdbWriter $writer,
+        private readonly QueryCompiler $compiler,
+        private readonly TsdbClient $client,
+        private readonly LoggerInterface $logger = new NullLogger,
+    ) {}
 
     public function write(MetricSample $sample): void
     {

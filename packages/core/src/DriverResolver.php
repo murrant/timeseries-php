@@ -20,9 +20,8 @@ final class DriverResolver
      * @throws DriverException
      * @throws DriverNotFoundException
      */
-    public static function resolve(string $driverClass, ?LoggerInterface $logger = null): TsdbDriver
+    public static function resolve(string $driverClass, LoggerInterface $logger = new NullLogger): TsdbDriver
     {
-        $logger ??= new NullLogger;
         if (! class_exists($driverClass)) {
             $logger->error('Driver not found', ['class' => $driverClass]);
             throw new DriverNotFoundException('Driver not found: '.$driverClass);
@@ -47,9 +46,8 @@ final class DriverResolver
     /**
      * @return array<string, class-string<TsdbDriver>>
      */
-    public static function discoverDrivers(?LoggerInterface $logger = null): array
+    public static function discoverDrivers(LoggerInterface $logger = new NullLogger): array
     {
-        $logger ??= new NullLogger;
         $packageNames = InstalledVersions::getInstalledPackagesByType('timeseries-php-driver');
 
         if (empty($packageNames)) {
@@ -83,7 +81,7 @@ final class DriverResolver
      * @throws DriverException
      * @throws DriverNotFoundException
      */
-    public static function resolveAll(?LoggerInterface $logger = null): array
+    public static function resolveAll(LoggerInterface $logger = new NullLogger): array
     {
         $resolved = [];
 
