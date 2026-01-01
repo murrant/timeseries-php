@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'default' => 'metrics',
+    'default' => env('TSDB_CONNECTION', 'metrics'),
     'metrics' => [
         'repository' => 'yaml',
         'path' => 'database/metrics.yaml',
@@ -17,6 +17,10 @@ return [
         ],
         'null' => [
             'driver' => 'null',
+        ],
+        'rrd' => [
+            'driver' => 'rrd',
+            'path' => env('RRD_DIR', 'database/rrd'),
         ],
     ],
 ];

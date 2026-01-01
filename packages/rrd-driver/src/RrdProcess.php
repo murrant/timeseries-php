@@ -59,6 +59,7 @@ class RrdProcess
 
     /**
      * @throws RrdException
+     * @throws RrdNotFoundException
      */
     public function run(string $command, string $waitFor = self::COMMAND_COMPLETE): string
     {

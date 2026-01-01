@@ -2,7 +2,8 @@
     "name": "timeseries-php/rrd-driver",
     "type": "timeseries-php-driver",
     "require": {
-        "php": "^8.3"
+        "php": "^8.3",
+        "symfony/process": "^7.4"
     },
     "autoload": {
         "psr-4": {

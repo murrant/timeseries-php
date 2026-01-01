@@ -2,6 +2,7 @@
 
 namespace TimeseriesPhp\Driver\RRD;
 
+use TimeseriesPhp\Core\Attributes\TsdbDriver;
 use TimeseriesPhp\Core\Contracts\Driver;
 use TimeseriesPhp\Core\Contracts\TsdbCapabilities;
 

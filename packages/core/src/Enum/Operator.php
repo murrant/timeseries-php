@@ -13,4 +13,5 @@ enum Operator: string
     case RegexMatch = '=~';
     case RegexNotMatch = '!~';
     case In = 'IN';
+    case NotIn = 'NOT_IN';
 }

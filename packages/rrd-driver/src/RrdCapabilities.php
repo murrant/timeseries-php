@@ -20,4 +20,9 @@ class RrdCapabilities implements TsdbCapabilities
     {
         return false;
     }
+
+    public function supports(string $capability): bool
+    {
+        return false;
+    }
 }

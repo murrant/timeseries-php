@@ -15,6 +15,8 @@ use TimeseriesPhp\Core\Contracts\TsdbConnection;
 use TimeseriesPhp\Core\Contracts\TsdbWriter;
 use TimeseriesPhp\Core\Metrics\Repository\RuntimeMetricRepository;
 use TimeseriesPhp\Core\Metrics\Repository\YamlMetricRepository;
+use TimeseriesPhp\Driver\RRD\Contracts\LabelStrategy;
+use TimeseriesPhp\Driver\RRD\FilenameLabelStrategy;
 
 class TsdbServiceProvider extends ServiceProvider
 {
@@ -46,7 +48,10 @@ class TsdbServiceProvider extends ServiceProvider
             $metadata = $manager->resolveMetadata($config['driver']);
             $writer = $metadata->writer;
 
-            return $app->make($writer, ['config' => $manager->loadConfig($metadata->config, $config)]);
+            $loadedConfig = $manager->loadConfig($metadata->config, $config);
+            $writerInstance = $app->make($writer, ['config' => $loadedConfig]);
+
+            return $writerInstance;
         });
 
         $this->app->bind(QueryCompiler::class, function ($app) {
@@ -66,6 +71,9 @@ class TsdbServiceProvider extends ServiceProvider
 
             return $app->make($capabilities);
         });
+
+        // TODO probably don't want driver specific bindings :I
+        $this->app->bind(LabelStrategy::class, FilenameLabelStrategy::class);
     }
 
     public function boot(): void
