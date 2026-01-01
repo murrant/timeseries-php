@@ -215,10 +215,6 @@ class PortTrafficChart extends ChartWidget
             ->from('network.port.bytes.in')
             ->from('network.port.bytes.out');
 
-        if (isset($this->filters['hostname'])) {
-            $query->where('host', $this->filters['hostname']);
-        }
-
         $values = $query->values('host')->values;
 
         return array_combine($values, $values);
@@ -235,7 +231,7 @@ class PortTrafficChart extends ChartWidget
             ->from('network.port.bytes.in')
             ->from('network.port.bytes.out');
 
-        if (isset($this->filters['hostname'])) {
+        if (! empty($this->filters['hostname'])) {
             $query->where('host', $this->filters['hostname']);
         }
 
