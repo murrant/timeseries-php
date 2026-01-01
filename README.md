@@ -21,15 +21,17 @@ WIP everything is subject to change
 2. Go to `packages/web` and run `composer install`
 3. Start docker tsdb containers `cd tests/docker` and `docker compose up -d`
 4. Then go back to `packages/web` and run:
-  1. `cp .env.example .env`
-  2. `./artisan key:generate`
-  3. `./artisan migrate`
+   1. `cp .env.example .env`
+   1. `./artisan key:generate`
+   1. `./artisan migrate`
 5. To run the web interface for testing, go to `packages/web` and run:
   - `composer dev` to start development services
+  
    OR
+
   - `QT_QPA_PLATFORM=offscreen composer dev` if you don't have a X11 display available
 
-This will start a schedule job to collect network stats from your local ports so there is data to work with.
+This will also run a schedule job to collect network stats from your local ports so there is data to work with.
 
 Visit `http://localhost:8000` and view an example graph.
 
