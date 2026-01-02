@@ -212,8 +212,8 @@ class PortTrafficChart extends ChartWidget
     protected function getAvailableHostnames(): array
     {
         $query = app(SchemaManager::class)->labels()
-            ->from('network.port', 'bytes.in')
-            ->from('network.port', 'bytes.out');
+            ->from('network.port.bytes.in')
+            ->from('network.port.bytes.out');
 
         if (! empty($this->filters['ifName'])) {
             $query->where('ifName', $this->filters['ifName']);
@@ -232,8 +232,8 @@ class PortTrafficChart extends ChartWidget
     protected function getAvailableIfNames(): array
     {
         $query = app(SchemaManager::class)->labels()
-            ->from('network.port', 'bytes.in')
-            ->from('network.port', 'bytes.out');
+            ->from('network.port.bytes.in')
+            ->from('network.port.bytes.out');
 
         if (! empty($this->filters['hostname'])) {
             $query->where('host', $this->filters['hostname']);

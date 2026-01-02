@@ -4,6 +4,7 @@ namespace TimeseriesPhp\Core\Query\Labels;
 
 use TimeseriesPhp\Core\Contracts\TsdbConnection;
 use TimeseriesPhp\Core\Enum\Operator;
+use TimeseriesPhp\Core\Metrics\MetricIdentifier;
 use TimeseriesPhp\Core\Query\AST\Filter;
 use TimeseriesPhp\Core\Query\AST\LabelQuery;
 use TimeseriesPhp\Core\Query\AST\TimeRange;
@@ -20,12 +21,12 @@ class LabelQueryBuilder
     private ?TimeRange $period = null;
 
     public function __construct(
-        private readonly TsdbConnection $connection
+        private readonly TsdbConnection $connection,
     ) {}
 
-    public function from(string $namespace, string $metric): self
+    public function from(MetricIdentifier $metric): self
     {
-        $this->metrics[] = [$namespace, $metric];
+        $this->metrics[] = $metric;
 
         return $this;
     }

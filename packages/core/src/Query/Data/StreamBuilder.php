@@ -7,6 +7,7 @@ use TimeseriesPhp\Core\Enum\Aggregation;
 use TimeseriesPhp\Core\Enum\MathOperator;
 use TimeseriesPhp\Core\Enum\OperationType;
 use TimeseriesPhp\Core\Enum\Operator;
+use TimeseriesPhp\Core\Metrics\MetricIdentifier;
 use TimeseriesPhp\Core\Query\AST\Filter;
 use TimeseriesPhp\Core\Query\AST\Operations\BasicOperation;
 use TimeseriesPhp\Core\Query\AST\Operations\MathOperation;
@@ -25,7 +26,7 @@ class StreamBuilder
 
     private ?string $alias = null;
 
-    public function __construct(private readonly string $namespace, private readonly string $metric) {}
+    public function __construct(private readonly MetricIdentifier $metric) {}
 
     public function where(string $key, mixed $val, Operator $op = Operator::Equals): self
     {
@@ -64,6 +65,6 @@ class StreamBuilder
 
     public function build(): Stream
     {
-        return new Stream($this->namespace, $this->metric, $this->filters, $this->pipeline, $this->aggregations, $this->alias);
+        return new Stream($this->metric, $this->filters, $this->pipeline, $this->aggregations, $this->alias);
     }
 }
