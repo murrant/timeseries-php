@@ -2,31 +2,21 @@
 
 namespace TimeseriesPhp\Driver\RRD;
 
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
-use Symfony\Component\Process\InputStream;
 use Throwable;
 use TimeseriesPhp\Driver\RRD\Contracts\RrdtoolInterface;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdCreationFailedException;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdNotFoundException;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdUpdateFailedException;
-use TimeseriesPhp\Driver\RRD\Factories\RrdProcessFactory;
 use TimeseriesPhp\Driver\RRD\Traits\RrdCommandBuilder;
 
 class RrdtoolCli implements RrdtoolInterface
 {
     use RrdCommandBuilder;
 
-    private RrdProcess $rrd;
-
     public function __construct(
         private readonly RrdConfig $config,
-        RrdProcessFactory $processFactory,
-        private LoggerInterface $logger = new NullLogger,
-        InputStream $input = new InputStream,
-    ) {
-        $this->rrd = $processFactory->make($this->config, $this->logger, $input);
-    }
+        private readonly RrdProcess $rrd,
+    ) {}
 
     public function fetch(string $path, string $consolidationFunction, array $options = []): array
     {

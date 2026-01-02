@@ -2,21 +2,17 @@
 
 namespace TimeseriesPhp\Driver\RRD\Factories;
 
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
-use Symfony\Component\Process\InputStream;
-use TimeseriesPhp\Driver\RRD\Contracts\RrdtoolInterface;
 use TimeseriesPhp\Driver\RRD\RrdConfig;
 use TimeseriesPhp\Driver\RRD\RrdtoolCli;
 
-class RrdtoolFactory
+readonly class RrdtoolFactory
 {
-    public function make(
-        RrdConfig $config,
-        RrdProcessFactory $processFactory,
-        LoggerInterface $logger = new NullLogger,
-        InputStream $input = new InputStream): RrdtoolInterface
+    public function __construct(
+        private RrdProcessFactory $factory,
+    ) {}
+
+    public function make(RrdConfig $config)
     {
-        return new RrdtoolCli($config, $processFactory, $logger, $input);
+        return new RrdtoolCli($config, $this->factory->make($config));
     }
 }

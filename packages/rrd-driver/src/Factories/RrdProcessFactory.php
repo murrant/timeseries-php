@@ -8,10 +8,15 @@ use Symfony\Component\Process\InputStream;
 use TimeseriesPhp\Driver\RRD\RrdConfig;
 use TimeseriesPhp\Driver\RRD\RrdProcess;
 
-class RrdProcessFactory
+readonly class RrdProcessFactory
 {
-    public function make(RrdConfig $config, ?LoggerInterface $logger = null, ?InputStream $input = null): RrdProcess
+    public function __construct(
+        private LoggerInterface $logger = new NullLogger,
+        private InputStream $input = new InputStream
+    ) {}
+
+    public function make(RrdConfig $config): RrdProcess
     {
-        return new RrdProcess($config, $logger ?? new NullLogger, $input ?? new InputStream);
+        return new RrdProcess($config, $this->logger, $this->input);
     }
 }
