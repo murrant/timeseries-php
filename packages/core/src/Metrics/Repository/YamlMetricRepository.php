@@ -4,6 +4,7 @@ namespace TimeseriesPhp\Core\Metrics\Repository;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Symfony\Component\Yaml\Yaml;
 use TimeseriesPhp\Core\Contracts\MetricRepository;
 use TimeseriesPhp\Core\Exceptions\UnknownMetricException;
 use TimeseriesPhp\Core\Metrics\MetricIdentifier;
@@ -17,7 +18,9 @@ final class YamlMetricRepository implements MetricRepository
         string $path,
         private readonly LoggerInterface $logger = new NullLogger
     ) {
-        $files = glob("{$path}/*.yaml") ?: [];
+        $searchPath = str_ends_with($path, '.yaml') ? $path : "$path/*.yaml";
+        $files = glob($searchPath) ?: [];
+
         foreach ($files as $file) {
             $this->loadFile($file);
         }
@@ -50,7 +53,7 @@ final class YamlMetricRepository implements MetricRepository
     private function loadFile(string $file): void
     {
         $this->logger->debug('Loading metrics from YAML file', ['file' => $file]);
-        $raw = yaml_parse_file($file);
+        $raw = Yaml::parseFile($file); // FIXME we don't want this dependency here
 
         if ($raw === false) {
             $this->logger->error('Failed to parse YAML file', ['file' => $file]);
@@ -58,27 +61,15 @@ final class YamlMetricRepository implements MetricRepository
             return;
         }
 
-        foreach ($raw as $key => $definition) {
-            $this->metrics[$key] = $this->parseMetric(
-                $key,
-                $definition,
-                $file
-            );
-        }
-    }
+        foreach ($raw as $namespace => $metrics) {
+            foreach($metrics as $metric => $definition) {
+                $definition['namespace'] = $namespace;
+                $definition['name'] = $metric;
 
-    private function parseMetric(
-        string $namespace,
-        string $name,
-        array $raw
-    ): MetricIdentifier {
-        return new MetricIdentifier(
-            namespace: $namespace,
-            name: $name,
-            type: MetricType::from($raw['type']),
-            unit: $raw['unit'] ?? null,
-            labels: $raw['labels'] ?? [],
-            aggregations: $raw['aggregations'] ?? [],
-        );
+                $metricIdentifier = MetricIdentifier::fromArray($definition);
+
+                $this->metrics[$metricIdentifier->key()] = $metricIdentifier;
+            }
+        }
     }
 }

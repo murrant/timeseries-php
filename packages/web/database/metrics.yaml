@@ -1,0 +1,17 @@
+network.system:
+  drops:
+    type: counter
+    unit: packets
+    labels:
+      - host
+    aggregations:
+      - rate
+      - sum
+  udp:
+    type: counter
+    unit: bytes
+    labels:
+      - host
+    aggregations:
+      - rate
+      - sum

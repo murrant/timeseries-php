@@ -32,7 +32,7 @@ class TsdbServiceProvider extends ServiceProvider
             $metrics = config('timeseries.metrics', ['repository' => 'runtime', 'path' => 'database/metrics.yaml']);
 
             return match ($metrics['repository']) {
-                'yaml' => new YamlMetricRepository($metrics['path']),
+                'yaml' => new YamlMetricRepository($app->basePath($metrics['path'])),
                 default => new RuntimeMetricRepository,
             };
         });
