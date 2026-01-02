@@ -94,8 +94,13 @@ class InfluxWriter implements TsdbWriter
 
     private function formatLineProtocol(MetricSample $sample): string
     {
-        $measurement = $sample->metric->namespace;
-        $valuename = $sample->metric->name;
+        if ($this->config->multiple_fields) {
+            $measurement = $sample->metric->namespace;
+            $valuename = $sample->metric->name;
+        } else {
+            $measurement = $sample->metric->key();
+            $valuename = 'value';
+        }
 
         $tags = [];
         foreach ($sample->labels as $key => $value) {

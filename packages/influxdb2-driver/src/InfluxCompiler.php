@@ -75,12 +75,20 @@ final readonly class InfluxCompiler implements QueryCompiler
      */
     private function compileStream(Stream $stream, Resolution $resolution): array
     {
-        $flux = [
-            sprintf('from(bucket: "%s")', $this->config->bucket),
-            '|> range(start: rangeStart, stop: rangeStop)',
-            sprintf('|> filter(fn: (r) => r._measurement == "%s")', $stream->metric->namespace),
-            sprintf('|> filter(fn: (r) => r._field == "%s")', $stream->metric->name),
-        ];
+        if ($this->config->multiple_fields) {
+            $flux = [
+                sprintf('from(bucket: "%s")', $this->config->bucket),
+                '|> range(start: rangeStart, stop: rangeStop)',
+                sprintf('|> filter(fn: (r) => r._measurement == "%s")', $stream->metric->namespace),
+                sprintf('|> filter(fn: (r) => r._field == "%s")', $stream->metric->name),
+            ];
+        } else {
+            $flux = [
+                sprintf('from(bucket: "%s")', $this->config->bucket),
+                '|> range(start: rangeStart, stop: rangeStop)',
+                sprintf('|> filter(fn: (r) => r._measurement == "%s")', $stream->metric->key()),
+            ];
+        }
 
         $flux = $this->compileFluxFilters($stream->filters, $flux);
 
@@ -160,7 +168,12 @@ final readonly class InfluxCompiler implements QueryCompiler
         ];
 
         if (! empty($query->metrics)) {
-            $metricFilters = array_map(fn ($m) => sprintf('r._measurement == "%s"', $m->namespace), $query->metrics);
+            if ($this->config->multiple_fields) {
+                $metricFilters = array_map(fn ($m) => sprintf('r._measurement == "%s"', $m), array_unique(array_column($query->metrics, 'namespace')));
+            } else {
+                $metricFilters = array_map(fn ($m) => sprintf('r._measurement == "%s"', $m->key()), $query->metrics);
+            }
+
             $flux[] = sprintf('|> filter(fn: (r) => %s)', implode(' or ', $metricFilters));
         }
 
