@@ -3,7 +3,6 @@
 namespace TimeseriesPhp\Driver\RRD;
 
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use Symfony\Component\Process\InputStream;
 use Symfony\Component\Process\Process;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdException;
@@ -18,16 +17,13 @@ class RrdProcess
      */
     private array $env = [];
 
-    private readonly InputStream $input;
-
     private ?Process $process = null;
 
     public function __construct(
         private readonly RrdConfig $config,
-        private readonly LoggerInterface $logger = new NullLogger,
+        private readonly LoggerInterface $logger,
+        private readonly InputStream $input,
     ) {
-        $this->input = new InputStream;
-
         if ($this->config->rrdcached) {
             $this->env['RRDCACHED_ADDRESS'] = $this->config->rrdcached;
         }

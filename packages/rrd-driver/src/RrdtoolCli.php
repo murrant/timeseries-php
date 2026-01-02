@@ -2,6 +2,9 @@
 
 namespace TimeseriesPhp\Driver\RRD;
 
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
+use Symfony\Component\Process\InputStream;
 use Throwable;
 use TimeseriesPhp\Driver\RRD\Contracts\RrdtoolInterface;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdCreationFailedException;
@@ -17,10 +20,12 @@ class RrdtoolCli implements RrdtoolInterface
     private RrdProcess $rrd;
 
     public function __construct(
-        private readonly RrdConfig $config,
-        RrdProcessFactory $processFactory
+        private readonly RrdConfig         $config,
+        RrdProcessFactory                  $processFactory,
+        private LoggerInterface $logger = new NullLogger,
+        InputStream $input = new InputStream,
     ) {
-        $this->rrd = $processFactory->make($this->config);
+        $this->rrd = $processFactory->make($this->config, $this->logger, $input);
     }
 
     public function fetch(string $path, string $consolidationFunction, array $options = []): array
@@ -32,7 +37,7 @@ class RrdtoolCli implements RrdtoolInterface
     {
         try {
             $command = $this->buildCreateCommand($path, $ds, $retentionPolicies);
-            $this->rrd->run($command);
+            $this->rrd->run((string) $command);
         } catch (Throwable $e) {
             throw new RrdCreationFailedException($e->getMessage(), previous: $e);
         }
@@ -48,7 +53,7 @@ class RrdtoolCli implements RrdtoolInterface
     {
         try {
             $command = $this->buildUpdateCommand($path, $data, $timestamp);
-            $this->rrd->run($command);
+            $this->rrd->run((string) $command);
         } catch (RrdNotFoundException $e) {
             throw $e;
         } catch (Throwable $e) {
