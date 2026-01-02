@@ -11,14 +11,13 @@ use TimeseriesPhp\Core\Results\TimeSeriesResult;
 readonly class RrdCommand implements \Stringable, CompiledQuery
 {
     /**
-     * @param  string  $name
      * @param  array<int|string, string>  $options
      * @param  string[]  $arguments  DEF,CDEF,VDEF,XPORT,etc expressions
      */
     public function __construct(
         public string $name,
-        public array  $options,
-        public array  $arguments,
+        public array $options,
+        public array $arguments,
     ) {}
 
     public function expandedOptions(): array

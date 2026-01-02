@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace TimeseriesPhp\Driver\RRD\Contracts;
 
+use TimeseriesPhp\Core\Enum\MetricType;
+use TimeseriesPhp\Core\Metrics\RetentionPolicy;
+use TimeseriesPhp\Driver\RRD\Exceptions\RrdCreationFailedException;
+use TimeseriesPhp\Driver\RRD\Exceptions\RrdNotFoundException;
+use TimeseriesPhp\Driver\RRD\Exceptions\RrdUpdateFailedException;
+
 interface RrdtoolInterface
 {
     // --- Core Operations ---
@@ -12,26 +18,28 @@ interface RrdtoolInterface
      * Create an RRD database file.
      *
      * @param  string  $path  Path to the .rrd file.
-     * @param  array<string>  $ds  DS Definitions
-     * @param  array<string>  $rra  RRA Definitions
-     * @param  int  $startTime  Start timestamp (defaults to now - 10s).
-     * @param  int  $step  Base interval in seconds.
+     * @param  array<string, MetricType>  $ds  DS Definitions
+     * @param  RetentionPolicy[]  $retentionPolicies  Retention Policies
+     *
+     * @throws RrdCreationFailedException
      */
     public function create(
         string $path,
         array $ds,
-        array $rra,
-        int $startTime = 0,
-        int $step = 300
-    ): bool;
+        array $retentionPolicies
+    ): void;
 
     /**
      * Update the RRD database with new values.
      *
      * @param  string  $path  Path to the .rrd file.
-     * @param  string  $data  Data in the format "timestamp:val1:val2" or "N:val1:val2".
+     * @param  array<string|int, int|float|null>  $data  Array of value(s).
+     * @param  int|null  $timestamp  Timestamp for the update. If null, current time is used.
+     *
+     * @throws RrdUpdateFailedException
+     * @throws RrdNotFoundException
      */
-    public function update(string $path, string $data): bool;
+    public function update(string $path, array $data, ?int $timestamp = null): void;
 
     /**
      * Fetch data from the RRD database.

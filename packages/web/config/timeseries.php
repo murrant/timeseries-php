@@ -21,11 +21,11 @@ return [
             'rrdcached' => 'localhost:42217',
             'rrdtool_exec' => '/usr/bin/rrdtool',
             'default_retention_policies' => [
-                ['resolution' => 60, 'retention' => 172800],     // 1 min for 2 days
-                ['resolution' => 300, 'retention' => 2592000],   // 5 min for 30 days
-                ['resolution' => 1800, 'retention' => 7776000],  // 30 min for 90 days
-                ['resolution' => 7200, 'retention' => 31536000], // 2 hours for 1 year
-                ['resolution' => 86400, 'retention' => 63072000], // 1 day for 2 years
+                ['name' => 'minute_for_two_days', 'resolution' => 60, 'retention' => 172800],
+                ['name' => 'five_min_for_30_days', 'resolution' => 300, 'retention' => 2592000],
+                ['name' => 'thirty_min_for_90_days', 'resolution' => 1800, 'retention' => 7776000],
+                ['name' => 'two_hours_for_1_year', 'resolution' => 7200, 'retention' => 31536000],
+                ['name' => 'one_day_for_2_years', 'resolution' => 86400, 'retention' => 63072000],
             ],
         ],
     ],

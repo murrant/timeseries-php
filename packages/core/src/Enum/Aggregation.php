@@ -4,12 +4,12 @@ namespace TimeseriesPhp\Core\Enum;
 
 enum Aggregation: string
 {
-    case AVG = 'avg';
-    case LAST = 'last';
-    case MAX = 'max';
-    case MEDIAN = 'median';
-    case MIN = 'min';
-    case PERCENTILE = 'percentile';
-    case RATE = 'rate';
-    case SUM = 'sum';
+    case Average = 'avg';
+    case Last = 'last';
+    case Maximum = 'max';
+    case Median = 'median';
+    case Minimum = 'min';
+    case Percentile = 'percentile';
+    case Rate = 'rate';
+    case Sum = 'sum';
 }

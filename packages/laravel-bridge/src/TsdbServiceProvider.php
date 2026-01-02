@@ -49,9 +49,8 @@ class TsdbServiceProvider extends ServiceProvider
             $writer = $metadata->writer;
 
             $loadedConfig = $manager->loadConfig($metadata->config, $config);
-            $writerInstance = $app->make($writer, ['config' => $loadedConfig]);
 
-            return $writerInstance;
+            return $app->make($writer, ['config' => $loadedConfig]);
         });
 
         $this->app->bind(QueryCompiler::class, function ($app) {

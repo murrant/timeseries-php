@@ -33,7 +33,7 @@ class FetchGraphData
 
                     $b->rate()
                         ->multiplyBy(8)
-                        ->aggregate(Aggregation::MAX, Aggregation::MIN, Aggregation::AVG)
+                        ->aggregate(Aggregation::Maximum, Aggregation::Minimum, Aggregation::Average)
                         ->as('Inbound');
                 })
                 ->select('network.port.bytes.out', function (StreamBuilder $b) use ($host, $ifName): void {
@@ -46,7 +46,7 @@ class FetchGraphData
 
                     $b->rate()
                         ->multiplyBy(8)
-                        ->aggregate(Aggregation::MAX, Aggregation::MIN, Aggregation::AVG)
+                        ->aggregate(Aggregation::Maximum, Aggregation::Minimum, Aggregation::Average)
                         ->as('Outbound');
                 })
                 ->build()

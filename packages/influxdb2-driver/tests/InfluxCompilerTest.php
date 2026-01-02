@@ -33,7 +33,7 @@ it('compiles a simple data query', function (): void {
         $period,
         Resolution::minutes(1),
         [
-            new Stream('cpu_usage', [], [], [Aggregation::AVG], 'cpu'),
+            new Stream('cpu_usage', [], [], [Aggregation::Average], 'cpu'),
         ]
     );
 

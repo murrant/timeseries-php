@@ -120,12 +120,12 @@ final readonly class InfluxCompiler implements QueryCompiler
     private function mapAggregation(Aggregation $agg): string
     {
         return match ($agg) {
-            Aggregation::AVG => 'mean',
-            Aggregation::LAST => 'last',
-            Aggregation::MAX => 'max',
-            Aggregation::MEDIAN => 'median',
-            Aggregation::MIN => 'min',
-            Aggregation::SUM => 'sum',
+            Aggregation::Average => 'mean',
+            Aggregation::Last => 'last',
+            Aggregation::Maximum => 'max',
+            Aggregation::Median => 'median',
+            Aggregation::Minimum => 'min',
+            Aggregation::Sum => 'sum',
             default => throw new \InvalidArgumentException('Unsupported aggregation'),
         };
     }

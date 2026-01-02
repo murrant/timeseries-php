@@ -11,7 +11,7 @@ final readonly class SeriesDefinition
         public string $metric,
         public array $variables = [],
         public ?string $legend = null,
-        public Aggregation $aggregation = Aggregation::AVG,
+        public Aggregation $aggregation = Aggregation::Average,
         public ?SeriesStyle $style = null,
     ) {}
 
@@ -21,7 +21,7 @@ final readonly class SeriesDefinition
             metric: $raw['metric'],
             variables: array_map(GraphVariable::fromArray(...), $raw['variables'] ?? []),
             legend: $raw['legend'] ?? null,
-            aggregation: isset($raw['aggregation']) ? Aggregation::from($raw['aggregation']) : Aggregation::AVG,
+            aggregation: isset($raw['aggregation']) ? Aggregation::from($raw['aggregation']) : Aggregation::Average,
             style: isset($raw['style']) ? SeriesStyle::fromArray($raw['style']) : null,
         );
     }
