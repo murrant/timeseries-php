@@ -17,8 +17,7 @@ class LabelStrategyFactory
         ?RrdProcessFactory $processFactory = null,
         ?LoggerInterface $logger = new NullLogger,
         InputStream $input = new InputStream,
-    ): LabelStrategy
-    {
+    ): LabelStrategy {
         $factory ??= new RrdtoolFactory;
         $processFactory ??= new RrdProcessFactory;
 

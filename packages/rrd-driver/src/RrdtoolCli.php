@@ -20,8 +20,8 @@ class RrdtoolCli implements RrdtoolInterface
     private RrdProcess $rrd;
 
     public function __construct(
-        private readonly RrdConfig         $config,
-        RrdProcessFactory                  $processFactory,
+        private readonly RrdConfig $config,
+        RrdProcessFactory $processFactory,
         private LoggerInterface $logger = new NullLogger,
         InputStream $input = new InputStream,
     ) {
