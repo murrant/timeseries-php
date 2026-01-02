@@ -8,6 +8,11 @@ use Filament\Schemas\Schema;
 use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\ChartWidget\Concerns\HasFiltersSchema;
+// Only needed until we can pass the MetricIdentifier from the config
+use TimeseriesPhp\Core\Enum\Aggregation;
+use TimeseriesPhp\Core\Enum\MetricType;
+use TimeseriesPhp\Core\Metrics\MetricIdentifier;
+//
 use TimeseriesPhp\Core\Query\AST\TimeRange;
 use TimeseriesPhp\Core\Results\TimeSeriesResult;
 use TimeseriesPhp\Core\Schema\SchemaManager;
@@ -212,8 +217,9 @@ class PortTrafficChart extends ChartWidget
     protected function getAvailableHostnames(): array
     {
         $query = app(SchemaManager::class)->labels()
-            ->from('network.port.bytes.in')
-            ->from('network.port.bytes.out');
+            // TODO: fetch MetricIdentifier from config
+            ->from(new MetricIdentifier('network.port', 'bits.in', 'bps', MetricType::COUNTER, ['host', 'ifName', 'ifIndex'], [Aggregation::Rate, Aggregation::Sum]))
+            ->from(new MetricIdentifier('network.port', 'bits.out', 'bps', MetricType::COUNTER, ['host', 'ifName', 'ifIndex'], [Aggregation::Rate, Aggregation::Sum]));
 
         if (! empty($this->filters['ifName'])) {
             $query->where('ifName', $this->filters['ifName']);
@@ -232,8 +238,9 @@ class PortTrafficChart extends ChartWidget
     protected function getAvailableIfNames(): array
     {
         $query = app(SchemaManager::class)->labels()
-            ->from('network.port.bytes.in')
-            ->from('network.port.bytes.out');
+            // TODO: fetch MetricIdentifier from config
+            ->from(new MetricIdentifier('network.port', 'bits.in', 'bps', MetricType::COUNTER, ['host', 'ifName', 'ifIndex'], [Aggregation::Rate, Aggregation::Sum]))
+            ->from(new MetricIdentifier('network.port', 'bits.out', 'bps', MetricType::COUNTER, ['host', 'ifName', 'ifIndex'], [Aggregation::Rate, Aggregation::Sum]));
 
         if (! empty($this->filters['hostname'])) {
             $query->where('host', $this->filters['hostname']);
