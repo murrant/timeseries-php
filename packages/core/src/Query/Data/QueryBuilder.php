@@ -37,9 +37,9 @@ class QueryBuilder
         return $this;
     }
 
-    public function select(string $metric, callable $setup): self
+    public function select(string $namespace, string $metric, callable $setup): self
     {
-        $builder = new StreamBuilder($metric);
+        $builder = new StreamBuilder($namespace, $metric);
         $setup($builder);
         $this->streams[] = $builder->build();
 

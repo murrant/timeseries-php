@@ -8,6 +8,7 @@ use TimeseriesPhp\Core\Enum\Aggregation;
 readonly class Stream
 {
     public function __construct(
+        public string $namespace,
         public string $metric,
         /** @var Filter[] */
         public array $filters,

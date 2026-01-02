@@ -23,7 +23,7 @@ class FetchGraphData
     {
         return $this->tsdb->query(
             (new QueryBuilder($range))
-                ->select('network.port.bytes.in', function (StreamBuilder $b) use ($host, $ifName): void {
+                ->select('network.port', 'bytes.in', function (StreamBuilder $b) use ($host, $ifName): void {
                     if ($host) {
                         $b->where('host', $host);
                     }
@@ -36,7 +36,7 @@ class FetchGraphData
                         ->aggregate(Aggregation::Maximum, Aggregation::Minimum, Aggregation::Average)
                         ->as('Inbound');
                 })
-                ->select('network.port.bytes.out', function (StreamBuilder $b) use ($host, $ifName): void {
+                ->select('network.port', 'bytes.out', function (StreamBuilder $b) use ($host, $ifName): void {
                     if ($host) {
                         $b->where('host', $host);
                     }

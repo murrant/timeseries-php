@@ -23,9 +23,9 @@ class LabelQueryBuilder
         private readonly TsdbConnection $connection
     ) {}
 
-    public function from(string $metric): self
+    public function from(string $namespace, string $metric): self
     {
-        $this->metrics[] = $metric;
+        $this->metrics[] = [$namespace, $metric];
 
         return $this;
     }

@@ -78,7 +78,8 @@ final readonly class InfluxCompiler implements QueryCompiler
         $flux = [
             sprintf('from(bucket: "%s")', $this->config->bucket),
             '|> range(start: rangeStart, stop: rangeStop)',
-            sprintf('|> filter(fn: (r) => r._measurement == "%s")', $stream->metric),
+            sprintf('|> filter(fn: (r) => r._measurement == "%s")', $stream->namespace),
+            sprintf('|> filter(fn: (r) => r._field == "%s")', $stream->metric),
         ];
 
         $flux = $this->compileFluxFilters($stream->filters, $flux);
@@ -159,7 +160,7 @@ final readonly class InfluxCompiler implements QueryCompiler
         ];
 
         if (! empty($query->metrics)) {
-            $metricFilters = array_map(fn ($m) => sprintf('r._measurement == "%s"', $m), $query->metrics);
+            $metricFilters = array_map(fn ($m) => sprintf('r._measurement == "%s"', $m[0]), $query->metrics);
             $flux[] = sprintf('|> filter(fn: (r) => %s)', implode(' or ', $metricFilters));
         }
 

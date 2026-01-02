@@ -94,7 +94,8 @@ class InfluxWriter implements TsdbWriter
 
     private function formatLineProtocol(MetricSample $sample): string
     {
-        $measurement = $sample->metric->key();
+        $measurement = $sample->metric->namespace;
+        $valuename = $sample->metric->name;
 
         $tags = [];
         foreach ($sample->labels as $key => $value) {
@@ -108,7 +109,7 @@ class InfluxWriter implements TsdbWriter
 
         $timestamp = $sample->timestamp->getTimestamp();
 
-        return "{$this->escape($measurement)}{$tagStr} value={$fieldValue} {$timestamp}";
+        return "{$this->escape($measurement)}{$tagStr} $valuename={$fieldValue} {$timestamp}";
     }
 
     private function escape(string $value): string

@@ -25,7 +25,7 @@ class StreamBuilder
 
     private ?string $alias = null;
 
-    public function __construct(private readonly string $metric) {}
+    public function __construct(private readonly string $namespace, private readonly string $metric) {}
 
     public function where(string $key, mixed $val, Operator $op = Operator::Equals): self
     {
@@ -64,6 +64,6 @@ class StreamBuilder
 
     public function build(): Stream
     {
-        return new Stream($this->metric, $this->filters, $this->pipeline, $this->aggregations, $this->alias);
+        return new Stream($this->namespace, $this->metric, $this->filters, $this->pipeline, $this->aggregations, $this->alias);
     }
 }

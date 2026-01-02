@@ -12,7 +12,7 @@ final readonly class LabelQuery implements Query
 {
     public function __construct(
         public ?string $label,
-        /** @var string[] */
+        /** @var string[][] */
         public array $metrics,
         /** @var Filter[] */
         public array $filters,
