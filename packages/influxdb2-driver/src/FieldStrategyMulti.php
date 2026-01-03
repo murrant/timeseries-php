@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace TimeseriesPhp\Driver\InfluxDB2;
 
 use TimeseriesPhp\Core\Metrics\MetricIdentifier;
-use TimeseriesPhp\Driver\RRD\Contracts\FieldStrategy;
+use TimeseriesPhp\Driver\InfluxDB2\Contracts\FieldStrategy;
 
 /**
  * Strategy for using a single field for each metric
