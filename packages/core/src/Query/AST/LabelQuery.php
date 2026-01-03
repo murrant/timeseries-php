@@ -3,7 +3,6 @@
 namespace TimeseriesPhp\Core\Query\AST;
 
 use TimeseriesPhp\Core\Contracts\Query;
-use TimeseriesPhp\Core\Metrics\MetricIdentifier;
 use TimeseriesPhp\Core\Results\LabelResult;
 
 /**
@@ -13,7 +12,7 @@ final readonly class LabelQuery implements Query
 {
     public function __construct(
         public ?string $label,
-        /** @var MetricIdentifier[] */
+        /** @var string[] */
         public array $metrics,
         /** @var Filter[] */
         public array $filters,

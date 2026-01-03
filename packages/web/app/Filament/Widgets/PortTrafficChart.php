@@ -8,7 +8,6 @@ use Filament\Schemas\Schema;
 use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\ChartWidget\Concerns\HasFiltersSchema;
-use TimeseriesPhp\Core\Contracts\MetricRepository;
 use TimeseriesPhp\Core\Query\AST\TimeRange;
 use TimeseriesPhp\Core\Results\TimeSeriesResult;
 use TimeseriesPhp\Core\Schema\SchemaManager;
@@ -212,11 +211,9 @@ class PortTrafficChart extends ChartWidget
      */
     protected function getAvailableHostnames(): array
     {
-        $metrics = app()->make(MetricRepository::class);
-
         $query = app(SchemaManager::class)->labels()
-            ->from($metrics->get('network.port.bits.in'))
-            ->from($metrics->get('network.port.bits.out'));
+            ->from('network.port.bytes.in')
+            ->from('network.port.bytes.out');
 
         if (! empty($this->filters['ifName'])) {
             $query->where('ifName', $this->filters['ifName']);
@@ -234,11 +231,9 @@ class PortTrafficChart extends ChartWidget
      */
     protected function getAvailableIfNames(): array
     {
-        $metrics = app()->make(MetricRepository::class);
-
         $query = app(SchemaManager::class)->labels()
-            ->from($metrics->get('network.port.bits.in'))
-            ->from($metrics->get('network.port.bits.out'));
+            ->from('network.port.bytes.in')
+            ->from('network.port.bytes.out');
 
         if (! empty($this->filters['hostname'])) {
             $query->where('host', $this->filters['hostname']);

@@ -2,7 +2,6 @@
 
 namespace App\Actions;
 
-use TimeseriesPhp\Core\Contracts\MetricRepository;
 use TimeSeriesPhp\Core\Contracts\Result;
 use TimeseriesPhp\Core\Contracts\TsdbConnection;
 use TimeseriesPhp\Core\Enum\Aggregation;
@@ -15,7 +14,6 @@ class FetchGraphData
 {
     public function __construct(
         private readonly TsdbConnection $tsdb,
-        private readonly MetricRepository $metricRepository,
     ) {}
 
     /**
@@ -25,7 +23,7 @@ class FetchGraphData
     {
         return $this->tsdb->query(
             (new QueryBuilder($range))
-                ->select($this->metricRepository->get('network.port.bytes.in'), function (StreamBuilder $b) use ($host, $ifName): void {
+                ->select('network.port.bytes.in', function (StreamBuilder $b) use ($host, $ifName): void {
                     if ($host) {
                         $b->where('host', $host);
                     }
@@ -38,7 +36,7 @@ class FetchGraphData
                         ->aggregate(Aggregation::Maximum, Aggregation::Minimum, Aggregation::Average)
                         ->as('Inbound');
                 })
-                ->select($this->metricRepository->get('network.port.bytes.out'), function (StreamBuilder $b) use ($host, $ifName): void {
+                ->select('network.port.bytes.out', function (StreamBuilder $b) use ($host, $ifName): void {
                     if ($host) {
                         $b->where('host', $host);
                     }

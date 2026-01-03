@@ -3,7 +3,6 @@
 namespace TimeseriesPhp\Core\Query\Data;
 
 use TimeseriesPhp\Core\Contracts\Query;
-use TimeseriesPhp\Core\Metrics\MetricIdentifier;
 use TimeseriesPhp\Core\Query\AST\DataQuery;
 use TimeseriesPhp\Core\Query\AST\Resolution;
 use TimeseriesPhp\Core\Query\AST\Stream;
@@ -38,7 +37,7 @@ class QueryBuilder
         return $this;
     }
 
-    public function select(MetricIdentifier $metric, callable $setup): self
+    public function select(string $metric, callable $setup): self
     {
         $builder = new StreamBuilder($metric);
         $setup($builder);
