@@ -22,14 +22,21 @@ use TimeseriesPhp\Core\Query\AST\Stream;
 use TimeseriesPhp\Core\Query\AST\TimeRange;
 use TimeseriesPhp\Core\Results\LabelResult;
 use TimeseriesPhp\Core\Results\TimeSeriesResult;
+use TimeseriesPhp\Driver\InfluxDB2\Contracts\FieldStrategy;
+use TimeseriesPhp\Driver\InfluxDB2\Factories\FieldStrategyFactory;
 
 /** @template TResult of Result */
 final readonly class InfluxCompiler implements QueryCompiler
 {
+    private readonly FieldStrategy $fieldStrategy;
+
     public function __construct(
         private InfluxConfig $config,
         private MetricRepository $metricRepository,
-    ) {}
+        private FieldStrategyFactory $fieldStrategyFactory,
+    ) {
+        $this->fieldStrategy = $fieldStrategyFactory->make($this->config);
+    }
 
     /**
      * @param  Query<TResult>  $query
@@ -77,22 +84,14 @@ final readonly class InfluxCompiler implements QueryCompiler
      */
     private function compileStream(Stream $stream, Resolution $resolution): array
     {
-        if ($this->config->multiple_fields) {
-            $metric = $this->metricRepository->get($stream->metric);
+        $metric = $this->metricRepository->get($stream->metric);
 
-            $flux = [
-                sprintf('from(bucket: "%s")', $this->config->bucket),
-                '|> range(start: rangeStart, stop: rangeStop)',
-                sprintf('|> filter(fn: (r) => r._measurement == "%s")', $metric->namespace),
-                sprintf('|> filter(fn: (r) => r._field == "%s")', $metric->name),
-            ];
-        } else {
-            $flux = [
-                sprintf('from(bucket: "%s")', $this->config->bucket),
-                '|> range(start: rangeStart, stop: rangeStop)',
-                sprintf('|> filter(fn: (r) => r._measurement == "%s")', $stream->metric),
-            ];
-        }
+        $flux = [
+            sprintf('from(bucket: "%s")', $this->config->bucket),
+            '|> range(start: rangeStart, stop: rangeStop)',
+            sprintf('|> filter(fn: (r) => r._measurement == "%s")', $this->fieldStrategy->getMeasurementName($metric)),
+            sprintf('|> filter(fn: (r) => r._field == "%s")', $this->fieldStrategy->getFieldName($metric)),
+        ];
 
         $flux = $this->compileFluxFilters($stream->filters, $flux);
 
@@ -172,11 +171,7 @@ final readonly class InfluxCompiler implements QueryCompiler
         ];
 
         if (! empty($query->metrics)) {
-            if ($this->config->multiple_fields) {
-                $metricFilters = array_map(fn ($m) => sprintf('r._measurement == "%s"', $m), array_unique(array_map(fn ($m) => $this->metricRepository->get($m)->namespace, $query->metrics)));
-            } else {
-                $metricFilters = array_map(fn ($m) => sprintf('r._measurement == "%s"', $m), $query->metrics);
-            }
+            $metricFilters = array_map(fn ($m) => sprintf('r._measurement == "%s"', $m), array_unique(array_map(fn ($m) => $this->fieldStrategy->getMeasurementName($this->metricRepository->get($m)), $query->metrics)));
 
             $flux[] = sprintf('|> filter(fn: (r) => %s)', implode(' or ', $metricFilters));
         }
