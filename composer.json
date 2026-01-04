@@ -28,7 +28,8 @@
         "pestphp/pest-plugin-laravel": "^4.0",
         "phpstan/phpstan": "^2.1",
         "rector/rector": "^2.2",
-        "symplify/monorepo-builder": "^11.2"
+        "symplify/monorepo-builder": "^11.2",
+        "peckphp/peck": "^0.2.0"
     },
     "replace": {
         "laravel/livewire-starter-kit": "self.version",
@@ -108,10 +109,10 @@
         "lint": "pint",
         "refactor": "rector",
         "merge": "monorepo-builder merge",
-        "test:type-coverage": "pest --type-coverage --exactly=100",
+        "test:type-coverage": "@php -d xdebug.mode=coverage vendor/bin/pest --coverage --min=100",
         "test:typos": "peck",
         "test:lint": "pint --test",
-        "test:unit": "pest --coverage --exactly=100",
+        "test:unit": "pest",
         "test:types": "phpstan",
         "test:refactor": "rector --dry-run",
         "test": [

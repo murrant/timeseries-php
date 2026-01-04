@@ -1,0 +1,39 @@
+{
+    "preset": "laravel",
+    "ignore": {
+        "words": [
+            "AST",
+            "agg",
+            "asc",
+            "desc",
+            "ds",
+            "filesystem",
+            "filesystems",
+            "hostnames",
+            "influxdb",
+            "js",
+            "matcher",
+            "matchers",
+            "monorepo",
+            "php",
+            "rra",
+            "rrd",
+            "rrdcached",
+            "rrdtool",
+            "timeseries",
+            "tsdb",
+            "wip",
+            "xport",
+            "yaml"
+        ],
+        "paths": [
+            "packages/core/vendor",
+            "packages/influxdb2-driver/vendor",
+            "packages/laravel-bridge/vendor",
+            "packages/null-driver/vendor",
+            "packages/rrd-driver/vendor",
+            "packages/web/public",
+            "packages/web/vendor"
+        ]
+    }
+}

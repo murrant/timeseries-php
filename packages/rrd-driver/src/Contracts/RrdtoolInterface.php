@@ -107,7 +107,7 @@ interface RrdtoolInterface
     /**
      * Forces rrdcached to write pending updates from memory to the disk.
      */
-    public function flushcache(string $path): bool;
+    public function flushCache(string $path): bool;
 
     /**
      * Get the last error message from the backend.

@@ -86,9 +86,9 @@ class RrdtoolCli implements RrdtoolInterface
         // TODO: Implement xport() method.
     }
 
-    public function flushcache(string $path): bool
+    public function flushCache(string $path): bool
     {
-        // TODO: Implement flushcache() method.
+        // TODO: Implement flushCache() method.
     }
 
     public function getLastError(): string
