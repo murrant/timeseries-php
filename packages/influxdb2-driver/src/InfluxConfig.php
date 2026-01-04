@@ -12,10 +12,11 @@ final readonly class InfluxConfig implements TsdbConfig
         public string $token = '',
         public string $org = '',
         public string $bucket = '',
+        public bool $multiple_fields = false,
     ) {}
 
     /**
-     * @param  array{host: string, port: int, token: string, org: string, bucket: string}  $config
+     * @param  array{host: string, port: int, token: string, org: string, bucket: string, multiple_fields: bool}  $config
      */
     public static function fromArray(array $config): self
     {
