@@ -29,7 +29,7 @@ it('writes a metric sample to influxdb2', function (): void {
     $bucket = 'test-bucket';
 
     $sample = new MetricSample(
-        new MetricIdentifier('app', 'cpu_usage'),
+        'app.cpu_usage',
         ['host' => 'server01', 'region' => 'us-west'],
         42.5,
         new \DateTimeImmutable('2023-10-27 12:00:00', new \DateTimeZone('UTC'))
@@ -88,7 +88,7 @@ it('escapes special characters in line protocol', function (): void {
     $stream = mock(StreamInterface::class);
 
     $sample = new MetricSample(
-        new MetricIdentifier('my namespace', 'my,metric'),
+        'my namespace.my,metric',
         ['label=name' => 'label value'],
         100,
         new \DateTimeImmutable('2023-10-27 12:00:00', new \DateTimeZone('UTC'))
