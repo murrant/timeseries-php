@@ -9,40 +9,34 @@ use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use PsrDiscovery\Discover;
 use TimeseriesPhp\Core\Contracts\CompiledQuery;
-use TimeseriesPhp\Core\Contracts\Result;
-use TimeseriesPhp\Core\Contracts\TsdbClient;
+use TimeseriesPhp\Core\Contracts\QueryExecutor;
+use TimeseriesPhp\Core\Contracts\QueryResult;
 use TimeseriesPhp\Core\Enum\QueryType;
 use TimeseriesPhp\Core\Exceptions\TimeseriesException;
 use TimeseriesPhp\Core\Results\DataPoint;
-use TimeseriesPhp\Core\Results\LabelResult;
+use TimeseriesPhp\Core\Results\LabelQueryResult;
 use TimeseriesPhp\Core\Results\TimeSeries;
-use TimeseriesPhp\Core\Results\TimeSeriesResult;
+use TimeseriesPhp\Core\Results\TimeSeriesQueryResult;
 
 /**
- * @template TResult of Result
+ * @template TResult of QueryResult
  *
- * @implements TsdbClient<TResult>
+ * @implements QueryExecutor<TResult>
  */
-class InfluxClient implements TsdbClient
+class InfluxQueryExecutor implements QueryExecutor
 {
-    private readonly ClientInterface $httpClient;
 
-    private readonly RequestFactoryInterface $requestFactory;
-
-    private readonly StreamFactoryInterface $streamFactory;
 
     public function __construct(
-        private readonly InfluxConfig $config,
-        ?ClientInterface $httpClient = null,
-        ?RequestFactoryInterface $requestFactory = null,
-        ?StreamFactoryInterface $streamFactory = null,
+        private readonly InfluxConfig    $config,
+        private readonly ClientInterface $httpClient,
+        private readonly RequestFactoryInterface $requestFactory,
+        private readonly StreamFactoryInterface $streamFactory,
+
         private readonly LoggerInterface $logger = new NullLogger,
     ) {
-        $this->httpClient = $httpClient ?? Discover::httpClient();
-        $this->requestFactory = $requestFactory ?? Discover::httpRequestFactory();
-        $this->streamFactory = $streamFactory ?? Discover::httpStreamFactory();
+
     }
 
     /**
@@ -51,7 +45,7 @@ class InfluxClient implements TsdbClient
      *
      * @throws TimeseriesException
      */
-    public function execute(CompiledQuery $query): Result
+    public function execute(CompiledQuery $query): QueryResult
     {
         if (! $query instanceof InfluxQuery) {
             throw new InvalidArgumentException('Query must be an instance of InfluxQuery');
@@ -120,7 +114,7 @@ class InfluxClient implements TsdbClient
      * @param  InfluxQuery<TResult>  $query
      * @return TResult
      */
-    private function parseResponse(string $csv, InfluxQuery $query): Result
+    private function parseResponse(string $csv, InfluxQuery $query): QueryResult
     {
         $lines = explode("\n", $csv);
         $data = [];
@@ -162,7 +156,7 @@ class InfluxClient implements TsdbClient
     /**
      * @param  array<int, array<string, string>>  $data
      */
-    private function parseLabelResult(array $data): LabelResult
+    private function parseLabelResult(array $data): LabelQueryResult
     {
         $values = [];
         $labelNames = [];
@@ -186,14 +180,14 @@ class InfluxClient implements TsdbClient
             }
         }
 
-        return new LabelResult(array_keys($labelNames), array_values(array_unique($values)));
+        return new LabelQueryResult(array_keys($labelNames), array_values(array_unique($values)));
     }
 
     /**
      * @param  array<int, array<string, string>>  $data
-     * @param  InfluxQuery<TimeSeriesResult>  $query
+     * @param  InfluxQuery<TimeSeriesQueryResult>  $query
      */
-    private function parseTimeSeriesResult(array $data, InfluxQuery $query): TimeSeriesResult
+    private function parseTimeSeriesResult(array $data, InfluxQuery $query): TimeSeriesQueryResult
     {
         $seriesData = [];
         foreach ($data as $row) {
@@ -231,6 +225,6 @@ class InfluxClient implements TsdbClient
             $resultSeries[] = new TimeSeries($measurement, $alias, $labels, $points);
         }
 
-        return new TimeSeriesResult($resultSeries, $query->range, $query->resolution);
+        return new TimeSeriesQueryResult($resultSeries, $query->range, $query->resolution);
     }
 }

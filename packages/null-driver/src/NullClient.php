@@ -3,16 +3,16 @@
 namespace TimeseriesPhp\Driver\Null;
 
 use TimeseriesPhp\Core\Contracts\CompiledQuery;
-use TimeseriesPhp\Core\Contracts\Result;
-use TimeseriesPhp\Core\Contracts\TsdbClient;
+use TimeseriesPhp\Core\Contracts\QueryExecutor;
+use TimeseriesPhp\Core\Contracts\QueryResult;
 use TimeseriesPhp\Core\Query\AST\Resolution;
 use TimeseriesPhp\Core\Query\AST\TimeRange;
-use TimeseriesPhp\Core\Results\TimeSeriesResult;
+use TimeseriesPhp\Core\Results\TimeSeriesQueryResult;
 
-final class NullClient implements TsdbClient
+final class NullClient implements QueryExecutor
 {
-    public function execute(CompiledQuery $query): Result
+    public function execute(CompiledQuery $query): QueryResult
     {
-        return new TimeSeriesResult([], TimeRange::lastMinutes(60), Resolution::auto());
+        return new TimeSeriesQueryResult([], TimeRange::lastMinutes(60), Resolution::auto());
     }
 }

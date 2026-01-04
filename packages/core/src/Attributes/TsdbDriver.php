@@ -5,21 +5,21 @@ declare(strict_types=1);
 namespace TimeseriesPhp\Core\Attributes;
 
 use Attribute;
+use TimeseriesPhp\Core\Contracts\DriverCapabilities;
+use TimeseriesPhp\Core\Contracts\DriverConfig;
 use TimeseriesPhp\Core\Contracts\QueryCompiler;
-use TimeseriesPhp\Core\Contracts\TsdbCapabilities;
-use TimeseriesPhp\Core\Contracts\TsdbClient;
-use TimeseriesPhp\Core\Contracts\TsdbConfig;
-use TimeseriesPhp\Core\Contracts\TsdbWriter;
+use TimeseriesPhp\Core\Contracts\QueryExecutor;
+use TimeseriesPhp\Core\Contracts\Writer;
 
 #[Attribute(Attribute::TARGET_CLASS)]
 class TsdbDriver
 {
     /**
-     * @param  class-string<TsdbConfig>  $config
-     * @param  class-string<TsdbWriter>  $writer
+     * @param  class-string<DriverConfig>  $config
+     * @param  class-string<Writer>  $writer
      * @param  class-string<QueryCompiler>  $compiler
-     * @param  class-string<TsdbClient>  $client
-     * @param  class-string<TsdbCapabilities>  $capabilities
+     * @param  class-string<QueryExecutor>  $client
+     * @param  class-string<DriverCapabilities>  $capabilities
      */
     public function __construct(
         public string $name,

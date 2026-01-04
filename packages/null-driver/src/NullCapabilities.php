@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace TimeseriesPhp\Driver\Null;
 
-use TimeseriesPhp\Core\Contracts\TsdbCapabilities;
+use TimeseriesPhp\Core\Contracts\DriverCapabilities;
 
-final class NullCapabilities implements TsdbCapabilities
+final class NullCapabilities implements DriverCapabilities
 {
     public function supportsRate(): bool
     {

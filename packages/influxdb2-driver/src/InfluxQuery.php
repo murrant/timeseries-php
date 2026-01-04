@@ -3,13 +3,13 @@
 namespace TimeseriesPhp\Driver\InfluxDB2;
 
 use TimeseriesPhp\Core\Contracts\CompiledQuery;
-use TimeseriesPhp\Core\Contracts\Result;
+use TimeseriesPhp\Core\Contracts\QueryResult;
 use TimeseriesPhp\Core\Enum\QueryType;
 use TimeseriesPhp\Core\Query\AST\Resolution;
 use TimeseriesPhp\Core\Query\AST\TimeRange;
 
 /**
- * @template TResult of Result
+ * @template TResult of QueryResult
  *
  * @implements CompiledQuery<TResult>
  */

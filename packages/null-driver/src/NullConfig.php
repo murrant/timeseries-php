@@ -2,9 +2,9 @@
 
 namespace TimeseriesPhp\Driver\Null;
 
-use TimeseriesPhp\Core\Contracts\TsdbConfig;
+use TimeseriesPhp\Core\Contracts\DriverConfig;
 
-class NullConfig implements TsdbConfig
+class NullConfig implements DriverConfig
 {
     public static function fromArray(array $config): self
     {

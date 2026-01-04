@@ -4,5 +4,5 @@ namespace TimeseriesPhp\Core\Contracts;
 
 interface Driver
 {
-    public function getCapabilities(): TsdbCapabilities;
+    public function getCapabilities(): DriverCapabilities;
 }

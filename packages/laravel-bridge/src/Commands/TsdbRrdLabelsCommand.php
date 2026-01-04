@@ -12,7 +12,7 @@ use TimeseriesPhp\Driver\RRD\Contracts\LabelStrategy;
 
 class TsdbRrdLabelsCommand extends Command
 {
-    protected $signature = 'tsdb:rrd-labels {label-command:names|values|filename} {--metric=*} {--label=*}';
+    protected $signature = 'tsdb:rrd-labels {label-command} {--metric=*} {--label=*}';
 
     protected $description = 'Manage RRD labels for metrics';
 

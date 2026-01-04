@@ -3,7 +3,7 @@
 namespace TimeseriesPhp\Bridge\Laravel;
 
 use Illuminate\Filesystem\Filesystem;
-use TimeseriesPhp\Core\DriverResolver;
+use TimeseriesPhp\Core\Services\DriverResolver;
 
 class TsdbManifestCompiler
 {

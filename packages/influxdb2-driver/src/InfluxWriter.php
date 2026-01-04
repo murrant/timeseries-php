@@ -11,11 +11,11 @@ use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use PsrDiscovery\Discover;
-use TimeseriesPhp\Core\Contracts\TsdbWriter;
+use TimeseriesPhp\Core\Contracts\Writer;
 use TimeseriesPhp\Core\Exceptions\TimeseriesException;
 use TimeseriesPhp\Core\Metrics\MetricSample;
 
-class InfluxWriter implements TsdbWriter
+class InfluxWriter implements Writer
 {
     private readonly ClientInterface $httpClient;
 
@@ -24,10 +24,10 @@ class InfluxWriter implements TsdbWriter
     private readonly StreamFactoryInterface $streamFactory;
 
     public function __construct(
-        private readonly InfluxConfig $config,
-        ?ClientInterface $httpClient = null,
-        ?RequestFactoryInterface $requestFactory = null,
-        ?StreamFactoryInterface $streamFactory = null,
+        private readonly InfluxConfig    $config,
+        ?ClientInterface                 $httpClient = null,
+        ?RequestFactoryInterface         $requestFactory = null,
+        ?StreamFactoryInterface          $streamFactory = null,
         private readonly LoggerInterface $logger = new NullLogger,
     ) {
         $this->httpClient = $httpClient ?? Discover::httpClient();

@@ -7,12 +7,12 @@ use TimeseriesPhp\Core\Metrics\MetricSample;
 interface TsdbConnection
 {
     /**
-     * @template TResult of Result
+     * @template TResult of QueryResult
      *
      * @param  Query<TResult>  $query
      * @return TResult
      */
-    public function query(Query $query): Result;
+    public function query(Query $query): QueryResult;
 
     public function write(MetricSample $sample): void;
 }

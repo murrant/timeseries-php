@@ -3,13 +3,13 @@
 namespace TimeseriesPhp\Core\Contracts;
 
 /**
- * @template TResult of Result
+ * @template TResult of QueryResult
  */
-interface TsdbClient
+interface QueryExecutor
 {
     /**
      * @param  CompiledQuery<TResult>  $query
      * @return TResult
      */
-    public function execute(CompiledQuery $query): Result;
+    public function execute(CompiledQuery $query): QueryResult;
 }

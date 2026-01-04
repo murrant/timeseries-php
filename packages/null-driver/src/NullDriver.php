@@ -6,7 +6,7 @@ namespace TimeseriesPhp\Driver\Null;
 
 use TimeseriesPhp\Core\Attributes\TsdbDriver;
 use TimeseriesPhp\Core\Contracts\Driver;
-use TimeseriesPhp\Core\Contracts\TsdbCapabilities;
+use TimeseriesPhp\Core\Contracts\DriverCapabilities;
 
 #[TsdbDriver(
     name: 'null',
@@ -18,7 +18,7 @@ use TimeseriesPhp\Core\Contracts\TsdbCapabilities;
 )]
 class NullDriver implements Driver
 {
-    public function getCapabilities(): TsdbCapabilities
+    public function getCapabilities(): DriverCapabilities
     {
         return new NullCapabilities;
     }

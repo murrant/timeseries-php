@@ -3,6 +3,6 @@
 namespace TimeseriesPhp\Core\Contracts;
 
 /**
- * @template TResult of Result
+ * @template TResult of QueryResult
  */
 interface CompiledQuery {}

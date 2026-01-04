@@ -22,7 +22,7 @@ use TimeseriesPhp\Driver\RRD\Exceptions\RrdException;
 final readonly class FilenameLabelStrategy implements LabelStrategy
 {
     public function __construct(
-        private RrdConfig $config,
+        private RrdConfig         $config,
         private ?RrdtoolInterface $rrdTool = null
     ) {}
 
@@ -93,6 +93,7 @@ final readonly class FilenameLabelStrategy implements LabelStrategy
     public function listLabelNames(MetricIdentifier|array $metrics): array
     {
         $labelNames = [];
+        $metrics = is_array($metrics) ? $metrics : [$metrics];
 
         foreach ($metrics as $metric) {
             $files = $this->listFilenames($metric);
@@ -119,6 +120,7 @@ final readonly class FilenameLabelStrategy implements LabelStrategy
     public function listLabelValues(MetricIdentifier|array $metrics, string $labelName, array $filters = []): array
     {
         $values = [];
+        $metrics = is_array($metrics) ? $metrics : [$metrics];
 
         foreach ($metrics as $metric) {
             $files = $this->listFilenames($metric, $filters);
@@ -222,11 +224,11 @@ final readonly class FilenameLabelStrategy implements LabelStrategy
         $value = $labels[$filter->key] ?? null;
 
         return match ($filter->operator) {
-            Operator::Equals => $value === $filter->value,
-            Operator::NotEquals => $value !== $filter->value,
-            Operator::RegexMatch => $value !== null &&
+            Operator::Equal => $value === $filter->value,
+            Operator::NotEqual => $value !== $filter->value,
+            Operator::Regex => $value !== null &&
                 preg_match('/'.$filter->value.'/', $value) === 1,
-            Operator::RegexNotMatch => $value === null ||
+            Operator::NotRegex => $value === null ||
                 preg_match('/'.$filter->value.'/', $value) === 0,
             Operator::In => is_array($filter->value) && in_array($value, $filter->value, true),
             Operator::NotIn => ! is_array($filter->value) || ! in_array($value, $filter->value, true),

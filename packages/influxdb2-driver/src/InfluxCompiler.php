@@ -7,7 +7,7 @@ use TimeseriesPhp\Core\Contracts\CompiledQuery;
 use TimeseriesPhp\Core\Contracts\Operation;
 use TimeseriesPhp\Core\Contracts\Query;
 use TimeseriesPhp\Core\Contracts\QueryCompiler;
-use TimeseriesPhp\Core\Contracts\Result;
+use TimeseriesPhp\Core\Contracts\QueryResult;
 use TimeseriesPhp\Core\Enum\Aggregation;
 use TimeseriesPhp\Core\Enum\OperationType;
 use TimeseriesPhp\Core\Enum\Operator;
@@ -19,10 +19,10 @@ use TimeseriesPhp\Core\Query\AST\Operations\MathOperation;
 use TimeseriesPhp\Core\Query\AST\Resolution;
 use TimeseriesPhp\Core\Query\AST\Stream;
 use TimeseriesPhp\Core\Query\AST\TimeRange;
-use TimeseriesPhp\Core\Results\LabelResult;
-use TimeseriesPhp\Core\Results\TimeSeriesResult;
+use TimeseriesPhp\Core\Results\LabelQueryResult;
+use TimeseriesPhp\Core\Results\TimeSeriesQueryResult;
 
-/** @template TResult of Result */
+/** @template TResult of QueryResult */
 final readonly class InfluxCompiler implements QueryCompiler
 {
     public function __construct(
@@ -47,7 +47,7 @@ final readonly class InfluxCompiler implements QueryCompiler
     }
 
     /**
-     * @return CompiledQuery<TimeSeriesResult>
+     * @return CompiledQuery<TimeSeriesQueryResult>
      */
     private function compileDataQuery(DataQuery $query): CompiledQuery
     {
@@ -64,7 +64,7 @@ final readonly class InfluxCompiler implements QueryCompiler
             $flux = [...$flux, ...$this->compileStream($stream, $query->resolution)];
         }
 
-        /** @var InfluxQuery<TimeSeriesResult> $compiled */
+        /** @var InfluxQuery<TimeSeriesQueryResult> $compiled */
         $compiled = new InfluxQuery($flux, $query->period, $query->resolution);
 
         return $compiled;
@@ -131,7 +131,7 @@ final readonly class InfluxCompiler implements QueryCompiler
     }
 
     /**
-     * @return CompiledQuery<LabelResult>
+     * @return CompiledQuery<LabelQueryResult>
      */
     private function compileLabelQuery(LabelQuery $query): CompiledQuery
     {
@@ -143,7 +143,7 @@ final readonly class InfluxCompiler implements QueryCompiler
                 $flux[] = sprintf('schema.tagValues(bucket: "%s", tag: "%s")', $this->config->bucket, $query->label);
             }
 
-            /** @var InfluxQuery<LabelResult> $compiled */
+            /** @var InfluxQuery<LabelQueryResult> $compiled */
             $compiled = new InfluxQuery($flux, new TimeRange(end: new \DateTimeImmutable, duration: new \DateInterval('PT1H')), Resolution::auto(), QueryType::Label);
 
             return $compiled;
@@ -175,7 +175,7 @@ final readonly class InfluxCompiler implements QueryCompiler
             $flux[] = sprintf('|> distinct(column: "%s")', $query->label);
         }
 
-        /** @var InfluxQuery<LabelResult> $compiled */
+        /** @var InfluxQuery<LabelQueryResult> $compiled */
         $compiled = new InfluxQuery($flux, $period, Resolution::auto(), QueryType::Label);
 
         return $compiled;

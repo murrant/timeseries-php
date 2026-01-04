@@ -19,6 +19,8 @@
   },
   "extra": {
     "timeseries-php": {
+      "driver": "influxdb2",
+      "factory": "\\TimeseriesPhp\\Driver\\InfluxDB2\\InfluxFactory",
       "driver-class": "\\TimeseriesPhp\\Driver\\InfluxDB2\\InfluxDriver"
     }
   }

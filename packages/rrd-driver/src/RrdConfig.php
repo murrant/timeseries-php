@@ -2,14 +2,15 @@
 
 namespace TimeseriesPhp\Driver\RRD;
 
-use TimeseriesPhp\Core\Contracts\TsdbConfig;
+use TimeseriesPhp\Core\Contracts\DriverConfig;
 use TimeseriesPhp\Core\Metrics\RetentionPolicy;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdConfigException;
 
-final readonly class RrdConfig implements TsdbConfig
+final readonly class RrdConfig implements DriverConfig
 {
     /**
      * @param  RetentionPolicy[]  $defaultRetentionPolicies
+     * @throws RrdConfigException
      */
     public function __construct(
         public string $dir,
@@ -23,24 +24,28 @@ final readonly class RrdConfig implements TsdbConfig
 
     /**
      * @param  array<string, mixed>  $config
+     * @throws RrdConfigException
      */
-    public static function fromArray(array $config): TsdbConfig
+    public static function fromArray(array $config): DriverConfig
     {
         return new self(
-            dir: $config['dir'],
-            rrdtool_exec: $config['rrdtool_exec'] ?? 'rrdtool',
-            rrdcached: $config['rrdcached'] ?? null,
+            dir: (string)$config['dir'],
+            rrdtool_exec: isset($config['rrdtool_exec']) ? (string)$config['rrdtool_exec'] : 'rrdtool',
+            rrdcached: isset($config['rrdcached']) ? (string)$config['rrdcached'] : null,
             defaultRetentionPolicies: array_map(
-                RetentionPolicy::fromArray(...),
+                fn($p) => RetentionPolicy::fromArray($p),
                 $config['default_retention_policies'] ?? []
             ),
         );
     }
 
+    /**
+     * @throws RrdConfigException
+     */
     private function validate(): void
     {
         if (! file_exists($this->dir)) {
-            throw new RrdConfigException("RRD directory does not exist: {$this->dir}");
+            throw new RrdConfigException("RRD directory does not exist: $this->dir");
         }
     }
 }

@@ -2,9 +2,9 @@
 
 namespace TimeseriesPhp\Driver\InfluxDB2;
 
-use TimeseriesPhp\Core\Contracts\TsdbConfig;
+use TimeseriesPhp\Core\Contracts\DriverConfig;
 
-final readonly class InfluxConfig implements TsdbConfig
+final readonly class InfluxConfig implements DriverConfig
 {
     public function __construct(
         public string $host,

@@ -2,7 +2,7 @@
 
 namespace TimeseriesPhp\Core\Contracts;
 
-interface TsdbConfig
+interface DriverConfig
 {
     public static function fromArray(array $config): self;
 }

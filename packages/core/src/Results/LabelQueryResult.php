@@ -2,12 +2,12 @@
 
 namespace TimeseriesPhp\Core\Results;
 
-use TimeseriesPhp\Core\Contracts\Result;
+use TimeseriesPhp\Core\Contracts\QueryResult;
 
 /**
- * @implements Result<LabelResult>
+ * @implements QueryResult<LabelQueryResult>
  */
-final readonly class LabelResult implements Result
+final readonly class LabelQueryResult implements QueryResult
 {
     /**
      * @param  string[]  $labels

@@ -13,11 +13,11 @@ use Psr\Http\Message\StreamInterface;
 use TimeseriesPhp\Core\Enum\QueryType;
 use TimeseriesPhp\Core\Query\AST\Resolution;
 use TimeseriesPhp\Core\Query\AST\TimeRange;
-use TimeseriesPhp\Core\Results\LabelResult;
-use TimeseriesPhp\Core\Results\TimeSeriesResult;
-use TimeseriesPhp\Driver\InfluxDB2\InfluxClient;
+use TimeseriesPhp\Core\Results\LabelQueryResult;
+use TimeseriesPhp\Core\Results\TimeSeriesQueryResult;
 use TimeseriesPhp\Driver\InfluxDB2\InfluxConfig;
 use TimeseriesPhp\Driver\InfluxDB2\InfluxQuery;
+use TimeseriesPhp\Driver\InfluxDB2\InfluxQueryExecutor;
 
 it('executes a data query and returns TimeSeriesResult', function (): void {
     $httpClient = mock(ClientInterface::class);
@@ -47,10 +47,10 @@ it('executes a data query and returns TimeSeriesResult', function (): void {
     $response->shouldReceive('getBody')->andReturn($responseStream);
     $responseStream->shouldReceive('getContents')->andReturn($csv);
 
-    $client = new InfluxClient($config, $httpClient, $requestFactory, $streamFactory);
+    $client = new InfluxQueryExecutor($config, $httpClient, $requestFactory, $streamFactory);
     $result = $client->execute($query);
 
-    expect($result)->toBeInstanceOf(TimeSeriesResult::class);
+    expect($result)->toBeInstanceOf(TimeSeriesQueryResult::class);
     expect($result->series)->toHaveCount(1);
     expect($result->series[0]->metric)->toBe('cpu');
     expect($result->series[0]->labels)->toBe(['host' => 'server1']);
@@ -87,10 +87,10 @@ it('executes a label query and returns LabelResult', function (): void {
     $response->shouldReceive('getBody')->andReturn($responseStream);
     $responseStream->shouldReceive('getContents')->andReturn($csv);
 
-    $client = new InfluxClient($config, $httpClient, $requestFactory, $streamFactory);
+    $client = new InfluxQueryExecutor($config, $httpClient, $requestFactory, $streamFactory);
     $result = $client->execute($query);
 
-    expect($result)->toBeInstanceOf(LabelResult::class);
+    expect($result)->toBeInstanceOf(LabelQueryResult::class);
     expect($result->values)->toBe(['cpu', 'mem']);
 });
 
@@ -121,10 +121,10 @@ it('executes a tag values query and returns LabelResult', function (): void {
     $response->shouldReceive('getBody')->andReturn($responseStream);
     $responseStream->shouldReceive('getContents')->andReturn($csv);
 
-    $client = new InfluxClient($config, $httpClient, $requestFactory, $streamFactory);
+    $client = new InfluxQueryExecutor($config, $httpClient, $requestFactory, $streamFactory);
     $result = $client->execute($query);
 
-    expect($result)->toBeInstanceOf(LabelResult::class);
+    expect($result)->toBeInstanceOf(LabelQueryResult::class);
     expect($result->values)->toBe(['server1', 'server2']);
 });
 
@@ -156,10 +156,10 @@ it('handles multiple results in TimeSeriesResult', function (): void {
     $response->shouldReceive('getBody')->andReturn($responseStream);
     $responseStream->shouldReceive('getContents')->andReturn($csv);
 
-    $client = new InfluxClient($config, $httpClient, $requestFactory, $streamFactory);
+    $client = new InfluxQueryExecutor($config, $httpClient, $requestFactory, $streamFactory);
     $result = $client->execute($query);
 
-    expect($result)->toBeInstanceOf(TimeSeriesResult::class);
+    expect($result)->toBeInstanceOf(TimeSeriesQueryResult::class);
     expect($result->series)->toHaveCount(2);
 
     $inSeries = collect($result->series)->first(fn ($s) => $s->metric === 'in');

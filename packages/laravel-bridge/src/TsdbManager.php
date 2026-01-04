@@ -6,10 +6,10 @@ use Illuminate\Support\Manager;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use TimeseriesPhp\Core\Attributes\TsdbDriver;
-use TimeseriesPhp\Core\Connection;
-use TimeseriesPhp\Core\Contracts\TsdbConfig;
+use TimeseriesPhp\Core\Contracts\DriverConfig;
 use TimeseriesPhp\Core\Contracts\TsdbConnection;
-use TimeseriesPhp\Core\DriverResolver;
+use TimeseriesPhp\Core\Services\Connection;
+use TimeseriesPhp\Core\Services\DriverResolver;
 
 class TsdbManager extends Manager
 {
@@ -24,10 +24,8 @@ class TsdbManager extends Manager
     #[\Override]
     protected function createDriver($driver): TsdbConnection
     {
-        $logger = app()->bound(LoggerInterface::class) ? app(LoggerInterface::class) : null;
-        if ($logger) {
-            $logger->debug('Creating TSDB driver', ['driver' => $driver]);
-        }
+        $logger = app()->bound(LoggerInterface::class) ? app(LoggerInterface::class) : new \Psr\Log\NullLogger();
+        $logger->debug('Creating TSDB driver', ['driver' => $driver]);
         $configData = $this->config->get("timeseries.connections.{$driver}");
 
         if (! $configData) {
@@ -47,7 +45,7 @@ class TsdbManager extends Manager
         return new Connection($writer, $compiler, $client, $logger);
     }
 
-    public function loadConfig(string $class, array $data): TsdbConfig
+    public function loadConfig(string $class, array $data): DriverConfig
     {
         unset($data['driver']); // FIXME elegance
 
@@ -58,7 +56,7 @@ class TsdbManager extends Manager
     {
         if ($this->manifest === null) {
             $path = $this->container->bootstrapPath('cache/timeseries_drivers.php');
-            $logger = app()->bound(LoggerInterface::class) ? app(LoggerInterface::class) : null;
+            $logger = app()->bound(LoggerInterface::class) ? app(LoggerInterface::class) : new \Psr\Log\NullLogger();
 
             // Load from bootstrap/cache if exists, otherwise live scan
             $this->manifest = file_exists($path)
@@ -71,5 +69,16 @@ class TsdbManager extends Manager
         }
 
         return $this->manifest[$name];
+    }
+
+    public function getConfiguration(string $name): array
+    {
+        $config = $this->config->get("timeseries.connections.{$name}");
+
+        if (! $config) {
+            throw new InvalidArgumentException("TSDB connection [{$name}] not configured.");
+        }
+
+        return $config;
     }
 }

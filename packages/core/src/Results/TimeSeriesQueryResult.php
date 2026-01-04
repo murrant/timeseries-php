@@ -2,14 +2,14 @@
 
 namespace TimeseriesPhp\Core\Results;
 
-use TimeseriesPhp\Core\Contracts\Result;
+use TimeseriesPhp\Core\Contracts\QueryResult;
 use TimeseriesPhp\Core\Query\AST\Resolution;
 use TimeseriesPhp\Core\Query\AST\TimeRange;
 
 /**
- * @implements Result<TimeSeriesResult>
+ * @implements QueryResult<TimeSeriesQueryResult>
  */
-final readonly class TimeSeriesResult implements \JsonSerializable, Result
+final readonly class TimeSeriesQueryResult implements \JsonSerializable, QueryResult
 {
     /**
      * @param  TimeSeries[]  $series

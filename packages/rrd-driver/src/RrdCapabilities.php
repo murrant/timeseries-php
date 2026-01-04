@@ -2,9 +2,9 @@
 
 namespace TimeseriesPhp\Driver\RRD;
 
-use TimeseriesPhp\Core\Contracts\TsdbCapabilities;
+use TimeseriesPhp\Core\Contracts\DriverCapabilities;
 
-class RrdCapabilities implements TsdbCapabilities
+class RrdCapabilities implements DriverCapabilities
 {
     public function supportsRate(): bool
     {

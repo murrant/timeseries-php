@@ -2,13 +2,13 @@
 
 namespace App\Actions;
 
-use TimeSeriesPhp\Core\Contracts\Result;
+use TimeSeriesPhp\Core\Contracts\QueryResult;
 use TimeseriesPhp\Core\Contracts\TsdbConnection;
 use TimeseriesPhp\Core\Enum\Aggregation;
 use TimeseriesPhp\Core\Query\AST\TimeRange;
 use TimeseriesPhp\Core\Query\Data\QueryBuilder;
 use TimeseriesPhp\Core\Query\Data\StreamBuilder;
-use TimeseriesPhp\Core\Results\TimeSeriesResult;
+use TimeseriesPhp\Core\Results\TimeSeriesQueryResult;
 
 class FetchGraphData
 {
@@ -17,9 +17,9 @@ class FetchGraphData
     ) {}
 
     /**
-     * @return Result<TimeSeriesResult>
+     * @return QueryResult<TimeSeriesQueryResult>
      */
-    public function execute(string $graph_id, ?string $host = null, ?string $ifName = null, ?TimeRange $range = null): TimeSeriesResult
+    public function execute(string $graph_id, ?string $host = null, ?string $ifName = null, ?TimeRange $range = null): TimeSeriesQueryResult
     {
         return $this->tsdb->query(
             (new QueryBuilder($range))

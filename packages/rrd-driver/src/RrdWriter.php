@@ -4,36 +4,23 @@ namespace TimeseriesPhp\Driver\RRD;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use Symfony\Component\Process\InputStream;
 use TimeseriesPhp\Core\Contracts\MetricRepository;
-use TimeseriesPhp\Core\Contracts\TsdbWriter;
+use TimeseriesPhp\Core\Contracts\Writer;
 use TimeseriesPhp\Core\Exceptions\UnknownMetricException;
 use TimeseriesPhp\Core\Metrics\MetricSample;
 use TimeseriesPhp\Driver\RRD\Contracts\LabelStrategy;
 use TimeseriesPhp\Driver\RRD\Contracts\RrdtoolInterface;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdNotFoundException;
-use TimeseriesPhp\Driver\RRD\Factories\LabelStrategyFactory;
-use TimeseriesPhp\Driver\RRD\Factories\RrdProcessFactory;
-use TimeseriesPhp\Driver\RRD\Factories\RrdtoolFactory;
 
-class RrdWriter implements TsdbWriter
+class RrdWriter implements Writer
 {
-    private readonly RrdtoolInterface $rrd;
-
-    private readonly LabelStrategy $labelStrategy;
-
     public function __construct(
-        private readonly RrdConfig $config,
+        private readonly RrdConfig        $config,
         private readonly MetricRepository $metrics,
-        RrdtoolFactory $factory,
-        RrdProcessFactory $processFactory,
-        LabelStrategyFactory $labelStrategyFactory,
-        private readonly LoggerInterface $logger = new NullLogger,
-        InputStream $input = new InputStream,
-    ) {
-        $this->rrd = $factory->make($this->config, $processFactory, $this->logger, $input);
-        $this->labelStrategy = $labelStrategyFactory->make($this->config, $factory, $processFactory, $this->logger, $input);
-    }
+        private readonly RrdtoolInterface $rrd,
+        private readonly LabelStrategy $labelStrategy,
+        private readonly LoggerInterface  $logger = new NullLogger,
+    ) {}
 
     public function write(MetricSample $sample): void
     {
@@ -76,7 +63,7 @@ class RrdWriter implements TsdbWriter
 
         // TODO evaluate
         $datasets = [
-            'value' => $metricId->type,
+            'value' => $metricId->type ?? \TimeseriesPhp\Core\Enum\MetricType::GAUGE,
         ];
 
         $this->rrd->create($filename, $datasets, $policies);

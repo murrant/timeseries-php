@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TimeseriesPhp\Core;
+namespace TimeseriesPhp\Core\Services;
 
 use Composer\InstalledVersions;
 use Psr\Log\LoggerInterface;

@@ -7,7 +7,7 @@ use TimeseriesPhp\Core\Query\AST\DataQuery;
 use TimeseriesPhp\Core\Query\AST\Resolution;
 use TimeseriesPhp\Core\Query\AST\Stream;
 use TimeseriesPhp\Core\Query\AST\TimeRange;
-use TimeseriesPhp\Core\Results\TimeSeriesResult;
+use TimeseriesPhp\Core\Results\TimeSeriesQueryResult;
 
 class QueryBuilder
 {
@@ -47,7 +47,7 @@ class QueryBuilder
     }
 
     /**
-     * @return Query<TimeSeriesResult>
+     * @return Query<TimeSeriesQueryResult>
      */
     public function build(): DataQuery
     {

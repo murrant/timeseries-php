@@ -4,10 +4,10 @@ namespace TimeseriesPhp\Driver\RRD;
 
 use TimeseriesPhp\Core\Contracts\CompiledQuery;
 use TimeseriesPhp\Core\Query\AST\LabelQuery;
-use TimeseriesPhp\Core\Results\LabelResult;
+use TimeseriesPhp\Core\Results\LabelQueryResult;
 
 /**
- * @implements CompiledQuery<LabelResult>
+ * @implements CompiledQuery<LabelQueryResult>
  */
 final readonly class RrdLabelQuery implements CompiledQuery
 {

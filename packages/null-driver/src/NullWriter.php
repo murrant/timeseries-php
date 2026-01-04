@@ -2,10 +2,10 @@
 
 namespace TimeseriesPhp\Driver\Null;
 
-use TimeseriesPhp\Core\Contracts\TsdbWriter;
+use TimeseriesPhp\Core\Contracts\Writer;
 use TimeseriesPhp\Core\Metrics\MetricSample;
 
-final class NullWriter implements TsdbWriter
+final class NullWriter implements Writer
 {
     public function write(MetricSample $sample): void
     {

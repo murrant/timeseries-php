@@ -6,44 +6,40 @@ use DateTimeImmutable;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use TimeseriesPhp\Core\Contracts\CompiledQuery;
-use TimeseriesPhp\Core\Contracts\Result;
-use TimeseriesPhp\Core\Contracts\TsdbClient;
+use TimeseriesPhp\Core\Contracts\QueryExecutor;
+use TimeseriesPhp\Core\Contracts\QueryResult;
 use TimeseriesPhp\Core\Exceptions\TimeseriesException;
 use TimeseriesPhp\Core\Query\AST\Resolution;
 use TimeseriesPhp\Core\Query\AST\TimeRange;
 use TimeseriesPhp\Core\Results\DataPoint;
-use TimeseriesPhp\Core\Results\LabelResult;
+use TimeseriesPhp\Core\Results\LabelQueryResult;
 use TimeseriesPhp\Core\Results\TimeSeries;
-use TimeseriesPhp\Core\Results\TimeSeriesResult;
+use TimeseriesPhp\Core\Results\TimeSeriesQueryResult;
+use TimeseriesPhp\Driver\RRD\Exceptions\RrdException;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdNotFoundException;
-use TimeseriesPhp\Driver\RRD\Factories\RrdProcessFactory;
 
 /**
- * @template TResult of Result
+ * @template TResult of QueryResult
  *
- * @implements TsdbClient<TResult>
+ * @implements QueryExecutor<TResult>
  */
-class RrdClient implements TsdbClient
+readonly class RrdQueryExecutor implements QueryExecutor
 {
-    private readonly RrdProcess $process;
-
     public function __construct(
-        private readonly RrdConfig $config,
-        RrdProcessFactory $factory,
-        private readonly LoggerInterface $logger = new NullLogger,
-    ) {
-        $this->process = $factory->make($this->config);
-    }
+        private RrdProcess $process, // FIXME wrong interface
+        private LoggerInterface $logger = new NullLogger,
+    ) {}
 
     /**
      * @param  CompiledQuery<TResult>  $query
      * @return TResult
+     * @throws TimeseriesException
      */
-    public function execute(CompiledQuery $query): Result
+    public function execute(CompiledQuery $query): QueryResult
     {
         if ($query instanceof RrdLabelQuery) {
             /** @var TResult */
-            return new LabelResult([], []); // FIXME wire up to LabelStrategy
+            return new LabelQueryResult([], []); // FIXME wire up to LabelStrategy
         }
 
         if (! $query instanceof RrdCommand) {
@@ -52,35 +48,22 @@ class RrdClient implements TsdbClient
 
         $this->logger->debug('Executing RRD query', ['query' => (string) $query]);
 
-        $allSeries = [];
-
-        $commonResolution = 0;
-
         try {
             $output = $this->process->run($query);
-            $result = $this->parseGraphOutput($output, $query);
-
-            foreach ($result->series as $series) {
-                $allSeries[] = $series;
-            }
-
-            $commonResolution = $result->resolution->seconds ?: $commonResolution;
+            // @phpstan-ignore-next-line
+            return $this->parseGraphOutput($output);
         } catch (RrdNotFoundException) {
-            return new TimeSeriesResult([], new TimeRange(new DateTimeImmutable, new DateTimeImmutable), new Resolution);
+            // @phpstan-ignore-next-line
+            return new TimeSeriesQueryResult([], new TimeRange(new DateTimeImmutable, new DateTimeImmutable), new Resolution);
+        } catch (RrdException $e) {
+            throw new TimeseriesException('RRD execution failed: ' . $e->getMessage(), 0, $e);
         }
-
-        if (empty($allSeries)) {
-            return new TimeSeriesResult([], new TimeRange(new DateTimeImmutable, new DateTimeImmutable), new Resolution);
-        }
-
-        return new TimeSeriesResult(
-            series: $allSeries,
-            range: $result->range,
-            resolution: new Resolution($commonResolution),
-        );
     }
 
-    private function parseGraphOutput(string $output, RrdCommand $query): TimeSeriesResult
+    /**
+     * @throws TimeseriesException
+     */
+    private function parseGraphOutput(string $output): TimeSeriesQueryResult
     {
         $json = json_decode($output, true);
         if (! is_array($json)) {
@@ -109,16 +92,18 @@ class RrdClient implements TsdbClient
 
         $timeSeries = [];
         foreach ($legend as $index => $legendKey) {
-            $streamMeta = $query->metadata['streams'][$legendKey] ?? [];
+            // We don't have metadata in RrdCommand yet to map back to original metric/labels easily
+            // unless we encoded it in the legend.
+            // For now, use legendKey as metric name or alias.
             $timeSeries[] = new TimeSeries(
-                metric: $streamMeta['metric'] ?? 'unknown',
+                metric: $legendKey,
                 alias: null,
-                labels: $streamMeta['labels'] ?? [],
+                labels: [],
                 points: $seriesData[$index]
             );
         }
 
-        return new TimeSeriesResult(
+        return new TimeSeriesQueryResult(
             series: $timeSeries,
             range: new TimeRange(
                 (new DateTimeImmutable)->setTimestamp($start),

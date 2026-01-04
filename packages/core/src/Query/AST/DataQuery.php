@@ -3,10 +3,10 @@
 namespace TimeseriesPhp\Core\Query\AST;
 
 use TimeseriesPhp\Core\Contracts\Query;
-use TimeseriesPhp\Core\Results\TimeSeriesResult;
+use TimeseriesPhp\Core\Results\TimeSeriesQueryResult;
 
 /**
- * @implements Query<TimeSeriesResult>
+ * @implements Query<TimeSeriesQueryResult>
  */
 readonly class DataQuery implements Query
 {

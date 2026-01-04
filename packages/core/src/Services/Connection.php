@@ -1,30 +1,30 @@
 <?php
 
-namespace TimeseriesPhp\Core;
+namespace TimeseriesPhp\Core\Services;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use TimeseriesPhp\Core\Contracts\Query;
 use TimeseriesPhp\Core\Contracts\QueryCompiler;
-use TimeseriesPhp\Core\Contracts\Result;
-use TimeseriesPhp\Core\Contracts\TsdbClient;
+use TimeseriesPhp\Core\Contracts\QueryExecutor;
+use TimeseriesPhp\Core\Contracts\QueryResult;
 use TimeseriesPhp\Core\Contracts\TsdbConnection;
-use TimeseriesPhp\Core\Contracts\TsdbWriter;
+use TimeseriesPhp\Core\Contracts\Writer;
 use TimeseriesPhp\Core\Metrics\MetricSample;
 use TimeseriesPhp\Core\Schema\SchemaManager;
 
 class Connection implements TsdbConnection
 {
     /**
-     * @template TResult of Result
+     * @template TResult of QueryResult
      *
      * @param  QueryCompiler<TResult>  $compiler
-     * @param  TsdbClient<TResult>  $client
+     * @param  QueryExecutor<TResult>  $client
      */
     public function __construct(
-        private readonly TsdbWriter $writer,
-        private readonly QueryCompiler $compiler,
-        private readonly TsdbClient $client,
+        private readonly Writer          $writer,
+        private readonly QueryCompiler   $compiler,
+        private readonly QueryExecutor   $client,
         private readonly LoggerInterface $logger = new NullLogger,
     ) {}
 
@@ -35,12 +35,12 @@ class Connection implements TsdbConnection
     }
 
     /**
-     * @template TResult of Result
+     * @template TResult of QueryResult
      *
      * @param  Query<TResult>  $query
-     * @return Result<TResult>
+     * @return QueryResult<TResult>
      */
-    public function query(Query $query): Result
+    public function query(Query $query): QueryResult
     {
         $this->logger->debug('Executing query', ['query' => $query]);
 

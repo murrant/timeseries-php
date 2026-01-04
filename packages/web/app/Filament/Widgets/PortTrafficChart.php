@@ -9,7 +9,7 @@ use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\ChartWidget\Concerns\HasFiltersSchema;
 use TimeseriesPhp\Core\Query\AST\TimeRange;
-use TimeseriesPhp\Core\Results\TimeSeriesResult;
+use TimeseriesPhp\Core\Results\TimeSeriesQueryResult;
 use TimeseriesPhp\Core\Schema\SchemaManager;
 
 class PortTrafficChart extends ChartWidget
@@ -179,7 +179,7 @@ class PortTrafficChart extends ChartWidget
     /**
      * Get the time series data based on the selected filter
      */
-    protected function getTimeSeriesData(): TimeSeriesResult
+    protected function getTimeSeriesData(): TimeSeriesQueryResult
     {
         $range = match ($this->filters['timeRange'] ?? null) {
             '10m' => TimeRange::lastMinutes(10),

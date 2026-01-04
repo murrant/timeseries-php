@@ -3,10 +3,10 @@
 namespace TimeseriesPhp\Driver\RRD;
 
 use TimeseriesPhp\Core\Contracts\CompiledQuery;
-use TimeseriesPhp\Core\Results\TimeSeriesResult;
+use TimeseriesPhp\Core\Results\TimeSeriesQueryResult;
 
 /**
- * @implements CompiledQuery<TimeSeriesResult>
+ * @implements CompiledQuery<TimeSeriesQueryResult>
  */
 readonly class RrdCommand implements \Stringable, CompiledQuery
 {

@@ -7,7 +7,7 @@ use TimeseriesPhp\Core\Enum\Operator;
 use TimeseriesPhp\Core\Query\AST\Filter;
 use TimeseriesPhp\Core\Query\AST\LabelQuery;
 use TimeseriesPhp\Core\Query\AST\TimeRange;
-use TimeseriesPhp\Core\Results\LabelResult;
+use TimeseriesPhp\Core\Results\LabelQueryResult;
 
 class LabelQueryBuilder
 {
@@ -44,7 +44,7 @@ class LabelQueryBuilder
         return $this;
     }
 
-    public function list(): LabelResult
+    public function list(): LabelQueryResult
     {
         return $this->connection->query(new LabelQuery(
             label: null,
@@ -54,7 +54,7 @@ class LabelQueryBuilder
         ));
     }
 
-    public function values(string $label): LabelResult
+    public function values(string $label): LabelQueryResult
     {
         return $this->connection->query(new LabelQuery(
             label: $label,

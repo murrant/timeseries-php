@@ -3,10 +3,10 @@
 namespace TimeseriesPhp\Core\Query\AST;
 
 use TimeseriesPhp\Core\Contracts\Query;
-use TimeseriesPhp\Core\Results\LabelResult;
+use TimeseriesPhp\Core\Results\LabelQueryResult;
 
 /**
- * @implements Query<LabelResult>
+ * @implements Query<LabelQueryResult>
  */
 final readonly class LabelQuery implements Query
 {

@@ -2,9 +2,9 @@
 
 namespace TimeseriesPhp\Driver\InfluxDB2;
 
-use TimeseriesPhp\Core\Contracts\TsdbCapabilities;
+use TimeseriesPhp\Core\Contracts\DriverCapabilities;
 
-class InfluxCapabilities implements TsdbCapabilities
+class InfluxCapabilities implements DriverCapabilities
 {
     public function supportsRate(): bool
     {

@@ -14,7 +14,7 @@ class RrdtoolCli implements RrdtoolInterface
     use RrdCommandBuilder;
 
     public function __construct(
-        private readonly RrdConfig $config,
+        private readonly RrdConfig  $config,
         private readonly RrdProcess $rrd,
     ) {}
 
