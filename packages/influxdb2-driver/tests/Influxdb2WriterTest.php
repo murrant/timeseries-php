@@ -70,7 +70,7 @@ it('writes a metric sample to influxdb2', function (): void {
         ->andReturn(204);
 
     $writer = new InfluxWriter(
-        new InfluxConfig($url, 8086, $token, $org, $bucket),
+        new InfluxConfig($url, 8086, $token, $org, $bucket, false),
         $httpClient,
         $requestFactory,
         $streamFactory,
@@ -107,7 +107,7 @@ it('escapes special characters in line protocol', function (): void {
     $httpClient->shouldReceive('sendRequest')->andReturn($response);
     $response->shouldReceive('getStatusCode')->andReturn(204);
 
-    $writer = new InfluxWriter(new InfluxConfig('url', 8086, 'token', 'org', 'bucket'), $httpClient, $requestFactory, $streamFactory);
+    $writer = new InfluxWriter(new InfluxConfig('url', 8086, 'token', 'org', 'bucket', false), $httpClient, $requestFactory, $streamFactory);
     $writer->write($sample);
 
     expect(true)->toBeTrue();
