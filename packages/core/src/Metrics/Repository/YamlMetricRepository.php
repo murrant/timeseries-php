@@ -62,7 +62,7 @@ final class YamlMetricRepository implements MetricRepository
         }
 
         foreach ($raw as $namespace => $metrics) {
-            foreach($metrics as $metric => $definition) {
+            foreach ($metrics as $metric => $definition) {
                 $definition['namespace'] = $namespace;
                 $definition['name'] = $metric;
 
