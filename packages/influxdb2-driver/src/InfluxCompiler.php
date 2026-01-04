@@ -105,14 +105,14 @@ final readonly class InfluxCompiler implements QueryCompiler
     private function mapOperator(Operator $operator): string
     {
         return match ($operator) {
-            Operator::Equals => '==',
-            Operator::NotEquals => '!=',
+            Operator::Equal => '==',
+            Operator::NotEqual => '!=',
             Operator::GreaterThan => '>',
             Operator::GreaterThanOrEqual => '>=',
             Operator::LessThan => '<',
             Operator::LessThanOrEqual => '<=',
-            Operator::RegexMatch => '=~',
-            Operator::RegexNotMatch => '!~',
+            Operator::Regex => '=~',
+            Operator::NotRegex => '!~',
             default => throw new \InvalidArgumentException('Unsupported operator'),
         };
     }

@@ -82,8 +82,8 @@ it('compiles a data query with filters', function (): void {
         Resolution::auto(),
         [
             new Stream('cpu_usage', [
-                new Filter('host', Operator::Equals, 'server01'),
-                new Filter('region', Operator::RegexMatch, '^us-'),
+                new Filter('host', Operator::Equal, 'server01'),
+                new Filter('region', Operator::Regex, '^us-'),
             ], [], []),
         ]
     );
@@ -142,7 +142,7 @@ it('compiles a complex label query', function (): void {
         new \DateTimeImmutable('2023-01-01 01:00:00', new \DateTimeZone('UTC'))
     );
     $query = new LabelQuery('host', ['cpu_usage'], [
-        new Filter('region', Operator::Equals, 'us-west'),
+        new Filter('region', Operator::Equal, 'us-west'),
     ], $period);
 
     $compiled = $this->compiler->compile($query);

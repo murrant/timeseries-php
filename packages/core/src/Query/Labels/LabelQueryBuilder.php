@@ -37,7 +37,7 @@ class LabelQueryBuilder
         return $this;
     }
 
-    public function where(string $label, mixed $value, Operator $op = Operator::Equals): self
+    public function where(string $label, mixed $value, Operator $op = Operator::Equal): self
     {
         $this->filters[] = new Filter($label, $op, $value);
 

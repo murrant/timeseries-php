@@ -8,6 +8,7 @@ use Illuminate\Console\Events\CommandFinished;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Symfony\Component\Console\Output\ConsoleOutput;
+use TimeseriesPhp\Bridge\Laravel\Commands\TsdbRrdLabelsCommand;
 use TimeseriesPhp\Core\Contracts\MetricRepository;
 use TimeseriesPhp\Core\Contracts\QueryCompiler;
 use TimeseriesPhp\Core\Contracts\TsdbCapabilities;
@@ -82,6 +83,7 @@ class TsdbServiceProvider extends ServiceProvider
         ]);
 
         if ($this->app->runningInConsole()) {
+            // TODO review this approach to caching
             Event::listen(CommandFinished::class, function (CommandFinished $event): void {
                 if ($event->command === 'optimize') {
                     $this->app->make(TsdbManifestCompiler::class)->compile();
@@ -93,6 +95,10 @@ class TsdbServiceProvider extends ServiceProvider
                     (new ConsoleOutput)->writeln('<info>TSDB driver manifest cleared!</info>');
                 }
             });
+
+            $this->commands([
+                TsdbRrdLabelsCommand::class,
+            ]);
         }
     }
 }

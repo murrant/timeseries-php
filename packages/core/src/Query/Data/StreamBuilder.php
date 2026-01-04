@@ -27,7 +27,7 @@ class StreamBuilder
 
     public function __construct(private readonly string $metric) {}
 
-    public function where(string $key, mixed $val, Operator $op = Operator::Equals): self
+    public function where(string $key, mixed $val, Operator $op = Operator::Equal): self
     {
         $this->filters[] = new Filter($key, $op, $val);
 
