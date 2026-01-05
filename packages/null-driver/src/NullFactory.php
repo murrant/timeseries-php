@@ -25,6 +25,9 @@ final readonly class NullFactory implements DriverFactory
         private MetricRepository $metricRepository = new RuntimeMetricRepository,
     ) {}
 
+    /**
+     * @param DriverConfig|array<string, mixed> $config
+     */
     public function make(DriverConfig|array $config): Runtime
     {
         $config = NullConfig::make($config);

@@ -24,11 +24,28 @@ final readonly class RrdConfig implements DriverConfig
     }
 
     /**
+     * @param DriverConfig|array<string, mixed> $config
+     * @throws RrdConfigException
+     */
+    public static function make(DriverConfig|array $config = []): self
+    {
+        if (is_array($config)) {
+            return self::fromArray($config);
+        }
+
+        if (! $config instanceof self) {
+            throw new RrdConfigException('Invalid config type provided');
+        }
+
+        return $config;
+    }
+
+    /**
      * @param  array<string, mixed>  $config
      *
      * @throws RrdConfigException
      */
-    public static function fromArray(array $config): DriverConfig
+    public static function fromArray(array $config): self
     {
         return new self(
             dir: (string) $config['dir'],

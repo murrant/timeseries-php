@@ -4,5 +4,8 @@ namespace TimeseriesPhp\Core\Contracts;
 
 interface DriverConfig
 {
-    public static function fromArray(array $config): self;
+    /**
+     * @param array<string, mixed>|DriverConfig $config
+     */
+    public static function make(array|DriverConfig $config = []): self;
 }

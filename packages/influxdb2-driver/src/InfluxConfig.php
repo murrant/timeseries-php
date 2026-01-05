@@ -3,6 +3,7 @@
 namespace TimeseriesPhp\Driver\InfluxDB2;
 
 use TimeseriesPhp\Core\Contracts\DriverConfig;
+use TimeseriesPhp\Core\Exceptions\TimeseriesException;
 
 final readonly class InfluxConfig implements DriverConfig
 {
@@ -15,7 +16,24 @@ final readonly class InfluxConfig implements DriverConfig
     ) {}
 
     /**
-     * @param  array{host: string, port: int, token: string, org: string, bucket: string}  $config
+     * @param DriverConfig|array<string, mixed> $config
+     * @throws TimeseriesException
+     */
+    public static function make(DriverConfig|array $config = []): self
+    {
+        if (is_array($config)) {
+            return self::fromArray($config);
+        }
+
+        if (! $config instanceof self) {
+            throw new TimeseriesException('Invalid configuration type');
+        }
+
+        return $config;
+    }
+
+    /**
+     * @param  array<string, mixed>  $config
      */
     public static function fromArray(array $config): self
     {

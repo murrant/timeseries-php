@@ -8,6 +8,10 @@ use TimeseriesPhp\Core\Contracts\DriverConfig;
 
 final readonly class NullConfig implements DriverConfig
 {
+    /**
+     * @param array<string, mixed>|DriverConfig $config
+     * @return self
+     */
     public static function make(array|DriverConfig $config = []): self
     {
         if (is_array($config)) {
