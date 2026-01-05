@@ -96,13 +96,6 @@
             "providers": [
                 "TimeseriesPhp\\Bridge\\Laravel\\TsdbServiceProvider"
             ]
-        },
-        "timeseries-php": {
-            "driver-class": [
-                "\\TimeseriesPhp\\Driver\\InfluxDB2\\InfluxDriver",
-                "\\TimeseriesPhp\\Driver\\Null\\NullDriver",
-                "\\TimeseriesPhp\\Driver\\RRD\\RrdDriver"
-            ]
         }
     },
     "scripts": {

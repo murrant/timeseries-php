@@ -11,6 +11,6 @@ final readonly class MetricSample
         public MetricIdentifier $metric,
         public array $labels,
         public float|int $value,
-        public \DateTimeImmutable $timestamp,
+        public ?\DateTimeImmutable $timestamp = null,
     ) {}
 }

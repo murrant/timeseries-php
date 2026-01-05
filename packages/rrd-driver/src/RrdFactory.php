@@ -7,9 +7,13 @@ use Psr\Log\NullLogger;
 use TimeseriesPhp\Core\Contracts\DriverConfig;
 use TimeseriesPhp\Core\Contracts\DriverFactory;
 use TimeseriesPhp\Core\Contracts\MetricRepository;
+use TimeseriesPhp\Core\Contracts\QueryCompiler;
+use TimeseriesPhp\Core\Contracts\QueryExecutor;
+use TimeseriesPhp\Core\Contracts\Writer;
 use TimeseriesPhp\Core\Runtime;
 use TimeseriesPhp\Core\Services\DriverServiceRegistry;
 use TimeseriesPhp\Driver\RRD\Contracts\LabelStrategy;
+use TimeseriesPhp\Driver\RRD\Contracts\RrdtoolInterface;
 use TimeseriesPhp\Driver\RRD\Factories\LabelStrategyFactory;
 use TimeseriesPhp\Driver\RRD\Factories\RrdProcessFactory;
 use TimeseriesPhp\Driver\RRD\Factories\RrdtoolFactory;
@@ -40,13 +44,16 @@ class RrdFactory implements DriverFactory
         $rrdProcess = $this->rrdProcessFactory->make($config);
 
         return new Runtime(
-            writer: new RrdWriter($config, $this->metricRepository, $rrdtool, $labelStrategy, $this->logger),
-            compiler: new RrdCompiler($config, $this->metricRepository),
-            executor: new RrdQueryExecutor($rrdProcess, $this->logger),
-            config: $config,
-            services: new DriverServiceRegistry([
-                    LabelStrategy::class => $labelStrategy,
+            new DriverServiceRegistry([
+                Writer::class => fn () => new RrdWriter($config, $this->metricRepository, $rrdtool, $labelStrategy, $this->logger),
+                QueryCompiler::class => fn () => new RrdCompiler($config, $this->metricRepository),
+                QueryExecutor::class => fn () => new RrdQueryExecutor($rrdProcess, $this->logger),
+                MetricRepository::class => $this->metricRepository,
+                RrdtoolInterface::class => $rrdtool,
+                RrdProcess::class => $rrdProcess,
+                LabelStrategy::class => $labelStrategy,
             ]),
+            $config
         );
     }
 }

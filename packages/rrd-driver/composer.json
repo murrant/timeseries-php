@@ -18,8 +18,7 @@
     "extra": {
         "timeseries-php": {
             "driver": "rrd",
-            "factory": "\\TimeseriesPhp\\Driver\\RRD\\RrdFactory",
-            "driver-class": "\\TimeseriesPhp\\Driver\\RRD\\RrdDriver"
+            "factory": "\\TimeseriesPhp\\Driver\\RRD\\RrdFactory"
         }
     }
 }

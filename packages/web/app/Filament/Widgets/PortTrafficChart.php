@@ -8,9 +8,11 @@ use Filament\Schemas\Schema;
 use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\ChartWidget\Concerns\HasFiltersSchema;
+use TimeseriesPhp\Core\Contracts\LabelDiscovery;
+use TimeseriesPhp\Core\Enum\Operator;
+use TimeseriesPhp\Core\Query\AST\Filter;
 use TimeseriesPhp\Core\Query\AST\TimeRange;
 use TimeseriesPhp\Core\Results\TimeSeriesQueryResult;
-use TimeseriesPhp\Core\Schema\SchemaManager;
 
 class PortTrafficChart extends ChartWidget
 {
@@ -211,17 +213,27 @@ class PortTrafficChart extends ChartWidget
      */
     protected function getAvailableHostnames(): array
     {
-        $query = app(SchemaManager::class)->labels()
-            ->from('network.port.bytes.in')
-            ->from('network.port.bytes.out');
+//        $query = app(SchemaManager::class)->labels()
+//            ->from('network.port.bytes.in')
+//            ->from('network.port.bytes.out');
+//
+//        if (! empty($this->filters['ifName'])) {
+//            $query->where('ifName', $this->filters['ifName']);
+//        }
+//
+//        $values = $query->values('host')->values;
+//
+//        return array_combine($values, $values);
 
+        $filters = [];
         if (! empty($this->filters['ifName'])) {
-            $query->where('ifName', $this->filters['ifName']);
+            $filters[] = new Filter('ifName', Operator::Equal, $this->filters['ifName']);
         }
 
-        $values = $query->values('host')->values;
-
-        return array_combine($values, $values);
+        return app(LabelDiscovery::class)->listLabelValues('host', [
+            'network.port.bytes.in',
+            'network.port.bytes.out'
+        ], $filters);
     }
 
     /**
@@ -231,17 +243,27 @@ class PortTrafficChart extends ChartWidget
      */
     protected function getAvailableIfNames(): array
     {
-        $query = app(SchemaManager::class)->labels()
-            ->from('network.port.bytes.in')
-            ->from('network.port.bytes.out');
+//        $query = app(SchemaManager::class)->labels()
+//            ->from('network.port.bytes.in')
+//            ->from('network.port.bytes.out');
+//
+//        if (! empty($this->filters['hostname'])) {
+//            $query->where('host', $this->filters['hostname']);
+//        }
+//
+//        $values = $query->values('ifName')->values;
+//
+//        return array_combine($values, $values);
 
+        $filters = [];
         if (! empty($this->filters['hostname'])) {
-            $query->where('host', $this->filters['hostname']);
+            $filters[] = new Filter('host', Operator::Equal, $this->filters['hostname']);
         }
 
-        $values = $query->values('ifName')->values;
-
-        return array_combine($values, $values);
+        return app(LabelDiscovery::class)->listLabelValues('ifName', [
+            'network.port.bytes.in',
+            'network.port.bytes.out'
+        ], $filters);
     }
 
     /**

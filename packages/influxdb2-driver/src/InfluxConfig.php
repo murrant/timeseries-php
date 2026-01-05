@@ -19,6 +19,12 @@ final readonly class InfluxConfig implements DriverConfig
      */
     public static function fromArray(array $config): self
     {
-        return new self(...$config);
+        return new self(
+            host: $config['host'],
+            port: $config['port'] ?? 8086,
+            token: $config['token'] ?? '',
+            org: $config['org'] ?? '',
+            bucket: $config['bucket'] ?? '',
+        );
     }
 }

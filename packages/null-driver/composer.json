@@ -16,7 +16,8 @@
   },
   "extra": {
     "timeseries-php": {
-      "driver-class": "\\TimeseriesPhp\\Driver\\Null\\NullDriver"
+      "driver": "null",
+      "factory": "\\TimeseriesPhp\\Driver\\Null\\NullFactory"
     }
   }
 }

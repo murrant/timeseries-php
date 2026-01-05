@@ -3,8 +3,9 @@
 namespace TimeseriesPhp\Bridge\Laravel;
 
 use Illuminate\Filesystem\Filesystem;
-use TimeseriesPhp\Core\Services\DriverResolver;
+use TimeseriesPhp\Core\Discovery\DriverDiscovery;
 
+// FIXME fix me :)
 class TsdbManifestCompiler
 {
     public function __construct(
@@ -14,7 +15,7 @@ class TsdbManifestCompiler
 
     public function compile(): void
     {
-        $manifest = DriverResolver::resolveAll();
+        $manifest = DriverDiscovery::discover();
 
         $this->files->put(
             $this->manifestPath,

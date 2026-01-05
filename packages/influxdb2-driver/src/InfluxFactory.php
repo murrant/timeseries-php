@@ -10,7 +10,12 @@ use Psr\Log\NullLogger;
 use PsrDiscovery\Discover;
 use TimeseriesPhp\Core\Contracts\DriverConfig;
 use TimeseriesPhp\Core\Contracts\DriverFactory;
+use TimeseriesPhp\Core\Contracts\LabelDiscovery;
+use TimeseriesPhp\Core\Contracts\QueryCompiler;
+use TimeseriesPhp\Core\Contracts\QueryExecutor;
+use TimeseriesPhp\Core\Contracts\Writer;
 use TimeseriesPhp\Core\Runtime;
+use TimeseriesPhp\Core\Services\DriverServiceRegistry;
 
 class InfluxFactory implements DriverFactory
 {
@@ -35,12 +40,31 @@ class InfluxFactory implements DriverFactory
         $requestFactory = $this->requestFactory ?? Discover::httpRequestFactory();
         $streamFactory = $this->streamFactory ?? Discover::httpStreamFactory();
 
-        return new Runtime(
-            writer: new InfluxWriter($config),
-            compiler: new InfluxCompiler($config),
-            executor: new InfluxQueryExecutor($config, $httpClient, $requestFactory, $streamFactory, $this->logger),
-            config: $config,
+        $compiler = new InfluxCompiler($config);
+        $executor = new InfluxQueryExecutor(
+            $config,
+            $httpClient,
+            $requestFactory,
+            $streamFactory,
+            $this->logger,
         );
 
+        $services = new DriverServiceRegistry([
+            Writer::class => fn () => new InfluxWriter(
+                $config,
+                $httpClient,
+                $requestFactory,
+                $streamFactory,
+                $this->logger,
+            ),
+            QueryCompiler::class => $compiler,
+            QueryExecutor::class => $executor,
+            LabelDiscovery::class => new InfluxLabelDiscovery(
+                $compiler,
+                $executor
+            ),
+        ]);
+
+        return new Runtime($services, $config);
     }
 }

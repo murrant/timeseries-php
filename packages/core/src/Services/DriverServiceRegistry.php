@@ -2,9 +2,14 @@
 
 namespace TimeseriesPhp\Core\Services;
 
+use TimeseriesPhp\Core\Contracts\DriverConfig;
 use TimeseriesPhp\Core\Exceptions\UnsupportedServiceException;
 
-class DriverServiceRegistry
+/**
+ * Driver-scoped service registry with lazy resolution.
+ * Acts as a bounded capability container, not a general DI container.
+ */
+final class DriverServiceRegistry
 {
     /** @var array<string, object> Cache of resolved services */
     private array $resolved = [];
@@ -14,11 +19,17 @@ class DriverServiceRegistry
      */
     public function __construct(
         private readonly array $services = []
-    ) {}
+    ) {
+        foreach ($this->services as $interface => $service) {
+            if ($interface === DriverConfig::class) {
+                throw new \LogicException('DriverConfig must not be registered as a service');
+            }
+        }
+
+    }
 
     /**
-     * Get a driver capability.
-     * * @template T of object
+     * @template T of object
      * @param class-string<T> $interface
      * @return T
      * @throws UnsupportedServiceException

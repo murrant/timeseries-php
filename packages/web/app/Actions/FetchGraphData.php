@@ -2,18 +2,18 @@
 
 namespace App\Actions;
 
-use TimeSeriesPhp\Core\Contracts\QueryResult;
-use TimeseriesPhp\Core\Contracts\TsdbConnection;
+use TimeseriesPhp\Core\Contracts\QueryResult;
 use TimeseriesPhp\Core\Enum\Aggregation;
 use TimeseriesPhp\Core\Query\AST\TimeRange;
 use TimeseriesPhp\Core\Query\Data\QueryBuilder;
 use TimeseriesPhp\Core\Query\Data\StreamBuilder;
 use TimeseriesPhp\Core\Results\TimeSeriesQueryResult;
+use TimeseriesPhp\Core\TSDB;
 
 class FetchGraphData
 {
     public function __construct(
-        private readonly TsdbConnection $tsdb,
+        private readonly TSDB $tsdb,
     ) {}
 
     /**
