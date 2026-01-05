@@ -22,7 +22,7 @@ use TimeseriesPhp\Driver\RRD\Exceptions\RrdException;
 final readonly class FilenameLabelStrategy implements LabelStrategy
 {
     public function __construct(
-        private RrdConfig         $config,
+        private RrdConfig $config,
         private ?RrdtoolInterface $rrdTool = null
     ) {}
 

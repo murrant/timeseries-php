@@ -24,10 +24,10 @@ class InfluxWriter implements Writer
     private readonly StreamFactoryInterface $streamFactory;
 
     public function __construct(
-        private readonly InfluxConfig    $config,
-        ?ClientInterface                 $httpClient = null,
-        ?RequestFactoryInterface         $requestFactory = null,
-        ?StreamFactoryInterface          $streamFactory = null,
+        private readonly InfluxConfig $config,
+        ?ClientInterface $httpClient = null,
+        ?RequestFactoryInterface $requestFactory = null,
+        ?StreamFactoryInterface $streamFactory = null,
         private readonly LoggerInterface $logger = new NullLogger,
     ) {
         $this->httpClient = $httpClient ?? Discover::httpClient();

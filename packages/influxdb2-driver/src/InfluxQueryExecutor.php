@@ -26,18 +26,14 @@ use TimeseriesPhp\Core\Results\TimeSeriesQueryResult;
  */
 class InfluxQueryExecutor implements QueryExecutor
 {
-
-
     public function __construct(
-        private readonly InfluxConfig    $config,
+        private readonly InfluxConfig $config,
         private readonly ClientInterface $httpClient,
         private readonly RequestFactoryInterface $requestFactory,
         private readonly StreamFactoryInterface $streamFactory,
 
         private readonly LoggerInterface $logger = new NullLogger,
-    ) {
-
-    }
+    ) {}
 
     /**
      * @param  CompiledQuery<TResult>  $query

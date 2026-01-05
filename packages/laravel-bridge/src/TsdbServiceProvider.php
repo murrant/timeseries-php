@@ -41,7 +41,7 @@ class TsdbServiceProvider extends ServiceProvider
 
         $this->app->singleton(TimeseriesManager::class);
 
-        $this->app->resolving(TimeseriesManager::class, function (TimeseriesManager $manager) {
+        $this->app->resolving(TimeseriesManager::class, function (TimeseriesManager $manager): void {
             // discover drivers and create factories
             foreach (DriverDiscovery::discover() as $name => $factory) {
                 $manager->registerDriver($name, $this->app->make($factory));

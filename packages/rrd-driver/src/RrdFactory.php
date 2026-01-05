@@ -4,6 +4,7 @@ namespace TimeseriesPhp\Driver\RRD;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use TimeseriesPhp\Core\Attributes\TimeseriesPhpDriver;
 use TimeseriesPhp\Core\Contracts\DriverConfig;
 use TimeseriesPhp\Core\Contracts\DriverFactory;
 use TimeseriesPhp\Core\Contracts\MetricRepository;
@@ -18,16 +19,16 @@ use TimeseriesPhp\Driver\RRD\Factories\LabelStrategyFactory;
 use TimeseriesPhp\Driver\RRD\Factories\RrdProcessFactory;
 use TimeseriesPhp\Driver\RRD\Factories\RrdtoolFactory;
 
+#[TimeseriesPhpDriver('rrd')]
 class RrdFactory implements DriverFactory
 {
     public function __construct(
         private readonly MetricRepository $metricRepository,
-        private readonly RrdtoolFactory  $rrdtoolFactory,
+        private readonly RrdtoolFactory $rrdtoolFactory,
         private readonly RrdProcessFactory $rrdProcessFactory,
         private readonly LabelStrategyFactory $labelStrategyFactory,
-        private readonly LoggerInterface  $logger = new NullLogger,
+        private readonly LoggerInterface $logger = new NullLogger,
     ) {}
-
 
     public function make(DriverConfig|array $config): Runtime
     {

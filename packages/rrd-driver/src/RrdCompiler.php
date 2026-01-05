@@ -24,13 +24,14 @@ use TimeseriesPhp\Driver\RRD\Exceptions\RrdNotFoundException;
 readonly class RrdCompiler implements QueryCompiler
 {
     public function __construct(
-        private RrdConfig        $config,
+        private RrdConfig $config,
         private MetricRepository $metrics,
     ) {}
 
     /**
      * @param  Query<TResult>  $query
      * @return CompiledQuery<TResult>
+     *
      * @throws RrdException
      */
     public function compile(Query $query): CompiledQuery
@@ -46,26 +47,28 @@ readonly class RrdCompiler implements QueryCompiler
         if ($query instanceof DataQuery) {
             /** @var CompiledQuery<TimeSeriesQueryResult> $rrdCommand */
             $rrdCommand = $this->compileDataQuery($query);
+
             // @phpstan-ignore-next-line
             return $rrdCommand;
         }
 
-        throw new InvalidArgumentException('Unsupported query type: '.get_class($query));
+        throw new InvalidArgumentException('Unsupported query type: '.$query::class);
     }
 
     /**
      * @return CompiledQuery<TimeSeriesQueryResult>
+     *
      * @throws RrdException
      */
     private function compileDataQuery(DataQuery $query): CompiledQuery
     {
         $options = [
-            '--start' => (string)$query->period->start->getTimestamp(),
-            '--end' => (string)$query->period->end->getTimestamp(),
+            '--start' => (string) $query->period->start->getTimestamp(),
+            '--end' => (string) $query->period->end->getTimestamp(),
         ];
 
         if ($query->resolution->seconds) {
-            $options['--step'] = (string)$query->resolution->seconds;
+            $options['--step'] = (string) $query->resolution->seconds;
         }
 
         $defs = [];
@@ -91,13 +94,13 @@ readonly class RrdCompiler implements QueryCompiler
                 // RRDtool expects absolute path or relative to cwd? Usually absolute is safer if not in dir.
                 // But FilenameLabelStrategy returns relative to config->dir.
                 // Let's assume we need full path.
-                $fullPath = rtrim($this->config->dir, '/') . '/' . $file;
-                
+                $fullPath = rtrim($this->config->dir, '/').'/'.$file;
+
                 // We need to know the DS name. Assuming 'value' for now or from metric definition?
                 // MetricIdentifier doesn't seem to have DS name. RrdWriter usually uses 'value' or similar.
                 // Let's assume 'value' for single-value metrics.
-                $dsName = 'value'; 
-                
+                $dsName = 'value';
+
                 // CF (Consolidation Function). Default to AVERAGE?
                 $cf = 'AVERAGE';
 
@@ -114,25 +117,25 @@ readonly class RrdCompiler implements QueryCompiler
             // But DataQuery usually implies one result series per stream unless grouped.
             // For now, let's SUM them if multiple files match, or just take the first one?
             // Realistically we need to handle aggregations from the stream pipeline.
-            
+
             // Simple case: Sum all matched files
             $combinedName = "s{$index}_combined";
             if (count($streamDefs) > 1) {
-                $expr = implode(',', $streamDefs) . str_repeat(',+', count($streamDefs) - 1);
+                $expr = implode(',', $streamDefs).str_repeat(',+', count($streamDefs) - 1);
                 $cdefs[] = "CDEF:$combinedName=$expr";
             } else {
                 $combinedName = $streamDefs[0];
             }
 
             // Apply pipeline operations (math, etc) - TODO
-            
+
             // Apply aggregations - TODO
-            
+
             // Final export
             $legend = $stream->alias ?? $stream->metric;
             // Escape legend
             $legend = str_replace(':', '\:', $legend);
-            
+
             $xports[] = "XPORT:$combinedName:$legend";
         }
 
@@ -141,10 +144,10 @@ readonly class RrdCompiler implements QueryCompiler
         // RrdClient handles RrdNotFoundException, maybe we can throw that?
         // But RrdCompiler shouldn't really check for file existence if possible, but here we did listFilenames.
         if (empty($xports)) {
-             // Return a command that does nothing or throws?
-             // If we return a command with no arguments, rrdtool will complain "can't make an xport without contents"
-             // Let's throw RrdException which RrdClient catches.
-             throw new RrdNotFoundException("No RRD files found for query");
+            // Return a command that does nothing or throws?
+            // If we return a command with no arguments, rrdtool will complain "can't make an xport without contents"
+            // Let's throw RrdException which RrdClient catches.
+            throw new RrdNotFoundException('No RRD files found for query');
         }
 
         $arguments = [...$defs, ...$cdefs, ...$xports];

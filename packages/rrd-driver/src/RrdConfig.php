@@ -10,6 +10,7 @@ final readonly class RrdConfig implements DriverConfig
 {
     /**
      * @param  RetentionPolicy[]  $defaultRetentionPolicies
+     *
      * @throws RrdConfigException
      */
     public function __construct(
@@ -24,16 +25,17 @@ final readonly class RrdConfig implements DriverConfig
 
     /**
      * @param  array<string, mixed>  $config
+     *
      * @throws RrdConfigException
      */
     public static function fromArray(array $config): DriverConfig
     {
         return new self(
-            dir: (string)$config['dir'],
-            rrdtool_exec: isset($config['rrdtool_exec']) ? (string)$config['rrdtool_exec'] : 'rrdtool',
-            rrdcached: isset($config['rrdcached']) ? (string)$config['rrdcached'] : null,
+            dir: (string) $config['dir'],
+            rrdtool_exec: isset($config['rrdtool_exec']) ? (string) $config['rrdtool_exec'] : 'rrdtool',
+            rrdcached: isset($config['rrdcached']) ? (string) $config['rrdcached'] : null,
             defaultRetentionPolicies: array_map(
-                fn($p) => RetentionPolicy::fromArray($p),
+                RetentionPolicy::fromArray(...),
                 $config['default_retention_policies'] ?? []
             ),
         );

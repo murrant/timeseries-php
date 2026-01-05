@@ -20,9 +20,9 @@ class RrdProcess
     private ?Process $process = null;
 
     public function __construct(
-        private readonly RrdConfig       $config,
+        private readonly RrdConfig $config,
         private readonly LoggerInterface $logger,
-        private readonly InputStream     $input,
+        private readonly InputStream $input,
     ) {
         if ($this->config->rrdcached) {
             $this->env['RRDCACHED_ADDRESS'] = $this->config->rrdcached;

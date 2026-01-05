@@ -9,8 +9,8 @@ interface LabelDiscovery
     /**
      * List labels (tags) available for the given metrics.
      *
-     * @param list<string> $metrics
-     * @param Filter[] $filters
+     * @param  list<string>  $metrics
+     * @param  Filter[]  $filters
      * @return list<string>
      */
     public function listLabels(
@@ -21,9 +21,8 @@ interface LabelDiscovery
     /**
      * List possible values for a label, given metrics and filters.
      *
-     * @param string $label
-     * @param list<string> $metrics
-     * @param Filter[] $filters
+     * @param  list<string>  $metrics
+     * @param  Filter[]  $filters
      * @return list<scalar>
      */
     public function listLabelValues(

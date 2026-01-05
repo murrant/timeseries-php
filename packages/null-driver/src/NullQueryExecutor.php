@@ -21,7 +21,7 @@ final readonly class NullQueryExecutor implements QueryExecutor
 
     public function execute(CompiledQuery $query): QueryResult
     {
-        $this->logger->debug("Received query execution request for query"); // TODO describe query somehow
+        $this->logger->debug('Received query execution request for query'); // TODO describe query somehow
 
         return new TimeSeriesQueryResult([], TimeRange::lastMinutes(60), Resolution::auto());
     }

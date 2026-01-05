@@ -18,7 +18,7 @@ final readonly class NullCompiler implements QueryCompiler
 
     public function compile(Query $query): CompiledQuery
     {
-        $this->logger->info("Received query compilation request for query"); // TODO describe query somehow
+        $this->logger->info('Received query compilation request for query'); // TODO describe query somehow
 
         return new class implements CompiledQuery {};
     }

@@ -15,13 +15,13 @@ class DriverDiscovery
         $packages = InstalledVersions::getAllRawData();
 
         foreach ($packages[0]['versions'] as $packageName => $data) {
-            if (!isset($data['type']) || $data['type'] !== 'timeseries-php-driver') {
+            if (! isset($data['type']) || $data['type'] !== 'timeseries-php-driver') {
                 continue;
             }
 
             $installPath = InstalledVersions::getInstallPath($packageName);
 
-            if ($installPath && file_exists($configFile = $installPath . '/composer.json')) {
+            if ($installPath && file_exists($configFile = $installPath.'/composer.json')) {
                 $manifest = json_decode(file_get_contents($configFile), true);
 
                 $config = $manifest['extra']['timeseries-php'] ?? [];

@@ -33,6 +33,7 @@ readonly class RrdQueryExecutor implements QueryExecutor
     /**
      * @param  CompiledQuery<TResult>  $query
      * @return TResult
+     *
      * @throws TimeseriesException
      */
     public function execute(CompiledQuery $query): QueryResult
@@ -50,13 +51,14 @@ readonly class RrdQueryExecutor implements QueryExecutor
 
         try {
             $output = $this->process->run($query);
+
             // @phpstan-ignore-next-line
             return $this->parseGraphOutput($output);
         } catch (RrdNotFoundException) {
             // @phpstan-ignore-next-line
             return new TimeSeriesQueryResult([], new TimeRange(new DateTimeImmutable, new DateTimeImmutable), new Resolution);
         } catch (RrdException $e) {
-            throw new TimeseriesException('RRD execution failed: ' . $e->getMessage(), 0, $e);
+            throw new TimeseriesException('RRD execution failed: '.$e->getMessage(), 0, $e);
         }
     }
 

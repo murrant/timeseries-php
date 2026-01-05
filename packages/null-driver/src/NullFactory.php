@@ -6,6 +6,7 @@ namespace TimeseriesPhp\Driver\Null;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use TimeseriesPhp\Core\Attributes\TimeseriesPhpDriver;
 use TimeseriesPhp\Core\Contracts\DriverConfig;
 use TimeseriesPhp\Core\Contracts\DriverFactory;
 use TimeseriesPhp\Core\Contracts\MetricRepository;
@@ -16,11 +17,12 @@ use TimeseriesPhp\Core\Metrics\Repository\RuntimeMetricRepository;
 use TimeseriesPhp\Core\Runtime;
 use TimeseriesPhp\Core\Services\DriverServiceRegistry;
 
+#[TimeseriesPhpDriver('null')]
 final readonly class NullFactory implements DriverFactory
 {
     public function __construct(
-        private LoggerInterface  $logger = new NullLogger,
-        private MetricRepository $metricRepository = new RuntimeMetricRepository(),
+        private LoggerInterface $logger = new NullLogger,
+        private MetricRepository $metricRepository = new RuntimeMetricRepository,
     ) {}
 
     public function make(DriverConfig|array $config): Runtime

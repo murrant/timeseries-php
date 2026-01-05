@@ -2,7 +2,4 @@
 
 namespace TimeseriesPhp\Core\Exceptions;
 
-class UnsupportedServiceException extends TimeseriesException
-{
-
-}
+class UnsupportedServiceException extends TimeseriesException {}

@@ -16,7 +16,6 @@ class TsdbRrdLabelsCommand extends Command
 
     protected $description = 'Manage RRD labels for metrics';
 
-
     public function handle(MetricRepository $repository, LabelStrategy $strategy): void
     {
         $command = $this->argument('label-command');
@@ -24,6 +23,7 @@ class TsdbRrdLabelsCommand extends Command
 
         if (empty($metricKeys)) {
             $this->error('The --metric option is required');
+
             return;
         }
 
@@ -42,14 +42,15 @@ class TsdbRrdLabelsCommand extends Command
     }
 
     /**
-     * @param string[] $metricKeys
+     * @param  string[]  $metricKeys
      * @return MetricIdentifier|MetricIdentifier[]
+     *
      * @throws UnknownMetricException
      */
     private function resolveMetrics(MetricRepository $repository, array $metricKeys): MetricIdentifier|array
     {
         $metrics = array_map(
-            fn(string $key) => $repository->get($key),
+            $repository->get(...),
             $metricKeys
         );
 
@@ -62,6 +63,7 @@ class TsdbRrdLabelsCommand extends Command
 
         if (empty($labelNames)) {
             $this->info('No labels found for the specified metric(s)');
+
             return;
         }
 
@@ -77,6 +79,7 @@ class TsdbRrdLabelsCommand extends Command
 
         if (empty($labelFilters)) {
             $this->error('The --label option is required for the "values" command. Usage: --label=labelName');
+
             return;
         }
 
@@ -89,6 +92,7 @@ class TsdbRrdLabelsCommand extends Command
 
         if (empty($values)) {
             $this->info("No values found for label: {$labelName}");
+
             return;
         }
 
@@ -102,6 +106,7 @@ class TsdbRrdLabelsCommand extends Command
     {
         if (is_array($metrics)) {
             $this->error('The "generate" command requires exactly one metric');
+
             return;
         }
 
@@ -114,22 +119,24 @@ class TsdbRrdLabelsCommand extends Command
             foreach ($metrics->labels as $label) {
                 $this->line("  - {$label}");
             }
+
             return;
         }
 
         // Parse label filters into key-value pairs
         $labels = [];
         foreach ($labelFilters as $filter) {
-            if (!str_contains($filter, ':')) {
+            if (! str_contains((string) $filter, ':')) {
                 $this->error("Invalid label format: {$filter}. Expected format: key:value");
+
                 return;
             }
 
-            [$key, $value] = explode(':', $filter, 2);
+            [$key, $value] = explode(':', (string) $filter, 2);
 
-            if (!in_array($key, $metrics->labels, true)) {
+            if (! in_array($key, $metrics->labels, true)) {
                 $this->warn("Label '{$key}' is not defined for metric '{$metrics->namespace}.{$metrics->name}'");
-                $this->line('Available labels: ' . implode(', ', $metrics->labels));
+                $this->line('Available labels: '.implode(', ', $metrics->labels));
             }
 
             $labels[$key] = $value;
@@ -147,7 +154,7 @@ class TsdbRrdLabelsCommand extends Command
     /**
      * Parse filter strings into Filter objects
      *
-     * @param string[] $filterStrings
+     * @param  string[]  $filterStrings
      * @return Filter[]
      */
     private function parseFilters(array $filterStrings): array
@@ -158,8 +165,9 @@ class TsdbRrdLabelsCommand extends Command
             // Expected formats: key=value, key!=value, key~=pattern, key>value, etc.
             $pattern = '/^([a-zA-Z_][a-zA-Z0-9_]*)([!=<>~]+)(.+)$/';
 
-            if (!preg_match($pattern, $filterString, $matches)) {
+            if (! preg_match($pattern, $filterString, $matches)) {
                 $this->warn("Invalid filter format: {$filterString}. Expected format: key=value or key!=value");
+
                 continue;
             }
 
@@ -179,6 +187,7 @@ class TsdbRrdLabelsCommand extends Command
 
             if ($operator === null) {
                 $this->warn("Unknown operator: {$operatorStr}. Supported: =, !=, >, >=, <, <=, ~=, !~");
+
                 continue;
             }
 

@@ -15,11 +15,11 @@ use TimeseriesPhp\Driver\RRD\Exceptions\RrdNotFoundException;
 class RrdWriter implements Writer
 {
     public function __construct(
-        private readonly RrdConfig        $config,
+        private readonly RrdConfig $config,
         private readonly MetricRepository $metrics,
         private readonly RrdtoolInterface $rrd,
         private readonly LabelStrategy $labelStrategy,
-        private readonly LoggerInterface  $logger = new NullLogger,
+        private readonly LoggerInterface $logger = new NullLogger,
     ) {}
 
     public function write(MetricSample $sample): void

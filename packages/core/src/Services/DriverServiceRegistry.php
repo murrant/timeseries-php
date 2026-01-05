@@ -15,7 +15,7 @@ final class DriverServiceRegistry
     private array $resolved = [];
 
     /**
-     * @param array<string, object|callable> $services
+     * @param  array<string, object|callable>  $services
      */
     public function __construct(
         private readonly array $services = []
@@ -30,8 +30,10 @@ final class DriverServiceRegistry
 
     /**
      * @template T of object
-     * @param class-string<T> $interface
+     *
+     * @param  class-string<T>  $interface
      * @return T
+     *
      * @throws UnsupportedServiceException
      */
     public function get(string $interface): object
@@ -40,7 +42,7 @@ final class DriverServiceRegistry
             return $this->resolved[$interface];
         }
 
-        if (!isset($this->services[$interface])) {
+        if (! isset($this->services[$interface])) {
             throw new UnsupportedServiceException("This driver does not support: {$interface}");
         }
 

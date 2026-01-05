@@ -18,10 +18,8 @@ readonly class TSDB
     ) {}
 
     /**
-     * @param string $metric
-     * @param string[] $tags
-     * @param float|int|null $value
-     * @return void
+     * @param  string[]  $tags
+     *
      * @throws TimeseriesException
      */
     public function write(string $metric, array $tags = [], float|int|null $value = null): void

@@ -213,17 +213,17 @@ class PortTrafficChart extends ChartWidget
      */
     protected function getAvailableHostnames(): array
     {
-//        $query = app(SchemaManager::class)->labels()
-//            ->from('network.port.bytes.in')
-//            ->from('network.port.bytes.out');
-//
-//        if (! empty($this->filters['ifName'])) {
-//            $query->where('ifName', $this->filters['ifName']);
-//        }
-//
-//        $values = $query->values('host')->values;
-//
-//        return array_combine($values, $values);
+        //        $query = app(SchemaManager::class)->labels()
+        //            ->from('network.port.bytes.in')
+        //            ->from('network.port.bytes.out');
+        //
+        //        if (! empty($this->filters['ifName'])) {
+        //            $query->where('ifName', $this->filters['ifName']);
+        //        }
+        //
+        //        $values = $query->values('host')->values;
+        //
+        //        return array_combine($values, $values);
 
         $filters = [];
         if (! empty($this->filters['ifName'])) {
@@ -232,7 +232,7 @@ class PortTrafficChart extends ChartWidget
 
         return app(LabelDiscovery::class)->listLabelValues('host', [
             'network.port.bytes.in',
-            'network.port.bytes.out'
+            'network.port.bytes.out',
         ], $filters);
     }
 
@@ -243,17 +243,17 @@ class PortTrafficChart extends ChartWidget
      */
     protected function getAvailableIfNames(): array
     {
-//        $query = app(SchemaManager::class)->labels()
-//            ->from('network.port.bytes.in')
-//            ->from('network.port.bytes.out');
-//
-//        if (! empty($this->filters['hostname'])) {
-//            $query->where('host', $this->filters['hostname']);
-//        }
-//
-//        $values = $query->values('ifName')->values;
-//
-//        return array_combine($values, $values);
+        //        $query = app(SchemaManager::class)->labels()
+        //            ->from('network.port.bytes.in')
+        //            ->from('network.port.bytes.out');
+        //
+        //        if (! empty($this->filters['hostname'])) {
+        //            $query->where('host', $this->filters['hostname']);
+        //        }
+        //
+        //        $values = $query->values('ifName')->values;
+        //
+        //        return array_combine($values, $values);
 
         $filters = [];
         if (! empty($this->filters['hostname'])) {
@@ -262,7 +262,7 @@ class PortTrafficChart extends ChartWidget
 
         return app(LabelDiscovery::class)->listLabelValues('ifName', [
             'network.port.bytes.in',
-            'network.port.bytes.out'
+            'network.port.bytes.out',
         ], $filters);
     }
 

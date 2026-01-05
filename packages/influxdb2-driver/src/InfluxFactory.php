@@ -8,6 +8,7 @@ use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use PsrDiscovery\Discover;
+use TimeseriesPhp\Core\Attributes\TimeseriesPhpDriver;
 use TimeseriesPhp\Core\Contracts\DriverConfig;
 use TimeseriesPhp\Core\Contracts\DriverFactory;
 use TimeseriesPhp\Core\Contracts\LabelDiscovery;
@@ -19,15 +20,16 @@ use TimeseriesPhp\Core\Metrics\Repository\RuntimeMetricRepository;
 use TimeseriesPhp\Core\Runtime;
 use TimeseriesPhp\Core\Services\DriverServiceRegistry;
 
+#[TimeseriesPhpDriver('influxdb2')]
 class InfluxFactory implements DriverFactory
 {
     public function __construct(
-        private ?ClientInterface          $httpClient = null,
-        private ?RequestFactoryInterface  $requestFactory = null,
-        private ?StreamFactoryInterface   $streamFactory = null,
-        private readonly MetricRepository $metricRepository = new RuntimeMetricRepository(),
-        private readonly LoggerInterface  $logger = new NullLogger,
-    ){}
+        private readonly ?ClientInterface $httpClient = null,
+        private readonly ?RequestFactoryInterface $requestFactory = null,
+        private readonly ?StreamFactoryInterface $streamFactory = null,
+        private readonly MetricRepository $metricRepository = new RuntimeMetricRepository,
+        private readonly LoggerInterface $logger = new NullLogger,
+    ) {}
 
     public function make(array|DriverConfig $config): Runtime
     {

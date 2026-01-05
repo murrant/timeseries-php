@@ -34,7 +34,7 @@ final class TimeseriesManager
 
     public function addConnection(string $name, string $driverName, array|DriverConfig $config): void
     {
-        $this->connections[$name] = ['driver' => $driverName, 'config' => $config,];
+        $this->connections[$name] = ['driver' => $driverName, 'config' => $config];
 
         // set default as the first registered connection
         if ($this->default === null) {
@@ -69,7 +69,7 @@ final class TimeseriesManager
         }
 
         $connectionConfig = $this->connections[$name] ?? null;
-        if (!$connectionConfig) {
+        if (! $connectionConfig) {
             throw new TimeseriesException("Connection [$name] not configured.");
         }
 
