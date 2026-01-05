@@ -222,18 +222,18 @@ class PortTrafficChart extends ChartWidget
         //        }
         //
         //        $values = $query->values('host')->values;
-        //
-        //        return array_combine($values, $values);
 
         $filters = [];
         if (! empty($this->filters['ifName'])) {
             $filters[] = new Filter('ifName', Operator::Equal, $this->filters['ifName']);
         }
 
-        return app(LabelDiscovery::class)->listLabelValues('host', [
+        $values = app(LabelDiscovery::class)->listLabelValues('host', [
             'network.port.bytes.in',
             'network.port.bytes.out',
         ], $filters);
+
+        return array_combine($values, $values);
     }
 
     /**
@@ -252,18 +252,20 @@ class PortTrafficChart extends ChartWidget
         //        }
         //
         //        $values = $query->values('ifName')->values;
-        //
-        //        return array_combine($values, $values);
+
 
         $filters = [];
         if (! empty($this->filters['hostname'])) {
             $filters[] = new Filter('host', Operator::Equal, $this->filters['hostname']);
         }
 
-        return app(LabelDiscovery::class)->listLabelValues('ifName', [
+        $values = app(LabelDiscovery::class)->listLabelValues('ifName', [
             'network.port.bytes.in',
             'network.port.bytes.out',
         ], $filters);
+
+
+        return array_combine($values, $values);
     }
 
     /**
