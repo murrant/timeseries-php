@@ -11,19 +11,22 @@ use PsrDiscovery\Discover;
 use TimeseriesPhp\Core\Contracts\DriverConfig;
 use TimeseriesPhp\Core\Contracts\DriverFactory;
 use TimeseriesPhp\Core\Contracts\LabelDiscovery;
+use TimeseriesPhp\Core\Contracts\MetricRepository;
 use TimeseriesPhp\Core\Contracts\QueryCompiler;
 use TimeseriesPhp\Core\Contracts\QueryExecutor;
 use TimeseriesPhp\Core\Contracts\Writer;
+use TimeseriesPhp\Core\Metrics\Repository\RuntimeMetricRepository;
 use TimeseriesPhp\Core\Runtime;
 use TimeseriesPhp\Core\Services\DriverServiceRegistry;
 
 class InfluxFactory implements DriverFactory
 {
     public function __construct(
-        private ?ClientInterface                 $httpClient = null,
-        private ?RequestFactoryInterface         $requestFactory = null,
-        private ?StreamFactoryInterface          $streamFactory = null,
-        private readonly LoggerInterface $logger = new NullLogger,
+        private ?ClientInterface          $httpClient = null,
+        private ?RequestFactoryInterface  $requestFactory = null,
+        private ?StreamFactoryInterface   $streamFactory = null,
+        private readonly MetricRepository $metricRepository = new RuntimeMetricRepository(),
+        private readonly LoggerInterface  $logger = new NullLogger,
     ){}
 
     public function make(array|DriverConfig $config): Runtime
@@ -65,6 +68,6 @@ class InfluxFactory implements DriverFactory
             ),
         ]);
 
-        return new Runtime($services, $config);
+        return new Runtime($config, $services, $this->metricRepository);
     }
 }

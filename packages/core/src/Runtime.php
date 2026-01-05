@@ -9,14 +9,14 @@ use TimeseriesPhp\Core\Contracts\QueryCompiler;
 use TimeseriesPhp\Core\Contracts\QueryExecutor;
 use TimeseriesPhp\Core\Contracts\Writer;
 use TimeseriesPhp\Core\Exceptions\UnsupportedServiceException;
-use TimeseriesPhp\Core\Metrics\Repository\RuntimeMetricRepository;
 use TimeseriesPhp\Core\Services\DriverServiceRegistry;
 
 final readonly class Runtime
 {
     public function __construct(
-        private DriverServiceRegistry $services,
         public DriverConfig $config,
+        private DriverServiceRegistry $services,
+        private MetricRepository $metrics,
     ) {}
 
     /**
@@ -45,8 +45,7 @@ final readonly class Runtime
 
     public function metrics(): MetricRepository
     {
-        // FIXME
-        return new RuntimeMetricRepository();
+        return $this->metrics;
     }
 
     public function labels(): LabelDiscovery

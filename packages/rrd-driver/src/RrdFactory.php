@@ -44,6 +44,7 @@ class RrdFactory implements DriverFactory
         $rrdProcess = $this->rrdProcessFactory->make($config);
 
         return new Runtime(
+            $config,
             new DriverServiceRegistry([
                 Writer::class => fn () => new RrdWriter($config, $this->metricRepository, $rrdtool, $labelStrategy, $this->logger),
                 QueryCompiler::class => fn () => new RrdCompiler($config, $this->metricRepository),
@@ -53,7 +54,7 @@ class RrdFactory implements DriverFactory
                 RrdProcess::class => $rrdProcess,
                 LabelStrategy::class => $labelStrategy,
             ]),
-            $config
+            $this->metricRepository,
         );
     }
 }
