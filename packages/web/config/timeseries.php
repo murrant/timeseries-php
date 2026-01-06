@@ -7,6 +7,13 @@ return [
         'path' => 'database/metrics.yaml',
     ],
     'connections' => [
+        'all' => [
+            'driver' => 'aggregate',
+            'connections' => [
+                'test-influxdb2',
+                'test-rrd',
+            ],
+        ],
         'test-influxdb2' => [
             'driver' => 'influxdb2',
             'host' => 'localhost',

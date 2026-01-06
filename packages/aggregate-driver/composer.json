@@ -1,0 +1,23 @@
+{
+  "name": "timeseries-php/aggregate-driver",
+  "type": "timeseries-php-driver",
+  "require": {
+    "php": "^8.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "\\TimeseriesPhp\\Driver\\Aggregate\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "extra": {
+    "timeseries-php": {
+      "driver": "aggregate",
+      "factory": "\\TimeseriesPhp\\Driver\\Aggregate\\AggregateFactory"
+    }
+  }
+}

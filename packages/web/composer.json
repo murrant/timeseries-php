@@ -10,6 +10,7 @@
         "filament/filament": "^4.0",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
+        "timeseries-php/aggregate-driver": "dev-main",
         "timeseries-php/influxdb2-driver": "dev-main",
         "timeseries-php/laravel": "*",
         "timeseries-php/rrd-driver": "dev-main"

@@ -68,7 +68,8 @@
             "\\TimeseriesPhp\\Core\\": "packages/core/src",
             "\\TimeseriesPhp\\Driver\\InfluxDB2\\": "packages/influxdb2-driver/src",
             "\\TimeseriesPhp\\Driver\\Null\\": "packages/null-driver/src",
-            "\\TimeseriesPhp\\Driver\\RRD\\": "packages/rrd-driver/src"
+            "\\TimeseriesPhp\\Driver\\RRD\\": "packages/rrd-driver/src",
+            "\\TimeseriesPhp\\Driver\\Aggregate\\": "packages/aggregate-driver/src"
         }
     },
     "autoload-dev": {
@@ -79,7 +80,8 @@
                 "packages/laravel-bridge/tests/",
                 "packages/null-driver/tests/",
                 "packages/rrd-driver/tests/",
-                "packages/web/tests/"
+                "packages/web/tests/",
+                "packages/aggregate-driver/tests/"
             ]
         }
     },

@@ -4,8 +4,8 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use TimeseriesPhp\Core\Contracts\MetricRepository;
-use TimeseriesPhp\Core\Contracts\Writer;
 use TimeseriesPhp\Core\Metrics\MetricSample;
+use TimeseriesPhp\Core\TimeseriesManager;
 
 class CollectPortStats extends Command
 {
@@ -26,7 +26,7 @@ class CollectPortStats extends Command
     /**
      * Execute the console command.
      */
-    public function handle(Writer $writer, MetricRepository $metricRepository): void
+    public function handle(TimeSeriesManager $manager, MetricRepository $metricRepository): void
     {
         $durations = [];
         $command_start = microtime(true);
@@ -42,7 +42,7 @@ class CollectPortStats extends Command
         $durations[] = ['op' => 'convert', 'time' => microtime(true) - $start];
 
         $start = microtime(true);
-        $writer->writeBatch($metrics);
+        $manager->connection('all')->writer()->writeBatch($metrics);
         $durations[] = ['op' => 'write', 'time' => microtime(true) - $start];
 
         if ($this->getOutput()->isVerbose()) {
