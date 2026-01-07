@@ -8,6 +8,7 @@ use TimeseriesPhp\Core\Contracts\MetricRepository;
 use TimeseriesPhp\Core\Contracts\Query;
 use TimeseriesPhp\Core\Contracts\QueryCompiler;
 use TimeseriesPhp\Core\Contracts\QueryResult;
+use TimeseriesPhp\Core\Enum\MathOperator;
 use TimeseriesPhp\Core\Exceptions\UnknownMetricException;
 use TimeseriesPhp\Core\Query\AST\DataQuery;
 use TimeseriesPhp\Core\Query\AST\LabelQuery;
@@ -89,61 +90,26 @@ readonly class RrdCompiler implements QueryCompiler
             $files = $strategy->listFilenames($metric, $stream->filters);
 
             // Create a DEF for each file
-            $streamDefs = [];
             foreach ($files as $fileIndex => $file) {
-                $defName = "s{$index}f$fileIndex";
+                $defName = "s{$index}f{$fileIndex}";
 
-                // We need to know the DS name. Assuming 'value' for now or from metric definition?
-                // MetricIdentifier doesn't seem to have DS name. RrdWriter usually uses 'value' or similar.
-                // Let's assume 'value' for single-value metrics.
+                // Assuming 'value' as the DS name for single-value metrics
                 $dsName = 'value';
-
-                // CF (Consolidation Function). Default to AVERAGE?
                 $cf = 'AVERAGE';
 
                 $defs[] = "DEF:$defName=$file:$dsName:$cf";
-                $streamDefs[] = $defName;
+
+                // Apply pipeline operations to individual file
+                $processedName = $this->applyPipeline($defName, $stream->pipeline, $index, $fileIndex, $cdefs);
+
+                // Export individual file series
+                $fileLabel = $this->extractLabelFromFile($file, $stream);
+                $fileLabel = $this->escapeRrdLabel($fileLabel);
+                $xports[] = "XPORT:$processedName:\"$fileLabel\"";
             }
-
-            if (empty($streamDefs)) {
-                continue;
-            }
-
-            // Aggregate streams if multiple files matched (e.g. sum them up)
-            // If no aggregation specified, maybe we should just output them all?
-            // But DataQuery usually implies one result series per stream unless grouped.
-            // For now, let's SUM them if multiple files match, or just take the first one?
-            // Realistically we need to handle aggregations from the stream pipeline.
-
-            // Simple case: Sum all matched files
-            $combinedName = "s{$index}_combined";
-            if (count($streamDefs) > 1) {
-                $expr = implode(',', $streamDefs).str_repeat(',+', count($streamDefs) - 1);
-                $cdefs[] = "CDEF:$combinedName=$expr";
-            } else {
-                $combinedName = $streamDefs[0];
-            }
-
-            // Apply pipeline operations (math, etc) - TODO
-
-            // Apply aggregations - TODO
-
-            // Final export
-            $legend = $stream->alias ?? $stream->metric;
-            // Escape legend
-            $legend = str_replace(':', '\:', $legend);
-
-            $xports[] = "XPORT:$combinedName:$legend";
         }
 
-        // If no streams matched any files, we can't generate a valid xport command.
-        // We should probably return a dummy query that returns empty result, or throw exception.
-        // RrdClient handles RrdNotFoundException, maybe we can throw that?
-        // But RrdCompiler shouldn't really check for file existence if possible, but here we did listFilenames.
         if (empty($xports)) {
-            // Return a command that does nothing or throws?
-            // If we return a command with no arguments, rrdtool will complain "can't make an xport without contents"
-            // Let's throw RrdException which RrdClient catches.
             throw new RrdNotFoundException('No RRD files found for query');
         }
 
@@ -151,6 +117,88 @@ readonly class RrdCompiler implements QueryCompiler
 
         /** @var CompiledQuery<TimeSeriesQueryResult> */
         // @phpstan-ignore-next-line
-        return new RrdCommand('xport', $options, $arguments);
+        return new RrdCommand('xport', $options, $arguments, $query);
+    }
+
+    /**
+     * Apply pipeline operations (rate, math, etc.) to a data source
+     */
+    private function applyPipeline(string $sourceName, array $pipeline, int $streamIndex, int|string $fileIndex, array &$cdefs): string
+    {
+        $currentName = $sourceName;
+
+        foreach ($pipeline as $opIndex => $operation) {
+            $newName = "s{$streamIndex}f{$fileIndex}_op{$opIndex}";
+
+            if ($operation instanceof \TimeseriesPhp\Core\Query\AST\Operations\BasicOperation) {
+                // Handle basic operations like rate
+                // Note: For COUNTER data sources, RRDtool already calculates the rate automatically
+                // so we can skip the rate operation
+                $cdef = match ($operation->type->value) {
+                    'rate' => null, // Skip - already handled by COUNTER DS type
+                    'derivative' => "CDEF:$newName=$currentName,PREV($currentName),-",
+                    default => null,
+                };
+
+                if ($cdef === null) {
+                    // Operation not needed or unknown, skip
+                    continue;
+                }
+
+                $cdefs[] = $cdef;
+                $currentName = $newName;
+            } elseif ($operation instanceof \TimeseriesPhp\Core\Query\AST\Operations\MathOperation) {
+                // Handle math operations
+                $value = $operation->value;
+
+                // Convert operator to RPN
+                $cdef = match ($operation->operator) {
+                    MathOperator::Add => "CDEF:$newName=$currentName,$value,+",
+                    MathOperator::Subtract => "CDEF:$newName=$currentName,$value,-",
+                    MathOperator::Multiply => "CDEF:$newName=$currentName,$value,*",
+                    MathOperator::Divide => "CDEF:$newName=$currentName,$value,/",
+                };
+
+                $cdefs[] = $cdef;
+                $currentName = $newName;
+            }
+        }
+
+        return $currentName;
+    }
+
+    /**
+     * Extract a meaningful label from the RRD filename
+     */
+    private function extractLabelFromFile(string $file, $stream): string
+    {
+        // Extract labels from filename pattern like:
+        // network.port/bytes.in/host=amorbis,ifIndex=15,ifName=veth487f2ee_if2.rrd
+
+        $basename = basename($file, '.rrd');
+
+        $prefix = $stream->alias ?? $stream->metric;
+
+        // If the filename contains labels (key=value pairs)
+        if (preg_match_all('/(\w+)=([^,]+)/', $basename, $matches, PREG_SET_ORDER)) {
+            $labels = [];
+            foreach ($matches as $match) {
+                $labels[] = $match[1] . '=' . $match[2];
+            }
+            $labelStr = implode(',', $labels);
+            return $prefix . '{' . $labelStr . '}';
+        }
+
+        // Fallback to just the basename
+        return $prefix . '{' . $basename . '}';
+    }
+
+    /**
+     * Escape special characters in RRD labels
+     */
+    private function escapeRrdLabel(string $label): string
+    {
+        // Escape colons - quotes will handle spaces
+        return str_replace(':', '\:', $label);
     }
 }
