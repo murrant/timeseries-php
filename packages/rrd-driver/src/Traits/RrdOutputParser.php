@@ -2,6 +2,12 @@
 
 namespace TimeseriesPhp\Driver\RRD\Traits;
 
+use DateTimeImmutable;
+use TimeseriesPhp\Core\Query\AST\Resolution;
+use TimeseriesPhp\Core\Query\AST\TimeRange;
+use TimeseriesPhp\Core\Results\DataPoint;
+use TimeseriesPhp\Core\Results\TimeSeries;
+use TimeseriesPhp\Core\Results\TimeSeriesQueryResult;
 use TimeseriesPhp\Driver\RRD\Exceptions\InvalidRrdtoolOutput;
 
 trait RrdOutputParser
@@ -67,6 +73,86 @@ trait RrdOutputParser
 
         return $info;
     }
+
+    /**
+     * Parse rrdtool xport JSON output into TimeSeriesQueryResult
+     */
+    public function parseXportOutput(string $jsonContent): TimeSeriesQueryResult
+    {
+        $data = json_decode($jsonContent, true, 512, JSON_THROW_ON_ERROR);
+
+        $meta = $data['meta'];
+        $start = (int) $meta['start'];
+        $end = (int) $meta['end'];
+        $step = (int) $meta['step'];
+        $legends = $meta['legend'];
+
+        $timeRange = new TimeRange(
+            new DateTimeImmutable("@{$start}"),
+            new DateTimeImmutable("@{$end}")
+        );
+
+        $resolution = new Resolution($step);
+
+        // Initialize time series for each metric
+        $seriesData = array_fill_keys(array_keys($legends), []);
+
+        // Parse data rows
+        $timestamp = $start;
+        foreach ($data['data'] as $row) {
+            foreach ($row as $idx => $value) {
+                $seriesData[$idx][] = new DataPoint(
+                    $timestamp,
+                    is_float($value) && is_nan($value) ? null : $value
+                );
+            }
+            $timestamp += $step;
+        }
+
+        // Build TimeSeries objects
+        $series = [];
+        foreach ($legends as $idx => $legend) {
+            $metric = $legend;
+            $alias = null;
+
+            if (str_contains($legend, ':')) {
+                [$metric, $alias] = explode(':', $legend, 2);
+            }
+
+            $series[] = new TimeSeries(
+                metric: $metric,
+                alias: $alias,
+                labels: $this->extractLabels($legend),
+                points: $seriesData[$idx]
+            );
+        }
+
+        return new TimeSeriesQueryResult(
+            series: $series,
+            range: $timeRange,
+            resolution: $resolution
+        );
+    }
+
+    /**
+     * Extract labels from legend string
+     *
+     * @return string[]
+     */
+    private function extractLabels(string $legend): array
+    {
+        $labels = [];
+
+        if (preg_match('/\{([^}]+)}/', $legend, $matches)) {
+            foreach(explode(',', $matches[1]) as $pair) {
+                [$key, $value] = explode('=', $pair, 2);
+                $labels[$key] = $value;
+            }
+        }
+
+        return $labels;
+    }
+
 
     /**
      * Parses a single RRD info value into a PHP scalar.

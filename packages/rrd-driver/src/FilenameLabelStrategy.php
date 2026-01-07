@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TimeseriesPhp\Driver\RRD;
 
 use FilesystemIterator;
+use TimeseriesPhp\Core\Contracts\MetricRepository;
 use TimeseriesPhp\Core\Enum\Operator;
 use TimeseriesPhp\Core\Metrics\MetricIdentifier;
 use TimeseriesPhp\Core\Query\AST\Filter;
@@ -23,6 +24,7 @@ final readonly class FilenameLabelStrategy implements LabelStrategy
 {
     public function __construct(
         private RrdConfig $config,
+        private MetricRepository $metrics,
         private RrdtoolInterface $rrdTool
     ) {}
 
@@ -63,8 +65,9 @@ final readonly class FilenameLabelStrategy implements LabelStrategy
      * @param  Filter[]  $filters  Optional label filters
      * @return string[] Array of relative file paths
      */
-    public function listFilenames(MetricIdentifier $metric, array $filters = []): array
+    public function listFilenames(string $metric, array $filters = []): array
     {
+        $metric = $this->metrics->get($metric);
         $metricDir = $this->getMetricDirectory($metric);
         $searchDir = str_starts_with($metricDir, '/') ? $metricDir : '/' . $metricDir;
 
@@ -79,18 +82,18 @@ final readonly class FilenameLabelStrategy implements LabelStrategy
     }
 
     /**
-     * List all label names available across one or more metrics.
+     * List labels (tags) available for the given metrics.
      *
-     * @param  MetricIdentifier|MetricIdentifier[]  $metrics
-     * @return string[] Unique label names found across all files
+     * @param  list<string>  $metrics
+     * @param  Filter[]  $filters
+     * @return list<string>
      */
-    public function listLabelNames(MetricIdentifier|array $metrics): array
+    public function listLabels(array $metrics, array $filters = []): array
     {
         $labelNames = [];
-        $metrics = is_array($metrics) ? $metrics : [$metrics];
 
         foreach ($metrics as $metric) {
-            $files = $this->listFilenames($metric);
+            $files = $this->listFilenames($metric, $filters);
 
             foreach ($files as $file) {
                 $labels = $this->parseLabelsFromFilename($file);
@@ -104,25 +107,23 @@ final readonly class FilenameLabelStrategy implements LabelStrategy
     }
 
     /**
-     * List label values for a given label name across one or more metrics.
+     * List labels (tags) available for the given metrics.
      *
-     * @param  MetricIdentifier|MetricIdentifier[]  $metrics
-     * @param  string  $labelName  The label to get values for
-     * @param  Filter[]  $filters  Additional filters to narrow results
-     * @return string[] Unique values for the specified label
+     * @param  list<string>  $metrics
+     * @param  Filter[]  $filters
+     * @return list<string>
      */
-    public function listLabelValues(MetricIdentifier|array $metrics, string $labelName, array $filters = []): array
+    public function listLabelValues(string $label, array $metrics, array $filters = []): array
     {
         $values = [];
-        $metrics = is_array($metrics) ? $metrics : [$metrics];
 
         foreach ($metrics as $metric) {
             $files = $this->listFilenames($metric, $filters);
 
             foreach ($files as $file) {
                 $labels = $this->parseLabelsFromFilename($file);
-                if (isset($labels[$labelName])) {
-                    $values[$labels[$labelName]] = true;
+                if (isset($labels[$label])) {
+                    $values[$labels[$label]] = true;
                 }
             }
         }
@@ -271,5 +272,17 @@ final readonly class FilenameLabelStrategy implements LabelStrategy
         $sanitized = preg_replace('/[^a-zA-Z0-9._-]/', '_', $value);
 
         return $sanitized ?: '_';
+    }
+
+    public function labelsFromFilename(string $path): array
+    {
+        $filename = basename($path, '.rrd');
+        $labels = [];
+        foreach (explode(',', $filename) as $parts) {
+            [$label, $value] = explode('=', $parts, 2);
+            $labels[$label] = $value;
+        }
+
+        return $labels;
     }
 }

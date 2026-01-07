@@ -113,7 +113,8 @@ class TsdbRrdLabelsCommand extends Command
         // Parse additional filters if provided in key:value format
         $filters = $this->parseFilters(array_slice($labelFilters, 1));
 
-        $values = $strategy->listLabelValues($metrics, $labelName, $filters);
+        $labelNames = array_map(fn ($metric) => $metric->key(), $metrics);
+        $values = $strategy->listLabelValues($labelNames, $labelName, $filters);
 
         if (empty($values)) {
             $this->info("No values found for label: {$labelName}");

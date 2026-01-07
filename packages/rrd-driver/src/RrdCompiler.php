@@ -4,17 +4,15 @@ namespace TimeseriesPhp\Driver\RRD;
 
 use InvalidArgumentException;
 use TimeseriesPhp\Core\Contracts\CompiledQuery;
-use TimeseriesPhp\Core\Contracts\MetricRepository;
 use TimeseriesPhp\Core\Contracts\Query;
 use TimeseriesPhp\Core\Contracts\QueryCompiler;
 use TimeseriesPhp\Core\Contracts\QueryResult;
 use TimeseriesPhp\Core\Enum\MathOperator;
-use TimeseriesPhp\Core\Exceptions\UnknownMetricException;
 use TimeseriesPhp\Core\Query\AST\DataQuery;
 use TimeseriesPhp\Core\Query\AST\LabelQuery;
 use TimeseriesPhp\Core\Results\LabelQueryResult;
 use TimeseriesPhp\Core\Results\TimeSeriesQueryResult;
-use TimeseriesPhp\Driver\RRD\Contracts\RrdtoolInterface;
+use TimeseriesPhp\Driver\RRD\Contracts\LabelStrategy;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdException;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdNotFoundException;
 
@@ -26,9 +24,7 @@ use TimeseriesPhp\Driver\RRD\Exceptions\RrdNotFoundException;
 readonly class RrdCompiler implements QueryCompiler
 {
     public function __construct(
-        private RrdConfig $config,
-        private MetricRepository $metrics,
-        private RrdtoolInterface $rrdtool,
+        private LabelStrategy $labelStrategy,
     ) {}
 
     /**
@@ -67,6 +63,7 @@ readonly class RrdCompiler implements QueryCompiler
         $options = [
             '--start' => (string) $query->period->start->getTimestamp(),
             '--end' => (string) $query->period->end->getTimestamp(),
+            '--json',
         ];
 
         if ($query->resolution->seconds) {
@@ -77,17 +74,10 @@ readonly class RrdCompiler implements QueryCompiler
         $cdefs = [];
         $xports = [];
 
-        $strategy = new FilenameLabelStrategy($this->config, $this->rrdtool);
-
         foreach ($query->streams as $index => $stream) {
-            try {
-                $metric = $this->metrics->get($stream->metric);
-            } catch (UnknownMetricException) {
-                continue;
-            }
 
             // Find all files matching the filters
-            $files = $strategy->listFilenames($metric, $stream->filters);
+            $files = $this->labelStrategy->listFilenames($stream->metric, $stream->filters);
 
             // Create a DEF for each file
             foreach ($files as $fileIndex => $file) {

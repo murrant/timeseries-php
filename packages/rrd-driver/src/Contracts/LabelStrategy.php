@@ -2,11 +2,12 @@
 
 namespace TimeseriesPhp\Driver\RRD\Contracts;
 
+use TimeseriesPhp\Core\Contracts\LabelDiscovery;
 use TimeseriesPhp\Core\Metrics\MetricIdentifier;
 use TimeseriesPhp\Core\Query\AST\Filter;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdException;
 
-interface LabelStrategy
+interface LabelStrategy extends LabelDiscovery
 {
     /**
      * Generate filename for creating/writing RRD files with all available labels.
@@ -24,23 +25,11 @@ interface LabelStrategy
      * @param  Filter[]  $filters  Optional label filters
      * @return string[] Array of relative file paths
      */
-    public function listFilenames(MetricIdentifier $metric, array $filters = []): array;
+    public function listFilenames(string $metric, array $filters = []): array;
 
     /**
-     * List all label names available for a specific metric.
-     *
-     * @param  MetricIdentifier|MetricIdentifier[]  $metrics
-     * @return string[] Unique label names found across all files
+     * Extract labels from a given rrd file path
+     * @return  array<string, string>  Key-value pairs of label dimensions
      */
-    public function listLabelNames(MetricIdentifier|array $metrics): array;
-
-    /**
-     * List label values for a given label name and query (metric + filters).
-     *
-     * @param  MetricIdentifier|MetricIdentifier[]  $metrics
-     * @param  string  $labelName  The label to get values for
-     * @param  Filter[]  $filters  Additional filters to narrow results
-     * @return string[] Unique values for the specified label
-     */
-    public function listLabelValues(MetricIdentifier|array $metrics, string $labelName, array $filters = []): array;
+    public function labelsFromFilename(string $path): array;
 }

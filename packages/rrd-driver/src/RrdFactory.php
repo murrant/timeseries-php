@@ -7,6 +7,7 @@ use Psr\Log\NullLogger;
 use TimeseriesPhp\Core\Attributes\TimeseriesPhpDriver;
 use TimeseriesPhp\Core\Contracts\DriverConfig;
 use TimeseriesPhp\Core\Contracts\DriverFactory;
+use TimeseriesPhp\Core\Contracts\LabelDiscovery;
 use TimeseriesPhp\Core\Contracts\MetricRepository;
 use TimeseriesPhp\Core\Contracts\QueryCompiler;
 use TimeseriesPhp\Core\Contracts\QueryExecutor;
@@ -48,8 +49,9 @@ class RrdFactory implements DriverFactory
             $config,
             new DriverServiceRegistry([
                 Writer::class => fn () => new RrdWriter($config, $this->metricRepository, $rrdtool, $labelStrategy, $this->logger),
-                QueryCompiler::class => fn () => new RrdCompiler($config, $this->metricRepository, $rrdtool),
+                QueryCompiler::class => fn () => new RrdCompiler($labelStrategy),
                 QueryExecutor::class => fn () => new RrdQueryExecutor($rrdProcess, $this->logger),
+                LabelDiscovery::class => $labelStrategy,
                 MetricRepository::class => $this->metricRepository,
                 RrdtoolInterface::class => $rrdtool,
                 RrdProcess::class => $rrdProcess,

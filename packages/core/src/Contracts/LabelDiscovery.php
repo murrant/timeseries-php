@@ -13,10 +13,7 @@ interface LabelDiscovery
      * @param  Filter[]  $filters
      * @return list<string>
      */
-    public function listLabels(
-        array $metrics,
-        array $filters = []
-    ): array;
+    public function listLabels(array $metrics, array $filters = []): array;
 
     /**
      * List possible values for a label, given metrics and filters.
@@ -25,9 +22,5 @@ interface LabelDiscovery
      * @param  Filter[]  $filters
      * @return list<scalar>
      */
-    public function listLabelValues(
-        string $label,
-        array $metrics,
-        array $filters = []
-    ): array;
+    public function listLabelValues(string $label, array $metrics, array $filters = []): array;
 }
