@@ -48,7 +48,7 @@ class RrdFactory implements DriverFactory
             $config,
             new DriverServiceRegistry([
                 Writer::class => fn () => new RrdWriter($config, $this->metricRepository, $rrdtool, $labelStrategy, $this->logger),
-                QueryCompiler::class => fn () => new RrdCompiler($config, $this->metricRepository),
+                QueryCompiler::class => fn () => new RrdCompiler($config, $this->metricRepository, $rrdtool),
                 QueryExecutor::class => fn () => new RrdQueryExecutor($rrdProcess, $this->logger),
                 MetricRepository::class => $this->metricRepository,
                 RrdtoolInterface::class => $rrdtool,

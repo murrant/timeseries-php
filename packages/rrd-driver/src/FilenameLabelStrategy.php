@@ -23,7 +23,7 @@ final readonly class FilenameLabelStrategy implements LabelStrategy
 {
     public function __construct(
         private RrdConfig $config,
-        private ?RrdtoolInterface $rrdTool = null
+        private RrdtoolInterface $rrdTool
     ) {}
 
     /**
@@ -66,15 +66,9 @@ final readonly class FilenameLabelStrategy implements LabelStrategy
     public function listFilenames(MetricIdentifier $metric, array $filters = []): array
     {
         $metricDir = $this->getMetricDirectory($metric);
-        $fullPath = rtrim($this->config->dir, '/').'/'.$metricDir;
+        $searchDir = str_starts_with($metricDir, '/') ? $metricDir : '/' . $metricDir;
 
-        // Use rrdtool list command if available (for remote rrdcached scenarios)
-        if ($this->rrdTool !== null) {
-            $files = $this->rrdTool->listFiles($fullPath);
-        } else {
-            // Fallback to filesystem access
-            $files = $this->listFilesystemFiles($fullPath);
-        }
+        $files = array_map(fn ($file) => "$metricDir/$file", $this->rrdTool->listFiles($searchDir));
 
         // Apply filters if provided
         if (empty($filters)) {
@@ -166,10 +160,16 @@ final readonly class FilenameLabelStrategy implements LabelStrategy
      */
     private function getMetricDirectory(MetricIdentifier $metric): string
     {
-        $namespace = $this->sanitizeForFilename($metric->namespace);
-        $name = $this->sanitizeForFilename($metric->name);
+        $parts = [
+            $this->sanitizeForFilename($metric->namespace),
+            $this->sanitizeForFilename($metric->name),
+        ];
 
-        return "{$namespace}/{$name}";
+        if (! $this->config->rrdcached) {
+            array_unshift($parts, $this->config->dir);
+        }
+
+        return implode('/', $parts);
     }
 
     /**

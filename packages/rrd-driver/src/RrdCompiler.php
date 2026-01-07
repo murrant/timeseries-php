@@ -13,6 +13,7 @@ use TimeseriesPhp\Core\Query\AST\DataQuery;
 use TimeseriesPhp\Core\Query\AST\LabelQuery;
 use TimeseriesPhp\Core\Results\LabelQueryResult;
 use TimeseriesPhp\Core\Results\TimeSeriesQueryResult;
+use TimeseriesPhp\Driver\RRD\Contracts\RrdtoolInterface;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdException;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdNotFoundException;
 
@@ -26,6 +27,7 @@ readonly class RrdCompiler implements QueryCompiler
     public function __construct(
         private RrdConfig $config,
         private MetricRepository $metrics,
+        private RrdtoolInterface $rrdtool,
     ) {}
 
     /**
@@ -40,7 +42,6 @@ readonly class RrdCompiler implements QueryCompiler
             /** @var CompiledQuery<LabelQueryResult> $rrdLabelQuery */
             $rrdLabelQuery = new RrdLabelQuery($query);
 
-            // @phpstan-ignore-next-line
             return $rrdLabelQuery;
         }
 
@@ -75,7 +76,7 @@ readonly class RrdCompiler implements QueryCompiler
         $cdefs = [];
         $xports = [];
 
-        $strategy = new FilenameLabelStrategy($this->config);
+        $strategy = new FilenameLabelStrategy($this->config, $this->rrdtool);
 
         foreach ($query->streams as $index => $stream) {
             try {
@@ -91,10 +92,6 @@ readonly class RrdCompiler implements QueryCompiler
             $streamDefs = [];
             foreach ($files as $fileIndex => $file) {
                 $defName = "s{$index}f$fileIndex";
-                // RRDtool expects absolute path or relative to cwd? Usually absolute is safer if not in dir.
-                // But FilenameLabelStrategy returns relative to config->dir.
-                // Let's assume we need full path.
-                $fullPath = rtrim($this->config->dir, '/').'/'.$file;
 
                 // We need to know the DS name. Assuming 'value' for now or from metric definition?
                 // MetricIdentifier doesn't seem to have DS name. RrdWriter usually uses 'value' or similar.
@@ -104,7 +101,7 @@ readonly class RrdCompiler implements QueryCompiler
                 // CF (Consolidation Function). Default to AVERAGE?
                 $cf = 'AVERAGE';
 
-                $defs[] = "DEF:$defName=$fullPath:$dsName:$cf";
+                $defs[] = "DEF:$defName=$file:$dsName:$cf";
                 $streamDefs[] = $defName;
             }
 
