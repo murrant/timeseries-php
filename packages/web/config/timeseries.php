@@ -2,6 +2,7 @@
 
 return [
     'default' => env('TSDB_CONNECTION', 'test-influxdb2'),
+    'default_write' => env('TSDB_WRITE_CONNECTION'),  // uses default connection if unset
     'metrics' => [
         'repository' => 'yaml',
         'path' => 'database/metrics.yaml',

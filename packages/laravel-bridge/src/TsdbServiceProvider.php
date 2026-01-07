@@ -8,6 +8,7 @@ use Illuminate\Console\Events\CommandFinished;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Symfony\Component\Console\Output\ConsoleOutput;
+use TimeseriesPhp\Bridge\Laravel\Commands\TsdbRrdInfoCommand;
 use TimeseriesPhp\Bridge\Laravel\Commands\TsdbRrdLabelsCommand;
 use TimeseriesPhp\Core\Contracts\LabelDiscovery;
 use TimeseriesPhp\Core\Contracts\MetricRepository;
@@ -110,6 +111,7 @@ class TsdbServiceProvider extends ServiceProvider
 
             $this->commands([
                 TsdbRrdLabelsCommand::class,
+                TsdbRrdInfoCommand::class,
             ]);
         }
     }

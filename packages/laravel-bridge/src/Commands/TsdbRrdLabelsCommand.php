@@ -5,30 +5,51 @@ namespace TimeseriesPhp\Bridge\Laravel\Commands;
 use Illuminate\Console\Command;
 use TimeseriesPhp\Core\Contracts\MetricRepository;
 use TimeseriesPhp\Core\Enum\Operator;
+use TimeseriesPhp\Core\Exceptions\TimeseriesException;
 use TimeseriesPhp\Core\Exceptions\UnknownMetricException;
 use TimeseriesPhp\Core\Metrics\MetricIdentifier;
 use TimeseriesPhp\Core\Query\AST\Filter;
+use TimeseriesPhp\Core\TimeseriesManager;
 use TimeseriesPhp\Driver\RRD\Contracts\LabelStrategy;
+use TimeseriesPhp\Driver\RRD\Factories\LabelStrategyFactory;
+use TimeseriesPhp\Driver\RRD\RrdConfig;
 
 class TsdbRrdLabelsCommand extends Command
 {
-    protected $signature = 'tsdb:rrd-labels {label-command} {--metric=*} {--label=*}';
+    protected $signature = 'tsdb:rrd-labels {label-command} {--metric=*} {--label=*} {--c|connection=}';
 
     protected $description = 'Manage RRD labels for metrics';
 
-    public function handle(MetricRepository $repository, LabelStrategy $strategy): void
+    public function handle(TimeseriesManager $tsm, LabelStrategyFactory $factory): int
     {
         $command = $this->argument('label-command');
         $metricKeys = $this->option('metric');
+        $connection = $this->option('connection');
 
         if (empty($metricKeys)) {
             $this->error('The --metric option is required');
 
-            return;
+            return 2;
         }
 
         try {
-            $metrics = $this->resolveMetrics($repository, $metricKeys);
+            $rrdConfig = $tsm->connection($connection)->config;
+        } catch (TimeseriesException $e) {
+            $this->error($e->getMessage());
+
+            return 1;
+        }
+
+        if (! $rrdConfig instanceof RrdConfig) {
+            $this->error('Connection does not use rrd driver, specify a valid connection');
+
+            return 1;
+        }
+
+        $strategy = $factory->make($rrdConfig);
+
+        try {
+            $metrics = $this->resolveMetrics($tsm->connection($connection)->metrics(), $metricKeys);
 
             match ($command) {
                 'names' => $this->listLabelNames($strategy, $metrics),
@@ -36,8 +57,12 @@ class TsdbRrdLabelsCommand extends Command
                 'filename' => $this->generateFilename($strategy, $metrics),
                 default => $this->error("Unknown command: {$command}. Available commands: names, values, filename"),
             };
+
+            return 0;
         } catch (UnknownMetricException $e) {
             $this->error("Unknown metric: {$e->getMessage()}");
+
+            return 1;
         }
     }
 

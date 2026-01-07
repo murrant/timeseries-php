@@ -8,10 +8,12 @@ use TimeseriesPhp\Driver\RRD\Exceptions\RrdCreationFailedException;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdNotFoundException;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdUpdateFailedException;
 use TimeseriesPhp\Driver\RRD\Traits\RrdCommandBuilder;
+use TimeseriesPhp\Driver\RRD\Traits\RrdOutputParser;
 
 class RrdtoolCli implements RrdtoolInterface
 {
     use RrdCommandBuilder;
+    use RrdOutputParser;
 
     public function __construct(
         private readonly RrdConfig $config,
@@ -66,9 +68,27 @@ class RrdtoolCli implements RrdtoolInterface
         // TODO: Implement first() method.
     }
 
+    /**
+     * Returns full structure information (DS, RRA, resolution).
+     *
+     * @returns array{filename: string, rrd_version: string, step: int, last_update: int, header_size: int, ds: array<string, array{index: int, type: string, minimal_heartbeat: int, min: float, max: float, last_ds: string, value: float, unknown_sec: int}>, rra: array<array{cf: string, rows: int, cur_row: int, pdp_per_row: int, xff: float, cdp_prep: array<array{value: float, unknown_datapoints: int}>}>}
+     */
     public function info(string $path): array
     {
-        // TODO: Implement info() method.
+        $command = $this->buildInfoCommand($path);
+        $output = $this->rrd->run($command);
+
+        return $this->parseInfoOutput($output);
+    }
+
+    public function dump(string $path, ?string $header = null): string
+    {
+        $args = [];
+        if ($header !== null) {
+            $args['--header'] = $header;
+        }
+
+        return $this->rrd->run(new RrdCommand('dump', $args, [$path]));
     }
 
     public function tune(string $path, array $options): bool

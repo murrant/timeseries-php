@@ -77,6 +77,8 @@ interface RrdtoolInterface
      */
     public function info(string $path): array;
 
+    public function dump(string $path, ?string $header = null): string;
+
     /**
      * List RRD files.
      *

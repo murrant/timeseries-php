@@ -2,6 +2,7 @@
 
 return [
     'default' => env('TSDB_CONNECTION', 'metrics'),
+    'default_write' => env('TSDB_WRITE_CONNECTION'),  // uses default connection if unset
     'metrics' => [
         'repository' => 'yaml',
         'path' => 'database/metrics.yaml',

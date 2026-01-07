@@ -18,11 +18,11 @@ trait RrdCommandBuilder
      */
     private function buildCreateCommand(string $path, array $ds, array $retentionPolicies): RrdCommand
     {
-        $heartbeat = null;
+        $step = null;
         $rras = [];
         foreach ($retentionPolicies as $policy) {
             $steps = $policy->retention;
-            $heartbeat = min($heartbeat, $policy->resolution);
+            $step = $step === null ? $policy->resolution : min($step, $policy->resolution);
             $rows = $policy->getPointCount();
             $cf = match ($policy->aggregator) {
                 Aggregation::Average => 'AVERAGE',
@@ -42,10 +42,16 @@ trait RrdCommandBuilder
             };
             // DS:ds-name:DST:heartbeat:min:max
             // Heartbeat is usually 2x the resolution to allow for small gaps in data
-            $datasets[] = sprintf('DS:%s:%s:%d:U:U', $name, $typeName, ($heartbeat ?? 300) * 2); // TODO min/max needed? probably
+            $datasets[] = sprintf('DS:%s:%s:%d:U:U', $name, $typeName, ($step ?? 300) * 2); // TODO min/max needed? probably
+        }
+//        dd('create', $path, $datasets, $rras);
+
+        $args = [];
+        if ($step !== null) {
+            $args['--step'] = $step;
         }
 
-        return new RrdCommand('create', [], [$path, ...$datasets, ...$rras]);
+        return new RrdCommand('create', $args, [$path, ...$datasets, ...$rras]);
     }
 
     private function buildListCommand(string $directory, bool $recursive = false): RrdCommand
@@ -67,5 +73,10 @@ trait RrdCommandBuilder
         $update = implode(':', [$timestamp ?? time(), ...$data]);
 
         return new RrdCommand('update', [], [$path, $update]);
+    }
+
+    private function buildInfoCommand(string $path): RrdCommand
+    {
+        return new RrdCommand('info', [], [$path]);
     }
 }

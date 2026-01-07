@@ -42,7 +42,8 @@ class CollectPortStats extends Command
         $durations[] = ['op' => 'convert', 'time' => microtime(true) - $start];
 
         $start = microtime(true);
-        $manager->connection('all')->writer()->writeBatch($metrics);
+        $writeConnection = config('timeseries.default_write', config('timeseries.default')); // FIXME handle inside manager
+        $manager->connection($writeConnection)->writer()->writeBatch($metrics);
         $durations[] = ['op' => 'write', 'time' => microtime(true) - $start];
 
         if ($this->getOutput()->isVerbose()) {
