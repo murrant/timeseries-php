@@ -13,6 +13,7 @@ use TimeseriesPhp\Core\Query\AST\LabelQuery;
 use TimeseriesPhp\Core\Results\LabelQueryResult;
 use TimeseriesPhp\Core\Results\TimeSeriesQueryResult;
 use TimeseriesPhp\Driver\RRD\Contracts\LabelStrategy;
+use TimeseriesPhp\Driver\RRD\Enum\RrdCommandType;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdException;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdNotFoundException;
 
@@ -107,7 +108,7 @@ readonly class RrdCompiler implements QueryCompiler
 
         /** @var CompiledQuery<TimeSeriesQueryResult> */
         // @phpstan-ignore-next-line
-        return new RrdCommand('xport', $options, $arguments, $query);
+        return new RrdCommand(RrdCommandType::Xport, $options, $arguments);
     }
 
     /**

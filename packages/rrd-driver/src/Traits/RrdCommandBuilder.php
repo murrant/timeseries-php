@@ -5,6 +5,7 @@ namespace TimeseriesPhp\Driver\RRD\Traits;
 use TimeseriesPhp\Core\Enum\Aggregation;
 use TimeseriesPhp\Core\Enum\MetricType;
 use TimeseriesPhp\Core\Metrics\RetentionPolicy;
+use TimeseriesPhp\Driver\RRD\Enum\RrdCommandType;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdException;
 use TimeseriesPhp\Driver\RRD\RrdCommand;
 
@@ -43,7 +44,7 @@ trait RrdCommandBuilder
             $datasets[] = sprintf('DS:%s:%s:%d:U:U', $name, $typeName, $step * 2);
         }
 
-        return new RrdCommand('create', ['--step' => $step], [$path, ...$datasets, ...$rras]);
+        return new RrdCommand(RrdCommandType::Create, ['--step' => $step], [$path, ...$datasets, ...$rras]);
     }
 
     private function buildListCommand(string $directory, bool $recursive = false): RrdCommand
@@ -54,7 +55,7 @@ trait RrdCommandBuilder
             $directory = str_replace($this->config->dir, '/', $directory);
         }
 
-        return new RrdCommand('list', $params, [$directory]);
+        return new RrdCommand(RrdCommandType::List, $params, [$directory]);
     }
 
     /**
@@ -64,11 +65,11 @@ trait RrdCommandBuilder
     {
         $update = implode(':', [$timestamp ?? 'N', ...$data]);
 
-        return new RrdCommand('update', [], [$path, $update]);
+        return new RrdCommand(RrdCommandType::Update, [], [$path, $update]);
     }
 
     private function buildInfoCommand(string $path): RrdCommand
     {
-        return new RrdCommand('info', [], [$path]);
+        return new RrdCommand(RrdCommandType::Info, [], [$path]);
     }
 }

@@ -6,6 +6,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Throwable;
 use TimeseriesPhp\Driver\RRD\Contracts\RrdtoolInterface;
+use TimeseriesPhp\Driver\RRD\Enum\RrdCommandType;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdCreationFailedException;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdNotFoundException;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdUpdateFailedException;
@@ -95,7 +96,7 @@ class RrdtoolCli implements RrdtoolInterface
             $args['--header'] = $header;
         }
 
-        return $this->rrd->run(new RrdCommand('dump', $args, [$path]));
+        return $this->rrd->run(new RrdCommand(RrdCommandType::Dump, $args, [$path]));
     }
 
     public function tune(string $path, array $options): bool

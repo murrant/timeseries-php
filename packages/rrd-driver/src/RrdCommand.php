@@ -4,6 +4,7 @@ namespace TimeseriesPhp\Driver\RRD;
 
 use TimeseriesPhp\Core\Contracts\CompiledQuery;
 use TimeseriesPhp\Core\Results\TimeSeriesQueryResult;
+use TimeseriesPhp\Driver\RRD\Enum\RrdCommandType;
 
 /**
  * @implements CompiledQuery<TimeSeriesQueryResult>
@@ -15,7 +16,7 @@ readonly class RrdCommand implements \Stringable, CompiledQuery
      * @param  string[]  $arguments  DEF,CDEF,VDEF,XPORT,etc expressions
      */
     public function __construct(
-        public string $name,
+        public RrdCommandType $name,
         public array $options,
         public array $arguments,
     ) {}
@@ -37,6 +38,6 @@ readonly class RrdCommand implements \Stringable, CompiledQuery
 
     public function __toString(): string
     {
-        return implode(' ', [$this->name, ...$this->expandedOptions(), ...$this->arguments]);
+        return implode(' ', [$this->name->value, ...$this->expandedOptions(), ...$this->arguments]);
     }
 }
