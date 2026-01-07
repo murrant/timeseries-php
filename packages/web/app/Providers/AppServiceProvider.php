@@ -5,11 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use TimeseriesPhp\Core\Contracts\MetricRepository;
 use TimeseriesPhp\Core\Enum\Aggregation;
-use TimeseriesPhp\Core\Enum\GraphType;
 use TimeseriesPhp\Core\Enum\MetricType;
-use TimeseriesPhp\Core\Graph\GraphDefinition;
-use TimeseriesPhp\Core\Graph\GraphStyle;
-use TimeseriesPhp\Core\Graph\GraphVariable;
 use TimeseriesPhp\Core\Metrics\MetricIdentifier;
 
 class AppServiceProvider extends ServiceProvider
@@ -25,8 +21,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(MetricRepository $metrics): void
     {
-        $bitsInMetric = new MetricIdentifier('network.port', 'bits.in', 'bps', MetricType::COUNTER, ['host', 'ifName', 'ifIndex'], [Aggregation::Rate, Aggregation::Sum]);
-        $bitsOutMetric = new MetricIdentifier('network.port', 'bits.out', 'bps', MetricType::COUNTER, ['host', 'ifName', 'ifIndex'], [Aggregation::Rate, Aggregation::Sum]);
         $bytesInMetric = new MetricIdentifier('network.port', 'bytes.in', 'bytes', MetricType::COUNTER, ['host', 'ifName', 'ifIndex'], [Aggregation::Rate, Aggregation::Sum]);
         $bytesOutMetric = new MetricIdentifier('network.port', 'bytes.out', 'bytes', MetricType::COUNTER, ['host', 'ifName', 'ifIndex'], [Aggregation::Rate, Aggregation::Sum]);
         $packetsInMetric = new MetricIdentifier('network.port', 'packets.in', 'packets', MetricType::COUNTER, ['host', 'ifName', 'ifIndex'], [Aggregation::Rate, Aggregation::Sum]);
@@ -40,8 +34,6 @@ class AppServiceProvider extends ServiceProvider
         $carrierMetric = new MetricIdentifier('network.port', 'carrier', 'errors', MetricType::COUNTER, ['host', 'ifName', 'ifIndex'], [Aggregation::Rate, Aggregation::Sum]);
         $collisionsMetric = new MetricIdentifier('network.port', 'collisions', 'errors', MetricType::COUNTER, ['host', 'ifName', 'ifIndex'], [Aggregation::Rate, Aggregation::Sum]);
 
-        $metrics->register($bitsInMetric);
-        $metrics->register($bitsOutMetric);
         $metrics->register($bytesInMetric);
         $metrics->register($bytesOutMetric);
         $metrics->register($packetsInMetric);

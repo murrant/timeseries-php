@@ -2,7 +2,7 @@
 
 namespace App\Filament\Widgets;
 
-use App\Actions\FetchPortTrafficData;
+use App\Actions\FetchPortPacketsData;
 use Filament\Forms\Components\Select;
 use Filament\Schemas\Schema;
 use Filament\Support\RawJs;
@@ -14,13 +14,13 @@ use TimeseriesPhp\Core\Query\AST\Filter;
 use TimeseriesPhp\Core\Query\AST\TimeRange;
 use TimeseriesPhp\Core\Results\TimeSeriesQueryResult;
 
-class PortTrafficChart extends ChartWidget
+class PortPacketsChart extends ChartWidget
 {
     use HasFiltersSchema;
 
-    protected ?string $heading = 'Port Traffic';
+    protected ?string $heading = 'Port Packets';
 
-    protected static ?int $sort = 2;
+    protected static ?int $sort = 3;
 
     protected ?string $pollingInterval = '30s';
 
@@ -110,7 +110,7 @@ class PortTrafficChart extends ChartWidget
                             }
                             if (context.parsed.y !== null) {
                                 const value = context.parsed.y;
-                                const units = ['bps', 'Kbps', 'Mbps', 'Gbps', 'Tbps'];
+                                const units = ['pps', 'Kpps', 'Mpps', 'Gpps', 'Tpps'];
                                 let unitIndex = 0;
                                 let formattedValue = value;
 
@@ -131,11 +131,11 @@ class PortTrafficChart extends ChartWidget
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Traffic (bps)',
+                        text: 'Packets (pps)',
                     },
                     ticks: {
                         callback: (value) => {
-                            const units = ['bps', 'Kbps', 'Mbps', 'Gbps', 'Tbps'];
+                            const units = ['pps', 'Kpps', 'Mpps', 'Gpps', 'Tpps'];
                             let unitIndex = 0;
                             let formattedValue = value;
 
@@ -193,7 +193,7 @@ class PortTrafficChart extends ChartWidget
             default => TimeRange::lastHours(6),
         };
 
-        return app(FetchPortTrafficData::class)->execute(
+        return app(FetchPortPacketsData::class)->execute(
             $this->filters['hostname'] ?? null,
             $this->filters['ifName'] ?? null,
             range: $range
@@ -212,24 +212,14 @@ class PortTrafficChart extends ChartWidget
      */
     protected function getAvailableHostnames(): array
     {
-        //        $query = app(SchemaManager::class)->labels()
-        //            ->from('network.port.bytes.in')
-        //            ->from('network.port.bytes.out');
-        //
-        //        if (! empty($this->filters['ifName'])) {
-        //            $query->where('ifName', $this->filters['ifName']);
-        //        }
-        //
-        //        $values = $query->values('host')->values;
-
         $filters = [];
         if (! empty($this->filters['ifName'])) {
             $filters[] = new Filter('ifName', Operator::Equal, $this->filters['ifName']);
         }
 
         $values = app(LabelDiscovery::class)->listLabelValues('host', [
-            'network.port.bytes.in',
-            'network.port.bytes.out',
+            'network.port.packets.in',
+            'network.port.packets.out',
         ], $filters);
 
         return array_combine($values, $values);
@@ -242,25 +232,14 @@ class PortTrafficChart extends ChartWidget
      */
     protected function getAvailableIfNames(): array
     {
-        //        $query = app(SchemaManager::class)->labels()
-        //            ->from('network.port.bytes.in')
-        //            ->from('network.port.bytes.out');
-        //
-        //        if (! empty($this->filters['hostname'])) {
-        //            $query->where('host', $this->filters['hostname']);
-        //        }
-        //
-        //        $values = $query->values('ifName')->values;
-
-
         $filters = [];
         if (! empty($this->filters['hostname'])) {
             $filters[] = new Filter('host', Operator::Equal, $this->filters['hostname']);
         }
 
         $values = app(LabelDiscovery::class)->listLabelValues('ifName', [
-            'network.port.bytes.in',
-            'network.port.bytes.out',
+            'network.port.packets.in',
+            'network.port.packets.out',
         ], $filters);
 
 
