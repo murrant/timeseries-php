@@ -16,7 +16,8 @@ final readonly class InfluxConfig implements DriverConfig
     ) {}
 
     /**
-     * @param DriverConfig|array<string, mixed> $config
+     * @param  DriverConfig|array<string, mixed>  $config
+     *
      * @throws TimeseriesException
      */
     public static function make(DriverConfig|array $config = []): self

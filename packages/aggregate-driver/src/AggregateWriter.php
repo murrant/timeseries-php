@@ -10,7 +10,7 @@ use TimeseriesPhp\Core\Metrics\MetricSample;
 final readonly class AggregateWriter implements Writer
 {
     /**
-     * @param Writer[] $writers
+     * @param  Writer[]  $writers
      */
     public function __construct(
         private array $writers,
@@ -24,7 +24,7 @@ final readonly class AggregateWriter implements Writer
     }
 
     /**
-     * @param MetricSample[] $samples
+     * @param  MetricSample[]  $samples
      */
     public function writeBatch(array $samples): void
     {

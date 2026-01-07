@@ -2,7 +2,4 @@
 
 namespace TimeseriesPhp\Driver\RRD\Exceptions;
 
-class RRDToolParseException extends RrdException
-{
-
-}
+class RRDToolParseException extends RrdException {}

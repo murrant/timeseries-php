@@ -17,15 +17,16 @@ class ConsoleOuputVerbosityListener
 {
     public function handle(CommandStarting $event): void
     {
-        $handler = new class('php://stdout', Level::Debug, $event->output) extends StreamHandler {
-            public function __construct(string $stream, $level, private OutputInterface $consoleOutput)
+        $handler = new class('php://stdout', Level::Debug, $event->output) extends StreamHandler
+        {
+            public function __construct(string $stream, $level, private readonly OutputInterface $consoleOutput)
             {
                 parent::__construct($stream, $level);
             }
 
             public function isHandling(LogRecord $record): bool
             {
-                $required = match($record->level) {
+                $required = match ($record->level) {
                     Level::Debug => OutputInterface::VERBOSITY_DEBUG,
                     Level::Info => OutputInterface::VERBOSITY_VERY_VERBOSE,
                     Level::Notice, Level::Warning => OutputInterface::VERBOSITY_VERBOSE,

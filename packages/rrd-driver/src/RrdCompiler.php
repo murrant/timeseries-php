@@ -173,14 +173,15 @@ readonly class RrdCompiler implements QueryCompiler
         if (preg_match_all('/(\w+)=([^,]+)/', $basename, $matches, PREG_SET_ORDER)) {
             $labels = [];
             foreach ($matches as $match) {
-                $labels[] = $match[1] . '=' . $match[2];
+                $labels[] = $match[1].'='.$match[2];
             }
             $labelStr = implode(',', $labels);
-            return $prefix . '{' . $labelStr . '}';
+
+            return $prefix.'{'.$labelStr.'}';
         }
 
         // Fallback to just the basename
-        return $prefix . '{' . $basename . '}';
+        return $prefix.'{'.$basename.'}';
     }
 
     /**

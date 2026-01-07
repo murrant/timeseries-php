@@ -8,6 +8,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\ChartWidget\Concerns\HasFiltersSchema;
+use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use TimeseriesPhp\Core\Contracts\LabelDiscovery;
 use TimeseriesPhp\Core\Enum\Operator;
 use TimeseriesPhp\Core\Query\AST\Filter;
@@ -17,6 +18,7 @@ use TimeseriesPhp\Core\Results\TimeSeriesQueryResult;
 class PortTrafficChart extends ChartWidget
 {
     use HasFiltersSchema;
+    use InteractsWithPageFilters;
 
     protected ?string $heading = 'Port Traffic';
 
@@ -196,7 +198,8 @@ class PortTrafficChart extends ChartWidget
         return app(FetchPortTrafficData::class)->execute(
             $this->filters['hostname'] ?? null,
             $this->filters['ifName'] ?? null,
-            range: $range
+            range: $range,
+            connection: $this->pageFilters['connection'] ?? null
         );
     }
 
@@ -227,7 +230,7 @@ class PortTrafficChart extends ChartWidget
             $filters[] = new Filter('ifName', Operator::Equal, $this->filters['ifName']);
         }
 
-        $values = app(LabelDiscovery::class)->listLabelValues('host', [
+        $values = app(LabelDiscovery::class, ['connection' => $this->pageFilters['connection'] ?? null])->listLabelValues('host', [
             'network.port.bytes.in',
             'network.port.bytes.out',
         ], $filters);
@@ -252,17 +255,15 @@ class PortTrafficChart extends ChartWidget
         //
         //        $values = $query->values('ifName')->values;
 
-
         $filters = [];
         if (! empty($this->filters['hostname'])) {
             $filters[] = new Filter('host', Operator::Equal, $this->filters['hostname']);
         }
 
-        $values = app(LabelDiscovery::class)->listLabelValues('ifName', [
+        $values = app(LabelDiscovery::class, ['connection' => $this->pageFilters['connection'] ?? null])->listLabelValues('ifName', [
             'network.port.bytes.in',
             'network.port.bytes.out',
         ], $filters);
-
 
         return array_combine($values, $values);
     }

@@ -19,7 +19,7 @@ class FetchPortTrafficData
     /**
      * @return QueryResult<TimeSeriesQueryResult>
      */
-    public function execute(?string $host = null, ?string $ifName = null, ?TimeRange $range = null): TimeSeriesQueryResult
+    public function execute(?string $host = null, ?string $ifName = null, ?TimeRange $range = null, ?string $connection = null): TimeSeriesQueryResult
     {
         $builder = new QueryBuilder($range);
 
@@ -36,20 +36,20 @@ class FetchPortTrafficData
                 ->aggregate(Aggregation::Maximum, Aggregation::Minimum, Aggregation::Average)
                 ->as('Inbound');
         })
-        ->select('network.port.bytes.out', function (StreamBuilder $b) use ($host, $ifName): void {
-            if ($host) {
-                $b->where('host', $host);
-            }
-            if ($ifName) {
-                $b->where('ifName', $ifName);
-            }
+            ->select('network.port.bytes.out', function (StreamBuilder $b) use ($host, $ifName): void {
+                if ($host) {
+                    $b->where('host', $host);
+                }
+                if ($ifName) {
+                    $b->where('ifName', $ifName);
+                }
 
-            $b->rate()
-                ->multiplyBy(8)
-                ->aggregate(Aggregation::Maximum, Aggregation::Minimum, Aggregation::Average)
-                ->as('Outbound');
-        });
+                $b->rate()
+                    ->multiplyBy(8)
+                    ->aggregate(Aggregation::Maximum, Aggregation::Minimum, Aggregation::Average)
+                    ->as('Outbound');
+            });
 
-        return $this->tsdb->query($builder->build());
+        return $this->tsdb->query($builder->build(), $connection ?: null);
     }
 }

@@ -24,7 +24,8 @@ final readonly class RrdConfig implements DriverConfig
     }
 
     /**
-     * @param DriverConfig|array<string, mixed> $config
+     * @param  DriverConfig|array<string, mixed>  $config
+     *
      * @throws RrdConfigException
      */
     public static function make(DriverConfig|array $config = []): self

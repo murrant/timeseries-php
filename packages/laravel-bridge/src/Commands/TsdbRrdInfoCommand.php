@@ -86,7 +86,7 @@ class TsdbRrdInfoCommand extends Command
                 ));
             }
 
-            if (!empty($rra['cdp_prep'])) {
+            if (! empty($rra['cdp_prep'])) {
                 foreach ($rra['cdp_prep'] as $j => $cdp) {
                     $this->line("    cdp_prep[{$j}]:");
 

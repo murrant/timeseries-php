@@ -65,7 +65,7 @@ class InfluxWriter implements Writer
             'precision' => 's',
         ]);
 
-//        $this->logger->debug('Writing to InfluxDB2', ['url' => $url, 'body' => $body]);
+        //        $this->logger->debug('Writing to InfluxDB2', ['url' => $url, 'body' => $body]);
 
         $request = $this->requestFactory->createRequest('POST', $url)
             ->withHeader('Authorization', 'Token '.$this->config->token)

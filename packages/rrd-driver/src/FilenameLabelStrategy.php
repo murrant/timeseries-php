@@ -69,7 +69,7 @@ final readonly class FilenameLabelStrategy implements LabelStrategy
     {
         $metric = $this->metrics->get($metric);
         $metricDir = $this->getMetricDirectory($metric);
-        $searchDir = str_starts_with($metricDir, '/') ? $metricDir : '/' . $metricDir;
+        $searchDir = str_starts_with($metricDir, '/') ? $metricDir : '/'.$metricDir;
 
         $files = array_map(fn ($file) => "$metricDir/$file", $this->rrdTool->listFiles($searchDir));
 

@@ -14,7 +14,7 @@ trait RrdOutputParser
 {
     private function parseInfoOutput(string $output): array
     {
-        if (!preg_match(
+        if (! preg_match(
             '/^
             filename\s*=\s*"(?<filename>[^"]+)"\R
             rrd_version\s*=\s*"(?<rrd_version>[^"]+)"\R
@@ -32,13 +32,13 @@ trait RrdOutputParser
         }
 
         $info = [
-            'filename'    => $m['filename'],
+            'filename' => $m['filename'],
             'rrd_version' => $m['rrd_version'],
-            'step'        => (int) $m['step'],
+            'step' => (int) $m['step'],
             'last_update' => (int) $m['last_update'],
             'header_size' => (int) $m['header_size'],
-            'ds'          => [],
-            'rra'         => [],
+            'ds' => [],
+            'rra' => [],
         ];
 
         /* -------------------------------------------------------------
@@ -115,8 +115,8 @@ trait RrdOutputParser
             $metric = $legend;
             $alias = null;
 
-            if (str_contains($legend, ':')) {
-                [$metric, $alias] = explode(':', $legend, 2);
+            if (str_contains((string) $legend, ':')) {
+                [$metric, $alias] = explode(':', (string) $legend, 2);
             }
 
             $series[] = new TimeSeries(
@@ -144,7 +144,7 @@ trait RrdOutputParser
         $labels = [];
 
         if (preg_match('/\{([^}]+)}/', $legend, $matches)) {
-            foreach(explode(',', $matches[1]) as $pair) {
+            foreach (explode(',', $matches[1]) as $pair) {
                 [$key, $value] = explode('=', $pair, 2);
                 $labels[$key] = $value;
             }
@@ -152,7 +152,6 @@ trait RrdOutputParser
 
         return $labels;
     }
-
 
     /**
      * Parses a single RRD info value into a PHP scalar.

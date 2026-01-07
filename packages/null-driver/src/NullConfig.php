@@ -9,8 +9,7 @@ use TimeseriesPhp\Core\Contracts\DriverConfig;
 final readonly class NullConfig implements DriverConfig
 {
     /**
-     * @param array<string, mixed>|DriverConfig $config
-     * @return self
+     * @param  array<string, mixed>|DriverConfig  $config
      */
     public static function make(array|DriverConfig $config = []): self
     {

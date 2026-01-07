@@ -18,7 +18,7 @@ trait RrdCommandBuilder
      */
     private function buildCreateCommand(string $path, array $ds, array $retentionPolicies): RrdCommand
     {
-        $step = min(array_map(fn($policy) => $policy->resolution, $retentionPolicies));
+        $step = min(array_map(fn ($policy) => $policy->resolution, $retentionPolicies));
 
         $rras = [];
         foreach ($retentionPolicies as $policy) {

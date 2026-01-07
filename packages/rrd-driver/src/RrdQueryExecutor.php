@@ -51,9 +51,7 @@ readonly class RrdQueryExecutor implements QueryExecutor
         $this->logger->debug('Executing RRD query', ['query' => (string) $query]);
 
         try {
-//            dump($query->raw, (string) $query);
             $output = $this->process->run($query);
-//            dd($output);
 
             return $this->parseXportOutput($output);
         } catch (RrdNotFoundException) {

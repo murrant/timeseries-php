@@ -62,17 +62,17 @@ final class TimeseriesManager
 
     public function connection(?string $name = null): Runtime
     {
-        $name ??= $this->default ?? 'default';
+        $name = empty($name) ? $this->default : $name; // FIXME somehow name get cast to '' from null
 
         if (isset($this->runtimes[$name])) {
             return $this->runtimes[$name];
         }
 
-        $connectionConfig = $this->connections[$name] ?? null;
-        if (! $connectionConfig) {
+        if (! isset($this->connections[$name])) {
             throw new TimeseriesException("Connection [$name] not configured.");
         }
 
+        $connectionConfig = $this->connections[$name];
         $driverName = $connectionConfig['driver'];
         $driverConfig = $connectionConfig['config'];
 

@@ -26,7 +26,7 @@ final readonly class NullFactory implements DriverFactory
     ) {}
 
     /**
-     * @param DriverConfig|array<string, mixed> $config
+     * @param  DriverConfig|array<string, mixed>  $config
      */
     public function make(DriverConfig|array $config): Runtime
     {

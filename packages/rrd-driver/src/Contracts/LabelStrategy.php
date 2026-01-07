@@ -29,7 +29,8 @@ interface LabelStrategy extends LabelDiscovery
 
     /**
      * Extract labels from a given rrd file path
-     * @return  array<string, string>  Key-value pairs of label dimensions
+     *
+     * @return array<string, string> Key-value pairs of label dimensions
      */
     public function labelsFromFilename(string $path): array;
 }
