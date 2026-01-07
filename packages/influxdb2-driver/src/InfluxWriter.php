@@ -103,7 +103,7 @@ class InfluxWriter implements Writer
         $value = $sample->value;
         $fieldValue = is_float($value) ? sprintf('%F', $value) : "{$value}i";
 
-        $timestamp = $sample->timestamp->getTimestamp();
+        $timestamp = $sample->timestamp?->getTimestamp();
 
         return "{$this->escape($measurement)}{$tagStr} value={$fieldValue} {$timestamp}";
     }

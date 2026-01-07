@@ -141,7 +141,6 @@ class CollectPortStats extends Command
     {
         $host = gethostname() ?: 'localhost';
         $metrics = [];
-        $timestamp = new \DateTimeImmutable;
 
         foreach ($interfaces as $interface => $stats) {
             [$ifIndex, $ifName] = explode('.', $interface, 2);
@@ -157,7 +156,6 @@ class CollectPortStats extends Command
                         'ifIndex' => $ifIndex,
                     ],
                     value: $value,
-                    timestamp: $timestamp
                 );
             }
         }

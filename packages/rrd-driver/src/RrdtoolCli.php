@@ -2,6 +2,8 @@
 
 namespace TimeseriesPhp\Driver\RRD;
 
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Throwable;
 use TimeseriesPhp\Driver\RRD\Contracts\RrdtoolInterface;
 use TimeseriesPhp\Driver\RRD\Exceptions\RrdCreationFailedException;
@@ -18,6 +20,7 @@ class RrdtoolCli implements RrdtoolInterface
     public function __construct(
         private readonly RrdConfig $config,
         private readonly RrdProcess $rrd,
+        private readonly LoggerInterface $logger = new NullLogger,
     ) {}
 
     public function fetch(string $path, string $consolidationFunction, array $options = []): array
@@ -45,7 +48,11 @@ class RrdtoolCli implements RrdtoolInterface
     {
         try {
             $command = $this->buildUpdateCommand($path, $data, $timestamp);
-            $this->rrd->run((string) $command);
+            $output = $this->rrd->run((string) $command);
+
+            if ($output) {
+                $this->logger->error($output);
+            }
         } catch (RrdNotFoundException $e) {
             throw $e;
         } catch (Throwable $e) {

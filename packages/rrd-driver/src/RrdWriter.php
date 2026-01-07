@@ -27,7 +27,7 @@ class RrdWriter implements Writer
         $this->logger->debug('Writing to RRD', ['sample' => $sample]);
 
         $filename = $this->labelStrategy->generateFilename($sample->metric, $sample->labels);
-        $timestamp = $sample->timestamp->getTimestamp();
+        $timestamp = $sample->timestamp?->getTimestamp();
         try {
             $this->rrd->update($filename, [$sample->value], $timestamp);
         } catch (RrdNotFoundException) {

@@ -18,11 +18,11 @@ trait RrdCommandBuilder
      */
     private function buildCreateCommand(string $path, array $ds, array $retentionPolicies): RrdCommand
     {
-        $step = null;
+        $step = min(array_map(fn($policy) => $policy->resolution, $retentionPolicies));
+
         $rras = [];
         foreach ($retentionPolicies as $policy) {
-            $steps = $policy->retention;
-            $step = $step === null ? $policy->resolution : min($step, $policy->resolution);
+            $stepsPerRow = $policy->resolution / $step;
             $rows = $policy->getPointCount();
             $cf = match ($policy->aggregator) {
                 Aggregation::Average => 'AVERAGE',
@@ -30,7 +30,7 @@ trait RrdCommandBuilder
                 Aggregation::Minimum => 'MIN',
             };
 
-            $rras[] = sprintf('RRA:%s:0.5:%d:%d', $cf, $steps, $rows);
+            $rras[] = sprintf('RRA:%s:0.5:%d:%d', $cf, $stepsPerRow, $rows);
         }
 
         $datasets = [];
@@ -40,18 +40,10 @@ trait RrdCommandBuilder
                 MetricType::GAUGE => 'GAUGE',
                 default => throw new RrdException('Unsupported metric type: '.$type->name),
             };
-            // DS:ds-name:DST:heartbeat:min:max
-            // Heartbeat is usually 2x the resolution to allow for small gaps in data
-            $datasets[] = sprintf('DS:%s:%s:%d:U:U', $name, $typeName, ($step ?? 300) * 2); // TODO min/max needed? probably
-        }
-//        dd('create', $path, $datasets, $rras);
-
-        $args = [];
-        if ($step !== null) {
-            $args['--step'] = $step;
+            $datasets[] = sprintf('DS:%s:%s:%d:U:U', $name, $typeName, $step * 2);
         }
 
-        return new RrdCommand('create', $args, [$path, ...$datasets, ...$rras]);
+        return new RrdCommand('create', ['--step' => $step], [$path, ...$datasets, ...$rras]);
     }
 
     private function buildListCommand(string $directory, bool $recursive = false): RrdCommand
@@ -70,7 +62,7 @@ trait RrdCommandBuilder
      */
     private function buildUpdateCommand(string $path, array $data, ?int $timestamp = null): RrdCommand
     {
-        $update = implode(':', [$timestamp ?? time(), ...$data]);
+        $update = implode(':', [$timestamp ?? 'N', ...$data]);
 
         return new RrdCommand('update', [], [$path, $update]);
     }
