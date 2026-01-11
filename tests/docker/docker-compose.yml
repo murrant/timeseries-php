@@ -72,8 +72,8 @@ services:
             - RRDCACHED_WRITE_THREADS=4
             - RRDCACHED_FLUSH_DEAD_DATA_INTERVAL=3600
         # fix file permissions
-#        command: >
-#            sh -c "chown 1000:1000 /data/db /data/journal && exec /init"
+        command: >
+            sh -c "chown 1000:1000 /data/db /data/journal && exec /init"
         healthcheck:
             test: ["CMD", "nc", "-z", "localhost", "42217"]
             interval: 30s
