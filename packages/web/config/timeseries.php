@@ -22,6 +22,7 @@ return [
             'token' => 'my-token',
             'org' => 'my-org',
             'bucket' => 'example_bucket',
+            'multiple_fields' => false,
         ],
         'test-rrd' => [
             'driver' => 'rrd',
