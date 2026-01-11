@@ -64,7 +64,7 @@ final readonly class RrdConfig implements DriverConfig
      */
     private function validate(): void
     {
-        if (! file_exists($this->dir)) {
+        if (! $this->rrdcached && ! file_exists($this->dir)) {
             throw new RrdConfigException("RRD directory does not exist: $this->dir");
         }
     }

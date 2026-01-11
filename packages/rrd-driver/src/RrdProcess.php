@@ -34,7 +34,7 @@ class RrdProcess
         if ($this->process === null) {
             $this->process = new Process(
                 command: [$this->config->rrdtool_exec, '-'],
-                cwd: $this->config->dir,
+                cwd: ($this->config->rrdcached ? null : $this->config->dir),
                 env: $this->env,
             );
             $this->process->setInput($this->input);
