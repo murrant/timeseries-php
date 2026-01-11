@@ -4,8 +4,8 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use TimeseriesPhp\Core\Contracts\MetricRepository;
-use TimeseriesPhp\Core\Contracts\TsdbWriter;
 use TimeseriesPhp\Core\Metrics\MetricSample;
+use TimeseriesPhp\Core\TimeseriesManager;
 
 class CollectPortStats extends Command
 {
@@ -26,7 +26,7 @@ class CollectPortStats extends Command
     /**
      * Execute the console command.
      */
-    public function handle(TsdbWriter $writer, MetricRepository $metricRepository): void
+    public function handle(TimeSeriesManager $manager, MetricRepository $metricRepository): void
     {
         $durations = [];
         $command_start = microtime(true);
