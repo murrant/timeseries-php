@@ -38,7 +38,7 @@ class CollectPortStats extends Command
         $durations[] = ['op' => 'parse', 'time' => microtime(true) - $start];
 
         $start = microtime(true);
-        $metrics = $this->convertToMetrics($interfaces, $metricRepository);
+        $metrics = $this->convertToMetrics($interfaces);
         $durations[] = ['op' => 'convert', 'time' => microtime(true) - $start];
 
         $start = microtime(true);
@@ -137,7 +137,7 @@ class CollectPortStats extends Command
      * @param  array<string, array<string, int>>  $interfaces
      * @return MetricSample[]
      */
-    private function convertToMetrics(array $interfaces, MetricRepository $metricRepository): array
+    private function convertToMetrics(array $interfaces): array
     {
         $host = gethostname() ?: 'localhost';
         $metrics = [];
@@ -146,10 +146,8 @@ class CollectPortStats extends Command
             [$ifIndex, $ifName] = explode('.', $interface, 2);
 
             foreach ($stats as $statName => $value) {
-                $metricId = $metricRepository->get($statName);
-
                 $metrics[] = new MetricSample(
-                    metric: $metricId,
+                    metricId: $statName,
                     labels: [
                         'host' => $host,
                         'ifName' => $ifName,
