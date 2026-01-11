@@ -65,6 +65,7 @@ class InfluxFactory implements DriverFactory
         $services = new DriverServiceRegistry([
             Writer::class => fn () => new InfluxWriter(
                 $config,
+                $fieldStrategy,
                 $httpClient,
                 $requestFactory,
                 $streamFactory,
