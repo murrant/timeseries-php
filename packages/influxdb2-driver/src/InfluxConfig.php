@@ -13,6 +13,7 @@ final readonly class InfluxConfig implements DriverConfig
         public string $token = '',
         public string $org = '',
         public string $bucket = '',
+        public bool $multiple_fields = false,
     ) {}
 
     /**
@@ -44,6 +45,7 @@ final readonly class InfluxConfig implements DriverConfig
             token: $config['token'] ?? '',
             org: $config['org'] ?? '',
             bucket: $config['bucket'] ?? '',
+            multiple_fields: $config['multiple_fields'] ?? false,
         );
     }
 }

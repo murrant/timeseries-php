@@ -4,6 +4,7 @@ namespace TimeseriesPhp\Driver\InfluxDB2;
 
 use DateTimeInterface;
 use TimeseriesPhp\Core\Contracts\CompiledQuery;
+use TimeseriesPhp\Core\Contracts\MetricRepository;
 use TimeseriesPhp\Core\Contracts\Operation;
 use TimeseriesPhp\Core\Contracts\Query;
 use TimeseriesPhp\Core\Contracts\QueryCompiler;
@@ -21,13 +22,21 @@ use TimeseriesPhp\Core\Query\AST\Stream;
 use TimeseriesPhp\Core\Query\AST\TimeRange;
 use TimeseriesPhp\Core\Results\LabelQueryResult;
 use TimeseriesPhp\Core\Results\TimeSeriesQueryResult;
+use TimeseriesPhp\Driver\InfluxDB2\Contracts\FieldStrategy;
+use TimeseriesPhp\Driver\InfluxDB2\Factories\FieldStrategyFactory;
 
 /** @template TResult of QueryResult */
 final readonly class InfluxCompiler implements QueryCompiler
 {
+    private readonly FieldStrategy $fieldStrategy;
+
     public function __construct(
-        private InfluxConfig $config
-    ) {}
+        private InfluxConfig $config,
+        private MetricRepository $metricRepository,
+        private FieldStrategyFactory $fieldStrategyFactory,
+    ) {
+        $this->fieldStrategy = $fieldStrategyFactory->make($this->config);
+    }
 
     /**
      * @param  Query<TResult>  $query
@@ -75,10 +84,13 @@ final readonly class InfluxCompiler implements QueryCompiler
      */
     private function compileStream(Stream $stream, Resolution $resolution): array
     {
+        $metric = $this->metricRepository->get($stream->metric);
+
         $flux = [
             sprintf('from(bucket: "%s")', $this->config->bucket),
             '|> range(start: rangeStart, stop: rangeStop)',
-            sprintf('|> filter(fn: (r) => r._measurement == "%s")', $stream->metric),
+            sprintf('|> filter(fn: (r) => r._measurement == "%s")', $this->fieldStrategy->getMeasurementName($metric)),
+            sprintf('|> filter(fn: (r) => r._field == "%s")', $this->fieldStrategy->getFieldName($metric)),
         ];
 
         $flux = $this->compileFluxFilters($stream->filters, $flux);
@@ -159,7 +171,8 @@ final readonly class InfluxCompiler implements QueryCompiler
         ];
 
         if (! empty($query->metrics)) {
-            $metricFilters = array_map(fn ($m) => sprintf('r._measurement == "%s"', $m), $query->metrics);
+            $metricFilters = array_map(fn ($m) => sprintf('r._measurement == "%s"', $m), array_unique(array_map(fn ($m) => $this->fieldStrategy->getMeasurementName($this->metricRepository->get($m)), $query->metrics)));
+
             $flux[] = sprintf('|> filter(fn: (r) => %s)', implode(' or ', $metricFilters));
         }
 

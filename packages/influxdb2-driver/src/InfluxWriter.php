@@ -14,6 +14,8 @@ use PsrDiscovery\Discover;
 use TimeseriesPhp\Core\Contracts\Writer;
 use TimeseriesPhp\Core\Exceptions\TimeseriesException;
 use TimeseriesPhp\Core\Metrics\MetricSample;
+use TimeseriesPhp\Driver\InfluxDB2\Contracts\FieldStrategy;
+use TimeseriesPhp\Driver\InfluxDB2\Factories\FieldStrategyFactory;
 
 class InfluxWriter implements Writer
 {
@@ -23,8 +25,11 @@ class InfluxWriter implements Writer
 
     private readonly StreamFactoryInterface $streamFactory;
 
+    private readonly FieldStrategy $fieldStrategy;
+
     public function __construct(
         private readonly InfluxConfig $config,
+        FieldStrategyFactory $fieldStrategyFactory,
         ?ClientInterface $httpClient = null,
         ?RequestFactoryInterface $requestFactory = null,
         ?StreamFactoryInterface $streamFactory = null,
@@ -33,6 +38,7 @@ class InfluxWriter implements Writer
         $this->httpClient = $httpClient ?? Discover::httpClient();
         $this->requestFactory = $requestFactory ?? Discover::httpRequestFactory();
         $this->streamFactory = $streamFactory ?? Discover::httpStreamFactory();
+        $this->fieldStrategy = $fieldStrategyFactory->make($this->config);
     }
 
     /**
@@ -91,7 +97,8 @@ class InfluxWriter implements Writer
 
     private function formatLineProtocol(MetricSample $sample): string
     {
-        $measurement = $sample->metric->key();
+        $measurement = $this->fieldStrategy->getMeasurementName($sample->metric);
+        $fieldname = $this->fieldStrategy->getFieldName($sample->metric);
 
         $tags = [];
         foreach ($sample->labels as $key => $value) {
@@ -105,7 +112,7 @@ class InfluxWriter implements Writer
 
         $timestamp = $sample->timestamp?->getTimestamp();
 
-        return "{$this->escape($measurement)}{$tagStr} value={$fieldValue} {$timestamp}";
+        return "{$this->escape($measurement)}{$tagStr} $fieldname={$fieldValue} {$timestamp}";
     }
 
     private function escape(string $value): string
