@@ -19,6 +19,7 @@ use TimeseriesPhp\Core\Contracts\Writer;
 use TimeseriesPhp\Core\Metrics\Repository\RuntimeMetricRepository;
 use TimeseriesPhp\Core\Runtime;
 use TimeseriesPhp\Core\Services\DriverServiceRegistry;
+use TimeseriesPhp\Driver\InfluxDB2\Factories\FieldStrategyFactory;
 
 #[TimeseriesPhpDriver('influxdb2')]
 class InfluxFactory implements DriverFactory
@@ -27,6 +28,7 @@ class InfluxFactory implements DriverFactory
         private readonly ?ClientInterface $httpClient = null,
         private readonly ?RequestFactoryInterface $requestFactory = null,
         private readonly ?StreamFactoryInterface $streamFactory = null,
+        private readonly ?FieldStrategy $fieldStrategy = null,
         private readonly MetricRepository $metricRepository = new RuntimeMetricRepository,
         private readonly LoggerInterface $logger = new NullLogger,
     ) {}
@@ -44,8 +46,14 @@ class InfluxFactory implements DriverFactory
         $httpClient = $this->httpClient ?? Discover::httpClient();
         $requestFactory = $this->requestFactory ?? Discover::httpRequestFactory();
         $streamFactory = $this->streamFactory ?? Discover::httpStreamFactory();
+        $fieldStrategy = $this->fieldStrategy ?? new FieldStrategyFactory()->make($config);
 
-        $compiler = new InfluxCompiler($config);
+        $compiler = new InfluxCompiler(
+            $config,
+            $this->metricRepository,
+            $fieldStrategy,
+        );
+
         $executor = new InfluxQueryExecutor(
             $config,
             $httpClient,

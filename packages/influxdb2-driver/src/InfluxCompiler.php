@@ -23,20 +23,15 @@ use TimeseriesPhp\Core\Query\AST\TimeRange;
 use TimeseriesPhp\Core\Results\LabelQueryResult;
 use TimeseriesPhp\Core\Results\TimeSeriesQueryResult;
 use TimeseriesPhp\Driver\InfluxDB2\Contracts\FieldStrategy;
-use TimeseriesPhp\Driver\InfluxDB2\Factories\FieldStrategyFactory;
 
 /** @template TResult of QueryResult */
 final readonly class InfluxCompiler implements QueryCompiler
 {
-    private readonly FieldStrategy $fieldStrategy;
-
     public function __construct(
         private InfluxConfig $config,
         private MetricRepository $metricRepository,
-        private FieldStrategyFactory $fieldStrategyFactory,
-    ) {
-        $this->fieldStrategy = $fieldStrategyFactory->make($this->config);
-    }
+        private FieldStrategy $fieldStrategy,
+    ) {}
 
     /**
      * @param  Query<TResult>  $query
